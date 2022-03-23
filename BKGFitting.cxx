@@ -68,6 +68,7 @@ bool PathExists(string path){
   struct stat buffer;
   return (stat (path.c_str(), &buffer) == 0);
 }
+
 //Borrowed Directly from Andrew.                                                
 void printCorrMatrix(const ROOT::Math::Minimizer& minim, const int nPars)
 {
@@ -238,7 +239,6 @@ TCanvas* DrawFromMnvH1Ds(MnvH1D* h_data, map<TString, MnvH1D*> hFit, map<TString
 int FitScaleFactorsAndDraw(MnvH1D* dataHist, map<TString, MnvH1D*> fitHistsAndNames, map<TString, MnvH1D*> unfitHistsAndNames, TString varName, TString outDir, int lowBin, int hiBin, bool sigFit){
   TString name = varName+"_low_"+(TString)(to_string(lowBin))+"_hi_"+(TString)(to_string(hiBin));
 
-
   if (PathExists((string)(outDir+name+"_postFit.pdf"))){
     cout << "Already performed fits over this range for this histo." << endl;
     cout << "If you are doing this because of updated histos, it is in your best interest to save this elsewhere or remove the old plots." << endl;
@@ -305,6 +305,7 @@ int FitScaleFactorsAndDraw(MnvH1D* dataHist, map<TString, MnvH1D*> fitHistsAndNa
 
   cout << "Trying to draw pre-scaling." << endl;
 
+  /*
   //TODO: ONLY DRAW THE PREFIT IF IT HASN'T BEEN DONE ALREADY.
   if (!PathExists((string)(outDir+varName+"_preFit.pdf"))){
     TCanvas* c1 = DrawFromMnvH1Ds(dataHist,fitHistsAndNames,unfitHistsAndNames,sigFit);
@@ -331,11 +332,67 @@ int FitScaleFactorsAndDraw(MnvH1D* dataHist, map<TString, MnvH1D*> fitHistsAndNa
   c1->Print(outDir+name+"_postFit_log.pdf");
   c1->Print(outDir+name+"_postFit_log.png");  
   delete c1;
+  */
 
-  for (auto hist:fitHistsAndNames){
-    hist.second->Scale(1.0/scaleByName[hist.first]);
+  //for (auto hist:fitHistsAndNames){
+  //hist.second->Scale(1.0/scaleByName[hist.first]);
+  //}
+  
+  cout << "Drawing of CV scale completed." << endl;
+  cout << "Looping over systematic universes to get the loop going" << endl;
+
+  //Info here largely lifted from Andrew's fitting script.
+  const auto errorBandNames = fitHistsAndNames.begin()->second->GetErrorBandNames();
+  for (const auto& bandName: errorBandNames){
+    cout << bandName << endl;
+    const auto univs = fitHistsAndNames.begin()->second->GetVertErrorBand(bandName)->GetHists();
+    for (size_t whichUniv=0; whichUniv < univs.size(); ++ whichUniv){
+      vector<TH1D*> fitHistsUniv = {};
+      vector<TH1D*> unfitHistsUniv = {};
+      
+      for (auto hists:fitHistsAndNames){
+	fitHistsUniv.push_back((TH1D*)hists.second->GetVertErrorBand(bandName)->GetHist(whichUniv)->Clone());
+      }
+      
+      for (auto hists:unfitHistsAndNames){
+	unfitHistsUniv.push_back((TH1D*)hists.second->GetVertErrorBand(bandName)->GetHist(whichUniv)->Clone());
+      }
+
+
+      fit::ScaleFactors funcUniv(fitHistsUniv,unfitHistsUniv,hData,lowBin,hiBin);
+      /*
+      auto* mini = new ROOT::Minuit2::Minuit2Minimizer(ROOT::Minuit2::kMigrad);
+
+      int nextPar = 0;
+      for (auto hist:fitHistsAndNames){
+	string var = hist.first.Data();
+	mini->SetVariable(nextPar,var,1.0,1.0);
+	nextPar++;
+      }
+      
+      if (nextPar != func.NDim()){
+	cout << "The number of parameters was unexpected for some reason..." << endl;
+	return 6;
+      }
+      
+      mini->SetFunction(func);
+      
+      if (!mini->Minimize()){
+	cout << "FIT FAILED" << endl;
+	cout << "Printing Results." << endl;
+	mini->PrintResults();
+	printCorrMatrix(*mini, func.NDim());
+      }
+      else{
+	cout << "FIT SUCCEEDED" << endl;
+	cout << "Printing Results." << endl;
+	mini->PrintResults();
+	printCorrMatrix(*mini, func.NDim());
+      }
+  */    
+    }
   }
-
+  
   return 0;
 }
 
