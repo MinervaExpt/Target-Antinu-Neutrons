@@ -65,7 +65,7 @@ namespace fit{
 	whichParam+=1;
       }
 
-      for (unsigned int whichUnfit; whichUnfit < fUnfitHists.size(); ++whichUnfit){
+      for (unsigned int whichUnfit=0; whichUnfit < fUnfitHists.size(); ++whichUnfit){
 	fitSum += fUnfitHists.at(whichUnfit)->GetBinContent(whichBin);
       }
 
