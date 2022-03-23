@@ -94,7 +94,7 @@ void printCorrMatrix(const ROOT::Math::Minimizer& minim, const int nPars)
   }
 }
 
-TCanvas* DrawFromMnvH1Ds(MnvH1D* h_data, map<TString, MnvH1D*> hFit, map<TString, MnvH1D*> hUnfit, bool sigFit = false){
+TCanvas* DrawFromMnvH1Ds(MnvH1D* h_data, map<TString, MnvH1D*> hFit, map<TString, MnvH1D*> hUnfit, bool sigFit){
 
   if (hFit.size()==0){
     cout << "This script should not be used to plot histograms not involved with fitting at this time." << endl;
@@ -235,7 +235,7 @@ TCanvas* DrawFromMnvH1Ds(MnvH1D* h_data, map<TString, MnvH1D*> hFit, map<TString
   return c1;
 }
 
-int FitScaleFactorsAndDraw(MnvH1D* dataHist, map<TString, MnvH1D*> fitHistsAndNames, map<TString, MnvH1D*> unfitHistsAndNames, TString varName, TString outDir, int lowBin, int hiBin){
+int FitScaleFactorsAndDraw(MnvH1D* dataHist, map<TString, MnvH1D*> fitHistsAndNames, map<TString, MnvH1D*> unfitHistsAndNames, TString varName, TString outDir, int lowBin, int hiBin, bool sigFit){
   TString name = varName+"_low_"+(TString)(to_string(lowBin))+"_hi_"+(TString)(to_string(hiBin));
 
 
@@ -307,7 +307,7 @@ int FitScaleFactorsAndDraw(MnvH1D* dataHist, map<TString, MnvH1D*> fitHistsAndNa
 
   //TODO: ONLY DRAW THE PREFIT IF IT HASN'T BEEN DONE ALREADY.
   if (!PathExists((string)(outDir+varName+"_preFit.pdf"))){
-    TCanvas* c1 = DrawFromMnvH1Ds(dataHist,fitHistsAndNames,unfitHistsAndNames);
+    TCanvas* c1 = DrawFromMnvH1Ds(dataHist,fitHistsAndNames,unfitHistsAndNames,sigFit);
     TPad* top = (TPad*)c1->GetPrimitive("Overlay");
     c1->Print(outDir+varName+"_preFit.pdf");
     c1->Print(outDir+varName+"_preFit.png");
@@ -322,7 +322,7 @@ int FitScaleFactorsAndDraw(MnvH1D* dataHist, map<TString, MnvH1D*> fitHistsAndNa
     hist.second->Scale(scaleByName[hist.first]);
   }
   
-  TCanvas* c1 = DrawFromMnvH1Ds(dataHist,fitHistsAndNames,unfitHistsAndNames);
+  TCanvas* c1 = DrawFromMnvH1Ds(dataHist,fitHistsAndNames,unfitHistsAndNames,sigFit);
   TPad* top = (TPad*)c1->GetPrimitive("Overlay");
   c1->Print(outDir+name+"_postFit.pdf");
   c1->Print(outDir+name+"_postFit.png");
@@ -534,27 +534,27 @@ int main(int argc, char* argv[]) {
     unfitHists5["Other"]=OtherIntTypeHist;
 
     cout << "Fitting 1" << endl;
-    int result = FitScaleFactorsAndDraw(dataHist, fitHists1, unfitHists1, name+"_fit1", outDir, lowBin, hiBin);
+    int result = FitScaleFactorsAndDraw(dataHist, fitHists1, unfitHists1, name+"_fit1", outDir, lowBin, hiBin, true);
     cout << "Result: " << result << endl;
     cout << "" << endl;
 
     cout << "Fitting 2" << endl;
-    result = FitScaleFactorsAndDraw(dataHist, fitHists2, unfitHists2, name+"_fit2", outDir, lowBin, hiBin);
+    result = FitScaleFactorsAndDraw(dataHist, fitHists2, unfitHists2, name+"_fit2", outDir, lowBin, hiBin, true);
     cout << "Result: " << result << endl;
     cout << "" << endl;
 
     cout << "Fitting 3" << endl;
-    result = FitScaleFactorsAndDraw(dataHist, fitHists3, unfitHists3, name+"_fit3", outDir, lowBin, hiBin);
+    result = FitScaleFactorsAndDraw(dataHist, fitHists3, unfitHists3, name+"_fit3", outDir, lowBin, hiBin, true);
     cout << "Result: " << result << endl;
     cout << "" << endl;
 
     cout << "Fitting 4" << endl;
-    result = FitScaleFactorsAndDraw(dataHist, fitHists4, unfitHists4, name+"_fit4", outDir, lowBin, hiBin);
+    result = FitScaleFactorsAndDraw(dataHist, fitHists4, unfitHists4, name+"_fit4", outDir, lowBin, hiBin, true);
     cout << "Result: " << result << endl;
     cout << "" << endl;
 
     cout << "Fitting 5" << endl;
-    result = FitScaleFactorsAndDraw(dataHist, fitHists5, unfitHists5, name+"_fit5", outDir, lowBin, hiBin);
+    result = FitScaleFactorsAndDraw(dataHist, fitHists5, unfitHists5, name+"_fit5", outDir, lowBin, hiBin, true);
     cout << "Result: " << result << endl;
     cout << "" << endl;
     //if (result != 0) return result;
