@@ -282,6 +282,21 @@ int FitScaleFactorsAndDraw(MnvH1D* dataHist, map<TString, MnvH1D*> fitHistsAndNa
     mini->PrintResults();
     printCorrMatrix(*mini, func.NDim());
   }
+  
+  const double* scaleResults = mini->X();
+  map<TString, double> scaleByName;
+  nextPar=0;
+  for (auto hist:fitHistsAndNames){
+    scaleByName[hist.first]=scaleResults[nextPar];
+    ++nextPar;
+  }
+
+  /*
+  cout << "Checking the grabbing of scale factors." << endl;
+  for (auto scale: scaleByName){
+    cout << scale.first << " scale: " << scale.second << endl;
+  }
+  */
 
   cout << "Trying to draw pre-scaling." << endl;
 
@@ -297,7 +312,7 @@ int FitScaleFactorsAndDraw(MnvH1D* dataHist, map<TString, MnvH1D*> fitHistsAndNa
     c1->Print(outDir+varName+"_preFit_POTScale_log.png");  
     delete c1;
   }
-
+  /*
   if (!PathExists((string)(outDir+varName+"_preFit_areaScale.pdf"))){
     //Scaling to the area normalizaion
     //sigHist->Scale(scale);
@@ -316,7 +331,7 @@ int FitScaleFactorsAndDraw(MnvH1D* dataHist, map<TString, MnvH1D*> fitHistsAndNa
     //sigHist->Scale(1.0/scale);
     //bkgTotHist->Scale(1.0/scale);
   }
-  /*
+  
   sigHist->Scale(scale0);
   bkgTotHist->Scale(scale1);
 
