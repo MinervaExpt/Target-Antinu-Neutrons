@@ -342,6 +342,17 @@ int FitScaleFactorsAndDraw(MnvH1D* dataHist, map<TString, MnvH1D*> fitHistsAndNa
   cout << "Looping over systematic universes to get the loop going" << endl;
 
   //Info here largely lifted from Andrew's fitting script.
+  map<TString, TH1D*> scaleFactorHists;
+  int nUnivBins = 250;
+
+  nextPar=0;
+  for (auto hist:fitHistsAndNames){
+    scaleFactorHists[hist.first] = new TH1D(name+"_ScaleFactorHists_par"+(TString)(to_string(nextPar)),hist.first+"By Universe;Universe;Scale Factor",nUnivBins,0,nUnivBins);
+    ++nextPar;
+  }
+
+  double quelUniv=0.5;
+
   const auto errorBandNames = fitHistsAndNames.begin()->second->GetErrorBandNames();
   for (const auto& bandName: errorBandNames){
     cout << bandName << endl;
@@ -391,9 +402,28 @@ int FitScaleFactorsAndDraw(MnvH1D* dataHist, map<TString, MnvH1D*> fitHistsAndNa
 	miniUniv->PrintResults();
 	printCorrMatrix(*miniUniv, funcUniv.NDim());
       }
+
+      const double* scaleResultsUniv = miniUniv->X();
+      parNext=0;
+      for (auto hist:fitHistsAndNames){
+	scaleFactorHists[hist.first]->Fill(quelUniv,scaleResultsUniv[parNext]);
+	++parNext;
+      }
+
+      quelUniv += 1.0;
     }
   }
-  
+
+  TCanvas* c1 = new TCanvas("c1","c1",1200,800);
+  c1->cd();
+  for (auto hist:scaleFactorHists){
+    hist.second->GetYaxis()->SetRangeUser(-3.0,3.0);
+    hist.second->Draw("hist");
+    c1->Print(outDir+hist.second->GetName()+".pdf");
+    c1->Print(outDir+hist.second->GetName()+".png");
+  }
+  delete c1;
+
   return 0;
 }
 
