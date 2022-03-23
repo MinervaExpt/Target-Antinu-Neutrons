@@ -298,11 +298,10 @@ int FitScaleFactorsAndDraw(MnvH1D* dataHist, map<TString, MnvH1D*> fitHistsAndNa
     delete c1;
   }
 
-  /*    
   if (!PathExists((string)(outDir+varName+"_preFit_areaScale.pdf"))){
     //Scaling to the area normalizaion
-    sigHist->Scale(scale);
-    bkgTotHist->Scale(scale);
+    //sigHist->Scale(scale);
+    //bkgTotHist->Scale(scale);
 
     TCanvas* c1 = DrawSigBKGFromMnvH1Ds(dataHist, sigHist, bkgTotHist);
     TPad* top = (TPad*)c1->GetPrimitive("Overlay");
@@ -314,10 +313,10 @@ int FitScaleFactorsAndDraw(MnvH1D* dataHist, map<TString, MnvH1D*> fitHistsAndNa
     c1->Print(outDir+varName+"_preFit_areaScale_log.png");  
     delete c1;
   
-    sigHist->Scale(1.0/scale);
-    bkgTotHist->Scale(1.0/scale);
+    //sigHist->Scale(1.0/scale);
+    //bkgTotHist->Scale(1.0/scale);
   }
-
+  /*
   sigHist->Scale(scale0);
   bkgTotHist->Scale(scale1);
 
