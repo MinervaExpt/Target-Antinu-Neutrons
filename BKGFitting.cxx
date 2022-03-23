@@ -347,6 +347,9 @@ int FitScaleFactorsAndDraw(MnvH1D* dataHist, map<TString, MnvH1D*> fitHistsAndNa
     cout << bandName << endl;
     const auto univs = fitHistsAndNames.begin()->second->GetVertErrorBand(bandName)->GetHists();
     for (size_t whichUniv=0; whichUniv < univs.size(); ++ whichUniv){
+      cout << "" << endl;
+      cout << "Fitting Universe " << whichUniv << " in " << bandName << " error band." << endl;
+      
       vector<TH1D*> fitHistsUniv = {};
       vector<TH1D*> unfitHistsUniv = {};
       
@@ -358,38 +361,36 @@ int FitScaleFactorsAndDraw(MnvH1D* dataHist, map<TString, MnvH1D*> fitHistsAndNa
 	unfitHistsUniv.push_back((TH1D*)hists.second->GetVertErrorBand(bandName)->GetHist(whichUniv)->Clone());
       }
 
-
       fit::ScaleFactors funcUniv(fitHistsUniv,unfitHistsUniv,hData,lowBin,hiBin);
-      /*
-      auto* mini = new ROOT::Minuit2::Minuit2Minimizer(ROOT::Minuit2::kMigrad);
 
-      int nextPar = 0;
+      auto* miniUniv = new ROOT::Minuit2::Minuit2Minimizer(ROOT::Minuit2::kMigrad);
+
+      int parNext = 0;
       for (auto hist:fitHistsAndNames){
 	string var = hist.first.Data();
-	mini->SetVariable(nextPar,var,1.0,1.0);
-	nextPar++;
+	miniUniv->SetVariable(parNext,var,1.0,1.0);
+	parNext++;
       }
       
-      if (nextPar != func.NDim()){
+      if (parNext != funcUniv.NDim()){
 	cout << "The number of parameters was unexpected for some reason..." << endl;
 	return 6;
       }
       
-      mini->SetFunction(func);
+      miniUniv->SetFunction(funcUniv);
       
-      if (!mini->Minimize()){
+      if (!miniUniv->Minimize()){
 	cout << "FIT FAILED" << endl;
 	cout << "Printing Results." << endl;
-	mini->PrintResults();
-	printCorrMatrix(*mini, func.NDim());
+	miniUniv->PrintResults();
+	printCorrMatrix(*miniUniv, funcUniv.NDim());
       }
       else{
 	cout << "FIT SUCCEEDED" << endl;
 	cout << "Printing Results." << endl;
-	mini->PrintResults();
-	printCorrMatrix(*mini, func.NDim());
+	miniUniv->PrintResults();
+	printCorrMatrix(*miniUniv, funcUniv.NDim());
       }
-  */    
     }
   }
   
