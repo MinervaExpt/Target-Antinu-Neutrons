@@ -1,7 +1,7 @@
 //File: BKGFitting.cxx
 //Info: This script is intended to fit recoil/pTmu plots using TMinuit primarily for the neutron selected sample.
 //
-//Usage: BKGFitting <mc_file> <data_file> <outdir> <recoil/pT> optional: <lowFitBinNum> <hiFitBinNum> <do fits in bins of muon momentum (only 0 means no)> TODO: Save the information beyond just printing it out
+//Usage: BKGFitting <mc_file> <data_file> <outdir> <recoil/pT> optional: <mainTagName> <lowFitBinNum> <hiFitBinNum> <do fits in bins of muon momentum (only 0 means no)> TODO: Save the information beyond just printing it out
 //Author: David Last dlast@sas.upenn.edu/lastd44@gmail.com
 
 //TODO: Same SegFault Business From My Plotting Code... I'm assuming I just need to delete things carefully that I'm not yet.
@@ -348,7 +348,7 @@ int main(int argc, char* argv[]) {
   #endif
 
   //Pass an input file name to this script now
-  if (argc < 5 || argc > 8) {
+  if (argc < 5 || argc > 9) {
     cout << "Check usage..." << endl;
     return 2;
   }
@@ -362,9 +362,9 @@ int main(int argc, char* argv[]) {
   int lowBin = 1;//Will be truncated later. Lowest allowed value for pT or recoil fits.
   int hiBin = 50;//Will be truncated later. Highest allowed value for pT or recoil fits.
   TString mainTag = "";
-  if (argc > 5) lowBin = max(atoi(argv[5]),1);//Not allowed lower than 1
-  if (argc > 6) hiBin = min(50, atoi(argv[6]));//Not allowed higher than 50
-  if (argc > 7) fitMuonBins = atoi(argv[7]);
+  if (argc > 6) lowBin = max(atoi(argv[6]),1);//Not allowed lower than 1
+  if (argc > 7) hiBin = min(50, atoi(argv[7]));//Not allowed higher than 50
+  if (argc > 8) fitMuonBins = atoi(argv[8]);
 
   string rootExt = ".root";
   string slash = "/";
@@ -417,11 +417,11 @@ int main(int argc, char* argv[]) {
   cout << "Input Data file name parsed to: " << fileNameStub << endl;
 
   if (varName == "pTmu"){
-    if (lowBin >= 12){
-      cout << "Not a valid fitting range for pTmu. Maximum bin is 12." << endl;
+    if (lowBin >= 14){
+      cout << "Not a valid fitting range for pTmu. Maximum bin is 14." << endl;
       return 100;
     }
-    hiBin = min(12,hiBin);
+    hiBin = min(14,hiBin);
     mainTag = "_RecoilSB";
   }
   else if (varName == "recoilE"){
@@ -432,6 +432,8 @@ int main(int argc, char* argv[]) {
     cout << "Not a valid variable name to fit." << endl;
     return 111;
   }
+  if (argc > 5) mainTag = argv[5];
+
   //cout << "Setting up MnvPlotter" << endl;
   //MnvPlotter* plotter = new MnvPlotter(kCCQEAntiNuStyle);
 
