@@ -62,7 +62,7 @@
 using namespace std;
 using namespace PlotUtils;
 
-map<int, TString> colors = {{0,"#117733"},{1,"#CC6677"},{2,"#882255"}};
+map<int, TString> colors = {{0,"#117733"},{1,"#CC6677"},{2,"#88CCEE"}};
 
 bool PathExists(string path){
   struct stat buffer;
@@ -181,7 +181,7 @@ TCanvas* DrawFromMnvH1Ds(MnvH1D* h_data, map<TString, MnvH1D*> hFit, map<TString
  
   leg->AddEntry(dataHist,"DATA");
   leg->AddEntry(h_sig,"Signal");
-  for (auto hist:hFit) leg->AddEntry(hist.second,hist.first);
+  for (auto hist = hFit.rbegin(); hist != hFit.rend(); ++hist) leg->AddEntry(hist->second,hist->first);
   if (!allFit) leg->AddEntry(unfitSum,"Not fit BKGs");
 
   leg->Draw();
@@ -232,13 +232,12 @@ TCanvas* DrawFromMnvH1Ds(MnvH1D* h_data, map<TString, MnvH1D*> hFit, map<TString
 int FitScaleFactorsAndDraw(MnvH1D* dataHist, map<TString, MnvH1D*> fitHistsAndNames, map<TString, MnvH1D*> unfitHistsAndNames, TString varName, TString outDir, int lowBin, int hiBin){
   TString name = varName+"_low_"+(TString)(to_string(lowBin))+"_hi_"+(TString)(to_string(hiBin));
 
-  /*
-  if (PathExists((string)(outDir+name+"_postFit_fitScaleONLY.pdf"))){
+
+  if (PathExists((string)(outDir+name+"_postFit.pdf"))){
     cout << "Already performed fits over this range for this histo." << endl;
     cout << "If you are doing this because of updated histos, it is in your best interest to save this elsewhere or remove the old plots." << endl;
     return 6;
   }
-  */
 
   TH1D* hData = (TH1D*)dataHist->GetCVHistoWithStatError().Clone();
   vector<TH1D*> fitHists = {};
@@ -301,80 +300,35 @@ int FitScaleFactorsAndDraw(MnvH1D* dataHist, map<TString, MnvH1D*> fitHistsAndNa
   cout << "Trying to draw pre-scaling." << endl;
 
   //TODO: ONLY DRAW THE PREFIT IF IT HASN'T BEEN DONE ALREADY.
-  if (!PathExists((string)(outDir+varName+"_preFit_POTScale.pdf"))){
+  if (!PathExists((string)(outDir+varName+"_preFit.pdf"))){
     TCanvas* c1 = DrawFromMnvH1Ds(dataHist,fitHistsAndNames,unfitHistsAndNames);
     TPad* top = (TPad*)c1->GetPrimitive("Overlay");
-    c1->Print(outDir+varName+"_preFit_POTScale.pdf");
-    c1->Print(outDir+varName+"_preFit_POTScale.png");
+    c1->Print(outDir+varName+"_preFit.pdf");
+    c1->Print(outDir+varName+"_preFit.png");
     top->SetLogy();
     c1->Update();
-    c1->Print(outDir+varName+"_preFit_POTScale_log.pdf");
-    c1->Print(outDir+varName+"_preFit_POTScale_log.png");  
+    c1->Print(outDir+varName+"_preFit_log.pdf");
+    c1->Print(outDir+varName+"_preFit_log.png");  
     delete c1;
   }
-  /*
-  if (!PathExists((string)(outDir+varName+"_preFit_areaScale.pdf"))){
-    //Scaling to the area normalizaion
-    //sigHist->Scale(scale);
-    //bkgTotHist->Scale(scale);
 
-    TCanvas* c1 = DrawSigBKGFromMnvH1Ds(dataHist, sigHist, bkgTotHist);
-    TPad* top = (TPad*)c1->GetPrimitive("Overlay");
-    c1->Print(outDir+varName+"_preFit_areaScale.pdf");
-    c1->Print(outDir+varName+"_preFit_areaScale.png");
-    top->SetLogy();
-    c1->Update();
-    c1->Print(outDir+varName+"_preFit_areaScale_log.pdf");
-    c1->Print(outDir+varName+"_preFit_areaScale_log.png");  
-    delete c1;
-  
-    //sigHist->Scale(1.0/scale);
-    //bkgTotHist->Scale(1.0/scale);
+  for (auto hist:fitHistsAndNames){
+    hist.second->Scale(scaleByName[hist.first]);
   }
   
-  sigHist->Scale(scale0);
-  bkgTotHist->Scale(scale1);
-
-  TCanvas* c1 = DrawSigBKGFromMnvH1Ds(dataHist, sigHist, bkgTotHist);
+  TCanvas* c1 = DrawFromMnvH1Ds(dataHist,fitHistsAndNames,unfitHistsAndNames);
   TPad* top = (TPad*)c1->GetPrimitive("Overlay");
-  c1->Print(outDir+name+"_postFit_fitScaleONLY.pdf");
-  c1->Print(outDir+name+"_postFit_fitScaleONLY.png");
+  c1->Print(outDir+name+"_postFit.pdf");
+  c1->Print(outDir+name+"_postFit.png");
   top->SetLogy();
   c1->Update();
-  c1->Print(outDir+name+"_postFit_fitScaleONLY_log.pdf");
-  c1->Print(outDir+name+"_postFit_fitScaleONLY_log.png");  
+  c1->Print(outDir+name+"_postFit_log.pdf");
+  c1->Print(outDir+name+"_postFit_log.png");  
   delete c1;
 
-  sigHist->Scale(1.0/scale0);
-  bkgTotHist->Scale(1.0/scale1);
-
-  sigHist->Scale(scale0_full);
-  bkgTotHist->Scale(scale1_full);
-
-  c1 = DrawSigBKGFromMnvH1Ds(dataHist, sigHist, bkgTotHist);
-  top = (TPad*)c1->GetPrimitive("Overlay");
-  c1->Print(outDir+name+"_postFit_fitAreaScale.pdf");
-  c1->Print(outDir+name+"_postFit_fitAreaScale.png");
-  top->SetLogy();
-  c1->Update();
-  c1->Print(outDir+name+"_postFit_fitAreaScale_log.pdf");
-  c1->Print(outDir+name+"_postFit_fitAreaScale_log.png");  
-  delete c1;
-
-
-  sigHist->Scale(1.0/scale0_full);
-  bkgTotHist->Scale(1.0/scale1_full);
-
-  c1 = DrawSigBKGFromMnvH1Ds(dataHist, sigHist, bkgTotHist);
-  top = (TPad*)c1->GetPrimitive("Overlay");
-  c1->Print(outDir+varName+"_checkScaling.pdf");
-  c1->Print(outDir+varName+"_checkScaling.png");
-  top->SetLogy();
-  c1->Update();
-  c1->Print(outDir+varName+"_checkScaling_log.pdf");
-  c1->Print(outDir+varName+"_checkScaling_log.png");  
-  delete c1;
-  */
+  for (auto hist:fitHistsAndNames){
+    hist.second->Scale(1.0/scaleByName[hist.first]);
+  }
 
   return 0;
 }
