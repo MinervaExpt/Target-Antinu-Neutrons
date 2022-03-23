@@ -1,7 +1,7 @@
 //File: BKGFitting.cxx
-//Info: This script is intended to fit recoil plots using TMinuit
+//Info: This script is intended to fit recoil/pTmu plots using TMinuit primarily for the neutron selected sample.
 //
-//Usage: BKGFitting <mc_file> <data_file> <outdir> <do fits in bins of muon momentum (only 0 means no)> optional: <lowFitBinNum> <hiFitBinNum> TODO: Save the information beyond just printing it out
+//Usage: BKGFitting <mc_file> <data_file> <outdir> <recoil/pT> optional: <lowFitBinNum> <hiFitBinNum> <do fits in bins of muon momentum (only 0 means no)> TODO: Save the information beyond just printing it out
 //Author: David Last dlast@sas.upenn.edu/lastd44@gmail.com
 
 //TODO: Same SegFault Business From My Plotting Code... I'm assuming I just need to delete things carefully that I'm not yet.
@@ -140,16 +140,20 @@ TCanvas* DrawFromMnvH1Ds(MnvH1D* h_data, map<TString, MnvH1D*> hFit, map<TString
 
   iHist = 0;
   for (auto hist:hFit){
-    hist.second->SetLineColor(TColor::GetColor(colors[iHist%3]));
-    hist.second->SetFillColor(TColor::GetColor(colors[iHist%3]));
-    iHist++;
+    if (hist.first != "Signal"){
+      hist.second->SetLineColor(TColor::GetColor(colors[iHist%3]));
+      hist.second->SetFillColor(TColor::GetColor(colors[iHist%3]));
+      iHist++;
+    }
   }
 
   //cout << "Stacking hists." << endl;
 
   THStack* h = new THStack();
   if(!allFit) h->Add((TH1D*)unfitSum->GetCVHistoWithError().Clone());
-  for (auto hist:hFit) h->Add((TH1D*)hist.second->GetCVHistoWithError().Clone());
+  for (auto hist:hFit){
+    if(hist.first != "Signal") h->Add((TH1D*)hist.second->GetCVHistoWithError().Clone());
+  }
   h->Add((TH1D*)h_sig->GetCVHistoWithError().Clone());
 
   TH1D* dataHist = (TH1D*)h_data->GetCVHistoWithError().Clone();
@@ -181,7 +185,9 @@ TCanvas* DrawFromMnvH1Ds(MnvH1D* h_data, map<TString, MnvH1D*> hFit, map<TString
  
   leg->AddEntry(dataHist,"DATA");
   leg->AddEntry(h_sig,"Signal");
-  for (auto hist = hFit.rbegin(); hist != hFit.rend(); ++hist) leg->AddEntry(hist->second,hist->first);
+  for (auto hist = hFit.rbegin(); hist != hFit.rend(); ++hist){
+    if (hist->first != "Signal") leg->AddEntry(hist->second,hist->first);
+  }
   if (!allFit) leg->AddEntry(unfitSum,"Not fit BKGs");
 
   leg->Draw();
@@ -342,7 +348,7 @@ int main(int argc, char* argv[]) {
   #endif
 
   //Pass an input file name to this script now
-  if (argc < 5 || argc > 7) {
+  if (argc < 5 || argc > 8) {
     cout << "Check usage..." << endl;
     return 2;
   }
@@ -350,19 +356,15 @@ int main(int argc, char* argv[]) {
   string MCfileName = string(argv[1]);
   string DATAfileName = string(argv[2]);
   string outDir = string(argv[3]);
-  int fitMuonBins = atoi(argv[4]);
+  TString varName= argv[4];
+  int fitMuonBins = 0;
 
-  //int lowBin = 11;//For 200 MeV for the neutron sample.
-  int lowBin = 26;//For 100 MeV for the no neutron sample.
-  int hiBin = 50;
-  int binWidth = 20;//hard-coded from the recoil variable for now.
-  if (argc > 5) lowBin = atoi(argv[5])/binWidth + 1;//Will truncate to the lower value of the bin this energy falls into.
-  if (argc > 6) hiBin = atoi(argv[6])/binWidth;//Truncates to the lower value of the bin this energy falls into... Is the high bin inclusive in the fit or exclusive? I'm treating as inclusive so no "+1".
-
-  if (hiBin > 50){
-    cout << "Fit can only extend to 1 GeV recoil energy. Forcing that value now." << endl;
-    hiBin=50;
-  }
+  int lowBin = 1;//Will be truncated later. Lowest allowed value for pT or recoil fits.
+  int hiBin = 50;//Will be truncated later. Highest allowed value for pT or recoil fits.
+  TString mainTag = "";
+  if (argc > 5) lowBin = max(atoi(argv[5]),1);//Not allowed lower than 1
+  if (argc > 6) hiBin = min(50, atoi(argv[6]));//Not allowed higher than 50
+  if (argc > 7) fitMuonBins = atoi(argv[7]);
 
   string rootExt = ".root";
   string slash = "/";
@@ -414,6 +416,22 @@ int main(int argc, char* argv[]) {
 
   cout << "Input Data file name parsed to: " << fileNameStub << endl;
 
+  if (varName == "pTmu"){
+    if (lowBin >= 12){
+      cout << "Not a valid fitting range for pTmu. Maximum bin is 12." << endl;
+      return 100;
+    }
+    hiBin = min(12,hiBin);
+    mainTag = "_RecoilSB";
+  }
+  else if (varName == "recoilE"){
+    if (argc < 6) lowBin = 26;
+    mainTag = "_PreRecoilCut";
+  }
+  else {
+    cout << "Not a valid variable name to fit." << endl;
+    return 111;
+  }
   //cout << "Setting up MnvPlotter" << endl;
   //MnvPlotter* plotter = new MnvPlotter(kCCQEAntiNuStyle);
 
@@ -423,7 +441,7 @@ int main(int argc, char* argv[]) {
   TParameter<double>* mcPOT = (TParameter<double>*)mcFile->Get("POTUsed");
   TParameter<double>* dataPOT = (TParameter<double>*)dataFile->Get("POTUsed");
 
-  vector<TString> tags = {"_PreRecoilCut"};
+  vector<TString> tags = {mainTag};
   if (fitMuonBins){
     tags.push_back((TString)("_bin_lost"));
     for (int iBin=0; iBin < 14; ++iBin){
@@ -436,7 +454,7 @@ int main(int argc, char* argv[]) {
   double POTscale = dataPOT->GetVal()/mcPOT->GetVal();
   //cout << "POT scale factor: " << scale << endl;
   
-  TString varName = "recoilE";
+  //TString varName = "recoilE";
 
   for (int iTag=0; iTag < tags.size(); ++iTag){
 
@@ -490,27 +508,27 @@ int main(int argc, char* argv[]) {
 
     fitHists1["single #pi^{#pm}"]=chargePiHist;
     fitHists1["N#pi & single #pi^{#0}"]=bkgNNeutPiHist;
-    unfitHists1["Signal"]=sigHist;
+    fitHists1["Signal"]=sigHist;
     unfitHists1["Other"]=otherHist;
 
     fitHists2["single #pi"]=bkg1PiHist;
     fitHists2["N#pi"]=NPiHist;
-    unfitHists2["Signal"]=sigHist;
+    fitHists2["Signal"]=sigHist;
     unfitHists2["Other"]=otherHist;
 
     fitHists3["single #pi^{#pm}"]=chargePiHist;
     fitHists3["single #pi^{0}"]=neutPiHist;
     fitHists3["N#pi"]=NPiHist;
-    unfitHists3["Signal"]=sigHist;
+    fitHists3["Signal"]=sigHist;
     unfitHists3["Other"]=otherHist;
 
     fitHists4["RES"]=RESHist;
     fitHists4["non-RES"]=bkgNonRESHist;
-    unfitHists4["Signal"]=sigHist;
+    fitHists4["Signal"]=sigHist;
 
     fitHists5["RES"]=RESHist;
     fitHists5["DIS"]=DISHist;
-    unfitHists5["Signal"]=sigHist;
+    fitHists5["Signal"]=sigHist;
     unfitHists5["QE"]=QEHist;
     unfitHists5["2p2h"]=MECHist;
     unfitHists5["Other"]=OtherIntTypeHist;
