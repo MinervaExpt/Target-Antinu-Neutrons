@@ -245,6 +245,19 @@ int FitScaleFactorsAndDraw(MnvH1D* dataHist, map<TString, MnvH1D*> fitHistsAndNa
     return 6;
   }
 
+  //TODO: ONLY DRAW THE PREFIT IF IT HASN'T BEEN DONE ALREADY.
+  if (!PathExists((string)(outDir+varName+"_preFit.pdf"))){
+    TCanvas* c1 = DrawFromMnvH1Ds(dataHist,fitHistsAndNames,unfitHistsAndNames,sigFit);
+    TPad* top = (TPad*)c1->GetPrimitive("Overlay");
+    c1->Print(outDir+varName+"_preFit.pdf");
+    c1->Print(outDir+varName+"_preFit.png");
+    top->SetLogy();
+    c1->Update();
+    c1->Print(outDir+varName+"_preFit_log.pdf");
+    c1->Print(outDir+varName+"_preFit_log.png");  
+    delete c1;
+  }
+
   TH1D* hData = (TH1D*)dataHist->GetCVHistoWithStatError().Clone();
   vector<TH1D*> fitHists = {};
   vector<TH1D*> unfitHists = {};
@@ -303,43 +316,14 @@ int FitScaleFactorsAndDraw(MnvH1D* dataHist, map<TString, MnvH1D*> fitHistsAndNa
   }
   */
 
-  cout << "Trying to draw pre-scaling." << endl;
+  //cout << "Trying to draw pre-scaling." << endl;
 
-  /*
-  //TODO: ONLY DRAW THE PREFIT IF IT HASN'T BEEN DONE ALREADY.
-  if (!PathExists((string)(outDir+varName+"_preFit.pdf"))){
-    TCanvas* c1 = DrawFromMnvH1Ds(dataHist,fitHistsAndNames,unfitHistsAndNames,sigFit);
-    TPad* top = (TPad*)c1->GetPrimitive("Overlay");
-    c1->Print(outDir+varName+"_preFit.pdf");
-    c1->Print(outDir+varName+"_preFit.png");
-    top->SetLogy();
-    c1->Update();
-    c1->Print(outDir+varName+"_preFit_log.pdf");
-    c1->Print(outDir+varName+"_preFit_log.png");  
-    delete c1;
-  }
-
+  cout << "Scaling the entire MnvH1D first." << endl;
   for (auto hist:fitHistsAndNames){
     hist.second->Scale(scaleByName[hist.first]);
   }
-  
-  TCanvas* c1 = DrawFromMnvH1Ds(dataHist,fitHistsAndNames,unfitHistsAndNames,sigFit);
-  TPad* top = (TPad*)c1->GetPrimitive("Overlay");
-  c1->Print(outDir+name+"_postFit.pdf");
-  c1->Print(outDir+name+"_postFit.png");
-  top->SetLogy();
-  c1->Update();
-  c1->Print(outDir+name+"_postFit_log.pdf");
-  c1->Print(outDir+name+"_postFit_log.png");  
-  delete c1;
-  */
 
-  //for (auto hist:fitHistsAndNames){
-  //hist.second->Scale(1.0/scaleByName[hist.first]);
-  //}
-  
-  cout << "Drawing of CV scale completed." << endl;
-  cout << "Looping over systematic universes to get the loop going" << endl;
+  cout << "Looping over systematic universes." << endl;
 
   //Info here largely lifted from Andrew's fitting script.
   map<TString, TH1D*> scaleFactorHists;
@@ -402,10 +386,11 @@ int FitScaleFactorsAndDraw(MnvH1D* dataHist, map<TString, MnvH1D*> fitHistsAndNa
 	miniUniv->PrintResults();
 	printCorrMatrix(*miniUniv, funcUniv.NDim());
       }
-
+      
       const double* scaleResultsUniv = miniUniv->X();
       parNext=0;
       for (auto hist:fitHistsAndNames){
+	hist.second->GetVertErrorBand(bandName)->GetHist(whichUniv)->Scale(scaleResultsUniv[parNext]);	
 	scaleFactorHists[hist.first]->Fill(quelUniv,scaleResultsUniv[parNext]);
 	++parNext;
       }
@@ -423,6 +408,18 @@ int FitScaleFactorsAndDraw(MnvH1D* dataHist, map<TString, MnvH1D*> fitHistsAndNa
     c1->Print(outDir+hist.second->GetName()+".png");
   }
   delete c1;
+  
+  c1 = DrawFromMnvH1Ds(dataHist,fitHistsAndNames,unfitHistsAndNames,sigFit);
+  TPad* top = (TPad*)c1->GetPrimitive("Overlay");
+  c1->Print(outDir+name+"_postFit.pdf");
+  c1->Print(outDir+name+"_postFit.png");
+  top->SetLogy();
+  c1->Update();
+  c1->Print(outDir+name+"_postFit_log.pdf");
+  c1->Print(outDir+name+"_postFit_log.png");  
+  delete c1;
+  
+  cout << "Drawing of CV scale completed." << endl;
 
   return 0;
 }
@@ -596,32 +593,32 @@ int main(int argc, char* argv[]) {
     map<TString, MnvH1D*> fitHists4, unfitHists4;
     map<TString, MnvH1D*> fitHists5, unfitHists5;
 
-    fitHists1["single #pi^{#pm}"]=chargePiHist;
-    fitHists1["N#pi & single #pi^{#0}"]=bkgNNeutPiHist;
-    fitHists1["Signal"]=sigHist;
-    unfitHists1["Other"]=otherHist;
+    fitHists1["single #pi^{#pm}"]=(MnvH1D*)chargePiHist->Clone();
+    fitHists1["N#pi & single #pi^{#0}"]=(MnvH1D*)bkgNNeutPiHist->Clone();
+    fitHists1["Signal"]=(MnvH1D*)sigHist->Clone()->Clone();
+    unfitHists1["Other"]=(MnvH1D*)otherHist->Clone();
 
-    fitHists2["single #pi"]=bkg1PiHist;
-    fitHists2["N#pi"]=NPiHist;
-    fitHists2["Signal"]=sigHist;
-    unfitHists2["Other"]=otherHist;
+    fitHists2["single #pi"]=(MnvH1D*)bkg1PiHist->Clone();
+    fitHists2["N#pi"]=(MnvH1D*)NPiHist->Clone();
+    fitHists2["Signal"]=(MnvH1D*)sigHist->Clone();
+    unfitHists2["Other"]=(MnvH1D*)otherHist->Clone();
 
-    fitHists3["single #pi^{#pm}"]=chargePiHist;
-    fitHists3["single #pi^{0}"]=neutPiHist;
-    fitHists3["N#pi"]=NPiHist;
-    fitHists3["Signal"]=sigHist;
-    unfitHists3["Other"]=otherHist;
+    fitHists3["single #pi^{#pm}"]=(MnvH1D*)chargePiHist->Clone();
+    fitHists3["single #pi^{0}"]=(MnvH1D*)neutPiHist->Clone();
+    fitHists3["N#pi"]=(MnvH1D*)NPiHist->Clone();
+    fitHists3["Signal"]=(MnvH1D*)sigHist->Clone();
+    unfitHists3["Other"]=(MnvH1D*)otherHist->Clone();
 
-    fitHists4["RES"]=RESHist;
-    fitHists4["non-RES"]=bkgNonRESHist;
-    fitHists4["Signal"]=sigHist;
+    fitHists4["RES"]=(MnvH1D*)RESHist->Clone();
+    fitHists4["non-RES"]=(MnvH1D*)bkgNonRESHist->Clone();
+    fitHists4["Signal"]=(MnvH1D*)sigHist->Clone();
 
-    fitHists5["RES"]=RESHist;
-    fitHists5["DIS"]=DISHist;
-    fitHists5["Signal"]=sigHist;
-    unfitHists5["QE"]=QEHist;
-    unfitHists5["2p2h"]=MECHist;
-    unfitHists5["Other"]=OtherIntTypeHist;
+    fitHists5["RES"]=(MnvH1D*)RESHist->Clone();
+    fitHists5["DIS"]=(MnvH1D*)DISHist->Clone();
+    fitHists5["Signal"]=(MnvH1D*)sigHist->Clone();
+    unfitHists5["QE"]=(MnvH1D*)QEHist->Clone();
+    unfitHists5["2p2h"]=(MnvH1D*)MECHist->Clone();
+    unfitHists5["Other"]=(MnvH1D*)OtherIntTypeHist->Clone();
 
     cout << "Fitting 1" << endl;
     int result = FitScaleFactorsAndDraw(dataHist, fitHists1, unfitHists1, name+"_fit1", outDir, lowBin, hiBin, true);
