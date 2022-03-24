@@ -1180,7 +1180,8 @@ int main(int argc, char* argv[]) {
     //cout << key->GetName() << endl;
     pos=0;
     string name=(string)key->GetName();
-    if((pos = name.find("_sig_IntType_QE")) != string::npos){
+    if((pos=name.find("TwoD")) != string::npos) continue;
+    else if((pos = name.find("_sig_IntType_QE")) != string::npos){
       TCanvas* c1 = DrawIntType(name,mcFile,dataFile,label,scale);
       TPad* top = (TPad*)c1->GetPrimitive("Overlay");
       name.erase(name.length()-15,name.length());
