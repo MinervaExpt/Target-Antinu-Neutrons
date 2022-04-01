@@ -202,6 +202,8 @@ class Variable2D: public PlotUtils::Variable2DBase<CVUniverse>
       if(selectedSignalReco) selectedSignalReco->SyncCVHistos();
       if(selectedMCReco) selectedMCReco->SyncCVHistos();
     }
+
+    void SetDirectoryName(std::string name){fDirName = name;}
 };
 
 #endif //VARIABLE2D_H

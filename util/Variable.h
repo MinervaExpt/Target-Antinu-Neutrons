@@ -223,6 +223,8 @@ class Variable: public PlotUtils::VariableBase<CVUniverse>
       if(selectedMCReco) selectedMCReco->SyncCVHistos();
       if(migration) migration->SyncCVHistos();
     }
+
+    void SetDirectoryName(std::string name){fDirName = name;}
 };
 
 #endif //VARIABLE_H
