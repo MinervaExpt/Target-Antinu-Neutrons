@@ -47,38 +47,38 @@ class Variable2D: public PlotUtils::Variable2DBase<CVUniverse>
                                                        {9, "mu"},
                                                        {1, "None"}};
       
-      m_backgroundHists = new util::Categorized<Hist, int>((fDirName+"_"+GetName() + "_by_BKG_Label").c_str(),
-							   (fDirName+"_" + GetName()).c_str(), BKGLabels,
+      m_backgroundHists = new util::Categorized<Hist, int>(("TwoD_"+GetName() + "_by_BKG_Label").c_str(),
+							   ("TwoD_" + GetName()).c_str(), BKGLabels,
 							   GetBinVecX(), GetBinVecY(), mc_error_bands);
 
-      m_SigIntTypeHists = new util::Categorized<Hist, int>((fDirName+"_"+GetName() + "_sig_IntType").c_str(),
-                                                           (fDirName+"_"+GetName()).c_str(), IntTypeLabels,
+      m_SigIntTypeHists = new util::Categorized<Hist, int>(("TwoD_"+GetName() + "_sig_IntType").c_str(),
+                                                           ("TwoD_"+GetName()).c_str(), IntTypeLabels,
                                                            GetBinVecX(), GetBinVecY(), mc_error_bands);
 
-      m_SigTargetTypeHists = new util::Categorized<Hist, int>((fDirName+"_"+GetName() + "_sig_TargetType").c_str(),
-							      (fDirName+"_"+GetName()).c_str(), TargetTypeLabels,
+      m_SigTargetTypeHists = new util::Categorized<Hist, int>(("TwoD_"+GetName() + "_sig_TargetType").c_str(),
+							      ("TwoD_"+GetName()).c_str(), TargetTypeLabels,
 							      GetBinVecX(), GetBinVecY(), mc_error_bands);
 
-      m_SigLeadBlobTypeHists = new util::Categorized<Hist, int>((fDirName+"_"+GetName() + "_sig_LeadBlobType").c_str(),
-								(fDirName+"_"+GetName()).c_str(), LeadBlobTypeLabels,
+      m_SigLeadBlobTypeHists = new util::Categorized<Hist, int>(("TwoD_"+GetName() + "_sig_LeadBlobType").c_str(),
+								("TwoD_"+GetName()).c_str(), LeadBlobTypeLabels,
 								GetBinVecX(), GetBinVecY(), mc_error_bands);
 
-      m_BkgIntTypeHists = new util::Categorized<Hist, int>((fDirName+"_"+GetName() + "_bkg_IntType").c_str(),
-                                                           (fDirName+"_"+GetName()).c_str(), IntTypeLabels,
+      m_BkgIntTypeHists = new util::Categorized<Hist, int>(("TwoD_"+GetName() + "_bkg_IntType").c_str(),
+                                                           ("TwoD_"+GetName()).c_str(), IntTypeLabels,
                                                            GetBinVecX(), GetBinVecY(), mc_error_bands);
 
-      m_BkgTargetTypeHists = new util::Categorized<Hist, int>((fDirName+"_"+GetName() + "_bkg_TargetType").c_str(),
-							      (fDirName+"_"+GetName()).c_str(), TargetTypeLabels,
+      m_BkgTargetTypeHists = new util::Categorized<Hist, int>(("TwoD_"+GetName() + "_bkg_TargetType").c_str(),
+							      ("TwoD_"+GetName()).c_str(), TargetTypeLabels,
 							      GetBinVecX(), GetBinVecY(), mc_error_bands);
 
-      m_BkgLeadBlobTypeHists = new util::Categorized<Hist, int>((fDirName+"_"+GetName() + "_bkg_LeadBlobType").c_str(),
-								(fDirName+"_"+GetName()).c_str(), LeadBlobTypeLabels,
+      m_BkgLeadBlobTypeHists = new util::Categorized<Hist, int>(("TwoD_"+GetName() + "_bkg_LeadBlobType").c_str(),
+								("TwoD_"+GetName()).c_str(), LeadBlobTypeLabels,
 								GetBinVecX(), GetBinVecY(), mc_error_bands);
 
-      efficiencyNumerator = new Hist((fDirName+"_" + GetName() + "_efficiency_numerator").c_str(), (fDirName+"_"+GetName()).c_str(), GetBinVecX(), GetBinVecY(), mc_error_bands);
-      efficiencyDenominator = new Hist((fDirName+"_" + GetName() + "_efficiency_denominator").c_str(), (fDirName+"_" + GetName()).c_str(), GetBinVecX(), GetBinVecY(), truth_error_bands);
-      selectedSignalReco = new Hist((fDirName+"_" + GetName() + "_selected_signal_reco").c_str(),  (fDirName+"_"+GetName()).c_str(), GetBinVecX(), GetBinVecY(), mc_error_bands);
-      selectedMCReco = new Hist((fDirName+"_" + GetName() + "_selected_mc_reco").c_str(),  (fDirName+"_"+GetName()).c_str(), GetBinVecX(), GetBinVecY(), mc_error_bands);
+      efficiencyNumerator = new Hist(("TwoD_" + GetName() + "_efficiency_numerator").c_str(), ("TwoD_"+GetName()).c_str(), GetBinVecX(), GetBinVecY(), mc_error_bands);
+      efficiencyDenominator = new Hist(("TwoD_" + GetName() + "_efficiency_denominator").c_str(), ("TwoD_" + GetName()).c_str(), GetBinVecX(), GetBinVecY(), truth_error_bands);
+      selectedSignalReco = new Hist(("TwoD_" + GetName() + "_selected_signal_reco").c_str(),  ("TwoD_"+GetName()).c_str(), GetBinVecX(), GetBinVecY(), mc_error_bands);
+      selectedMCReco = new Hist(("TwoD_" + GetName() + "_selected_mc_reco").c_str(),  ("TwoD_"+GetName()).c_str(), GetBinVecX(), GetBinVecY(), mc_error_bands);
     }
 
     //Histograms to be filled
@@ -100,85 +100,92 @@ class Variable2D: public PlotUtils::Variable2DBase<CVUniverse>
     void InitializeDATAHists(std::vector<CVUniverse*>& data_error_bands)
     {
       //const char* name = GetName().c_str();
-      dataHist = new Hist((fDirName+"_" + GetName() + "_data").c_str(), GetName().c_str(), GetBinVecX(), GetBinVecY(), data_error_bands);
+      dataHist = new Hist(("TwoD_" + GetName() + "_data").c_str(), GetName().c_str(), GetBinVecX(), GetBinVecY(), data_error_bands);
       //dataHist = new Hist(Form("_data_%s", name), name, GetBinVecX(), GetBinVecY(), data_error_bands);
     }
 
     void Write(TFile& file)
     {
       SyncCVHistos();
-      file.cd();
 
-      m_backgroundHists->visit([&file](Hist& categ)
+      TString dirName = (TString)(fDirName);
+      TDirectory* dir;
+      dir = file.GetDirectory(dirName);
+      if (dir == NULL){
+        file.mkdir(dirName);
+      }
+      dir = file.GetDirectory(dirName);
+
+      m_backgroundHists->visit([dir](Hist& categ)
                                     {
-                                      categ.hist->SetDirectory(&file);
-                                      categ.hist->Write(); //TODO: Or let the TFile destructor do this the "normal" way?                                                                                           
+                                      categ.hist->SetDirectory(dir);
+                                      //categ.hist->Write(); //TODO: Or let the TFile destructor do this the "normal" way?                                                                                           
                                     });
 
-      m_SigIntTypeHists->visit([&file](Hist& categ)
+      m_SigIntTypeHists->visit([dir](Hist& categ)
 			       {
-				 categ.hist->SetDirectory(&file);
-				 categ.hist->Write(); //TODO: Or let the TFile destructor do this the "normal" way?
+				 categ.hist->SetDirectory(dir);
+				 //categ.hist->Write(); //TODO: Or let the TFile destructor do this the "normal" way?
 			       });
 
-      m_SigTargetTypeHists->visit([&file](Hist& categ)
+      m_SigTargetTypeHists->visit([dir](Hist& categ)
 				  {
-				    categ.hist->SetDirectory(&file);
-				    categ.hist->Write(); //TODO: Or let the TFile destructor do this the "normal" way?
+				    categ.hist->SetDirectory(dir);
+				    //categ.hist->Write(); //TODO: Or let the TFile destructor do this the "normal" way?
 				  });
 
-      m_SigLeadBlobTypeHists->visit([&file](Hist& categ)
+      m_SigLeadBlobTypeHists->visit([dir](Hist& categ)
                                     {
-                                      categ.hist->SetDirectory(&file);
-                                      categ.hist->Write(); //TODO: Or let the TFile destructor do this the "normal" way?
+                                      categ.hist->SetDirectory(dir);
+                                      //categ.hist->Write(); //TODO: Or let the TFile destructor do this the "normal" way?
 				    });
 
-      m_BkgIntTypeHists->visit([&file](Hist& categ)
+      m_BkgIntTypeHists->visit([dir](Hist& categ)
 			       {
-				 categ.hist->SetDirectory(&file);
-				 categ.hist->Write(); //TODO: Or let the TFile destructor do this the "normal" way?
+				 categ.hist->SetDirectory(dir);
+				 //categ.hist->Write(); //TODO: Or let the TFile destructor do this the "normal" way?
 			       });
 
-      m_BkgTargetTypeHists->visit([&file](Hist& categ)
+      m_BkgTargetTypeHists->visit([dir](Hist& categ)
 				  {
-				    categ.hist->SetDirectory(&file);
-				    categ.hist->Write(); //TODO: Or let the TFile destructor do this the "normal" way?                                                                                           
+				    categ.hist->SetDirectory(dir);
+				    //categ.hist->Write(); //TODO: Or let the TFile destructor do this the "normal" way?                                                                                           
 				  });
 
-      m_BkgLeadBlobTypeHists->visit([&file](Hist& categ)
+      m_BkgLeadBlobTypeHists->visit([dir](Hist& categ)
                                     {
-                                      categ.hist->SetDirectory(&file);
-                                      categ.hist->Write(); //TODO: Or let the TFile destructor do this the "normal" way?
+                                      categ.hist->SetDirectory(dir);
+                                      //categ.hist->Write(); //TODO: Or let the TFile destructor do this the "normal" way?
 				    });
 
       /*
       if (dataHist->hist) {
-	dataHist->hist->SetDirectory(&file);
+	dataHist->hist->SetDirectory(dir);
 	dataHist->hist->Write();
       }
       */
 
       if(efficiencyNumerator)
       {
-        efficiencyNumerator->hist->SetDirectory(&file); //TODO: Can I get around having to call SetDirectory() this many times somehow?
-        efficiencyNumerator->hist->Write();
+        efficiencyNumerator->hist->SetDirectory(dir); //TODO: Can I get around having to call SetDirectory() this many times somehow?
+        //efficiencyNumerator->hist->Write();
       }
 
       if(efficiencyDenominator)
       {
-        efficiencyDenominator->hist->SetDirectory(&file);
-        efficiencyDenominator->hist->Write();
+        efficiencyDenominator->hist->SetDirectory(dir);
+        //efficiencyDenominator->hist->Write();
       }
       if(selectedSignalReco)
 	{
-	  selectedSignalReco->hist->SetDirectory(&file);
-	  selectedSignalReco->hist->Write();
+	  selectedSignalReco->hist->SetDirectory(dir);
+	  //selectedSignalReco->hist->Write();
 	}
 
       if(selectedMCReco)
 	{
-	  selectedMCReco->hist->SetDirectory(&file);
-	  selectedMCReco->hist->Write((fDirName+"_"+GetName() + "_data").c_str()); //Make this histogram look just like the data for closure tests
+	  selectedMCReco->hist->SetDirectory(dir);
+	  selectedMCReco->hist->SetName(("TwoD_"+GetName() + "_data").c_str()); //Make this histogram look just like the data for closure tests
 	}
     }
 

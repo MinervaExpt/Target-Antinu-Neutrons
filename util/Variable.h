@@ -116,89 +116,106 @@ class Variable: public PlotUtils::VariableBase<CVUniverse>
       dataHist = new Hist((GetName() + "_data").c_str(), (GetName()+";"+GetAxisLabel()).c_str(), GetBinVec(), data_error_bands);
     }
 
+    //Repurposing to not write but just set the directory. The writing will be handled by TFile::Write.
     void WriteData(TFile& file)
     {
+      TString dirName = (TString)(fDirName);
+      TDirectory* dir;
+      dir = file.GetDirectory(dirName);
+      if (dir == NULL){
+	file.mkdir(dirName);
+      }
+      dir = file.GetDirectory(dirName);
+      
       if (dataHist->hist) {
-                dataHist->hist->SetDirectory(&file);
-                dataHist->hist->Write();
+	dataHist->hist->SetDirectory(dir);
+	//dataHist->hist->Write();
       }
     }
 
+    //Repurposing to not write but just set the directory. The writing will be handled by TFile::Write.
     void WriteMC(TFile& file)
     {
       SyncCVHistos();
-      file.cd();
 
-      m_backgroundHists->visit([&file](Hist& categ)
+      TString dirName = (TString)(fDirName);
+      TDirectory* dir;
+      dir = file.GetDirectory(dirName);
+      if (dir == NULL){
+	file.mkdir(dirName);
+      }
+      dir = file.GetDirectory(dirName);
+
+      m_backgroundHists->visit([dir](Hist& categ)
                                     {
-                                      categ.hist->SetDirectory(&file);
-                                      categ.hist->Write(); //TODO: Or let the TFile destructor do this the "normal" way?                                                                                           
+                                      categ.hist->SetDirectory(dir);
+                                      //categ.hist->Write(); //TODO: Or let the TFile destructor do this the "normal" way?                                                                                           
                                     });
 
-      m_SigIntTypeHists->visit([&file](Hist& categ)
+      m_SigIntTypeHists->visit([dir](Hist& categ)
                                     {
-                                      categ.hist->SetDirectory(&file);
-                                      categ.hist->Write(); //TODO: Or let the TFile destructor do this the "normal" way?                                                                                           
+                                      categ.hist->SetDirectory(dir);
+                                      //categ.hist->Write(); //TODO: Or let the TFile destructor do this the "normal" way?                                                                                           
                                     });
 
-      m_SigTargetTypeHists->visit([&file](Hist& categ)
+      m_SigTargetTypeHists->visit([dir](Hist& categ)
                                     {
-                                      categ.hist->SetDirectory(&file);
-                                      categ.hist->Write(); //TODO: Or let the TFile destructor do this the "normal" way?                                                                                           
+                                      categ.hist->SetDirectory(dir);
+                                      //categ.hist->Write(); //TODO: Or let the TFile destructor do this the "normal" way?                                                                                           
                                     });
 
-      m_SigLeadBlobTypeHists->visit([&file](Hist& categ)
+      m_SigLeadBlobTypeHists->visit([dir](Hist& categ)
                                     {
-                                      categ.hist->SetDirectory(&file);
-                                      categ.hist->Write(); //TODO: Or let the TFile destructor do this the "normal" way?                                                                                           
+                                      categ.hist->SetDirectory(dir);
+                                      //categ.hist->Write(); //TODO: Or let the TFile destructor do this the "normal" way?                                                                                           
                                     });
 
-      m_BkgIntTypeHists->visit([&file](Hist& categ)
+      m_BkgIntTypeHists->visit([dir](Hist& categ)
                                     {
-                                      categ.hist->SetDirectory(&file);
-                                      categ.hist->Write(); //TODO: Or let the TFile destructor do this the "normal" way?                                                                                           
+                                      categ.hist->SetDirectory(dir);
+                                      //categ.hist->Write(); //TODO: Or let the TFile destructor do this the "normal" way?                                                                                           
                                     });
 
-      m_BkgTargetTypeHists->visit([&file](Hist& categ)
+      m_BkgTargetTypeHists->visit([dir](Hist& categ)
                                     {
-                                      categ.hist->SetDirectory(&file);
-                                      categ.hist->Write(); //TODO: Or let the TFile destructor do this the "normal" way?                                                                                           
+                                      categ.hist->SetDirectory(dir);
+                                      //categ.hist->Write(); //TODO: Or let the TFile destructor do this the "normal" way?                                                                                           
                                     });
 
-      m_BkgLeadBlobTypeHists->visit([&file](Hist& categ)
+      m_BkgLeadBlobTypeHists->visit([dir](Hist& categ)
                                     {
-                                      categ.hist->SetDirectory(&file);
-                                      categ.hist->Write(); //TODO: Or let the TFile destructor do this the "normal" way?                                                                                           
+                                      categ.hist->SetDirectory(dir);
+                                      //categ.hist->Write(); //TODO: Or let the TFile destructor do this the "normal" way?                                                                                           
                                     });
       
       if(efficiencyNumerator)
       {
-        efficiencyNumerator->hist->SetDirectory(&file); //TODO: Can I get around having to call SetDirectory() this many times somehow?
-        efficiencyNumerator->hist->Write();
+        efficiencyNumerator->hist->SetDirectory(dir); //TODO: Can I get around having to call SetDirectory() this many times somehow?
+        //efficiencyNumerator->hist->Write();
       }
 
       if(efficiencyDenominator)
       {
-        efficiencyDenominator->hist->SetDirectory(&file);
-        efficiencyDenominator->hist->Write();
+        efficiencyDenominator->hist->SetDirectory(dir);
+        //efficiencyDenominator->hist->Write();
       }
 
       if(migration)
       {
-        migration->hist->SetDirectory(&file); 
-        migration->hist->Write();
+        migration->hist->SetDirectory(dir); 
+        //migration->hist->Write();
       }
 
       if(selectedSignalReco)
       {
-        selectedSignalReco->hist->SetDirectory(&file);
-        selectedSignalReco->hist->Write();
+        selectedSignalReco->hist->SetDirectory(dir);
+        //selectedSignalReco->hist->Write();
       }
 
       if(selectedMCReco)
       {
-        selectedMCReco->hist->SetDirectory(&file);
-        selectedMCReco->hist->Write((GetName() + "_data").c_str()); //Make this histogram look just like the data for closure tests
+        selectedMCReco->hist->SetDirectory(dir);
+        selectedMCReco->hist->SetName((GetName() + "_data").c_str()); //Make this histogram look just like the data for closure tests
       }
     }
 

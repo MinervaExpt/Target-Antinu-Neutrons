@@ -727,9 +727,15 @@ int main(const int argc, const char** argv)
       return badOutputFile;
     }
 
+    std::cout << "Actually Setting Directories in the File" << std::endl;
+
     for(auto& study: studies) study->SaveOrDrawMC(*mcOutDir);
     for(auto& var: vars) var->WriteMC(*mcOutDir);
     for(auto& var: vars2D) var->Write(*mcOutDir);
+
+    std::cout << "Writing" << std::endl;
+
+    mcOutDir->Write();
 
     //Protons On Target
     auto mcPOT = new TParameter<double>("POTUsed", options.m_mc_pot);
@@ -763,6 +769,8 @@ int main(const int argc, const char** argv)
 
     for(auto& study: studies) study->SaveOrDrawData(*dataOutDir);
     for(auto& var: vars) var->WriteData(*dataOutDir);
+
+    dataOutDir->Write();
 
     //Protons On Target
     auto dataPOT = new TParameter<double>("POTUsed", options.m_data_pot);
