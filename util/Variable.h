@@ -16,9 +16,10 @@ class Variable: public PlotUtils::VariableBase<CVUniverse>
   private:
     typedef PlotUtils::HistWrapper<CVUniverse> Hist;
     typedef std::function<double(const CVUniverse&)> PointerToCVUniverseFunction;
+    TString fDirName;
   public:
     template <class ...ARGS>
-    Variable(ARGS... args): PlotUtils::VariableBase<CVUniverse>(args...)
+    Variable(ARGS... args): PlotUtils::VariableBase<CVUniverse>(args...), fDirName("")
     {
     }
 

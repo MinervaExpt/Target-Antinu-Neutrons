@@ -9,9 +9,10 @@ class Variable2D: public PlotUtils::Variable2DBase<CVUniverse>
 {
   private:
     typedef PlotUtils::Hist2DWrapper<CVUniverse> Hist;
+    std::string fDirName;
   public:
     template <class ...ARGS>
-    Variable2D(ARGS... args): PlotUtils::Variable2DBase<CVUniverse>(args...)
+    Variable2D(ARGS... args): PlotUtils::Variable2DBase<CVUniverse>(args...), fDirName("TwoD")
     {
     }
 
@@ -46,38 +47,38 @@ class Variable2D: public PlotUtils::Variable2DBase<CVUniverse>
                                                        {9, "mu"},
                                                        {1, "None"}};
       
-      m_backgroundHists = new util::Categorized<Hist, int>(("TwoD_"+GetName() + "_by_BKG_Label").c_str(),
-							   ("TwoD_" + GetName()).c_str(), BKGLabels,
+      m_backgroundHists = new util::Categorized<Hist, int>((fDirName+"_"+GetName() + "_by_BKG_Label").c_str(),
+							   (fDirName+"_" + GetName()).c_str(), BKGLabels,
 							   GetBinVecX(), GetBinVecY(), mc_error_bands);
 
-      m_SigIntTypeHists = new util::Categorized<Hist, int>(("TwoD_"+GetName() + "_sig_IntType").c_str(),
-                                                           ("TwoD_"+GetName()).c_str(), IntTypeLabels,
+      m_SigIntTypeHists = new util::Categorized<Hist, int>((fDirName+"_"+GetName() + "_sig_IntType").c_str(),
+                                                           (fDirName+"_"+GetName()).c_str(), IntTypeLabels,
                                                            GetBinVecX(), GetBinVecY(), mc_error_bands);
 
-      m_SigTargetTypeHists = new util::Categorized<Hist, int>(("TwoD_"+GetName() + "_sig_TargetType").c_str(),
-							      ("TwoD_"+GetName()).c_str(), TargetTypeLabels,
+      m_SigTargetTypeHists = new util::Categorized<Hist, int>((fDirName+"_"+GetName() + "_sig_TargetType").c_str(),
+							      (fDirName+"_"+GetName()).c_str(), TargetTypeLabels,
 							      GetBinVecX(), GetBinVecY(), mc_error_bands);
 
-      m_SigLeadBlobTypeHists = new util::Categorized<Hist, int>(("TwoD_"+GetName() + "_sig_LeadBlobType").c_str(),
-								("TwoD_"+GetName()).c_str(), LeadBlobTypeLabels,
+      m_SigLeadBlobTypeHists = new util::Categorized<Hist, int>((fDirName+"_"+GetName() + "_sig_LeadBlobType").c_str(),
+								(fDirName+"_"+GetName()).c_str(), LeadBlobTypeLabels,
 								GetBinVecX(), GetBinVecY(), mc_error_bands);
 
-      m_BkgIntTypeHists = new util::Categorized<Hist, int>(("TwoD_"+GetName() + "_bkg_IntType").c_str(),
-                                                           ("TwoD_"+GetName()).c_str(), IntTypeLabels,
+      m_BkgIntTypeHists = new util::Categorized<Hist, int>((fDirName+"_"+GetName() + "_bkg_IntType").c_str(),
+                                                           (fDirName+"_"+GetName()).c_str(), IntTypeLabels,
                                                            GetBinVecX(), GetBinVecY(), mc_error_bands);
 
-      m_BkgTargetTypeHists = new util::Categorized<Hist, int>(("TwoD_"+GetName() + "_bkg_TargetType").c_str(),
-							      ("TwoD_"+GetName()).c_str(), TargetTypeLabels,
+      m_BkgTargetTypeHists = new util::Categorized<Hist, int>((fDirName+"_"+GetName() + "_bkg_TargetType").c_str(),
+							      (fDirName+"_"+GetName()).c_str(), TargetTypeLabels,
 							      GetBinVecX(), GetBinVecY(), mc_error_bands);
 
-      m_BkgLeadBlobTypeHists = new util::Categorized<Hist, int>(("TwoD_"+GetName() + "_bkg_LeadBlobType").c_str(),
-								("TwoD_"+GetName()).c_str(), LeadBlobTypeLabels,
+      m_BkgLeadBlobTypeHists = new util::Categorized<Hist, int>((fDirName+"_"+GetName() + "_bkg_LeadBlobType").c_str(),
+								(fDirName+"_"+GetName()).c_str(), LeadBlobTypeLabels,
 								GetBinVecX(), GetBinVecY(), mc_error_bands);
 
-      efficiencyNumerator = new Hist(("TwoD_" + GetName() + "_efficiency_numerator").c_str(), ("TwoD_"+GetName()).c_str(), GetBinVecX(), GetBinVecY(), mc_error_bands);
-      efficiencyDenominator = new Hist(("TwoD_" + GetName() + "_efficiency_denominator").c_str(), ("TwoD_" + GetName()).c_str(), GetBinVecX(), GetBinVecY(), truth_error_bands);
-      selectedSignalReco = new Hist(("TwoD_" + GetName() + "_selected_signal_reco").c_str(),  ("TwoD_"+GetName()).c_str(), GetBinVecX(), GetBinVecY(), mc_error_bands);
-      selectedMCReco = new Hist(("TwoD_" + GetName() + "_selected_mc_reco").c_str(),  ("TwoD_"+GetName()).c_str(), GetBinVecX(), GetBinVecY(), mc_error_bands);
+      efficiencyNumerator = new Hist((fDirName+"_" + GetName() + "_efficiency_numerator").c_str(), (fDirName+"_"+GetName()).c_str(), GetBinVecX(), GetBinVecY(), mc_error_bands);
+      efficiencyDenominator = new Hist((fDirName+"_" + GetName() + "_efficiency_denominator").c_str(), (fDirName+"_" + GetName()).c_str(), GetBinVecX(), GetBinVecY(), truth_error_bands);
+      selectedSignalReco = new Hist((fDirName+"_" + GetName() + "_selected_signal_reco").c_str(),  (fDirName+"_"+GetName()).c_str(), GetBinVecX(), GetBinVecY(), mc_error_bands);
+      selectedMCReco = new Hist((fDirName+"_" + GetName() + "_selected_mc_reco").c_str(),  (fDirName+"_"+GetName()).c_str(), GetBinVecX(), GetBinVecY(), mc_error_bands);
     }
 
     //Histograms to be filled
@@ -99,7 +100,7 @@ class Variable2D: public PlotUtils::Variable2DBase<CVUniverse>
     void InitializeDATAHists(std::vector<CVUniverse*>& data_error_bands)
     {
       //const char* name = GetName().c_str();
-      dataHist = new Hist(("TwoD_" + GetName() + "_data").c_str(), GetName().c_str(), GetBinVecX(), GetBinVecY(), data_error_bands);
+      dataHist = new Hist((fDirName+"_" + GetName() + "_data").c_str(), GetName().c_str(), GetBinVecX(), GetBinVecY(), data_error_bands);
       //dataHist = new Hist(Form("_data_%s", name), name, GetBinVecX(), GetBinVecY(), data_error_bands);
     }
 
@@ -177,7 +178,7 @@ class Variable2D: public PlotUtils::Variable2DBase<CVUniverse>
       if(selectedMCReco)
 	{
 	  selectedMCReco->hist->SetDirectory(&file);
-	  selectedMCReco->hist->Write(("TwoD_"+GetName() + "_data").c_str()); //Make this histogram look just like the data for closure tests
+	  selectedMCReco->hist->Write((fDirName+"_"+GetName() + "_data").c_str()); //Make this histogram look just like the data for closure tests
 	}
     }
 
