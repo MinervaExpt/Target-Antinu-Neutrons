@@ -541,7 +541,8 @@ int main(const int argc, const char** argv)
   const double minZ = minZtmp, maxZ = maxZtmp, apothem = 850; //All in mm
   preCuts.emplace_back(new reco::ZRange<CVUniverse, NeutronEvent>(FVregion, minZ, maxZ));
   preCuts.emplace_back(new reco::Apothem<CVUniverse, NeutronEvent>(apothem));
-  preCuts.emplace_back(new reco::MaxMuonAngle<CVUniverse, NeutronEvent>(20.));
+  preCuts.emplace_back(new reco::MaxMuonAngle<CVUniverse, NeutronEvent>(17.0));
+  //preCuts.emplace_back(new reco::MaxMuonAngle<CVUniverse, NeutronEvent>(20.0));
   preCuts.emplace_back(new reco::HasMINOSMatch<CVUniverse, NeutronEvent>());
   preCuts.emplace_back(new reco::NoDeadtime<CVUniverse, NeutronEvent>(1, "Deadtime"));
   preCuts.emplace_back(new MyCCQECuts::PMuRange<CVUniverse, NeutronEvent>("1.5 <= Pmu <= 20",1.5,20.0));
@@ -568,10 +569,10 @@ int main(const int argc, const char** argv)
   signalDefinition.emplace_back(new truth::IsCC<CVUniverse>());
   signalDefinition.emplace_back(new MySignal::IsCorrectFS<CVUniverse>(doNeutronCuts,neutKESig));
 
-  //REMOVED FOR DIAGNOSTIC PURPOSES TO CHECK OLD SIGNAL DEFINITION
   phaseSpace.emplace_back(new truth::ZRange<CVUniverse>(FVregion, minZ, maxZ));
   phaseSpace.emplace_back(new truth::Apothem<CVUniverse>(apothem));
-  phaseSpace.emplace_back(new truth::MuonAngle<CVUniverse>(20.));
+  //phaseSpace.emplace_back(new truth::MuonAngle<CVUniverse>(20.0));
+  phaseSpace.emplace_back(new truth::MuonAngle<CVUniverse>(17.0));
   phaseSpace.emplace_back(new MySignal::TrueMuonPRange<CVUniverse>(1.5,20.));
 
   PlotUtils::Cutter<CVUniverse, NeutronEvent> mycuts(std::move(preCuts), std::move(sidebands) , std::move(signalDefinition),std::move(phaseSpace));
@@ -692,8 +693,8 @@ int main(const int argc, const char** argv)
     //new EMSideBands(vars, error_bands, truth_bands, data_band),
     //new MichelAndNBlobSB(vars, error_bands, truth_bands, data_band),
     //new NeutronVariables(maxZ, minZ, error_bands, truth_bands, data_band),
-    new RecoilSB(vars, error_bands, truth_bands, data_band, splitRecoil),
-    //new PreRecoil(vars, error_bands, truth_bands, data_band, splitRecoil),
+    //new RecoilSB(vars, error_bands, truth_bands, data_band, splitRecoil),
+    new PreRecoil(vars, error_bands, truth_bands, data_band, splitRecoil),
   };
 
   for(auto& var: vars) var->InitializeMCHists(error_bands, truth_bands);
