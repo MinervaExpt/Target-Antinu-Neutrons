@@ -66,6 +66,7 @@ enum ErrorCodes
 #include "util/GetFluxIntegral.h"
 #include "util/GetPlaylist.h"
 #include "util/GetBackgroundID.h"
+#include "util/GetRecoTargetZ.h"
 #include "cuts/SignalDefinition.h"
 #include "cuts/q3RecoCut.h"
 #include "studies/Study.h"
@@ -159,6 +160,24 @@ void LoopAndFillEventSelection(
         const bool isSignal = michelcuts.isSignal(*universe, weight);
 	int intType = universe->GetInteractionType();
 	int tgtType = universe->GetTargetZ();
+	
+	std::vector<double> vtx = universe->GetVtx();
+	double vtx_x = vtx.at(0);
+	double vtx_y = vtx.at(1);
+	double vtx_z = vtx.at(2);
+
+	int tgtID = util::GetRecoTargetZ(vtx_x,vtx_y,vtx_z);
+
+	/* Just for checking the output of GetRecoTargetZ
+	std::cout << "Checking Target Breakdown" << std::endl;
+	std::cout << "Target Z " << tgtType << std::endl;
+	std::cout << "Reco Vtx.: " << vtx.at(0) << ", " << vtx.at(1) << ", " << vtx.at(2) << std::endl;
+	std::cout << "Reco Vtx. X: " << vtx_x << std::endl;
+	std::cout << "Reco Vtx. Y: " << vtx_y << std::endl;
+	std::cout << "Reco Vtx. Z: " << vtx_z << std::endl;
+	std::cout << "Returned Tgt. ID: " << tgtID << std::endl;
+	std::cout << "" << std::endl;
+	*/
 
         myevent.SetSignal(isSignal);
 	myevent.SetIntType(intType);
@@ -168,7 +187,6 @@ void LoopAndFillEventSelection(
 
 	myevent.SetMaxFSNeutronKE(universe->GetMaxFSNeutronKE());
 	//myevent.SetBKGID(bkgd_ID); Maybe add later...
-
 
 	std::cout << std::setprecision(16);
 
