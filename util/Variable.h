@@ -23,6 +23,12 @@ class Variable: public PlotUtils::VariableBase<CVUniverse>
     {
     }
 
+    //This is risky and only safe because right now VariableBase won't have an ambiguous constructor... Think of a way to protect against this if possible...
+    template <class ...ARGS>
+    Variable(TString name, ARGS... args): PlotUtils::VariableBase<CVUniverse>(args...), fDirName(name)
+    {
+    }
+
     //Additional Getter to return Variable Reco Function. Not sure I want to add to MAT writ-large. Would need to discuss first.
     PointerToCVUniverseFunction GetRecoFunc() { return m_pointer_to_GetRecoValue; }
     PointerToCVUniverseFunction GetTrueFunc() { return m_pointer_to_GetTrueValue; }
@@ -242,6 +248,7 @@ class Variable: public PlotUtils::VariableBase<CVUniverse>
     }
 
     void SetDirectoryName(std::string name){fDirName = name;}
+    TString GetDirectoryName(){return fDirName;}
 };
 
 #endif //VARIABLE_H

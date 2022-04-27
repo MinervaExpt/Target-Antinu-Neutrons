@@ -67,6 +67,7 @@ enum ErrorCodes
 #include "util/GetPlaylist.h"
 #include "util/GetBackgroundID.h"
 #include "util/GetRecoTargetZ.h"
+#include "util/Categorized.h"
 #include "cuts/SignalDefinition.h"
 #include "cuts/q3RecoCut.h"
 #include "studies/Study.h"
@@ -675,7 +676,7 @@ int main(const int argc, const char** argv)
 
   std::vector<Variable*> vars = {
     new Variable("pTmu", "p_{T, #mu} [GeV/c]", dansPTBins, &CVUniverse::GetMuonPT, &CVUniverse::GetMuonPTTrue),
-    new Variable("pTmu_MYBins", "p_{T, #mu} [GeV/c]", myPTBins, &CVUniverse::GetMuonPT, &CVUniverse::GetMuonPTTrue),
+    new Variable((TString)("MyBins"),"pTmu_MYBins", "p_{T, #mu} [GeV/c]", myPTBins, &CVUniverse::GetMuonPT, &CVUniverse::GetMuonPTTrue),
     new Variable("nBlobs", "No.", nBlobsBins, &CVUniverse::GetNNeutBlobs),//Don't need GetDummyTrue perhaps...
     new Variable("recoilE", "Recoil E [GeV]", myRecoilBins, &CVUniverse::GetDANRecoilEnergyGeV),//Don't need GetDummyTrue perhaps...
     new Variable("Q2QE", "Q^{2}_{QE} [GeV^{2}]", myQ2QEBins, &CVUniverse::GetQ2QEPickledGeV),
@@ -685,6 +686,25 @@ int main(const int argc, const char** argv)
     new Variable("vtxZ", "Z [mm]", myVtxZBins, &CVUniverse::GetVtxZ),//Don't need GetDummyTrue perhaps...
     new Variable("recQ2Bin","No.",myRecoilQ2Bins, &CVUniverse::GetRecoilQ2Bin),
   };
+
+  std::map<int, std::string> TgtList = {{1,"Tgt1"},
+					{2,"Tgt2"},
+					{3,"Tgt3"},
+					{4,"Tgt4"},
+					{5,"Tgt5"},
+					{6,"WaterTgt"},
+					{10,"Plastic_US1"},
+					{21,"Plastic_US2_DS1"},
+					{32,"Plastic_US3_DS2"},
+					{63,"Plastic_USWater_DS3"},
+					{46,"Plastic_US4_DSWater"},
+					{54,"Plastic_US5_DS4"},
+					{0,"Plastic_DS5"}};
+
+  std::vector<util::Categorized<Variable, int>*> vars_ByTgt = {};
+  for(auto& var: vars){ 
+    vars_ByTgt.push_back(new util::Categorized<Variable, int>(var->GetDirectoryName(), "ByTgt", var->GetName().c_str(),var->GetAxisLabel().c_str(),TgtList,var->GetBinVec(),var->GetRecoFunc(),var->GetTrueFunc()));
+  }
 
   std::vector<Variable2D*> vars2D = {
     new Variable2D(*vars[4],*vars[3]),//recoil v. Q2
@@ -718,6 +738,19 @@ int main(const int argc, const char** argv)
   for(auto& var: vars) var->InitializeMCHists(error_bands, truth_bands);
   for(auto& var: vars) var->InitializeDATAHists(data_band);
 
+  for(auto& tgt: vars_ByTgt){ 
+    tgt->visit([&error_bands, &truth_bands](Variable& var)
+	       {
+		 var.InitializeMCHists(error_bands, truth_bands);
+	       });
+  }
+  for(auto& tgt: vars_ByTgt){ 
+    tgt->visit([&data_band](Variable& var)
+	       {
+		 var.InitializeDATAHists(data_band);
+	       });
+  }
+
   for(auto& var: vars2D) var->InitializeMCHists(error_bands, truth_bands);
   for(auto& var: vars2D) var->InitializeDATAHists(data_band);
 
@@ -750,6 +783,13 @@ int main(const int argc, const char** argv)
 
     for(auto& study: studies) study->SaveOrDrawMC(*mcOutDir);
     for(auto& var: vars) var->WriteMC(*mcOutDir);
+    for(auto& tgt: vars_ByTgt){ 
+      tgt->visit([mcOutDir](Variable& var)
+		 {
+		   var.WriteMC(*mcOutDir);
+		 });
+    }
+
     for(auto& var: vars2D) var->Write(*mcOutDir);
 
     std::cout << "Writing" << std::endl;
@@ -788,6 +828,12 @@ int main(const int argc, const char** argv)
 
     for(auto& study: studies) study->SaveOrDrawData(*dataOutDir);
     for(auto& var: vars) var->WriteData(*dataOutDir);
+    for(auto& tgt: vars_ByTgt){
+      tgt->visit([dataOutDir](Variable& var)
+		 {
+		   var.WriteData(*dataOutDir);
+		 });
+    }
 
     dataOutDir->Write();
 

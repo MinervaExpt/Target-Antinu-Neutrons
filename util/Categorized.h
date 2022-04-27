@@ -98,6 +98,20 @@ namespace util
 
         fOther = new HIST((baseName + "_Other").c_str(), ("Other;" + axes).c_str(), args...);
       }
+
+      //tag is useful for separating the possible overlapping of different Categorizations of the same thing. This exact function also has an extra argument dirName to help navigate the directory saving of variables which currently has its own risks...
+      template <class ...HISTARGS>
+      Categorized(const TString dirName, const TString tag, const std::string& baseName, const std::string& axes,
+                  const std::map<CATEGORY, std::string> categories, HISTARGS... args)
+      {
+        for(const auto& category: categories)
+        {
+          auto hist = (dirName != "") ? new HIST(dirName+"/"+tag+"_"+(TString)category.second, SafeROOTName(baseName + "_" + category.second).c_str(), (category.second + ";" + axes).c_str(), args...) : new HIST(tag+"_"+(TString)category.second, SafeROOTName(baseName + "_" + category.second).c_str(), (category.second + ";" + axes).c_str(), args...);
+          fCatToHist[category.first] = hist;
+        }
+
+        fOther = new HIST(dirName+"/"+tag+"_Other", (baseName + "_Other").c_str(), ("Other;" + axes).c_str(), args...);
+      }
       #endif //__CINT__
 
       HIST& operator [](const CATEGORY& cat) const
