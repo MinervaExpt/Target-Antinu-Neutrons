@@ -726,6 +726,7 @@ int main(const int argc, const char** argv)
     new Variable("recQ2Bin","No.",myRecoilQ2Bins, &CVUniverse::GetRecoilQ2Bin),
   };
 
+  /*
   std::map<int, std::string> TgtList = {{1,"Tgt1"},
 					{2,"Tgt2"},
 					{3,"Tgt3"},
@@ -739,11 +740,12 @@ int main(const int argc, const char** argv)
 					{46,"Plastic_US4_DSWater"},
 					{54,"Plastic_US5_DS4"},
 					{0,"Plastic_DS5"}};
+  */
 
   std::vector<util::Categorized<Variable, int>*> vars_ByTgt = {};
   if (FVregionName == "Targets"){
     for(auto& var: vars){ 
-      vars_ByTgt.push_back(new util::Categorized<Variable, int>(var->GetDirectoryName(), "ByTgt", var->GetName().c_str(),var->GetAxisLabel().c_str(),TgtList,var->GetBinVec(),var->GetRecoFunc(),var->GetTrueFunc()));
+      vars_ByTgt.push_back(new util::Categorized<Variable, int>(var->GetDirectoryName(), "ByTgt", var->GetName().c_str(),var->GetAxisLabel().c_str(),util::TgtList,var->GetBinVec(),var->GetRecoFunc(),var->GetTrueFunc()));
     }
   }
 

@@ -22,6 +22,21 @@
 
 namespace util
 {
+  std::map<int, std::string> TgtList = {{1,"Tgt1"},
+                                        {2,"Tgt2"},
+                                        {3,"Tgt3"},
+                                        {4,"Tgt4"},
+                                        {5,"Tgt5"},
+                                        {6,"WaterTgt"},
+                                        {10,"Plastic_US1"},
+                                        {21,"Plastic_US2_DS1"},
+                                        {32,"Plastic_US3_DS2"},
+                                        {63,"Plastic_USWater_DS3"},
+                                        {46,"Plastic_US4_DSWater"},
+                                        {54,"Plastic_US5_DS4"},
+                                        {0,"Plastic_DS5"}};
+
+
   //Mapping from a set of values to a name.  Helper for constructing a Categorized<>
   template <class value_t>
   struct NamedCategory
