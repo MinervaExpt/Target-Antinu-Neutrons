@@ -775,7 +775,7 @@ int main(const int argc, const char** argv)
     //new MichelAndNBlobSB(vars, error_bands, truth_bands, data_band),
     //new NeutronVariables(maxZ, minZ, error_bands, truth_bands, data_band),
     //new RecoilSB(vars, error_bands, truth_bands, data_band, splitRecoil),
-    new PreRecoil(vars, error_bands, truth_bands, data_band, splitRecoil),
+    new PreRecoil(vars, error_bands, truth_bands, data_band, splitRecoil, FVregionName),
   };
 
   for(auto& var: vars) var->InitializeMCHists(error_bands, truth_bands);
