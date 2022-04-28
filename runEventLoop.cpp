@@ -112,6 +112,7 @@ void LoopAndFillEventSelection(
     PlotUtils::ChainWrapper* chain,
     std::map<std::string, std::vector<CVUniverse*> > error_bands,
     std::vector<Variable*> vars,
+    std::vector<util::Categorized<Variable, int>*> vars_ByTgt,
     std::vector<Variable2D*> vars2D,
     std::vector<Study*> studies,
     PlotUtils::Cutter<CVUniverse, NeutronEvent>& michelcuts,
@@ -225,6 +226,8 @@ void LoopAndFillEventSelection(
 
         for(auto& var: vars) var->selectedMCReco->FillUniverse(universe, var->GetRecoValue(*universe), weight); //"Fake data" for closure
 
+        for(auto& var: vars_ByTgt) (*var)[tgtID].selectedMCReco->FillUniverse(universe, (*var)[tgtID].GetRecoValue(*universe), weight); //"Fake data" for closure
+
 	for(auto& var: vars2D) var->selectedMCReco->FillUniverse(universe, var->GetRecoValueX(*universe), var->GetRecoValueY(*universe), weight); //"Fake data" for closure
 
         if(isSignal)
@@ -242,6 +245,19 @@ void LoopAndFillEventSelection(
 	    (*var->m_SigIntTypeHists)[intType].FillUniverse(universe, var->GetRecoValue(*universe), weight);
 	    (*var->m_SigTargetTypeHists)[tgtType].FillUniverse(universe, var->GetRecoValue(*universe), weight);
 	    (*var->m_SigLeadBlobTypeHists)[leadBlobType].FillUniverse(universe, var->GetRecoValue(*universe), weight);
+          }
+
+          for(auto& var: vars_ByTgt)
+          {
+            //Cross section components
+            (*var)[tgtID].efficiencyNumerator->FillUniverse(universe, (*var)[tgtID].GetTrueValue(*universe), weight);
+            (*var)[tgtID].migration->FillUniverse(universe, (*var)[tgtID].GetRecoValue(*universe), (*var)[tgtID].GetTrueValue(*universe), weight);
+            (*var)[tgtID].selectedSignalReco->FillUniverse(universe, (*var)[tgtID].GetRecoValue(*universe), weight); //Efficiency numerator in reco variables.  Useful for warping studies.
+
+	    //Various breakdowns of selected signal reco
+	    (*(*var)[tgtID].m_SigIntTypeHists)[intType].FillUniverse(universe, (*var)[tgtID].GetRecoValue(*universe), weight);
+	    (*(*var)[tgtID].m_SigTargetTypeHists)[tgtType].FillUniverse(universe, (*var)[tgtID].GetRecoValue(*universe), weight);
+	    (*(*var)[tgtID].m_SigLeadBlobTypeHists)[leadBlobType].FillUniverse(universe, (*var)[tgtID].GetRecoValue(*universe), weight);
           }
 
           for(auto& var: vars2D)
@@ -274,6 +290,14 @@ void LoopAndFillEventSelection(
 	    (*var->m_BkgLeadBlobTypeHists)[leadBlobType].FillUniverse(universe, var->GetRecoValue(*universe), weight);
 	  }
 
+          for(auto& var: vars_ByTgt){
+	    (*(*var)[tgtID].m_backgroundHists)[bkgd_ID].FillUniverse(universe, (*var)[tgtID].GetRecoValue(*universe), weight);
+	    //Various breakdowns of selected backgrounds
+	    (*(*var)[tgtID].m_BkgIntTypeHists)[intType].FillUniverse(universe, (*var)[tgtID].GetRecoValue(*universe), weight);
+	    (*(*var)[tgtID].m_BkgTargetTypeHists)[tgtType].FillUniverse(universe, (*var)[tgtID].GetRecoValue(*universe), weight);
+	    (*(*var)[tgtID].m_BkgLeadBlobTypeHists)[leadBlobType].FillUniverse(universe, (*var)[tgtID].GetRecoValue(*universe), weight);
+	  }
+
           for(auto& var: vars2D){
 	    (*var->m_backgroundHists)[bkgd_ID].FillUniverse(universe, var->GetRecoValueX(*universe), var->GetRecoValueY(*universe), weight);
 	    //Various breakdowns of selected backgrounds
@@ -291,6 +315,7 @@ void LoopAndFillEventSelection(
 void LoopAndFillData( PlotUtils::ChainWrapper* data,
 			        std::vector<CVUniverse*> data_band,
 				std::vector<Variable*> vars,
+		                std::vector<util::Categorized<Variable, int>*> vars_ByTgt,
                                 std::vector<Variable2D*> vars2D,
                                 std::vector<Study*> studies,
 				PlotUtils::Cutter<CVUniverse, NeutronEvent>& michelcuts)
@@ -309,6 +334,13 @@ void LoopAndFillData( PlotUtils::ChainWrapper* data,
       myevent.SetSideBandStat(SBStat);
 
       if (SBStat.none()) continue;
+
+      std::vector<double> vtx = universe->GetVtx();
+      double vtx_x = vtx.at(0);
+      double vtx_y = vtx.at(1);
+      double vtx_z = vtx.at(2);
+      
+      int tgtID = util::GetRecoTargetZ(vtx_x,vtx_y,vtx_z);
 
       std::cout << std::setprecision(16);
 
@@ -337,6 +369,11 @@ void LoopAndFillData( PlotUtils::ChainWrapper* data,
         var->dataHist->FillUniverse(universe, var->GetRecoValue(*universe), 1);
       }
 
+      for(auto& var: vars_ByTgt)
+      {
+        (*var)[tgtID].dataHist->FillUniverse(universe, (*var)[tgtID].GetRecoValue(*universe), 1);
+      }
+
       for(auto& var: vars2D)
       {
         var->dataHist->FillUniverse(universe, var->GetRecoValueX(*universe), var->GetRecoValueY(*universe), 1);
@@ -348,7 +385,8 @@ void LoopAndFillData( PlotUtils::ChainWrapper* data,
 
 void LoopAndFillEffDenom( PlotUtils::ChainWrapper* truth,
     				std::map<std::string, std::vector<CVUniverse*> > truth_bands,
-    				std::vector<Variable*> vars,
+			        std::vector<Variable*> vars,
+			      //std::vector<Variable*> vars_ByTgt,
                                 std::vector<Variable2D*> vars2D,
     				PlotUtils::Cutter<CVUniverse, NeutronEvent>& michelcuts,
                                 PlotUtils::Model<CVUniverse, NeutronEvent>& model)
@@ -676,7 +714,8 @@ int main(const int argc, const char** argv)
 
   std::vector<Variable*> vars = {
     new Variable("pTmu", "p_{T, #mu} [GeV/c]", dansPTBins, &CVUniverse::GetMuonPT, &CVUniverse::GetMuonPTTrue),
-    new Variable((TString)("MyBins"),"pTmu_MYBins", "p_{T, #mu} [GeV/c]", myPTBins, &CVUniverse::GetMuonPT, &CVUniverse::GetMuonPTTrue),
+    //new Variable((TString)("MyBins"),"pTmu_MYBins", "p_{T, #mu} [GeV/c]", myPTBins, &CVUniverse::GetMuonPT, &CVUniverse::GetMuonPTTrue),
+    new Variable("pTmu_MYBins", "p_{T, #mu} [GeV/c]", myPTBins, &CVUniverse::GetMuonPT, &CVUniverse::GetMuonPTTrue),
     new Variable("nBlobs", "No.", nBlobsBins, &CVUniverse::GetNNeutBlobs),//Don't need GetDummyTrue perhaps...
     new Variable("recoilE", "Recoil E [GeV]", myRecoilBins, &CVUniverse::GetDANRecoilEnergyGeV),//Don't need GetDummyTrue perhaps...
     new Variable("Q2QE", "Q^{2}_{QE} [GeV^{2}]", myQ2QEBins, &CVUniverse::GetQ2QEPickledGeV),
@@ -702,8 +741,10 @@ int main(const int argc, const char** argv)
 					{0,"Plastic_DS5"}};
 
   std::vector<util::Categorized<Variable, int>*> vars_ByTgt = {};
-  for(auto& var: vars){ 
-    vars_ByTgt.push_back(new util::Categorized<Variable, int>(var->GetDirectoryName(), "ByTgt", var->GetName().c_str(),var->GetAxisLabel().c_str(),TgtList,var->GetBinVec(),var->GetRecoFunc(),var->GetTrueFunc()));
+  if (FVregionName == "Targets"){
+    for(auto& var: vars){ 
+      vars_ByTgt.push_back(new util::Categorized<Variable, int>(var->GetDirectoryName(), "ByTgt", var->GetName().c_str(),var->GetAxisLabel().c_str(),TgtList,var->GetBinVec(),var->GetRecoFunc(),var->GetTrueFunc()));
+    }
   }
 
   std::vector<Variable2D*> vars2D = {
@@ -758,7 +799,7 @@ int main(const int argc, const char** argv)
   try
   {
     CVUniverse::SetTruth(false);
-    LoopAndFillEventSelection(options.m_mc, error_bands, vars, vars2D, studies, mycuts, model);
+    LoopAndFillEventSelection(options.m_mc, error_bands, vars, vars_ByTgt, vars2D, studies, mycuts, model);
     CVUniverse::SetTruth(true);
     LoopAndFillEffDenom(options.m_truth, truth_bands, vars, vars2D, mycuts, model);
     options.PrintMacroConfiguration(argv[0]);
@@ -766,7 +807,7 @@ int main(const int argc, const char** argv)
     mycuts.resetStats();
 
     CVUniverse::SetTruth(false);
-    LoopAndFillData(options.m_data, data_band, vars, vars2D, studies, mycuts);
+    LoopAndFillData(options.m_data, data_band, vars, vars_ByTgt, vars2D, studies, mycuts);
     std::cout << "Data cut summary:\n" << mycuts << "\n";
 
     std::cout << "Writing MC Output File." << std::endl;
