@@ -258,8 +258,8 @@ TCanvas* DrawIntType(string name_QE, TFile* mcFile, TFile* dataFile, TString sam
   h_QE_Sig->SetLineColor(TColor::GetColor("#88CCEE"));
   h_QE_Sig->SetFillColor(TColor::GetColor("#88CCEE"));
 
-
-  string name_sig = (string)h_QE_Sig->GetName();
+  //  string name_sig = (string)h_QE_Sig->GetName();
+  string name_sig = name_QE;
   name_sig.erase(name_sig.length()-3,name_sig.length());
   string name_bkg = name_sig;
   name_bkg.erase(name_bkg.length()-12,name_bkg.length());
@@ -511,7 +511,8 @@ TCanvas* DrawTargetType(string name_C, TFile* mcFile, TFile* dataFile, TString s
   h_C_Sig->SetLineColor(TColor::GetColor("#88CCEE"));
   h_C_Sig->SetFillColor(TColor::GetColor("#88CCEE"));
 
-  string name_sig = (string)h_C_Sig->GetName();
+  //string name_sig = (string)h_C_Sig->GetName();
+  string name_sig = name_C;
   name_sig.erase(name_sig.length()-2,name_sig.length());
   string name_bkg = name_sig;
   name_bkg.erase(name_bkg.length()-15,name_bkg.length());
@@ -785,7 +786,8 @@ TCanvas* DrawLeadBlobType(string name_Neut, TFile* mcFile, TFile* dataFile, TStr
   h_Neut_Sig->SetLineColor(TColor::GetColor("#88CCEE"));
   h_Neut_Sig->SetFillColor(TColor::GetColor("#88CCEE"));
 
-  string name_sig = (string)h_Neut_Sig->GetName();
+  //string name_sig = (string)h_Neut_Sig->GetName();
+  string name_sig = name_Neut;
   name_sig.erase(name_sig.length()-5,name_sig.length());
   string name_bkg = name_sig;
   name_bkg.erase(name_bkg.length()-17,name_bkg.length());
@@ -1177,7 +1179,77 @@ int main(int argc, char* argv[]) {
   TIter next(keyList);
   TKey* key;
   while ( key = (TKey*)next() ){
-    //cout << key->GetName() << endl;
+    if ((TString)(key->GetClassName()) == "TDirectoryFile")
+    {
+      TDirectoryFile* dirInt = (TDirectoryFile*)mcFile->Get(key->GetName());
+      TList* keyListInt = dirInt->GetListOfKeys();
+      if (!keyListInt){
+	cout << "List of keys failed to get inside directory." << endl;
+	return 5;
+      }
+      
+      TIter nextInt(keyListInt);
+      TKey* keyInt;
+      while ( keyInt = (TKey*)nextInt() ){
+	string nameInt = (string)keyInt->GetName();
+	string name = (string)key->GetName() + "/"+nameInt;
+	pos=0;
+	if ((pos=nameInt.find("TwoD")) != string::npos) continue;
+	else if((pos = name.find("_sig_IntType_QE")) != string::npos){
+	  TCanvas* c1 = DrawIntType(name,mcFile,dataFile,label,scale);
+	  TPad* top = (TPad*)c1->GetPrimitive("Overlay");
+	  name.erase(name.length()-15,name.length());
+	  c1->Print((TString)outDir+(TString)nameInt+"_IntType_stacked.pdf");
+	  c1->Print((TString)outDir+(TString)nameInt+"_IntType_stacked.png");
+	  top->SetLogy();
+	  c1->Update();
+	  c1->Print((TString)outDir+(TString)nameInt+"_IntType_stacked_log.pdf");
+	  c1->Print((TString)outDir+(TString)nameInt+"_IntType_stacked_log.png");
+	  cout << "" << endl;
+	  delete c1;
+	}
+	else if ((pos = name.find("_sig_TargetType_C")) != string::npos){
+	  TCanvas* c1 = DrawTargetType(name,mcFile,dataFile,label,scale);
+	  TPad* top = (TPad*)c1->GetPrimitive("Overlay");
+	  nameInt.erase(nameInt.length()-17,nameInt.length());
+	  c1->Print((TString)outDir+(TString)nameInt+"_TargetType_stacked.pdf");
+	  c1->Print((TString)outDir+(TString)nameInt+"_TargetType_stacked.png");
+	  top->SetLogy();
+	  c1->Update();
+	  c1->Print((TString)outDir+(TString)nameInt+"_TargetType_stacked_log.pdf");
+	  c1->Print((TString)outDir+(TString)nameInt+"_TargetType_stacked_log.png");
+	  cout << "" << endl;
+	  delete c1;
+	}
+	else if ((pos = name.find("_sig_LeadBlobType_neut")) != string::npos){
+	  TCanvas* c1 = DrawLeadBlobType(name,mcFile,dataFile,label,scale);
+	  TPad* top = (TPad*)c1->GetPrimitive("Overlay");
+	  nameInt.erase(nameInt.length()-22,nameInt.length());
+	  c1->Print((TString)outDir+(TString)nameInt+"_LeadBlobType_stacked.pdf");
+	  c1->Print((TString)outDir+(TString)nameInt+"_LeadBlobType_stacked.png");
+	  top->SetLogy();
+	  c1->Update();
+	  c1->Print((TString)outDir+(TString)nameInt+"_LeadBlobType_stacked_log.pdf");
+	  c1->Print((TString)outDir+(TString)nameInt+"_LeadBlobType_stacked_log.png");
+	  cout << "" << endl;
+	  delete c1;
+	}
+	else if ((pos = name.find("_selected_signal_reco")) != string::npos){
+	  TCanvas* c1 = DrawBKGCateg(name,mcFile,dataFile,label,scale);
+	  TPad* top = (TPad*)c1->GetPrimitive("Overlay");
+	  nameInt.erase(nameInt.length()-21,nameInt.length());
+	  c1->Print((TString)outDir+(TString)nameInt+"_BKG_stacked.pdf");
+	  c1->Print((TString)outDir+(TString)nameInt+"_BKG_stacked.png");
+	  top->SetLogy();
+	  c1->Update();
+	  c1->Print((TString)outDir+(TString)nameInt+"_BKG_stacked_log.pdf");
+	  c1->Print((TString)outDir+(TString)nameInt+"_BKG_stacked_log.png");
+	  cout << "" << endl;
+	  delete c1;
+	}	
+      }
+    }
+
     pos=0;
     string name=(string)key->GetName();
     if((pos=name.find("TwoD")) != string::npos) continue;
