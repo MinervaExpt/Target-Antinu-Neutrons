@@ -32,7 +32,7 @@ class Variable2D: public PlotUtils::Variable2DBase<CVUniverse>
                                                   {3, "DIS"},
                                                   {8, "2p2h"}};
 
-      std::map<int, std::string> TargetTypeLabels = {{1, "H"},
+      std::map<int, std::string> TargetTypeLabels = {{1, "Plastic"},
                                                      {6, "C"},
                                                      {8, "O"},
                                                      {26, "Fe"},
