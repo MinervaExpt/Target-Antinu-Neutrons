@@ -161,14 +161,26 @@ void LoopAndFillEventSelection(
         //const double weight = 1.0; //Dummy weight for testing/validation pre-weight
         const bool isSignal = michelcuts.isSignal(*universe, weight);
 	int intType = universe->GetInteractionType();
-	int tgtType = universe->GetTargetZ();
-	
+	int tgtZ = universe->GetTargetZ();
+	//util::GetTargetType(tgtZ,);
+
 	std::vector<double> vtx = universe->GetVtx();
 	double vtx_x = vtx.at(0);
 	double vtx_y = vtx.at(1);
 	double vtx_z = vtx.at(2);
 
+	std::vector<double> mc_vtx = universe->GetTrueVtx();
+	double mc_vtx_x = mc_vtx.at(0);
+	double mc_vtx_y = mc_vtx.at(1);
+	double mc_vtx_z = mc_vtx.at(2);
+
 	int tgtID = util::GetRecoTargetZ(vtx_x,vtx_y,vtx_z);
+	int trueTgtID = util::GetRecoTargetZ(mc_vtx_x,mc_vtx_y,mc_vtx_z);
+
+	int tgtType = tgtZ;
+	if (tgtZ==6 && trueTgtID !=3) tgtType = 1;
+	if (tgtZ==1 && trueTgtID ==6) tgtType = 8;
+	if (tgtZ==8 && trueTgtID !=6) tgtType = -1;
 
 	/* Just for checking the output of GetRecoTargetZ
 	std::cout << "Checking Target Breakdown" << std::endl;
@@ -722,7 +734,7 @@ int main(const int argc, const char** argv)
     new Variable("nMichel","No.", n5Bins, &CVUniverse::GetNImprovedMichel),
     new Variable("nTrack","No.", n5Bins, &CVUniverse::GetNTracks),
     new Variable("pmu", "p_{#mu} [GeV/c]", myPmuBins, &CVUniverse::GetMuonP, &CVUniverse::GetMuonPTrue),//Don't need GetDummyTrue perhaps...
-    new Variable("vtxZ", "Z [mm]", myVtxZBins, &CVUniverse::GetVtxZ),//Don't need GetDummyTrue perhaps...
+    new Variable("vtxZ", "Z [mm]", myVtxZBins, &CVUniverse::GetVtxZ, &CVUniverse::GetTrueVtxZ),//Don't need GetDummyTrue perhaps...
     new Variable("recQ2Bin","No.",myRecoilQ2Bins, &CVUniverse::GetRecoilQ2Bin),
   };
 
