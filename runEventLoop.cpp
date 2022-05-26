@@ -182,6 +182,11 @@ void LoopAndFillEventSelection(
 	if (tgtZ==1 && trueTgtID ==6) tgtType = 8;
 	if (tgtZ==8 && trueTgtID !=6) tgtType = -1;
 
+	if (tgtType==1 && tgtID > 0 && tgtID < 7){
+	  if (mc_vtx_z < vtx_z) tgtType = 2; //US Plastic
+	  if (mc_vtx_z > vtx_z) tgtType = 3; //DS Plastic
+	}
+
 	/* Just for checking the output of GetRecoTargetZ
 	std::cout << "Checking Target Breakdown" << std::endl;
 	std::cout << "Target Z " << tgtType << std::endl;
