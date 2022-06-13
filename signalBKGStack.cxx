@@ -508,8 +508,8 @@ TCanvas* DrawTargetType(string name_Plastic, TFile* mcFile, TFile* dataFile, TSt
   MnvH1D* h_Plastic_Sig = (MnvH1D*)mcFile->Get((TString)name_Plastic);
   h_Plastic_Sig->Scale(scale);
   MnvH1D* mcSum = (MnvH1D*)h_Plastic_Sig->Clone();
-  h_Plastic_Sig->SetLineColor(TColor::GetColor("#88CCEE"));
-  h_Plastic_Sig->SetFillColor(TColor::GetColor("#88CCEE"));
+  h_Plastic_Sig->SetLineColor(TColor::GetColor("#DDCC77"));
+  h_Plastic_Sig->SetFillColor(TColor::GetColor("#DDCC77"));
 
   //string name_sig = (string)h_Plastic_Sig->GetName();
   string name_sig = name_Plastic;
@@ -527,6 +527,18 @@ TCanvas* DrawTargetType(string name_Plastic, TFile* mcFile, TFile* dataFile, TSt
   cout << title << endl;
   cout << "" << endl;
   */
+
+  MnvH1D* h_US_Sig = (MnvH1D*)mcFile->Get((TString)name_sig+"_USPlastic");
+  h_US_Sig->Scale(scale);
+  mcSum->Add(h_US_Sig);
+  h_US_Sig->SetLineColor(TColor::GetColor("#A26E1C"));
+  h_US_Sig->SetFillColor(TColor::GetColor("#A26E1C"));
+
+  MnvH1D* h_DS_Sig = (MnvH1D*)mcFile->Get((TString)name_sig+"_DSPlastic");
+  h_DS_Sig->Scale(scale);
+  mcSum->Add(h_DS_Sig);
+  h_DS_Sig->SetLineColor(TColor::GetColor("#C1B185"));
+  h_DS_Sig->SetFillColor(TColor::GetColor("#C1B185"));
 
   MnvH1D* h_Fe_Sig = (MnvH1D*)mcFile->Get((TString)name_sig+"_Fe");
   h_Fe_Sig->Scale(scale);
@@ -549,8 +561,8 @@ TCanvas* DrawTargetType(string name_Plastic, TFile* mcFile, TFile* dataFile, TSt
   MnvH1D* h_C_Sig = (MnvH1D*)mcFile->Get((TString)name_sig+"_C");
   h_C_Sig->Scale(scale);
   mcSum->Add(h_C_Sig);
-  h_C_Sig->SetLineColor(TColor::GetColor("#DDCC77"));
-  h_C_Sig->SetFillColor(TColor::GetColor("#DDCC77"));
+  h_C_Sig->SetLineColor(TColor::GetColor("#88CCEE"));
+  h_C_Sig->SetFillColor(TColor::GetColor("#88CCEE"));
 
   //h_Prot_Sig->SetFillColor(TColor::GetColor("#999933"));
 
@@ -565,9 +577,23 @@ TCanvas* DrawTargetType(string name_Plastic, TFile* mcFile, TFile* dataFile, TSt
   MnvH1D* h_Plastic_Bkg = (MnvH1D*)mcFile->Get((TString)name_bkg+"_bkg_TargetType_Plastic");
   h_Plastic_Bkg->Scale(scale);
   mcSum->Add(h_Plastic_Bkg);
-  h_Plastic_Bkg->SetLineColor(TColor::GetColor("#88CCEE"));
-  h_Plastic_Bkg->SetFillColor(TColor::GetColor("#88CCEE"));
+  h_Plastic_Bkg->SetLineColor(TColor::GetColor("#DDCC77"));
+  h_Plastic_Bkg->SetFillColor(TColor::GetColor("#DDCC77"));
   h_Plastic_Bkg->SetFillStyle(3444);
+
+  MnvH1D* h_US_Bkg = (MnvH1D*)mcFile->Get((TString)name_bkg+"_bkg_TargetType_USPlastic");
+  h_US_Bkg->Scale(scale);
+  mcSum->Add(h_US_Bkg);
+  h_US_Bkg->SetLineColor(TColor::GetColor("#A26E1C"));
+  h_US_Bkg->SetFillColor(TColor::GetColor("#A26E1C"));
+  h_US_Bkg->SetFillStyle(3444);
+
+  MnvH1D* h_DS_Bkg = (MnvH1D*)mcFile->Get((TString)name_bkg+"_bkg_TargetType_DSPlastic");
+  h_DS_Bkg->Scale(scale);
+  mcSum->Add(h_DS_Bkg);
+  h_DS_Bkg->SetLineColor(TColor::GetColor("#C1B185"));
+  h_DS_Bkg->SetFillColor(TColor::GetColor("#C1B185"));
+  h_DS_Bkg->SetFillStyle(3444);
 
   MnvH1D* h_Fe_Bkg = (MnvH1D*)mcFile->Get((TString)name_bkg+"_bkg_TargetType_Fe");
   h_Fe_Bkg->Scale(scale);
@@ -593,8 +619,8 @@ TCanvas* DrawTargetType(string name_Plastic, TFile* mcFile, TFile* dataFile, TSt
   MnvH1D* h_C_Bkg = (MnvH1D*)mcFile->Get((TString)name_bkg+"_bkg_TargetType_C");
   h_C_Bkg->Scale(scale);
   mcSum->Add(h_C_Bkg);
-  h_C_Bkg->SetLineColor(TColor::GetColor("#DDCC77"));
-  h_C_Bkg->SetFillColor(TColor::GetColor("#DDCC77"));
+  h_C_Bkg->SetLineColor(TColor::GetColor("#88CCEE"));
+  h_C_Bkg->SetFillColor(TColor::GetColor("#88CCEE"));
   h_C_Bkg->SetFillStyle(3444);
 
   MnvH1D* h_Other_Bkg = (MnvH1D*)mcFile->Get((TString)name_bkg+"_bkg_TargetType_Other");
@@ -614,6 +640,8 @@ TCanvas* DrawTargetType(string name_Plastic, TFile* mcFile, TFile* dataFile, TSt
   h->Add((TH1D*)h_Water_Bkg->GetCVHistoWithError().Clone());
   h->Add((TH1D*)h_Pb_Bkg->GetCVHistoWithError().Clone());
   h->Add((TH1D*)h_Fe_Bkg->GetCVHistoWithError().Clone());
+  h->Add((TH1D*)h_DS_Bkg->GetCVHistoWithError().Clone());
+  h->Add((TH1D*)h_US_Bkg->GetCVHistoWithError().Clone());
   h->Add((TH1D*)h_Plastic_Bkg->GetCVHistoWithError().Clone());
 
   h->Add((TH1D*)h_Other_Sig->GetCVHistoWithError().Clone());
@@ -621,6 +649,8 @@ TCanvas* DrawTargetType(string name_Plastic, TFile* mcFile, TFile* dataFile, TSt
   h->Add((TH1D*)h_Water_Sig->GetCVHistoWithError().Clone());
   h->Add((TH1D*)h_Pb_Sig->GetCVHistoWithError().Clone());
   h->Add((TH1D*)h_Fe_Sig->GetCVHistoWithError().Clone());
+  h->Add((TH1D*)h_DS_Sig->GetCVHistoWithError().Clone());
+  h->Add((TH1D*)h_US_Sig->GetCVHistoWithError().Clone());
   h->Add((TH1D*)h_Plastic_Sig->GetCVHistoWithError().Clone());
 
   TCanvas* c1 = new TCanvas("c1","c1",1200,800);
@@ -714,6 +744,12 @@ TCanvas* DrawTargetType(string name_Plastic, TFile* mcFile, TFile* dataFile, TSt
 
   leg->AddEntry(h_Plastic_Sig,"Sig. + Plastic");
   leg->AddEntry(h_Plastic_Bkg,"Bkg. + Plastic");
+
+  leg->AddEntry(h_US_Sig,"Sig. + US Plastic");
+  leg->AddEntry(h_US_Bkg,"Bkg. + US Plastic");
+
+  leg->AddEntry(h_DS_Sig,"Sig. + DS Plastic");
+  leg->AddEntry(h_DS_Bkg,"Bkg. + DS Plastic");
 
   leg->AddEntry(h_Fe_Sig,"Sig. + Fe");
   leg->AddEntry(h_Fe_Bkg,"Bkg. + Fe");
