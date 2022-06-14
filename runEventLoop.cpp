@@ -169,6 +169,11 @@ void LoopAndFillEventSelection(
 	double vtx_y = vtx.at(1);
 	double vtx_z = vtx.at(2);
 
+	/*
+	if ((TString)(universe->ShortName()) == "cv" && vtx_z > 5650 && vtx_z < 5800){
+	  std::cout << "Event Vertex Z: " << vtx_z << std::endl;
+	  }*/
+
 	std::vector<double> mc_vtx = universe->GetTrueVtx();
 	double mc_vtx_x = mc_vtx.at(0);
 	double mc_vtx_y = mc_vtx.at(1);
