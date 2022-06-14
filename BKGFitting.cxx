@@ -1,7 +1,7 @@
 //File: BKGFitting.cxx
 //Info: This script is intended to fit recoil/pTmu plots using TMinuit primarily for the neutron selected sample.
 //
-//Usage: BKGFitting <mc_file> <data_file> <outdir> <recoilE/pTmu> <doSyst (only 0 means no)> optional: <mainTagName> <lowFitBinNum> <hiFitBinNum> <do fits in bins of muon momentum (only 0 means no)> TODO: Save the information beyond just printing it out
+//Usage: BKGFitting <mc_file> <data_file> <outdir> <recoilE/pTmu/vtxZ> <doSyst (only 0 means no)> optional: <mainTagName> <lowFitBinNum> <hiFitBinNum> <do fits in bins of muon momentum (only 0 means no)> TODO: Save the information beyond just printing it out
 //Author: David Last dlast@sas.upenn.edu/lastd44@gmail.com
 
 //TODO: Same SegFault Business From My Plotting Code... I'm assuming I just need to delete things carefully that I'm not yet.
@@ -521,6 +521,8 @@ int main(int argc, char* argv[]) {
     return 111;
   }
   if (argc > 6) mainTag = argv[6];
+
+  //NEED TO CODE IN SOMETHING THAT HANDLES THE VERTEX PLOTS IN THE TARGETS.
 
   //cout << "Setting up MnvPlotter" << endl;
   //MnvPlotter* plotter = new MnvPlotter(kCCQEAntiNuStyle);
