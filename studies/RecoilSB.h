@@ -51,6 +51,8 @@ class PreRecoil: public Study
       for (auto& var : vars){
 	fVars.push_back(new Variable((var->GetName()+"_PreRecoilCut").c_str(), var->GetAxisLabel(), var->GetBinVec(),var->GetRecoFunc(),var->GetTrueFunc()));
 	if (fFVregionName == "Targets"){
+	  TString nameCheck = var->GetName();
+	  if (nameCheck=="vtxZ") continue;
 	  fVars_ByTgt.push_back(new util::Categorized<Variable, int>(var->GetDirectoryName(), "ByTgt", (var->GetName()+"_PreRecoilCut").c_str(),var->GetAxisLabel().c_str(), util::TgtList,var->GetBinVec(),var->GetRecoFunc(),var->GetTrueFunc()));
 	}
       }

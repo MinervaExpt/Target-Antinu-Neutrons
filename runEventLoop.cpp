@@ -604,7 +604,7 @@ int main(const int argc, const char** argv)
     maxZtmp = 8422;
   }
   else if (FVregionName == "Targets"){
-    minZtmp = 4470;
+    minZtmp = 4400;
     maxZtmp = 5980;
   }
   else{
@@ -720,7 +720,7 @@ int main(const int argc, const char** argv)
   const double myPmuBinWidth = 0.5;
   for(int whichBin = 0; whichBin < 41; ++whichBin) myPmuBins.push_back(myPmuBinWidth * whichBin);
 
-  const double myVtxZBinWidth = 10.;
+  const double myVtxZBinWidth = 1.;
   //const double myVtxZBase = 5800.; //Tracker for plot testing
   const double myVtxZBase = minZ; //Targets for later!!!
   const int nVtxZBins = ceil((maxZ-minZ)/myVtxZBinWidth);
@@ -736,11 +736,11 @@ int main(const int argc, const char** argv)
     new Variable("nBlobs", "No.", nBlobsBins, &CVUniverse::GetNNeutBlobs),//Don't need GetDummyTrue perhaps...
     new Variable("recoilE", "Recoil E [GeV]", myRecoilBins, &CVUniverse::GetDANRecoilEnergyGeV),//Don't need GetDummyTrue perhaps...
     new Variable("Q2QE", "Q^{2}_{QE} [GeV^{2}]", myQ2QEBins, &CVUniverse::GetQ2QEPickledGeV),
-    new Variable("nMichel","No.", n5Bins, &CVUniverse::GetNImprovedMichel),
-    new Variable("nTrack","No.", n5Bins, &CVUniverse::GetNTracks),
-    new Variable("pmu", "p_{#mu} [GeV/c]", myPmuBins, &CVUniverse::GetMuonP, &CVUniverse::GetMuonPTrue),//Don't need GetDummyTrue perhaps...
+    //new Variable("nMichel","No.", n5Bins, &CVUniverse::GetNImprovedMichel),
+    //new Variable("nTrack","No.", n5Bins, &CVUniverse::GetNTracks),
+    //new Variable("pmu", "p_{#mu} [GeV/c]", myPmuBins, &CVUniverse::GetMuonP, &CVUniverse::GetMuonPTrue),//Don't need GetDummyTrue perhaps...
     new Variable("vtxZ", "Z [mm]", myVtxZBins, &CVUniverse::GetVtxZ, &CVUniverse::GetTrueVtxZ),//Don't need GetDummyTrue perhaps...
-    new Variable("recQ2Bin","No.",myRecoilQ2Bins, &CVUniverse::GetRecoilQ2Bin),
+    //new Variable("recQ2Bin","No.",myRecoilQ2Bins, &CVUniverse::GetRecoilQ2Bin),
   };
 
   /*
@@ -762,14 +762,18 @@ int main(const int argc, const char** argv)
   std::vector<util::Categorized<Variable, int>*> vars_ByTgt = {};
   if (FVregionName == "Targets"){
     for(auto& var: vars){ 
+      TString nameCheck = var->GetName();
+      if (nameCheck = "vtxZ") continue;
       vars_ByTgt.push_back(new util::Categorized<Variable, int>(var->GetDirectoryName(), "ByTgt", var->GetName().c_str(),var->GetAxisLabel().c_str(),util::TgtList,var->GetBinVec(),var->GetRecoFunc(),var->GetTrueFunc()));
     }
   }
 
+
   std::vector<Variable2D*> vars2D = {
-    new Variable2D(*vars[4],*vars[3]),//recoil v. Q2
-    new Variable2D(*vars[vars.size()-1],*vars[0]),//pT v. recoilQ2Bin
+    //new Variable2D(*vars[4],*vars[3]),//recoil v. Q2
+    //new Variable2D(*vars[vars.size()-1],*vars[0]),//pT v. recoilQ2Bin
   };
+
 
   if(doCCQENuValidation)
   {
