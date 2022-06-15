@@ -314,12 +314,14 @@ map<TString,MnvH1D*> FitScaleFactorsAndDraw(MnvH1D* dataHist, map<TString, MnvH1
   }
   
   const double* scaleResults = mini->X();
+  const double* scaleErrors = mini->Errors();
   map<TString, double> scaleByName;
   nextPar=0;
   for (auto hist:fitHistsAndNames){
     scaleByName[hist.first]=scaleResults[nextPar];
     for (int iBin=0; iBin <= scaleHists[hist.first]->GetNbinsX()+1; ++iBin){
       scaleHists[hist.first]->SetBinContent(iBin,scaleResults[nextPar]);
+      scaleHists[hist.first]->SetBinError(iBin,scaleErrors[nextPar]);
     }
     scaleHists[hist.first]->AddMissingErrorBandsAndFillWithCV(*hist.second);
     ++nextPar;
