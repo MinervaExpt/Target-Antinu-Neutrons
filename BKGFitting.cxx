@@ -95,11 +95,11 @@ void printCorrMatrix(const ROOT::Math::Minimizer& minim, const int nPars)
   }
 }
 
-TCanvas* DrawFromMnvH1Ds(MnvH1D* h_data, map<TString, MnvH1D*> hFit, map<TString, MnvH1D*> hUnfit, bool sigFit){
+void DrawFromMnvH1Ds(MnvH1D* h_data, map<TString, MnvH1D*> hFit, map<TString, MnvH1D*> hUnfit, bool sigFit, TString nameToSave){
 
   if (hFit.size()==0){
     cout << "This script should not be used to plot histograms not involved with fitting at this time." << endl;
-    return new TCanvas();
+    return;
   }
 
   MnvH1D* mcSum;
@@ -233,9 +233,27 @@ TCanvas* DrawFromMnvH1Ds(MnvH1D* h_data, map<TString, MnvH1D*> hFit, map<TString
   straightLine->Draw("HIST SAME");
 
   c1->Update();
-  return c1;
+  c1->Print(nameToSave+".pdf");
+  c1->Print(nameToSave+".png");
+  top->SetLogy();
+  c1->Update();
+  c1->Print(nameToSave+"_log.pdf");
+  c1->Print(nameToSave+"_log.png");  
+
+  delete c1;
+
+  //Does deleting these fix my seg fault issues?
+  delete mcSum;
+  if (!allFit) delete unfitSum;
+  delete h;
+  delete ratio;
+  delete mcRatio;
+  delete straightLine;
+
+  return;
 }
 
+//TODO: Instead of Plotting Save Scale Factor Histograms for analysis variables.
 int FitScaleFactorsAndDraw(MnvH1D* dataHist, map<TString, MnvH1D*> fitHistsAndNames, map<TString, MnvH1D*> unfitHistsAndNames, TString varName, TString outDir, int lowBin, int hiBin, bool doSyst, bool sigFit){
   TString name = varName+"_low_"+(TString)(to_string(lowBin))+"_hi_"+(TString)(to_string(hiBin));
 
@@ -245,17 +263,8 @@ int FitScaleFactorsAndDraw(MnvH1D* dataHist, map<TString, MnvH1D*> fitHistsAndNa
     return 6;
   }
 
-  //TODO: ONLY DRAW THE PREFIT IF IT HASN'T BEEN DONE ALREADY.
   if (!PathExists((string)(outDir+varName+"_preFit.pdf"))){
-    TCanvas* c1 = DrawFromMnvH1Ds(dataHist,fitHistsAndNames,unfitHistsAndNames,sigFit);
-    TPad* top = (TPad*)c1->GetPrimitive("Overlay");
-    c1->Print(outDir+varName+"_preFit.pdf");
-    c1->Print(outDir+varName+"_preFit.png");
-    top->SetLogy();
-    c1->Update();
-    c1->Print(outDir+varName+"_preFit_log.pdf");
-    c1->Print(outDir+varName+"_preFit_log.png");  
-    delete c1;
+    DrawFromMnvH1Ds(dataHist,fitHistsAndNames,unfitHistsAndNames,sigFit,outDir+varName+"_preFit");
   }
 
   TH1D* hData = (TH1D*)dataHist->GetCVHistoWithStatError().Clone();
@@ -397,6 +406,10 @@ int FitScaleFactorsAndDraw(MnvH1D* dataHist, map<TString, MnvH1D*> fitHistsAndNa
 	}
 	
 	quelUniv += 1.0;
+	for (auto hist:fitHistsUniv) delete hist;
+	fitHistsUniv.clear();
+	for (auto hist:unfitHistsUniv) delete hist;
+	unfitHistsUniv.clear();
       }
     }
 
@@ -411,17 +424,15 @@ int FitScaleFactorsAndDraw(MnvH1D* dataHist, map<TString, MnvH1D*> fitHistsAndNa
     delete c1;
   }
 
-  TCanvas* c1 = DrawFromMnvH1Ds(dataHist,fitHistsAndNames,unfitHistsAndNames,sigFit);
-  TPad* top = (TPad*)c1->GetPrimitive("Overlay");
-  c1->Print(outDir+name+"_postFit.pdf");
-  c1->Print(outDir+name+"_postFit.png");
-  top->SetLogy();
-  c1->Update();
-  c1->Print(outDir+name+"_postFit_log.pdf");
-  c1->Print(outDir+name+"_postFit_log.png");  
-  delete c1;
+  DrawFromMnvH1Ds(dataHist,fitHistsAndNames,unfitHistsAndNames,sigFit,outDir+name+"_postFit");
   
   cout << "Drawing of CV scale completed." << endl;
+
+  delete hData;
+  for (auto hist:fitHists) delete hist;
+  fitHists.clear();
+  for (auto hist:unfitHists) delete hist;
+  unfitHists.clear();
 
   return 0;
 }
@@ -639,12 +650,12 @@ int main(int argc, char* argv[]) {
 
     fitHists4A["single #pi^{#pm}"]=(MnvH1D*)chargePiHist->Clone();
     fitHists4A["N#pi & single #pi^{0}"]=(MnvH1D*)bkgNNeutPiHist->Clone();
-    fitHists4A["Signal"]=(MnvH1D*)sigHist->Clone()->Clone();
+    fitHists4A["Signal"]=(MnvH1D*)sigHist->Clone();
     unfitHists4A["Other"]=(MnvH1D*)otherHist->Clone();
 
     fitHists4B["single #pi^{#pm}"]=(MnvH1D*)chargePiHist->Clone();
     fitHists4B["N#pi & single #pi^{0}"]=(MnvH1D*)bkgNNeutPiHist->Clone();
-    unfitHists4B["Signal"]=(MnvH1D*)sigHist->Clone()->Clone();
+    unfitHists4B["Signal"]=(MnvH1D*)sigHist->Clone();
     unfitHists4B["Other"]=(MnvH1D*)otherHist->Clone();
 
     fitHists5A["RES"]=(MnvH1D*)RESHist->Clone();
@@ -729,6 +740,46 @@ int main(int argc, char* argv[]) {
     cout << "Result: " << result << endl;
     cout << "" << endl;
     //if (result != 0) return result;
+
+    delete dataHist;
+    delete sigHist;
+    delete chargePiHist;
+    delete neutPiHist;
+    delete NPiHist;
+    delete otherHist;
+    delete bkgNNeutPiHist;
+    delete bkg1PiHist;
+    delete QEHist;
+    delete RESHist;
+    delete DISHist;
+    delete MECHist;
+    delete OtherIntTypeHist;
+    delete bkgNonRESHist;
+    delete bkgTotHist;
+    for (auto hist:fitHists1A) delete hist.second;
+    for (auto hist:unfitHists1A) delete hist.second;
+    for (auto hist:fitHists1B) delete hist.second;
+    for (auto hist:unfitHists1B) delete hist.second;
+    for (auto hist:fitHists2A) delete hist.second;
+    for (auto hist:unfitHists2A) delete hist.second;
+    for (auto hist:fitHists2B) delete hist.second;
+    for (auto hist:unfitHists2B) delete hist.second;
+    for (auto hist:fitHists3A) delete hist.second;
+    for (auto hist:unfitHists3A) delete hist.second;
+    for (auto hist:fitHists3B) delete hist.second;
+    for (auto hist:unfitHists3B) delete hist.second;
+    for (auto hist:fitHists4A) delete hist.second;
+    for (auto hist:unfitHists4A) delete hist.second;
+    for (auto hist:fitHists4B) delete hist.second;
+    for (auto hist:unfitHists4B) delete hist.second;
+    for (auto hist:fitHists5A) delete hist.second;
+    for (auto hist:unfitHists5A) delete hist.second;
+    for (auto hist:fitHists5B) delete hist.second;
+    for (auto hist:unfitHists5B) delete hist.second;
+    for (auto hist:fitHists6A) delete hist.second;
+    for (auto hist:unfitHists6A) delete hist.second;
+    for (auto hist:fitHists6B) delete hist.second;
+    for (auto hist:unfitHists6B) delete hist.second;
   }
 
   cout << "Closing Files... Does this solve the issue of seg fault." << endl;
