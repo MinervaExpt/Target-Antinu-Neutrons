@@ -254,13 +254,15 @@ void DrawFromMnvH1Ds(MnvH1D* h_data, map<TString, MnvH1D*> hFit, map<TString, Mn
 }
 
 //TODO: Instead of Plotting Save Scale Factor Histograms for analysis variables.
-int FitScaleFactorsAndDraw(MnvH1D* dataHist, map<TString, MnvH1D*> fitHistsAndNames, map<TString, MnvH1D*> unfitHistsAndNames, TString varName, TString outDir, int lowBin, int hiBin, bool doSyst, bool sigFit){
+map<TString,MnvH1D*> FitScaleFactorsAndDraw(MnvH1D* dataHist, map<TString, MnvH1D*> fitHistsAndNames, map<TString, MnvH1D*> unfitHistsAndNames, TString varName, TString outDir, int lowBin, int hiBin, bool doSyst, bool sigFit){
+  map<TString,MnvH1D*> scaleHists = {};
+
   TString name = varName+"_low_"+(TString)(to_string(lowBin))+"_hi_"+(TString)(to_string(hiBin));
 
   if (PathExists((string)(outDir+name+"_postFit.pdf"))){
     cout << "Already performed fits over this range for this histo." << endl;
     cout << "If you are doing this because of updated histos, it is in your best interest to save this elsewhere or remove the old plots." << endl;
-    return 6;
+    return scaleHists;
   }
 
   if (!PathExists((string)(outDir+varName+"_preFit.pdf"))){
@@ -273,6 +275,7 @@ int FitScaleFactorsAndDraw(MnvH1D* dataHist, map<TString, MnvH1D*> fitHistsAndNa
 
   for (auto hists:fitHistsAndNames){
     fitHists.push_back((TH1D*)hists.second->GetCVHistoWithStatError().Clone());
+    scaleHists[hists.first] = new MnvH1D(name+hists.first,"",hists.second->GetNbinsX(),hists.second->GetXaxis()->GetXbins()->GetArray());
   }
 
   for (auto hists:unfitHistsAndNames){
@@ -292,7 +295,7 @@ int FitScaleFactorsAndDraw(MnvH1D* dataHist, map<TString, MnvH1D*> fitHistsAndNa
 
   if (nextPar != func.NDim()){
     cout << "The number of parameters was unexpected for some reason..." << endl;
-    return 6;
+    return scaleHists;
   }
 
   mini->SetFunction(func);
@@ -315,6 +318,10 @@ int FitScaleFactorsAndDraw(MnvH1D* dataHist, map<TString, MnvH1D*> fitHistsAndNa
   nextPar=0;
   for (auto hist:fitHistsAndNames){
     scaleByName[hist.first]=scaleResults[nextPar];
+    for (int iBin=0; iBin <= scaleHists[hist.first]->GetNbinsX()+1; ++iBin){
+      scaleHists[hist.first]->SetBinContent(iBin,scaleResults[nextPar]);
+    }
+    scaleHists[hist.first]->AddMissingErrorBandsAndFillWithCV(*hist.second);
     ++nextPar;
   }
 
@@ -379,7 +386,7 @@ int FitScaleFactorsAndDraw(MnvH1D* dataHist, map<TString, MnvH1D*> fitHistsAndNa
 	
 	if (parNext != funcUniv.NDim()){
 	  cout << "The number of parameters was unexpected for some reason..." << endl;
-	  return 6;
+	  return scaleHists;
 	}
 	
 	miniUniv->SetFunction(funcUniv);
@@ -401,6 +408,7 @@ int FitScaleFactorsAndDraw(MnvH1D* dataHist, map<TString, MnvH1D*> fitHistsAndNa
 	parNext=0;
 	for (auto hist:fitHistsAndNames){
 	  hist.second->GetVertErrorBand(bandName)->GetHist(whichUniv)->Scale(scaleResultsUniv[parNext]);	
+	  scaleHists[hist.first]->GetVertErrorBand(bandName)->GetHist(whichUniv)->Scale(scaleResultsUniv[parNext]);
 	  scaleFactorHists[hist.first]->Fill(quelUniv,scaleResultsUniv[parNext]);
 	  ++parNext;
 	}
@@ -434,7 +442,7 @@ int FitScaleFactorsAndDraw(MnvH1D* dataHist, map<TString, MnvH1D*> fitHistsAndNa
   for (auto hist:unfitHists) delete hist;
   unfitHists.clear();
 
-  return 0;
+  return scaleHists;
 }
 
 int main(int argc, char* argv[]) {
@@ -607,18 +615,22 @@ int main(int argc, char* argv[]) {
     bkgTotHist->Add(RESHist);
 
     map<TString, MnvH1D*> fitHists1A, unfitHists1A;
+    /*
     map<TString, MnvH1D*> fitHists2A, unfitHists2A;
     map<TString, MnvH1D*> fitHists3A, unfitHists3A;
     map<TString, MnvH1D*> fitHists4A, unfitHists4A;
     map<TString, MnvH1D*> fitHists5A, unfitHists5A;
     map<TString, MnvH1D*> fitHists6A, unfitHists6A;
+    */
 
     map<TString, MnvH1D*> fitHists1B, unfitHists1B;
+    /*
     map<TString, MnvH1D*> fitHists2B, unfitHists2B;
     map<TString, MnvH1D*> fitHists3B, unfitHists3B;
     map<TString, MnvH1D*> fitHists4B, unfitHists4B;
     map<TString, MnvH1D*> fitHists5B, unfitHists5B;
     map<TString, MnvH1D*> fitHists6B, unfitHists6B;
+    */
 
     fitHists1A["BKG"]=(MnvH1D*)bkgTotHist->Clone();
     fitHists1A["Signal"]=(MnvH1D*)sigHist->Clone();
@@ -626,6 +638,7 @@ int main(int argc, char* argv[]) {
     fitHists1B["BKG"]=(MnvH1D*)bkgTotHist->Clone();
     unfitHists1B["Signal"]=(MnvH1D*)sigHist->Clone();
 
+    /*
     fitHists2A["single #pi^{#pm}"]=(MnvH1D*)chargePiHist->Clone();
     fitHists2A["single #pi^{0}"]=(MnvH1D*)neutPiHist->Clone();
     fitHists2A["N#pi"]=(MnvH1D*)NPiHist->Clone();
@@ -679,17 +692,34 @@ int main(int argc, char* argv[]) {
     unfitHists6B["QE"]=(MnvH1D*)QEHist->Clone();
     unfitHists6B["2p2h"]=(MnvH1D*)MECHist->Clone();
     unfitHists6B["Other"]=(MnvH1D*)OtherIntTypeHist->Clone();
+    */
 
     cout << "Fitting 1A" << endl;
-    int result = FitScaleFactorsAndDraw(dataHist, fitHists1A, unfitHists1A, name+"_fit1A", outDir, lowBin, hiBin, doSyst, true);
-    cout << "Result: " << result << endl;
+    map<TString,MnvH1D*> result = FitScaleFactorsAndDraw(dataHist, fitHists1A, unfitHists1A, name+"_fit1A", outDir, lowBin, hiBin, doSyst, true);
+    map<TString,MnvH1D*> scaledHists1A = {};
+    scaledHists1A["BKG"]=(MnvH1D*)bkgTotHist->Clone();
+    scaledHists1A["Signal"]=(MnvH1D*)sigHist->Clone();
+    for(auto hists:scaledHists1A) hists.second->Multiply(hists.second,result[hists.first]);
+    DrawFromMnvH1Ds(dataHist,scaledHists1A,unfitHists1A,true,outDir+"TEST_NEW_"+name+"_fit1A_postFit");
+    //cout << "Result Has Size: " << result << endl;
     cout << "" << endl;
+
+    for (auto hist:result) delete hist.second;
+    result.clear();
 
     cout << "Fitting 1B" << endl;
     result = FitScaleFactorsAndDraw(dataHist, fitHists1B, unfitHists1B, name+"_fit1B", outDir, lowBin, hiBin, doSyst, false);
-    cout << "Result: " << result << endl;
+    map<TString,MnvH1D*> scaledHists1B = {};
+    scaledHists1B["BKG"]=(MnvH1D*)bkgTotHist->Clone();
+    for(auto hists:scaledHists1B) hists.second->Multiply(hists.second,result[hists.first]);
+    DrawFromMnvH1Ds(dataHist,scaledHists1B,unfitHists1B,false,outDir+"TEST_NEW_"+name+"_fit1B_postFit");
+    //cout << "Result Has Size: " << result << endl;
     cout << "" << endl;
 
+    for (auto hist:result) delete hist.second;
+    result.clear();
+
+    /*
     cout << "Fitting 2A" << endl;
     result = FitScaleFactorsAndDraw(dataHist, fitHists2A, unfitHists2A, name+"_fit2A", outDir, lowBin, hiBin, doSyst, true);
     cout << "Result: " << result << endl;
@@ -740,6 +770,7 @@ int main(int argc, char* argv[]) {
     cout << "Result: " << result << endl;
     cout << "" << endl;
     //if (result != 0) return result;
+    */
 
     delete dataHist;
     delete sigHist;
@@ -760,6 +791,9 @@ int main(int argc, char* argv[]) {
     for (auto hist:unfitHists1A) delete hist.second;
     for (auto hist:fitHists1B) delete hist.second;
     for (auto hist:unfitHists1B) delete hist.second;
+    for (auto hist:scaledHists1A) delete hist.second;
+    for (auto hist:scaledHists1B) delete hist.second;
+    /*
     for (auto hist:fitHists2A) delete hist.second;
     for (auto hist:unfitHists2A) delete hist.second;
     for (auto hist:fitHists2B) delete hist.second;
@@ -780,6 +814,7 @@ int main(int argc, char* argv[]) {
     for (auto hist:unfitHists6A) delete hist.second;
     for (auto hist:fitHists6B) delete hist.second;
     for (auto hist:unfitHists6B) delete hist.second;
+    */
   }
 
   cout << "Closing Files... Does this solve the issue of seg fault." << endl;
