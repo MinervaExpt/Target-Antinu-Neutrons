@@ -627,7 +627,7 @@ int main(const int argc, const char** argv)
   preCuts.emplace_back(new MyCCQECuts::PMuRange<CVUniverse, NeutronEvent>("1.5 <= Pmu <= 20",1.5,20.0));
   preCuts.emplace_back(new MyCCQECuts::IsAntiNu<CVUniverse, NeutronEvent>());
   preCuts.emplace_back(new MyCCQECuts::IsSingleTrack<CVUniverse, NeutronEvent>());
-  preCuts.emplace_back(new MyCCQECuts::LooseRecoilCut<CVUniverse, NeutronEvent>());
+  //preCuts.emplace_back(new MyCCQECuts::LooseRecoilCut<CVUniverse, NeutronEvent>());
   //preCuts.emplace_back(new MyCCQECuts::RecoilCut<CVUniverse, NeutronEvent>());
   if (doNeutronCuts){
     preCuts.emplace_back(new MyNeutCuts::LeadNeutIs3D<CVUniverse, NeutronEvent>());
