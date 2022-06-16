@@ -548,6 +548,7 @@ int main(int argc, char* argv[]) {
   //cout << "Setting up MnvPlotter" << endl;
   //MnvPlotter* plotter = new MnvPlotter(kCCQEAntiNuStyle);
 
+  TFile* outFile = new TFile("fitResults.root","RECREATE");
   TFile* mcFile = new TFile(MCfileName.c_str(),"READ");
   TFile* dataFile = new TFile(DATAfileName.c_str(),"READ");
 
@@ -701,10 +702,15 @@ int main(int argc, char* argv[]) {
     map<TString,MnvH1D*> scaledHists1A = {};
     scaledHists1A["BKG"]=(MnvH1D*)bkgTotHist->Clone();
     scaledHists1A["Signal"]=(MnvH1D*)sigHist->Clone();
-    for(auto hists:scaledHists1A) hists.second->Multiply(hists.second,result[hists.first]);
+    for(auto hists:scaledHists1A){
+      hists.second->Multiply(hists.second,result[hists.first]);
+      result[hists.first]->SetDirectory(outFile);
+    }
     DrawFromMnvH1Ds(dataHist,scaledHists1A,unfitHists1A,true,outDir+"TEST_NEW_"+name+"_fit1A_postFit");
     //cout << "Result Has Size: " << result << endl;
     cout << "" << endl;
+
+    outFile->Write();
 
     for (auto hist:result) delete hist.second;
     result.clear();
@@ -713,10 +719,15 @@ int main(int argc, char* argv[]) {
     result = FitScaleFactorsAndDraw(dataHist, fitHists1B, unfitHists1B, name+"_fit1B", outDir, lowBin, hiBin, doSyst, false);
     map<TString,MnvH1D*> scaledHists1B = {};
     scaledHists1B["BKG"]=(MnvH1D*)bkgTotHist->Clone();
-    for(auto hists:scaledHists1B) hists.second->Multiply(hists.second,result[hists.first]);
+    for(auto hists:scaledHists1B){
+      hists.second->Multiply(hists.second,result[hists.first]);
+      result[hists.first]->SetDirectory(outFile);
+    }
     DrawFromMnvH1Ds(dataHist,scaledHists1B,unfitHists1B,false,outDir+"TEST_NEW_"+name+"_fit1B_postFit");
     //cout << "Result Has Size: " << result << endl;
     cout << "" << endl;
+
+    outFile->Write();
 
     for (auto hist:result) delete hist.second;
     result.clear();
@@ -822,6 +833,7 @@ int main(int argc, char* argv[]) {
   cout << "Closing Files... Does this solve the issue of seg fault." << endl;
   mcFile->Close();
   dataFile->Close();
+  outFile->Close();
 
   cout << "HEY YOU DID IT!!!" << endl;
   return 0;
