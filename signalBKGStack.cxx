@@ -70,6 +70,8 @@ void DrawBKGCateg(string name, TFile* mcFile, TFile* dataFile, TString sample, d
   string title = (string)h_Sig->GetTitle();
   TString Xtitle = h_Sig->GetXaxis()->GetTitle();
   TString Ytitle = h_Sig->GetYaxis()->GetTitle();
+  string units = Xtitle.Data();
+  units.erase(0,units.find("["));
 
   string name_bkg = name;
   name_bkg.erase(name_bkg.length()-21,name_bkg.length());
@@ -153,7 +155,8 @@ void DrawBKGCateg(string name, TFile* mcFile, TFile* dataFile, TString sample, d
   h->SetTitle(sampleName);//+" "+title.c_str());
   h->GetXaxis()->SetTitle(Xtitle);
   h->GetXaxis()->SetTitleSize(0.04);
-  h->GetYaxis()->SetTitle("Events");
+  if (units.length() != 0) h->GetYaxis()->SetTitle("Events / "+(TString)units);
+  else h->GetYaxis()->SetTitle("Events / bin");
   h->GetYaxis()->SetTitleSize(0.05);
   h->GetYaxis()->SetTitleOffset(0.75);
   if (!primPar)h->SetMaximum((dataHist->GetMaximum())*1.05);
@@ -296,6 +299,8 @@ void DrawIntType(string name_QE, TFile* mcFile, TFile* dataFile, TString sample,
   string title = (string)h_QE_Sig->GetTitle();
   TString Xtitle = h_QE_Sig->GetXaxis()->GetTitle();
   TString Ytitle = h_QE_Sig->GetYaxis()->GetTitle();
+  string units = Xtitle.Data();
+  units.erase(0,units.find("["));
   /*
   cout << title << endl;
   title.erase(0, 8);
@@ -425,7 +430,8 @@ void DrawIntType(string name_QE, TFile* mcFile, TFile* dataFile, TString sample,
   h->SetTitle(sampleName);//+" "+title.c_str());
   h->GetXaxis()->SetTitle(Xtitle);
   h->GetXaxis()->SetTitleSize(0.04);
-  h->GetYaxis()->SetTitle("Events");
+  if (units.length() != 0) h->GetYaxis()->SetTitle("Events / "+(TString)units);
+  else h->GetYaxis()->SetTitle("Events / bin");
   h->GetYaxis()->SetTitleSize(0.05);
   h->GetYaxis()->SetTitleOffset(0.75);
   if (!primPar) h->SetMaximum((dataHist->GetMaximum())*1.05);
@@ -586,6 +592,8 @@ void DrawTargetType(string name_Plastic, TFile* mcFile, TFile* dataFile, TString
   string title = (string)h_Plastic_Sig->GetTitle();
   TString Xtitle = h_Plastic_Sig->GetXaxis()->GetTitle();
   TString Ytitle = h_Plastic_Sig->GetYaxis()->GetTitle();
+  string units = Xtitle.Data();
+  units.erase(0,units.find("["));
   /*
   cout << title << endl;
   title.erase(0, 7);
@@ -770,7 +778,8 @@ void DrawTargetType(string name_Plastic, TFile* mcFile, TFile* dataFile, TString
   h->SetTitle(sampleName);//+" "+title.c_str());
   h->GetXaxis()->SetTitle(Xtitle);
   h->GetXaxis()->SetTitleSize(0.04);
-  h->GetYaxis()->SetTitle("Events");
+  if (units.length() != 0) h->GetYaxis()->SetTitle("Events / "+(TString)units);
+  else h->GetYaxis()->SetTitle("Events / bin");
   h->GetYaxis()->SetTitleSize(0.05);
   h->GetYaxis()->SetTitleOffset(0.75);
   if (!primPar)h->SetMaximum((dataHist->GetMaximum())*1.05);
@@ -946,6 +955,8 @@ void DrawLeadBlobType(string name_Neut, TFile* mcFile, TFile* dataFile, TString 
   string title = (string)h_Neut_Sig->GetTitle();
   TString Xtitle = h_Neut_Sig->GetXaxis()->GetTitle();
   TString Ytitle = h_Neut_Sig->GetYaxis()->GetTitle();
+  string units = Xtitle.Data();
+  units.erase(0,units.find("["));
 
   /*
   cout << title << endl;
@@ -1129,7 +1140,8 @@ void DrawLeadBlobType(string name_Neut, TFile* mcFile, TFile* dataFile, TString 
   h->SetTitle(sampleName);//+" "+title.c_str());
   h->GetXaxis()->SetTitle(Xtitle);
   h->GetXaxis()->SetTitleSize(0.04);
-  h->GetYaxis()->SetTitle("Events");
+  if (units.length() != 0) h->GetYaxis()->SetTitle("Events / "+(TString)units);
+  else h->GetYaxis()->SetTitle("Events / bin");
   h->GetYaxis()->SetTitleSize(0.05);
   h->GetYaxis()->SetTitleOffset(0.75);
   if (!primPar)h->SetMaximum((dataHist->GetMaximum())*1.05);
