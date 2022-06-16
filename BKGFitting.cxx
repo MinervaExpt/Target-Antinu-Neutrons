@@ -254,10 +254,11 @@ void DrawFromMnvH1Ds(MnvH1D* h_data, map<TString, MnvH1D*> hFit, map<TString, Mn
 }
 
 //TODO: Instead of Plotting Save Scale Factor Histograms for analysis variables.
-map<TString,MnvH1D*> FitScaleFactorsAndDraw(MnvH1D* dataHist, map<TString, MnvH1D*> fitHistsAndNames, map<TString, MnvH1D*> unfitHistsAndNames, TString varName, TString outDir, int lowBin, int hiBin, bool doSyst, bool sigFit){
-  map<TString,MnvH1D*> scaleHists = {};
+map<TString,map<TString,MnvH1D*>> FitScaleFactorsAndDraw(MnvH1D* dataHist, map<TString, MnvH1D*> fitHistsAndNames, map<TString, MnvH1D*> unfitHistsAndNames, TString varName, TString outDir, TString fitName, int lowBin, int hiBin, bool doSyst, bool sigFit, map<TString,MnvH1D*> varsToSave){
+  map<TString,map<TString,MnvH1D*>> scaleHists = {};
 
-  TString name = varName+"_low_"+(TString)(to_string(lowBin))+"_hi_"+(TString)(to_string(hiBin));
+  TString nameTag = fitName+"_low_"+(TString)(to_string(lowBin))+"_hi_"+(TString)(to_string(hiBin));
+  TString name = varName+nameTag;
 
   if (PathExists((string)(outDir+name+"_postFit.pdf"))){
     cout << "Already performed fits over this range for this histo." << endl;
@@ -265,8 +266,8 @@ map<TString,MnvH1D*> FitScaleFactorsAndDraw(MnvH1D* dataHist, map<TString, MnvH1
     return scaleHists;
   }
 
-  if (!PathExists((string)(outDir+varName+"_preFit.pdf"))){
-    DrawFromMnvH1Ds(dataHist,fitHistsAndNames,unfitHistsAndNames,sigFit,outDir+varName+"_preFit");
+  if (!PathExists((string)(outDir+varName+fitName+"_preFit.pdf"))){
+    DrawFromMnvH1Ds(dataHist,fitHistsAndNames,unfitHistsAndNames,sigFit,outDir+varName+fitName+"_preFit");
   }
 
   TH1D* hData = (TH1D*)dataHist->GetCVHistoWithStatError().Clone();
@@ -275,7 +276,11 @@ map<TString,MnvH1D*> FitScaleFactorsAndDraw(MnvH1D* dataHist, map<TString, MnvH1
 
   for (auto hists:fitHistsAndNames){
     fitHists.push_back((TH1D*)hists.second->GetCVHistoWithStatError().Clone());
-    scaleHists[hists.first] = new MnvH1D(name+hists.first,"",hists.second->GetNbinsX(),hists.second->GetXaxis()->GetXbins()->GetArray());
+    for (auto var:varsToSave){
+      if (var.first == varName) continue;
+      scaleHists[var.first][hists.first] = new MnvH1D(var.first+nameTag+"_"+hists.first,"",var.second->GetNbinsX(),var.second->GetXaxis()->GetXbins()->GetArray());
+    }
+    scaleHists[varName][hists.first]= new MnvH1D(name+"_"+hists.first,"",hists.second->GetNbinsX(),hists.second->GetXaxis()->GetXbins()->GetArray());
   }
 
   for (auto hists:unfitHistsAndNames){
@@ -319,11 +324,13 @@ map<TString,MnvH1D*> FitScaleFactorsAndDraw(MnvH1D* dataHist, map<TString, MnvH1
   nextPar=0;
   for (auto hist:fitHistsAndNames){
     scaleByName[hist.first]=scaleResults[nextPar];
-    for (int iBin=0; iBin <= scaleHists[hist.first]->GetNbinsX()+1; ++iBin){
-      scaleHists[hist.first]->SetBinContent(iBin,scaleResults[nextPar]);
-      scaleHists[hist.first]->SetBinError(iBin,scaleErrors[nextPar]);
+    for (auto var:scaleHists){
+      for (int iBin=0; iBin <= var.second[hist.first]->GetNbinsX()+1; ++iBin){
+	var.second[hist.first]->SetBinContent(iBin,scaleResults[nextPar]);
+	var.second[hist.first]->SetBinError(iBin,scaleErrors[nextPar]);
+      }
+      var.second[hist.first]->AddMissingErrorBandsAndFillWithCV(*hist.second);
     }
-    scaleHists[hist.first]->AddMissingErrorBandsAndFillWithCV(*hist.second);
     ++nextPar;
   }
 
@@ -410,7 +417,7 @@ map<TString,MnvH1D*> FitScaleFactorsAndDraw(MnvH1D* dataHist, map<TString, MnvH1
 	parNext=0;
 	for (auto hist:fitHistsAndNames){
 	  hist.second->GetVertErrorBand(bandName)->GetHist(whichUniv)->Scale(scaleResultsUniv[parNext]);	
-	  scaleHists[hist.first]->GetVertErrorBand(bandName)->GetHist(whichUniv)->Scale(scaleResultsUniv[parNext]);
+	  for (auto var:scaleHists) var.second[hist.first]->GetVertErrorBand(bandName)->GetHist(whichUniv)->Scale(scaleResultsUniv[parNext]);
 	  scaleFactorHists[hist.first]->Fill(quelUniv,scaleResultsUniv[parNext]);
 	  ++parNext;
 	}
@@ -467,6 +474,9 @@ int main(int argc, char* argv[]) {
   TString varName= argv[4];
   bool doSyst = (bool)(atoi(argv[5]));
   int fitMuonBins = 0;
+  
+  //vector<TString> namesToSave = {"pTmu","vtxZ","recoilE"}
+  vector<TString> namesToSave = {"pTmu","recoilE"};
 
   int lowBin = 1;//Will be truncated later. Lowest allowed value for pT or recoil fits.
   int hiBin = 50;//Will be truncated later. Highest allowed value for pT or recoil fits.
@@ -576,6 +586,9 @@ int main(int argc, char* argv[]) {
     TString name = varName+tag;
 
     cout << "Performing Fitting and Scaling for: " << name << endl;
+
+    map<TString,MnvH1D*> varsToSave = {};
+    for (auto nameSave:namesToSave) varsToSave[nameSave+tag] = (MnvH1D*)(mcFile->Get(nameSave+tag+"_selected_signal_reco"))->Clone();
 
     MnvH1D* dataHist = (MnvH1D*)(dataFile->Get(name+"_data"))->Clone();
     MnvH1D* sigHist = (MnvH1D*)(mcFile->Get(name+"_selected_signal_reco"))->Clone();
@@ -698,13 +711,13 @@ int main(int argc, char* argv[]) {
     */
 
     cout << "Fitting 1A" << endl;
-    map<TString,MnvH1D*> result = FitScaleFactorsAndDraw(dataHist, fitHists1A, unfitHists1A, name+"_fit1A", outDir, lowBin, hiBin, doSyst, true);
+    map<TString,map<TString,MnvH1D*>> result = FitScaleFactorsAndDraw(dataHist, fitHists1A, unfitHists1A, name, outDir, "_fit1A", lowBin, hiBin, doSyst, true, varsToSave);
     map<TString,MnvH1D*> scaledHists1A = {};
     scaledHists1A["BKG"]=(MnvH1D*)bkgTotHist->Clone();
     scaledHists1A["Signal"]=(MnvH1D*)sigHist->Clone();
     for(auto hists:scaledHists1A){
-      hists.second->Multiply(hists.second,result[hists.first]);
-      result[hists.first]->SetDirectory(outFile);
+      hists.second->Multiply(hists.second,result[name][hists.first]);
+      for (auto var:result)var.second[hists.first]->SetDirectory(outFile);
     }
     DrawFromMnvH1Ds(dataHist,scaledHists1A,unfitHists1A,true,outDir+"TEST_NEW_"+name+"_fit1A_postFit");
     //cout << "Result Has Size: " << result << endl;
@@ -712,16 +725,18 @@ int main(int argc, char* argv[]) {
 
     outFile->Write();
 
-    for (auto hist:result) delete hist.second;
+    for (auto hist:result){
+      for (auto var:hist.second) delete var.second;
+    }
     result.clear();
 
     cout << "Fitting 1B" << endl;
-    result = FitScaleFactorsAndDraw(dataHist, fitHists1B, unfitHists1B, name+"_fit1B", outDir, lowBin, hiBin, doSyst, false);
+    result = FitScaleFactorsAndDraw(dataHist, fitHists1B, unfitHists1B, name, outDir, "_fit1B", lowBin, hiBin, doSyst, false, varsToSave);
     map<TString,MnvH1D*> scaledHists1B = {};
     scaledHists1B["BKG"]=(MnvH1D*)bkgTotHist->Clone();
     for(auto hists:scaledHists1B){
-      hists.second->Multiply(hists.second,result[hists.first]);
-      result[hists.first]->SetDirectory(outFile);
+      hists.second->Multiply(hists.second,result[name][hists.first]);
+      for (auto var:result)var.second[hists.first]->SetDirectory(outFile);
     }
     DrawFromMnvH1Ds(dataHist,scaledHists1B,unfitHists1B,false,outDir+"TEST_NEW_"+name+"_fit1B_postFit");
     //cout << "Result Has Size: " << result << endl;
@@ -729,7 +744,9 @@ int main(int argc, char* argv[]) {
 
     outFile->Write();
 
-    for (auto hist:result) delete hist.second;
+    for (auto hist:result){
+      for (auto var:hist.second) delete var.second;
+    }
     result.clear();
 
     /*
@@ -806,6 +823,8 @@ int main(int argc, char* argv[]) {
     for (auto hist:unfitHists1B) delete hist.second;
     for (auto hist:scaledHists1A) delete hist.second;
     for (auto hist:scaledHists1B) delete hist.second;
+    for (auto hist:varsToSave) delete hist.second;
+    varsToSave.clear();
     /*
     for (auto hist:fitHists2A) delete hist.second;
     for (auto hist:unfitHists2A) delete hist.second;
