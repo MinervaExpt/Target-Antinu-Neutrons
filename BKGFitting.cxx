@@ -253,7 +253,6 @@ void DrawFromMnvH1Ds(MnvH1D* h_data, map<TString, MnvH1D*> hFit, map<TString, Mn
   return;
 }
 
-//TODO: Instead of Plotting Save Scale Factor Histograms for analysis variables.
 map<TString,map<TString,MnvH1D*>> FitScaleFactorsAndDraw(MnvH1D* dataHist, map<TString, MnvH1D*> fitHistsAndNames, map<TString, MnvH1D*> unfitHistsAndNames, TString varName, TString outDir, TString fitName, int lowBin, int hiBin, bool doSyst, bool sigFit, map<TString,MnvH1D*> varsToSave){
   map<TString,map<TString,MnvH1D*>> scaleHists = {};
 
@@ -278,9 +277,9 @@ map<TString,map<TString,MnvH1D*>> FitScaleFactorsAndDraw(MnvH1D* dataHist, map<T
     fitHists.push_back((TH1D*)hists.second->GetCVHistoWithStatError().Clone());
     for (auto var:varsToSave){
       if (var.first == varName) continue;
-      scaleHists[var.first][hists.first] = new MnvH1D(var.first+nameTag+"_"+hists.first,"",var.second->GetNbinsX(),var.second->GetXaxis()->GetXbins()->GetArray());
+      scaleHists[var.first][hists.first] = new MnvH1D(var.first+"_fit_"+name+"_"+hists.first,"",var.second->GetNbinsX(),var.second->GetXaxis()->GetXbins()->GetArray());
     }
-    scaleHists[varName][hists.first]= new MnvH1D(name+"_"+hists.first,"",hists.second->GetNbinsX(),hists.second->GetXaxis()->GetXbins()->GetArray());
+    scaleHists[varName][hists.first]= new MnvH1D(varName+"_fit_"+name+"_"+hists.first,"",hists.second->GetNbinsX(),hists.second->GetXaxis()->GetXbins()->GetArray());
   }
 
   for (auto hists:unfitHistsAndNames){
