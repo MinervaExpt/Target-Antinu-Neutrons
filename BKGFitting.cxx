@@ -269,6 +269,7 @@ map<TString,map<TString,MnvH1D*>> FitScaleFactorsAndDraw(MnvH1D* dataHist, map<T
     DrawFromMnvH1Ds(dataHist,fitHistsAndNames,unfitHistsAndNames,sigFit,outDir+varName+fitName+"_preFit");
   }
 
+  cout << "Getting Data" << endl;
   TH1D* hData = (TH1D*)dataHist->GetCVHistoWithStatError().Clone();
   vector<TH1D*> fitHists = {};
   vector<TH1D*> unfitHists = {};
@@ -630,22 +631,18 @@ int main(int argc, char* argv[]) {
     bkgTotHist->Add(RESHist);
 
     map<TString, MnvH1D*> fitHists1A, unfitHists1A;
-    /*
     map<TString, MnvH1D*> fitHists2A, unfitHists2A;
     map<TString, MnvH1D*> fitHists3A, unfitHists3A;
     map<TString, MnvH1D*> fitHists4A, unfitHists4A;
     map<TString, MnvH1D*> fitHists5A, unfitHists5A;
     map<TString, MnvH1D*> fitHists6A, unfitHists6A;
-    */
 
     map<TString, MnvH1D*> fitHists1B, unfitHists1B;
-    /*
     map<TString, MnvH1D*> fitHists2B, unfitHists2B;
     map<TString, MnvH1D*> fitHists3B, unfitHists3B;
     map<TString, MnvH1D*> fitHists4B, unfitHists4B;
     map<TString, MnvH1D*> fitHists5B, unfitHists5B;
     map<TString, MnvH1D*> fitHists6B, unfitHists6B;
-    */
 
     fitHists1A["BKG"]=(MnvH1D*)bkgTotHist->Clone();
     fitHists1A["Signal"]=(MnvH1D*)sigHist->Clone();
@@ -653,7 +650,6 @@ int main(int argc, char* argv[]) {
     fitHists1B["BKG"]=(MnvH1D*)bkgTotHist->Clone();
     unfitHists1B["Signal"]=(MnvH1D*)sigHist->Clone();
 
-    /*
     fitHists2A["single #pi^{#pm}"]=(MnvH1D*)chargePiHist->Clone();
     fitHists2A["single #pi^{0}"]=(MnvH1D*)neutPiHist->Clone();
     fitHists2A["N#pi"]=(MnvH1D*)NPiHist->Clone();
@@ -707,7 +703,6 @@ int main(int argc, char* argv[]) {
     unfitHists6B["QE"]=(MnvH1D*)QEHist->Clone();
     unfitHists6B["2p2h"]=(MnvH1D*)MECHist->Clone();
     unfitHists6B["Other"]=(MnvH1D*)OtherIntTypeHist->Clone();
-    */
 
     cout << "Fitting 1A" << endl;
     map<TString,map<TString,MnvH1D*>> result = FitScaleFactorsAndDraw(dataHist, fitHists1A, unfitHists1A, name, outDir, "_fit1A", lowBin, hiBin, doSyst, true, varsToSave);
@@ -748,58 +743,212 @@ int main(int argc, char* argv[]) {
     }
     result.clear();
 
-    /*
     cout << "Fitting 2A" << endl;
-    result = FitScaleFactorsAndDraw(dataHist, fitHists2A, unfitHists2A, name+"_fit2A", outDir, lowBin, hiBin, doSyst, true);
-    cout << "Result: " << result << endl;
+    result = FitScaleFactorsAndDraw(dataHist, fitHists2A, unfitHists2A, name, outDir, "_fit2A", lowBin, hiBin, doSyst, true, varsToSave);
+    map<TString,MnvH1D*> scaledHists2A = {};
+    scaledHists2A["single #pi^{#pm}"]=(MnvH1D*)chargePiHist->Clone();
+    scaledHists2A["single #pi^{0}"]=(MnvH1D*)neutPiHist->Clone();
+    scaledHists2A["N#pi"]=(MnvH1D*)NPiHist->Clone();
+    scaledHists2A["Signal"]=(MnvH1D*)sigHist->Clone();
+    for(auto hists:scaledHists2A){
+      hists.second->Multiply(hists.second,result[name][hists.first]);
+      for (auto var:result)var.second[hists.first]->SetDirectory(outFile);
+    }
+    DrawFromMnvH1Ds(dataHist,scaledHists2A,unfitHists2A,true,outDir+"TEST_NEW_"+name+"_fit2A_postFit");
+    //cout << "Result Has Size: " << result << endl;
     cout << "" << endl;
+
+    outFile->Write();
+
+    for (auto hist:result){
+      for (auto var:hist.second) delete var.second;
+    }
+    result.clear();
 
     cout << "Fitting 2B" << endl;
-    result = FitScaleFactorsAndDraw(dataHist, fitHists2B, unfitHists2B, name+"_fit2B", outDir, lowBin, hiBin, doSyst, false);
-    cout << "Result: " << result << endl;
+    result = FitScaleFactorsAndDraw(dataHist, fitHists2B, unfitHists2B, name, outDir, "_fit2B", lowBin, hiBin, doSyst, false, varsToSave);
+    map<TString,MnvH1D*> scaledHists2B = {};
+    scaledHists2B["single #pi^{#pm}"]=(MnvH1D*)chargePiHist->Clone();
+    scaledHists2B["single #pi^{0}"]=(MnvH1D*)neutPiHist->Clone();
+    scaledHists2B["N#pi"]=(MnvH1D*)NPiHist->Clone();
+    for(auto hists:scaledHists2B){
+      hists.second->Multiply(hists.second,result[name][hists.first]);
+      for (auto var:result)var.second[hists.first]->SetDirectory(outFile);
+    }
+    DrawFromMnvH1Ds(dataHist,scaledHists2B,unfitHists2B,false,outDir+"TEST_NEW_"+name+"_fit2B_postFit");
+    //cout << "Result Has Size: " << result << endl;
     cout << "" << endl;
+
+    outFile->Write();
+
+    for (auto hist:result){
+      for (auto var:hist.second) delete var.second;
+    }
+    result.clear();
 
     cout << "Fitting 3A" << endl;
-    result = FitScaleFactorsAndDraw(dataHist, fitHists3A, unfitHists3A, name+"_fit3A", outDir, lowBin, hiBin, doSyst, true);
-    cout << "Result: " << result << endl;
+    result = FitScaleFactorsAndDraw(dataHist, fitHists3A, unfitHists3A, name, outDir, "_fit3A", lowBin, hiBin, doSyst, true, varsToSave);
+    map<TString,MnvH1D*> scaledHists3A = {};
+    scaledHists3A["single #pi"]=(MnvH1D*)bkg1PiHist->Clone();
+    scaledHists3A["N#pi"]=(MnvH1D*)NPiHist->Clone();
+    scaledHists3A["Signal"]=(MnvH1D*)sigHist->Clone();
+    for(auto hists:scaledHists3A){
+      hists.second->Multiply(hists.second,result[name][hists.first]);
+      for (auto var:result)var.second[hists.first]->SetDirectory(outFile);
+    }
+    DrawFromMnvH1Ds(dataHist,scaledHists3A,unfitHists3A,true,outDir+"TEST_NEW_"+name+"_fit3A_postFit");
+    //cout << "Result Has Size: " << result << endl;
     cout << "" << endl;
+
+    outFile->Write();
+
+    for (auto hist:result){
+      for (auto var:hist.second) delete var.second;
+    }
+    result.clear();
 
     cout << "Fitting 3B" << endl;
-    result = FitScaleFactorsAndDraw(dataHist, fitHists3B, unfitHists3B, name+"_fit3B", outDir, lowBin, hiBin, doSyst, false);
-    cout << "Result: " << result << endl;
+    result = FitScaleFactorsAndDraw(dataHist, fitHists3B, unfitHists3B, name, outDir, "_fit3B", lowBin, hiBin, doSyst, false, varsToSave);
+    map<TString,MnvH1D*> scaledHists3B = {};
+    scaledHists3B["single #pi"]=(MnvH1D*)bkg1PiHist->Clone();
+    scaledHists3B["N#pi"]=(MnvH1D*)NPiHist->Clone();
+    for(auto hists:scaledHists3B){
+      hists.second->Multiply(hists.second,result[name][hists.first]);
+      for (auto var:result)var.second[hists.first]->SetDirectory(outFile);
+    }
+    DrawFromMnvH1Ds(dataHist,scaledHists3B,unfitHists3B,false,outDir+"TEST_NEW_"+name+"_fit3B_postFit");
+    //cout << "Result Has Size: " << result << endl;
     cout << "" << endl;
+
+    outFile->Write();
+
+    for (auto hist:result){
+      for (auto var:hist.second) delete var.second;
+    }
+    result.clear();
 
     cout << "Fitting 4A" << endl;
-    result = FitScaleFactorsAndDraw(dataHist, fitHists4A, unfitHists4A, name+"_fit4A", outDir, lowBin, hiBin, doSyst, true);
-    cout << "Result: " << result << endl;
+    result = FitScaleFactorsAndDraw(dataHist, fitHists4A, unfitHists4A, name, outDir, "_fit4A", lowBin, hiBin, doSyst, true, varsToSave);
+    map<TString,MnvH1D*> scaledHists4A = {};
+    scaledHists4A["single #pi^{#pm}"]=(MnvH1D*)chargePiHist->Clone();
+    scaledHists4A["N#pi & single #pi^{0}"]=(MnvH1D*)bkgNNeutPiHist->Clone();
+    scaledHists4A["Signal"]=(MnvH1D*)sigHist->Clone();
+    for(auto hists:scaledHists4A){
+      hists.second->Multiply(hists.second,result[name][hists.first]);
+      for (auto var:result)var.second[hists.first]->SetDirectory(outFile);
+    }
+    DrawFromMnvH1Ds(dataHist,scaledHists4A,unfitHists4A,true,outDir+"TEST_NEW_"+name+"_fit4A_postFit");
+    //cout << "Result Has Size: " << result << endl;
     cout << "" << endl;
+
+    outFile->Write();
+
+    for (auto hist:result){
+      for (auto var:hist.second) delete var.second;
+    }
+    result.clear();
 
     cout << "Fitting 4B" << endl;
-    result = FitScaleFactorsAndDraw(dataHist, fitHists4B, unfitHists4B, name+"_fit4B", outDir, lowBin, hiBin, doSyst, false);
-    cout << "Result: " << result << endl;
+    result = FitScaleFactorsAndDraw(dataHist, fitHists4B, unfitHists4B, name, outDir, "_fit4B", lowBin, hiBin, doSyst, false, varsToSave);
+    map<TString,MnvH1D*> scaledHists4B = {};
+    scaledHists4B["single #pi^{#pm}"]=(MnvH1D*)chargePiHist->Clone();
+    scaledHists4B["N#pi & single #pi^{0}"]=(MnvH1D*)bkgNNeutPiHist->Clone();
+    for(auto hists:scaledHists4B){
+      hists.second->Multiply(hists.second,result[name][hists.first]);
+      for (auto var:result)var.second[hists.first]->SetDirectory(outFile);
+    }
+    DrawFromMnvH1Ds(dataHist,scaledHists4B,unfitHists4B,false,outDir+"TEST_NEW_"+name+"_fit4B_postFit");
+    //cout << "Result Has Size: " << result << endl;
     cout << "" << endl;
+
+    outFile->Write();
+
+    for (auto hist:result){
+      for (auto var:hist.second) delete var.second;
+    }
+    result.clear();
 
     cout << "Fitting 5A" << endl;
-    result = FitScaleFactorsAndDraw(dataHist, fitHists5A, unfitHists5A, name+"_fit5A", outDir, lowBin, hiBin, doSyst, true);
-    cout << "Result: " << result << endl;
+    result = FitScaleFactorsAndDraw(dataHist, fitHists5A, unfitHists5A, name, outDir, "_fit5A", lowBin, hiBin, doSyst, true, varsToSave);
+    map<TString,MnvH1D*> scaledHists5A = {};
+    scaledHists5A["RES"]=(MnvH1D*)RESHist->Clone();
+    scaledHists5A["non-RES"]=(MnvH1D*)bkgNonRESHist->Clone();
+    scaledHists5A["Signal"]=(MnvH1D*)sigHist->Clone();
+    for(auto hists:scaledHists5A){
+      hists.second->Multiply(hists.second,result[name][hists.first]);
+      for (auto var:result)var.second[hists.first]->SetDirectory(outFile);
+    }
+    DrawFromMnvH1Ds(dataHist,scaledHists5A,unfitHists5A,true,outDir+"TEST_NEW_"+name+"_fit5A_postFit");
+    //cout << "Result Has Size: " << result << endl;
     cout << "" << endl;
+
+    outFile->Write();
+
+    for (auto hist:result){
+      for (auto var:hist.second) delete var.second;
+    }
+    result.clear();
 
     cout << "Fitting 5B" << endl;
-    result = FitScaleFactorsAndDraw(dataHist, fitHists5B, unfitHists5B, name+"_fit5B", outDir, lowBin, hiBin, doSyst, false);
-    cout << "Result: " << result << endl;
+    result = FitScaleFactorsAndDraw(dataHist, fitHists5B, unfitHists5B, name, outDir, "_fit5B", lowBin, hiBin, doSyst, false, varsToSave);
+    map<TString,MnvH1D*> scaledHists5B = {};
+    scaledHists5B["RES"]=(MnvH1D*)RESHist->Clone();
+    scaledHists5B["non-RES"]=(MnvH1D*)bkgNonRESHist->Clone();
+    for(auto hists:scaledHists5B){
+      hists.second->Multiply(hists.second,result[name][hists.first]);
+      for (auto var:result)var.second[hists.first]->SetDirectory(outFile);
+    }
+    DrawFromMnvH1Ds(dataHist,scaledHists5B,unfitHists5B,false,outDir+"TEST_NEW_"+name+"_fit5B_postFit");
+    //cout << "Result Has Size: " << result << endl;
     cout << "" << endl;
+
+    outFile->Write();
+
+    for (auto hist:result){
+      for (auto var:hist.second) delete var.second;
+    }
+    result.clear();
 
     cout << "Fitting 6A" << endl;
-    result = FitScaleFactorsAndDraw(dataHist, fitHists6A, unfitHists6A, name+"_fit6A", outDir, lowBin, hiBin, doSyst, true);
-    cout << "Result: " << result << endl;
+    result = FitScaleFactorsAndDraw(dataHist, fitHists6A, unfitHists6A, name, outDir, "_fit6A", lowBin, hiBin, doSyst, true, varsToSave);
+    map<TString,MnvH1D*> scaledHists6A = {};
+    scaledHists6A["RES"]=(MnvH1D*)RESHist->Clone();
+    scaledHists6A["DIS"]=(MnvH1D*)DISHist->Clone();
+    scaledHists6A["Signal"]=(MnvH1D*)sigHist->Clone();
+    for(auto hists:scaledHists6A){
+      hists.second->Multiply(hists.second,result[name][hists.first]);
+      for (auto var:result)var.second[hists.first]->SetDirectory(outFile);
+    }
+    DrawFromMnvH1Ds(dataHist,scaledHists6A,unfitHists6A,true,outDir+"TEST_NEW_"+name+"_fit6A_postFit");
+    //cout << "Result Has Size: " << result << endl;
     cout << "" << endl;
 
+    outFile->Write();
+
+    for (auto hist:result){
+      for (auto var:hist.second) delete var.second;
+    }
+    result.clear();
+
     cout << "Fitting 6B" << endl;
-    result = FitScaleFactorsAndDraw(dataHist, fitHists6B, unfitHists6B, name+"_fit6B", outDir, lowBin, hiBin, doSyst, false);
-    cout << "Result: " << result << endl;
+    result = FitScaleFactorsAndDraw(dataHist, fitHists6B, unfitHists6B, name, outDir, "_fit6B", lowBin, hiBin, doSyst, false, varsToSave);
+    map<TString,MnvH1D*> scaledHists6B = {};
+    scaledHists6B["RES"]=(MnvH1D*)RESHist->Clone();
+    scaledHists6B["DIS"]=(MnvH1D*)DISHist->Clone();
+    for(auto hists:scaledHists6B){
+      hists.second->Multiply(hists.second,result[name][hists.first]);
+      for (auto var:result)var.second[hists.first]->SetDirectory(outFile);
+    }
+    DrawFromMnvH1Ds(dataHist,scaledHists6B,unfitHists6B,false,outDir+"TEST_NEW_"+name+"_fit6B_postFit");
+    //cout << "Result Has Size: " << result << endl;
     cout << "" << endl;
-    //if (result != 0) return result;
-    */
+
+    outFile->Write();
+
+    for (auto hist:result){
+      for (auto var:hist.second) delete var.second;
+    }
+    result.clear();
 
     delete dataHist;
     delete sigHist;
@@ -820,11 +969,6 @@ int main(int argc, char* argv[]) {
     for (auto hist:unfitHists1A) delete hist.second;
     for (auto hist:fitHists1B) delete hist.second;
     for (auto hist:unfitHists1B) delete hist.second;
-    for (auto hist:scaledHists1A) delete hist.second;
-    for (auto hist:scaledHists1B) delete hist.second;
-    for (auto hist:varsToSave) delete hist.second;
-    varsToSave.clear();
-    /*
     for (auto hist:fitHists2A) delete hist.second;
     for (auto hist:unfitHists2A) delete hist.second;
     for (auto hist:fitHists2B) delete hist.second;
@@ -845,7 +989,20 @@ int main(int argc, char* argv[]) {
     for (auto hist:unfitHists6A) delete hist.second;
     for (auto hist:fitHists6B) delete hist.second;
     for (auto hist:unfitHists6B) delete hist.second;
-    */
+    for (auto hist:scaledHists1A) delete hist.second;
+    for (auto hist:scaledHists1B) delete hist.second;
+    for (auto hist:scaledHists2A) delete hist.second;
+    for (auto hist:scaledHists2B) delete hist.second;
+    for (auto hist:scaledHists3A) delete hist.second;
+    for (auto hist:scaledHists3B) delete hist.second;
+    for (auto hist:scaledHists4A) delete hist.second;
+    for (auto hist:scaledHists4B) delete hist.second;
+    for (auto hist:scaledHists5A) delete hist.second;
+    for (auto hist:scaledHists5B) delete hist.second;
+    for (auto hist:scaledHists6A) delete hist.second;
+    for (auto hist:scaledHists6B) delete hist.second;
+    for (auto hist:varsToSave) delete hist.second;
+    varsToSave.clear();
   }
 
   cout << "Closing Files... Does this solve the issue of seg fault." << endl;
