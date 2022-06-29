@@ -259,8 +259,8 @@ void LoopAndFillEventSelection(
           for(auto& var: vars)
           {
             //Cross section components
-            var->efficiencyNumerator->FillUniverse(universe, var->GetTrueValue(*universe), weight);
-            var->migration->FillUniverse(universe, var->GetRecoValue(*universe), var->GetTrueValue(*universe), weight);
+            if (var->IsAnaVar()) var->efficiencyNumerator->FillUniverse(universe, var->GetTrueValue(*universe), weight);
+            if (var->IsAnaVar()) var->migration->FillUniverse(universe, var->GetRecoValue(*universe), var->GetTrueValue(*universe), weight);
             var->selectedSignalReco->FillUniverse(universe, var->GetRecoValue(*universe), weight); //Efficiency numerator in reco variables.  Useful for warping studies.
 
 	    //Various breakdowns of selected signal reco
@@ -272,8 +272,8 @@ void LoopAndFillEventSelection(
           for(auto& var: vars_ByTgt)
           {
             //Cross section components
-            (*var)[tgtID].efficiencyNumerator->FillUniverse(universe, (*var)[tgtID].GetTrueValue(*universe), weight);
-            (*var)[tgtID].migration->FillUniverse(universe, (*var)[tgtID].GetRecoValue(*universe), (*var)[tgtID].GetTrueValue(*universe), weight);
+            if ((*var)[tgtID].IsAnaVar()) (*var)[tgtID].efficiencyNumerator->FillUniverse(universe, (*var)[tgtID].GetTrueValue(*universe), weight);
+            if ((*var)[tgtID].IsAnaVar()) (*var)[tgtID].migration->FillUniverse(universe, (*var)[tgtID].GetRecoValue(*universe), (*var)[tgtID].GetTrueValue(*universe), weight);
             (*var)[tgtID].selectedSignalReco->FillUniverse(universe, (*var)[tgtID].GetRecoValue(*universe), weight); //Efficiency numerator in reco variables.  Useful for warping studies.
 
 	    //Various breakdowns of selected signal reco
@@ -446,9 +446,9 @@ void LoopAndFillEffDenom( PlotUtils::ChainWrapper* truth,
         //Fill efficiency denominator now: 
         for(auto var: vars)
         {
-          var->efficiencyDenominator->FillUniverse(universe, var->GetTrueValue(*universe), weight);
+          if (var->IsAnaVar()) var->efficiencyDenominator->FillUniverse(universe, var->GetTrueValue(*universe), weight);
         }
-
+	
         for(auto var: vars2D)
         {
           var->efficiencyDenominator->FillUniverse(universe, var->GetTrueValueX(*universe), var->GetTrueValueY(*universe), weight);
@@ -735,16 +735,16 @@ int main(const int argc, const char** argv)
   //for(int whichBin = 0; whichBin < 51; ++whichBin) myBlobEBins.push_back(myBlobEBinWidth * whichBin);
 
   std::vector<Variable*> vars = {
-    new Variable("pTmu", "p_{T, #mu} [GeV/c]", dansPTBins, &CVUniverse::GetMuonPT, &CVUniverse::GetMuonPTTrue),
+    new Variable(true, "pTmu", "p_{T, #mu} [GeV/c]", dansPTBins, &CVUniverse::GetMuonPT, &CVUniverse::GetMuonPTTrue),
     //new Variable((TString)("MyBins"),"pTmu_MYBins", "p_{T, #mu} [GeV/c]", myPTBins, &CVUniverse::GetMuonPT, &CVUniverse::GetMuonPTTrue),
-    new Variable("pTmu_MYBins", "p_{T, #mu} [GeV/c]", myPTBins, &CVUniverse::GetMuonPT, &CVUniverse::GetMuonPTTrue),
-    new Variable("nBlobs", "No.", nBlobsBins, &CVUniverse::GetNNeutBlobs),//Don't need GetDummyTrue perhaps...
-    new Variable("recoilE", "Recoil E [GeV]", myRecoilBins, &CVUniverse::GetDANRecoilEnergyGeV),//Don't need GetDummyTrue perhaps...
-    new Variable("Q2QE", "Q^{2}_{QE} [GeV^{2}]", myQ2QEBins, &CVUniverse::GetQ2QEPickledGeV),
+    new Variable(false, "pTmu_MYBins", "p_{T, #mu} [GeV/c]", myPTBins, &CVUniverse::GetMuonPT, &CVUniverse::GetMuonPTTrue),
+    new Variable(false, "nBlobs", "No.", nBlobsBins, &CVUniverse::GetNNeutBlobs),//Don't need GetDummyTrue perhaps...
+    new Variable(false, "recoilE", "Recoil E [GeV]", myRecoilBins, &CVUniverse::GetDANRecoilEnergyGeV),//Don't need GetDummyTrue perhaps...
+    new Variable(false, "Q2QE", "Q^{2}_{QE} [GeV^{2}]", myQ2QEBins, &CVUniverse::GetQ2QEPickledGeV),
     //new Variable("nMichel","No.", n5Bins, &CVUniverse::GetNImprovedMichel),
     //new Variable("nTrack","No.", n5Bins, &CVUniverse::GetNTracks),
     //new Variable("pmu", "p_{#mu} [GeV/c]", myPmuBins, &CVUniverse::GetMuonP, &CVUniverse::GetMuonPTrue),//Don't need GetDummyTrue perhaps...
-    //new Variable("vtxZ", "Z [mm]", myVtxZBins, &CVUniverse::GetVtxZ, &CVUniverse::GetTrueVtxZ),//Don't need GetDummyTrue perhaps...
+    new Variable(false,"vtxZ", "Z [mm]", myVtxZBins, &CVUniverse::GetVtxZ, &CVUniverse::GetTrueVtxZ),//Don't need GetDummyTrue perhaps...
     //new Variable("recQ2Bin","No.",myRecoilQ2Bins, &CVUniverse::GetRecoilQ2Bin),
   };
 
@@ -769,17 +769,17 @@ int main(const int argc, const char** argv)
     for(auto& var: vars){ 
       TString nameCheck = var->GetName();
       if (nameCheck = "vtxZ") continue;
-      vars_ByTgt.push_back(new util::Categorized<Variable, int>(var->GetDirectoryName(), "ByTgt", var->GetName().c_str(),var->GetAxisLabel().c_str(),util::TgtList,var->GetBinVec(),var->GetRecoFunc(),var->GetTrueFunc()));
+      vars_ByTgt.push_back(new util::Categorized<Variable, int>(var->GetDirectoryName(), "ByTgt", var->IsAnaVar(), var->GetName().c_str(),var->GetAxisLabel().c_str(),util::TgtList,var->GetBinVec(),var->GetRecoFunc(),var->GetTrueFunc()));
     }
   }
-
 
   std::vector<Variable2D*> vars2D = {
     //new Variable2D(*vars[4],*vars[3]),//recoil v. Q2
     //new Variable2D(*vars[vars.size()-1],*vars[0]),//pT v. recoilQ2Bin
   };
 
-
+  //Commented out during testing of analysis variable flag
+  /*
   if(doCCQENuValidation)
   {
     std::cerr << "Detected that tree name is CCQENu.  Making validation histograms.\n";
@@ -788,6 +788,7 @@ int main(const int argc, const char** argv)
     vars.push_back(new Variable("Erecoil", "E_{recoil}", robsRecoilBins, &CVUniverse::GetRecoilE, &CVUniverse::Getq0True)); //TODO: q0 is not the same as recoil energy without a spline correction
     vars2D.push_back(new Variable2D(*vars[1], *vars[0]));
   }
+  */
     
   CVUniverse* data_universe = new CVUniverse(options.m_data);
   std::vector<CVUniverse*> data_band = {data_universe};

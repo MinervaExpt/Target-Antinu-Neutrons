@@ -25,8 +25,8 @@ class EMSideBands: public Study
 		     std::vector<CVUniverse*>& data_error_bands): Study()
     {
       for (auto& var : vars){
-	fVars_NBlobs.push_back(new Variable((var->GetName()+"_NBlobsSB").c_str(), var->GetAxisLabel(), var->GetBinVec(),var->GetRecoFunc(),var->GetTrueFunc()));
-	fVars_ENHit.push_back(new Variable((var->GetName()+"_ENHitSB").c_str(), var->GetAxisLabel(), var->GetBinVec(),var->GetRecoFunc(),var->GetTrueFunc()));
+	fVars_NBlobs.push_back(new Variable(false,(var->GetName()+"_NBlobsSB").c_str(), var->GetAxisLabel(), var->GetBinVec(),var->GetRecoFunc(),var->GetTrueFunc()));
+	fVars_ENHit.push_back(new Variable(false,(var->GetName()+"_ENHitSB").c_str(), var->GetAxisLabel(), var->GetBinVec(),var->GetRecoFunc(),var->GetTrueFunc()));
       }
 
       std::vector<double> myBlobNBins;

@@ -25,8 +25,8 @@ class MichelAndNBlobSB: public Study
 		     std::vector<CVUniverse*>& data_error_bands): Study()
     {
       for (auto& var : vars){
-	fVars_Michel.push_back(new Variable((var->GetName()+"_MichelSB").c_str(), var->GetAxisLabel(), var->GetBinVec(),var->GetRecoFunc(),var->GetTrueFunc()));
-	fVars_NBlobs.push_back(new Variable((var->GetName()+"_NBlobsSB").c_str(), var->GetAxisLabel(), var->GetBinVec(),var->GetRecoFunc(),var->GetTrueFunc()));
+	fVars_Michel.push_back(new Variable(false,(var->GetName()+"_MichelSB").c_str(), var->GetAxisLabel(), var->GetBinVec(),var->GetRecoFunc(),var->GetTrueFunc()));
+	fVars_NBlobs.push_back(new Variable(false,(var->GetName()+"_NBlobsSB").c_str(), var->GetAxisLabel(), var->GetBinVec(),var->GetRecoFunc(),var->GetTrueFunc()));
       }
 
       std::vector<double> myBlobNBins;

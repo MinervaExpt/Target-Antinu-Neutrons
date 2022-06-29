@@ -41,7 +41,7 @@ class PreRecoil: public Study
 	for (int iBin=lowBin; iBin < nBins; ++iBin){
 	  std::string binName = std::to_string(iBin);
 	  if (iBin == lowBin) binName = "lost";
-	  fRecoilBinned[iBin] = new Variable(("recoilE_bin_"+binName).c_str(), "Recoil E [GeV]", myRecoilBins, &CVUniverse::GetDANRecoilEnergyGeV);
+	  fRecoilBinned[iBin] = new Variable(false,("recoilE_bin_"+binName).c_str(), "Recoil E [GeV]", myRecoilBins, &CVUniverse::GetDANRecoilEnergyGeV);
 	  fRecoilBinned[iBin]->InitializeMCHists(mc_error_bands, truth_error_bands);
 	  fRecoilBinned[iBin]->InitializeDATAHists(data_error_bands);
 	}
@@ -49,17 +49,18 @@ class PreRecoil: public Study
 
       fVars_ByTgt = {};
       for (auto& var : vars){
-	fVars.push_back(new Variable((var->GetName()+"_PreRecoilCut").c_str(), var->GetAxisLabel(), var->GetBinVec(),var->GetRecoFunc(),var->GetTrueFunc()));
+	fVars.push_back(new Variable(false, (var->GetName()+"_PreRecoilCut").c_str(), var->GetAxisLabel(), var->GetBinVec(),var->GetRecoFunc(),var->GetTrueFunc()));
 	if (fFVregionName == "Targets"){
 	  TString nameCheck = var->GetName();
 	  if (nameCheck=="vtxZ") continue;
-	  fVars_ByTgt.push_back(new util::Categorized<Variable, int>(var->GetDirectoryName(), "ByTgt", (var->GetName()+"_PreRecoilCut").c_str(),var->GetAxisLabel().c_str(), util::TgtList,var->GetBinVec(),var->GetRecoFunc(),var->GetTrueFunc()));
+	  fVars_ByTgt.push_back(new util::Categorized<Variable, int>(var->GetDirectoryName(), "ByTgt", var->IsAnaVar(), (var->GetName()+"_PreRecoilCut").c_str(),var->GetAxisLabel().c_str(), util::TgtList,var->GetBinVec(),var->GetRecoFunc(),var->GetTrueFunc()));
 	}
       }
-
+      
+      //Commented out in the main code so commented here as well.
       fVars2D = {
-	new Variable2D(*fVars[4],*fVars[3]),//recoil v. Q2     
-	new Variable2D(*fVars[fVars.size()-1],*fVars[0]),//pT v. recoilQ2Bin     
+	//new Variable2D(*fVars[4],*fVars[3]),//recoil v. Q2     
+	//new Variable2D(*fVars[fVars.size()-1],*fVars[0]),//pT v. recoilQ2Bin     
       };
 
       for(auto& var: fVars) var->InitializeMCHists(mc_error_bands, truth_error_bands);
@@ -259,14 +260,14 @@ class RecoilSB: public Study
 	for (int iBin=lowBin; iBin < nBins; ++iBin){
 	  std::string binName = std::to_string(iBin);
 	  if (iBin == lowBin) binName = "lost";
-	  fRecoilBinned[iBin] = new Variable(("recoilE_RecoilSB_bin_"+binName).c_str(), "Recoil E [GeV]", myRecoilBins, &CVUniverse::GetDANRecoilEnergyGeV);
+	  fRecoilBinned[iBin] = new Variable(false,("recoilE_RecoilSB_bin_"+binName).c_str(), "Recoil E [GeV]", myRecoilBins, &CVUniverse::GetDANRecoilEnergyGeV);
 	  fRecoilBinned[iBin]->InitializeMCHists(mc_error_bands, truth_error_bands);
 	  fRecoilBinned[iBin]->InitializeDATAHists(data_error_bands);
 	}
       }
 
       for (auto& var : vars){
-	fVars.push_back(new Variable((var->GetName()+"_RecoilSB").c_str(), var->GetAxisLabel(), var->GetBinVec(),var->GetRecoFunc(),var->GetTrueFunc()));
+	fVars.push_back(new Variable(false,(var->GetName()+"_RecoilSB").c_str(), var->GetAxisLabel(), var->GetBinVec(),var->GetRecoFunc(),var->GetTrueFunc()));
       }
 
       fVars2D = {

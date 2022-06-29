@@ -16,16 +16,17 @@ class Variable: public PlotUtils::VariableBase<CVUniverse>
   private:
     typedef PlotUtils::HistWrapper<CVUniverse> Hist;
     typedef std::function<double(const CVUniverse&)> PointerToCVUniverseFunction;
+    bool fAnaVar;
     TString fDirName;
   public:
     template <class ...ARGS>
-    Variable(ARGS... args): PlotUtils::VariableBase<CVUniverse>(args...), fDirName("")
+    Variable(bool isAnalysisVar, ARGS... args): PlotUtils::VariableBase<CVUniverse>(args...), fAnaVar(isAnalysisVar), fDirName("")
     {
     }
 
     //This is risky and only safe because right now VariableBase won't have an ambiguous constructor... Think of a way to protect against this if possible...
     template <class ...ARGS>
-    Variable(TString name, ARGS... args): PlotUtils::VariableBase<CVUniverse>(args...), fDirName(name)
+    Variable(TString name, bool isAnalysisVar, ARGS... args): PlotUtils::VariableBase<CVUniverse>(args...), fAnaVar(isAnalysisVar), fDirName(name)
     {
     }
 
@@ -98,11 +99,11 @@ class Variable: public PlotUtils::VariableBase<CVUniverse>
 							   GetBinVec(), mc_error_bands);
       */
 
-      efficiencyNumerator = new Hist((GetName() + "_efficiency_numerator").c_str(), (GetName()+";"+GetAxisLabel()).c_str(), GetBinVec(), mc_error_bands);
-      efficiencyDenominator = new Hist((GetName() + "_efficiency_denominator").c_str(), (GetName()+";"+GetAxisLabel()).c_str(), GetBinVec(), truth_error_bands);
+      if (fAnaVar) efficiencyNumerator = new Hist((GetName() + "_efficiency_numerator").c_str(), (GetName()+";"+GetAxisLabel()).c_str(), GetBinVec(), mc_error_bands);
+      if (fAnaVar) efficiencyDenominator = new Hist((GetName() + "_efficiency_denominator").c_str(), (GetName()+";"+GetAxisLabel()).c_str(), GetBinVec(), truth_error_bands);
       selectedSignalReco = new Hist((GetName() + "_selected_signal_reco").c_str(), (GetName()+";"+GetAxisLabel()).c_str(), GetBinVec(), mc_error_bands);
       selectedMCReco = new Hist((GetName() + "_selected_mc_reco").c_str(), (GetName()+";"+GetAxisLabel()).c_str(), GetBinVec(), mc_error_bands);
-      migration = new PlotUtils::Hist2DWrapper<CVUniverse>((GetName() + "_migration").c_str(), (GetName()+";"+GetAxisLabel()).c_str(), GetBinVec(), GetBinVec(), mc_error_bands);
+      if (fAnaVar) migration = new PlotUtils::Hist2DWrapper<CVUniverse>((GetName() + "_migration").c_str(), (GetName()+";"+GetAxisLabel()).c_str(), GetBinVec(), GetBinVec(), mc_error_bands);
     }
 
     //Histograms to be filled
@@ -194,7 +195,6 @@ class Variable: public PlotUtils::VariableBase<CVUniverse>
                                       categ.hist->SetDirectory(dir);
                                       //categ.hist->Write(); //TODO: Or let the TFile destructor do this the "normal" way?                                                                                           
                                     });
-
       /*
       m_BkgLeadBlobTypeHists->visit([dir](Hist& categ)
                                     {
@@ -202,20 +202,20 @@ class Variable: public PlotUtils::VariableBase<CVUniverse>
                                       //categ.hist->Write(); //TODO: Or let the TFile destructor do this the "normal" way?                                                                                           
                                     });
       */
-      
-      if(efficiencyNumerator)
+
+      if(efficiencyNumerator && fAnaVar)
       {
         efficiencyNumerator->hist->SetDirectory(dir); //TODO: Can I get around having to call SetDirectory() this many times somehow?
         //efficiencyNumerator->hist->Write();
       }
 
-      if(efficiencyDenominator)
+      if(efficiencyDenominator && fAnaVar)
       {
         efficiencyDenominator->hist->SetDirectory(dir);
         //efficiencyDenominator->hist->Write();
       }
 
-      if(migration)
+      if(migration && fAnaVar)
       {
         migration->hist->SetDirectory(dir); 
         //migration->hist->Write();
@@ -249,14 +249,15 @@ class Variable: public PlotUtils::VariableBase<CVUniverse>
       //m_BkgLeadBlobTypeHists->visit([](Hist& categ) { categ.SyncCVHistos(); });
 
       if(dataHist) dataHist->SyncCVHistos();
-      if(efficiencyNumerator) efficiencyNumerator->SyncCVHistos();
-      if(efficiencyDenominator) efficiencyDenominator->SyncCVHistos();
+      if(efficiencyNumerator && fAnaVar) efficiencyNumerator->SyncCVHistos();
+      if(efficiencyDenominator && fAnaVar) efficiencyDenominator->SyncCVHistos();
       if(selectedSignalReco) selectedSignalReco->SyncCVHistos();
       if(selectedMCReco) selectedMCReco->SyncCVHistos();
-      if(migration) migration->SyncCVHistos();
+      if(migration && fAnaVar) migration->SyncCVHistos();
     }
 
     void SetDirectoryName(std::string name){fDirName = name;}
+    bool IsAnaVar(){return fAnaVar;}
     TString GetDirectoryName(){return fDirName;}
 };
 
