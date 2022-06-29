@@ -266,7 +266,7 @@ void LoopAndFillEventSelection(
 	    //Various breakdowns of selected signal reco
 	    (*var->m_SigIntTypeHists)[intType].FillUniverse(universe, var->GetRecoValue(*universe), weight);
 	    (*var->m_SigTargetTypeHists)[tgtType].FillUniverse(universe, var->GetRecoValue(*universe), weight);
-	    (*var->m_SigLeadBlobTypeHists)[leadBlobType].FillUniverse(universe, var->GetRecoValue(*universe), weight);
+	    //(*var->m_SigLeadBlobTypeHists)[leadBlobType].FillUniverse(universe, var->GetRecoValue(*universe), weight);
           }
 
           for(auto& var: vars_ByTgt)
@@ -279,7 +279,7 @@ void LoopAndFillEventSelection(
 	    //Various breakdowns of selected signal reco
 	    (*(*var)[tgtID].m_SigIntTypeHists)[intType].FillUniverse(universe, (*var)[tgtID].GetRecoValue(*universe), weight);
 	    (*(*var)[tgtID].m_SigTargetTypeHists)[tgtType].FillUniverse(universe, (*var)[tgtID].GetRecoValue(*universe), weight);
-	    (*(*var)[tgtID].m_SigLeadBlobTypeHists)[leadBlobType].FillUniverse(universe, (*var)[tgtID].GetRecoValue(*universe), weight);
+	    //(*(*var)[tgtID].m_SigLeadBlobTypeHists)[leadBlobType].FillUniverse(universe, (*var)[tgtID].GetRecoValue(*universe), weight);
           }
 
           for(auto& var: vars2D)
@@ -291,7 +291,7 @@ void LoopAndFillEventSelection(
 	    //Various breakdowns of selected signal reco
 	    (*var->m_SigIntTypeHists)[intType].FillUniverse(universe, var->GetRecoValueX(*universe), var->GetRecoValueY(*universe), weight);;
 	    (*var->m_SigTargetTypeHists)[tgtType].FillUniverse(universe, var->GetRecoValueX(*universe), var->GetRecoValueY(*universe), weight);;
-	    (*var->m_SigLeadBlobTypeHists)[leadBlobType].FillUniverse(universe, var->GetRecoValueX(*universe), var->GetRecoValueY(*universe), weight);
+	    //(*var->m_SigLeadBlobTypeHists)[leadBlobType].FillUniverse(universe, var->GetRecoValueX(*universe), var->GetRecoValueY(*universe), weight);
 
             //var->efficiencyNumerator->FillUniverse(universe, var->GetTrueValueX(*universe), var->GetTrueValueY(*universe), weight);
           }
@@ -309,7 +309,7 @@ void LoopAndFillEventSelection(
 	    //Various breakdowns of selected backgrounds
 	    (*var->m_BkgIntTypeHists)[intType].FillUniverse(universe, var->GetRecoValue(*universe), weight);
 	    (*var->m_BkgTargetTypeHists)[tgtType].FillUniverse(universe, var->GetRecoValue(*universe), weight);
-	    (*var->m_BkgLeadBlobTypeHists)[leadBlobType].FillUniverse(universe, var->GetRecoValue(*universe), weight);
+	    //(*var->m_BkgLeadBlobTypeHists)[leadBlobType].FillUniverse(universe, var->GetRecoValue(*universe), weight);
 	  }
 
           for(auto& var: vars_ByTgt){
@@ -317,7 +317,7 @@ void LoopAndFillEventSelection(
 	    //Various breakdowns of selected backgrounds
 	    (*(*var)[tgtID].m_BkgIntTypeHists)[intType].FillUniverse(universe, (*var)[tgtID].GetRecoValue(*universe), weight);
 	    (*(*var)[tgtID].m_BkgTargetTypeHists)[tgtType].FillUniverse(universe, (*var)[tgtID].GetRecoValue(*universe), weight);
-	    (*(*var)[tgtID].m_BkgLeadBlobTypeHists)[leadBlobType].FillUniverse(universe, (*var)[tgtID].GetRecoValue(*universe), weight);
+	    //(*(*var)[tgtID].m_BkgLeadBlobTypeHists)[leadBlobType].FillUniverse(universe, (*var)[tgtID].GetRecoValue(*universe), weight);
 	  }
 
           for(auto& var: vars2D){
@@ -325,7 +325,7 @@ void LoopAndFillEventSelection(
 	    //Various breakdowns of selected backgrounds
 	    (*var->m_BkgIntTypeHists)[intType].FillUniverse(universe, var->GetRecoValueX(*universe), var->GetRecoValueY(*universe), weight);
 	    (*var->m_BkgTargetTypeHists)[tgtType].FillUniverse(universe, var->GetRecoValueX(*universe), var->GetRecoValueY(*universe), weight);
-	    (*var->m_BkgLeadBlobTypeHists)[leadBlobType].FillUniverse(universe, var->GetRecoValueX(*universe), var->GetRecoValueY(*universe), weight);
+	    //(*var->m_BkgLeadBlobTypeHists)[leadBlobType].FillUniverse(universe, var->GetRecoValueX(*universe), var->GetRecoValueY(*universe), weight);
 	  }
         }
       } // End band's universe loop
@@ -744,7 +744,7 @@ int main(const int argc, const char** argv)
     //new Variable("nMichel","No.", n5Bins, &CVUniverse::GetNImprovedMichel),
     //new Variable("nTrack","No.", n5Bins, &CVUniverse::GetNTracks),
     //new Variable("pmu", "p_{#mu} [GeV/c]", myPmuBins, &CVUniverse::GetMuonP, &CVUniverse::GetMuonPTrue),//Don't need GetDummyTrue perhaps...
-    new Variable("vtxZ", "Z [mm]", myVtxZBins, &CVUniverse::GetVtxZ, &CVUniverse::GetTrueVtxZ),//Don't need GetDummyTrue perhaps...
+    //new Variable("vtxZ", "Z [mm]", myVtxZBins, &CVUniverse::GetVtxZ, &CVUniverse::GetTrueVtxZ),//Don't need GetDummyTrue perhaps...
     //new Variable("recQ2Bin","No.",myRecoilQ2Bins, &CVUniverse::GetRecoilQ2Bin),
   };
 
