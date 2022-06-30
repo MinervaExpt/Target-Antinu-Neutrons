@@ -1,7 +1,7 @@
 //File: BKGFitting.cxx
 //Info: This script is intended to fit recoil/pTmu plots using TMinuit primarily for the neutron selected sample.
 //
-//Usage: BKGFitting <mc_file> <data_file> <outdir> <recoilE/pTmu/vtxZ> <doSyst (only 0 means no)> optional: <mainTagName> <lowFitBinNum> <hiFitBinNum> <do fits in bins of muon momentum (only 0 means no)> TODO: Save the information beyond just printing it out
+//Usage: BKGFitting <mc_file> <data_file> <outdir> <recoilE/pTmu/vtxZ> <doSyst (only 0 means no)> <Tgts> optional: <mainTagName> <lowFitBinNum> <hiFitBinNum> <do fits in bins of muon momentum (only 0 means no)> TODO: Save the information beyond just printing it out
 //Author: David Last dlast@sas.upenn.edu/lastd44@gmail.com
 
 //TODO: Same SegFault Business From My Plotting Code... I'm assuming I just need to delete things carefully that I'm not yet.
@@ -35,6 +35,7 @@
 #include "TCanvas.h"
 #include "TStyle.h"
 #include "TString.h"
+#include "TObjString.h"
 #include "TLorentzVector.h"
 #include "TVector3.h"
 #include "TLegend.h"
@@ -463,7 +464,7 @@ int main(int argc, char* argv[]) {
   #endif
 
   //Pass an input file name to this script now
-  if (argc < 6 || argc > 10) {
+  if (argc < 7 || argc > 11) {
     cout << "Check usage..." << endl;
     return 2;
   }
@@ -473,6 +474,7 @@ int main(int argc, char* argv[]) {
   string outDir = string(argv[3]);
   TString varName= argv[4];
   bool doSyst = (bool)(atoi(argv[5]));
+  bool Tgts = (bool)(atoi(argv[6]));
   int fitMuonBins = 0;
   
   //vector<TString> namesToSave = {"pTmu","vtxZ","recoilE"}
@@ -481,9 +483,9 @@ int main(int argc, char* argv[]) {
   int lowBin = 1;//Will be truncated later. Lowest allowed value for pT or recoil fits.
   int hiBin = 50;//Will be truncated later. Highest allowed value for pT or recoil fits.
   TString mainTag = "";
-  if (argc > 7) lowBin = max(atoi(argv[7]),1);//Not allowed lower than 1
-  if (argc > 8) hiBin = min(50, atoi(argv[8]));//Not allowed higher than 50
-  if (argc > 9) fitMuonBins = atoi(argv[9]);
+  if (argc > 8) lowBin = max(atoi(argv[8]),1);//Not allowed lower than 1
+  if (argc > 9) hiBin = min(50, atoi(argv[9]));//Not allowed higher than 50
+  if (argc > 10) fitMuonBins = atoi(argv[10]);
 
   string rootExt = ".root";
   string slash = "/";
@@ -551,7 +553,7 @@ int main(int argc, char* argv[]) {
     cout << "Not a valid variable name to fit." << endl;
     return 111;
   }
-  if (argc > 6) mainTag = argv[6];
+  if (argc > 7) mainTag = argv[7];
 
   //NEED TO CODE IN SOMETHING THAT HANDLES THE VERTEX PLOTS IN THE TARGETS.
 
@@ -566,6 +568,15 @@ int main(int argc, char* argv[]) {
   TParameter<double>* dataPOT = (TParameter<double>*)dataFile->Get("POTUsed");
 
   vector<TString> tags = {mainTag};
+
+  if (Tgts){
+    tags.push_back(mainTag+"_Tgt1");
+    tags.push_back(mainTag+"_Tgt2");
+    tags.push_back(mainTag+"_Tgt3");
+    tags.push_back(mainTag+"_Tgt4");
+    tags.push_back(mainTag+"_Tgt5");
+  }
+
   if (fitMuonBins){
     tags.push_back((TString)("_bin_lost"));
     for (int iBin=0; iBin < 14; ++iBin){
@@ -584,24 +595,38 @@ int main(int argc, char* argv[]) {
 
     TString tag = tags.at(iTag);
     TString name = varName+tag;
+    TString grabName;
+    if (tag.Contains("_Tgt")){
+      TObjArray* tagArr = tag.Tokenize("Tgt");
+      grabName="ByTgt_Tgt"+((TObjString*)(tagArr->At(tagArr->GetEntries()-1)))->String()+"/"+name;
+    }
+    else grabName = name;
 
     cout << "Performing Fitting and Scaling for: " << name << endl;
+    cout << "Grabbing: " << grabName << endl;
 
     map<TString,MnvH1D*> varsToSave = {};
-    for (auto nameSave:namesToSave) varsToSave[nameSave+tag] = (MnvH1D*)(mcFile->Get(nameSave+tag+"_selected_signal_reco"))->Clone();
+    for (auto nameSave:namesToSave){
+      if (tag.Contains("_Tgt")){
+	TObjArray* tagArr = tag.Tokenize("Tgt");
+	TString grabNameSave = "ByTgt_Tgt"+((TObjString*)(tagArr->At(tagArr->GetEntries()-1)))->String()+"/"+nameSave+tag;
+	varsToSave[nameSave+tag] = (MnvH1D*)(mcFile->Get(grabNameSave+"_selected_signal_reco"))->Clone();
+      }
+      else varsToSave[nameSave+tag] = (MnvH1D*)(mcFile->Get(nameSave+tag+"_selected_signal_reco"))->Clone();
+    }
 
-    MnvH1D* dataHist = (MnvH1D*)(dataFile->Get(name+"_data"))->Clone();
-    MnvH1D* sigHist = (MnvH1D*)(mcFile->Get(name+"_selected_signal_reco"))->Clone();
+    MnvH1D* dataHist = (MnvH1D*)(dataFile->Get(grabName+"_data"))->Clone();
+    MnvH1D* sigHist = (MnvH1D*)(mcFile->Get(grabName+"_selected_signal_reco"))->Clone();
     sigHist->Scale(POTscale);
 
     //
-    MnvH1D* chargePiHist = (MnvH1D*)(mcFile->Get(name+"_background_1chargePi"))->Clone();
+    MnvH1D* chargePiHist = (MnvH1D*)(mcFile->Get(grabName+"_background_1chargePi"))->Clone();
     chargePiHist->Scale(POTscale);
-    MnvH1D* neutPiHist = (MnvH1D*)(mcFile->Get(name+"_background_1neutPi"))->Clone();
+    MnvH1D* neutPiHist = (MnvH1D*)(mcFile->Get(grabName+"_background_1neutPi"))->Clone();
     neutPiHist->Scale(POTscale);
-    MnvH1D* NPiHist = (MnvH1D*)(mcFile->Get(name+"_background_NPi"))->Clone();
+    MnvH1D* NPiHist = (MnvH1D*)(mcFile->Get(grabName+"_background_NPi"))->Clone();
     NPiHist->Scale(POTscale);
-    MnvH1D* otherHist = (MnvH1D*)(mcFile->Get(name+"_background_Other"))->Clone();
+    MnvH1D* otherHist = (MnvH1D*)(mcFile->Get(grabName+"_background_Other"))->Clone();
     otherHist->Scale(POTscale);
 
     MnvH1D* bkgNNeutPiHist = neutPiHist->Clone();
@@ -611,15 +636,15 @@ int main(int argc, char* argv[]) {
     bkg1PiHist->Add(chargePiHist);
 
     //
-    MnvH1D* QEHist = (MnvH1D*)(mcFile->Get(name+"_bkg_IntType_QE"))->Clone();
+    MnvH1D* QEHist = (MnvH1D*)(mcFile->Get(grabName+"_bkg_IntType_QE"))->Clone();
     QEHist->Scale(POTscale);
-    MnvH1D* RESHist = (MnvH1D*)(mcFile->Get(name+"_bkg_IntType_RES"))->Clone();
+    MnvH1D* RESHist = (MnvH1D*)(mcFile->Get(grabName+"_bkg_IntType_RES"))->Clone();
     RESHist->Scale(POTscale);
-    MnvH1D* DISHist = (MnvH1D*)(mcFile->Get(name+"_bkg_IntType_DIS"))->Clone();
+    MnvH1D* DISHist = (MnvH1D*)(mcFile->Get(grabName+"_bkg_IntType_DIS"))->Clone();
     DISHist->Scale(POTscale);
-    MnvH1D* MECHist = (MnvH1D*)(mcFile->Get(name+"_bkg_IntType_2p2h"))->Clone();
+    MnvH1D* MECHist = (MnvH1D*)(mcFile->Get(grabName+"_bkg_IntType_2p2h"))->Clone();
     MECHist->Scale(POTscale);
-    MnvH1D* OtherIntTypeHist = (MnvH1D*)(mcFile->Get(name+"_bkg_IntType_Other"))->Clone();
+    MnvH1D* OtherIntTypeHist = (MnvH1D*)(mcFile->Get(grabName+"_bkg_IntType_Other"))->Clone();
     OtherIntTypeHist->Scale(POTscale);
 
     MnvH1D* bkgNonRESHist = DISHist->Clone();
