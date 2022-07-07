@@ -180,6 +180,7 @@ void LoopAndFillEventSelection(
 	double mc_vtx_z = mc_vtx.at(2);
 
 	int tgtID = util::GetRecoTargetZ(vtx_x,vtx_y,vtx_z);
+	int tgtCode = util::GetRecoTargetCode(vtx_x,vtx_y,vtx_z);
 	int trueTgtID = util::GetRecoTargetZ(mc_vtx_x,mc_vtx_y,mc_vtx_z);
 
 	int tgtType = tgtZ;
@@ -248,7 +249,7 @@ void LoopAndFillEventSelection(
 
         for(auto& var: vars) var->selectedMCReco->FillUniverse(universe, var->GetRecoValue(*universe), weight); //"Fake data" for closure
 
-        for(auto& var: vars_ByTgt) (*var)[tgtID].selectedMCReco->FillUniverse(universe, (*var)[tgtID].GetRecoValue(*universe), weight); //"Fake data" for closure
+        for(auto& var: vars_ByTgt) (*var)[tgtCode].selectedMCReco->FillUniverse(universe, (*var)[tgtCode].GetRecoValue(*universe), weight); //"Fake data" for closure
 
 	for(auto& var: vars2D) var->selectedMCReco->FillUniverse(universe, var->GetRecoValueX(*universe), var->GetRecoValueY(*universe), weight); //"Fake data" for closure
 
@@ -272,14 +273,14 @@ void LoopAndFillEventSelection(
           for(auto& var: vars_ByTgt)
           {
             //Cross section components
-            if ((*var)[tgtID].IsAnaVar()) (*var)[tgtID].efficiencyNumerator->FillUniverse(universe, (*var)[tgtID].GetTrueValue(*universe), weight);
-            if ((*var)[tgtID].IsAnaVar()) (*var)[tgtID].migration->FillUniverse(universe, (*var)[tgtID].GetRecoValue(*universe), (*var)[tgtID].GetTrueValue(*universe), weight);
-            (*var)[tgtID].selectedSignalReco->FillUniverse(universe, (*var)[tgtID].GetRecoValue(*universe), weight); //Efficiency numerator in reco variables.  Useful for warping studies.
+            if ((*var)[tgtCode].IsAnaVar()) (*var)[tgtCode].efficiencyNumerator->FillUniverse(universe, (*var)[tgtCode].GetTrueValue(*universe), weight);
+            if ((*var)[tgtCode].IsAnaVar()) (*var)[tgtCode].migration->FillUniverse(universe, (*var)[tgtCode].GetRecoValue(*universe), (*var)[tgtCode].GetTrueValue(*universe), weight);
+            (*var)[tgtCode].selectedSignalReco->FillUniverse(universe, (*var)[tgtCode].GetRecoValue(*universe), weight); //Efficiency numerator in reco variables.  Useful for warping studies.
 
 	    //Various breakdowns of selected signal reco
-	    (*(*var)[tgtID].m_SigIntTypeHists)[intType].FillUniverse(universe, (*var)[tgtID].GetRecoValue(*universe), weight);
-	    (*(*var)[tgtID].m_SigTargetTypeHists)[tgtType].FillUniverse(universe, (*var)[tgtID].GetRecoValue(*universe), weight);
-	    //(*(*var)[tgtID].m_SigLeadBlobTypeHists)[leadBlobType].FillUniverse(universe, (*var)[tgtID].GetRecoValue(*universe), weight);
+	    (*(*var)[tgtCode].m_SigIntTypeHists)[intType].FillUniverse(universe, (*var)[tgtCode].GetRecoValue(*universe), weight);
+	    (*(*var)[tgtCode].m_SigTargetTypeHists)[tgtType].FillUniverse(universe, (*var)[tgtCode].GetRecoValue(*universe), weight);
+	    //(*(*var)[tgtCode].m_SigLeadBlobTypeHists)[leadBlobType].FillUniverse(universe, (*var)[tgtCode].GetRecoValue(*universe), weight);
           }
 
           for(auto& var: vars2D)
@@ -313,11 +314,11 @@ void LoopAndFillEventSelection(
 	  }
 
           for(auto& var: vars_ByTgt){
-	    (*(*var)[tgtID].m_backgroundHists)[bkgd_ID].FillUniverse(universe, (*var)[tgtID].GetRecoValue(*universe), weight);
+	    (*(*var)[tgtCode].m_backgroundHists)[bkgd_ID].FillUniverse(universe, (*var)[tgtCode].GetRecoValue(*universe), weight);
 	    //Various breakdowns of selected backgrounds
-	    (*(*var)[tgtID].m_BkgIntTypeHists)[intType].FillUniverse(universe, (*var)[tgtID].GetRecoValue(*universe), weight);
-	    (*(*var)[tgtID].m_BkgTargetTypeHists)[tgtType].FillUniverse(universe, (*var)[tgtID].GetRecoValue(*universe), weight);
-	    //(*(*var)[tgtID].m_BkgLeadBlobTypeHists)[leadBlobType].FillUniverse(universe, (*var)[tgtID].GetRecoValue(*universe), weight);
+	    (*(*var)[tgtCode].m_BkgIntTypeHists)[intType].FillUniverse(universe, (*var)[tgtCode].GetRecoValue(*universe), weight);
+	    (*(*var)[tgtCode].m_BkgTargetTypeHists)[tgtType].FillUniverse(universe, (*var)[tgtCode].GetRecoValue(*universe), weight);
+	    //(*(*var)[tgtCode].m_BkgLeadBlobTypeHists)[leadBlobType].FillUniverse(universe, (*var)[tgtCode].GetRecoValue(*universe), weight);
 	  }
 
           for(auto& var: vars2D){
@@ -363,6 +364,7 @@ void LoopAndFillData( PlotUtils::ChainWrapper* data,
       double vtx_z = vtx.at(2);
       
       int tgtID = util::GetRecoTargetZ(vtx_x,vtx_y,vtx_z);
+      int tgtCode = util::GetRecoTargetCode(vtx_x,vtx_y,vtx_z);
 
       std::cout << std::setprecision(16);
 
@@ -393,7 +395,7 @@ void LoopAndFillData( PlotUtils::ChainWrapper* data,
 
       for(auto& var: vars_ByTgt)
       {
-        (*var)[tgtID].dataHist->FillUniverse(universe, (*var)[tgtID].GetRecoValue(*universe), 1);
+        (*var)[tgtCode].dataHist->FillUniverse(universe, (*var)[tgtCode].GetRecoValue(*universe), 1);
       }
 
       for(auto& var: vars2D)
@@ -769,7 +771,7 @@ int main(const int argc, const char** argv)
     for(auto& var: vars){ 
       TString nameCheck = var->GetName();
       if (nameCheck = "vtxZ") continue;
-      vars_ByTgt.push_back(new util::Categorized<Variable, int>(var->GetDirectoryName(), "ByTgt", var->IsAnaVar(), var->GetName().c_str(),var->GetAxisLabel().c_str(),util::TgtList,var->GetBinVec(),var->GetRecoFunc(),var->GetTrueFunc()));
+      vars_ByTgt.push_back(new util::Categorized<Variable, int>(var->GetDirectoryName(), "ByTgt", var->IsAnaVar(), var->GetName().c_str(),var->GetAxisLabel().c_str(),util::TgtCodeList,var->GetBinVec(),var->GetRecoFunc(),var->GetTrueFunc()));
     }
   }
 

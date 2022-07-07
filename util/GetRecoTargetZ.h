@@ -34,6 +34,72 @@ namespace util
     else if (vtx_z < Tgt5Lo) return 54;
     else return 0;
   }
+
+  int GetRecoTarget15(double vtx_x, double vtx_y){
+    double u = PlotUtils::TargetUtils::Get().GetCoordU(vtx_x,vtx_y);
+    double udist = u - PlotUtils::TargetProp::offset_pb_fe;
+    if (fabs(udist) <= 25.0) return 99;
+    if (udist < 0.0) return 26;
+    return 82;
+  }
+
+  int GetRecoTarget2(double vtx_x, double vtx_y){
+    double d = PlotUtils::TargetUtils::Get().GetCoordD(vtx_x,vtx_y);
+    double ddist = d - PlotUtils::TargetProp::offset_pb_fe;
+    if (fabs(ddist) <= 25.0) return 99;
+    if (ddist < 0.0) return 26;
+    return 82;
+  }
+
+  int GetRecoTarget3(double vtx_x, double vtx_y){
+    double c = PlotUtils::TargetUtils::Get().GetCoordC(vtx_x,vtx_y);
+    double cdist = c;
+    if (fabs(cdist) <= 25.0) return 99;
+    if (cdist >= 0.0) return 6;
+    if (fabs(vtx_x) <= 25.0) return 99;
+    if (vtx_x < 0.0) return 26;
+    return 82;
+  }
+
+  int GetRecoTargetCode(double vtx_x, double vtx_y, double vtx_z){
+    int TgtByZ = GetRecoTargetZ(vtx_x,vtx_y,vtx_z);
+    if (TgtByZ < 0) return TgtByZ;
+    if (TgtByZ == 10) return 1000;
+    if (TgtByZ == 21) return 2100;
+    if (TgtByZ == 32) return 3200;
+    if (TgtByZ == 63) return 6300;
+    if (TgtByZ == 46) return 4600;
+    if (TgtByZ == 54) return 5400;
+    if (TgtByZ == 0) return 7500;
+    if (TgtByZ == 4) return 4482;
+    if (TgtByZ == 6) return 6666;
+    if (TgtByZ == 1){
+      int mat = GetRecoTarget15(vtx_x,vtx_y);
+      if (mat == 99) return 1199;
+      if (mat == 26) return 1126;
+      if (mat == 82) return 1182;
+    }
+    if (TgtByZ == 2){
+      int mat = GetRecoTarget2(vtx_x,vtx_y);
+      if (mat == 99) return 2299;
+      if (mat == 26) return 2226;
+      if (mat == 82) return 2282;
+    }
+    if (TgtByZ == 3){
+      int mat = GetRecoTarget3(vtx_x,vtx_y);
+      if (mat == 99) return 3399;
+      if (mat == 6) return 3306;
+      if (mat == 26) return 3326;
+      if (mat == 82) return 3382;
+    }
+    if (TgtByZ == 5){
+      int mat = GetRecoTarget15(vtx_x,vtx_y);
+      if (mat == 99) return 5599;
+      if (mat == 26) return 5526;
+      if (mat == 82) return 5582;
+    }
+    return TgtByZ;
+  }
 }
 
 #endif //UTIL_GETRECOTGTZ_H

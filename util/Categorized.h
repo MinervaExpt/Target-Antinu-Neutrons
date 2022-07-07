@@ -36,7 +36,29 @@ namespace util
                                         {54,"Plastic_US5_DS4"},
                                         {0,"Plastic_DS5"}};
 
-
+  std::map<int, std::string> TgtCodeList = {{1126,"Tgt1_Fe"},
+					    {1182,"Tgt1_Pb"},
+					    {1199,"Tgt1_Buffer"},
+					    {2226,"Tgt2_Fe"},
+					    {2282,"Tgt2_Pb"},
+					    {2299,"Tgt2_Buffer"},
+					    {3326,"Tgt3_Fe"},
+					    {3382,"Tgt3_Pb"},
+					    {3306,"Tgt3_C"},
+					    {3399,"Tgt3_Buffer"},
+					    {4482,"Tgt4_Pb"},
+					    {5526,"Tgt5_Fe"},
+					    {5582,"Tgt5_Pb"},
+					    {5599,"Tgt5_Buffer"},
+					    {6666,"WaterTgt"},
+					    {1000,"Plastic_US1"},
+					    {2100,"Plastic_US2_DS1"},
+					    {3200,"Plastic_US3_DS2"},
+					    {6300,"Plastic_USWater_DS3"},
+					    {4600,"Plastic_US4_DSWater"},
+					    {5400,"Plastic_US5_DS4"},
+					    {7500,"Plastic_DS5"}};
+  
   //Mapping from a set of values to a name.  Helper for constructing a Categorized<>
   template <class value_t>
   struct NamedCategory
