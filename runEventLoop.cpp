@@ -363,7 +363,7 @@ void LoopAndFillData( PlotUtils::ChainWrapper* data,
       double vtx_y = vtx.at(1);
       double vtx_z = vtx.at(2);
       
-      int tgtID = util::GetRecoTargetZ(vtx_x,vtx_y,vtx_z);
+      //int tgtID = util::GetRecoTargetZ(vtx_x,vtx_y,vtx_z);
       int tgtCode = util::GetRecoTargetCode(vtx_x,vtx_y,vtx_z);
 
       std::cout << std::setprecision(16);
@@ -770,7 +770,7 @@ int main(const int argc, const char** argv)
   if (FVregionName == "Targets"){
     for(auto& var: vars){ 
       TString nameCheck = var->GetName();
-      if (nameCheck = "vtxZ") continue;
+      if (nameCheck == "vtxZ") continue;
       vars_ByTgt.push_back(new util::Categorized<Variable, int>(var->GetDirectoryName(), "ByTgt", var->IsAnaVar(), var->GetName().c_str(),var->GetAxisLabel().c_str(),util::TgtCodeList,var->GetBinVec(),var->GetRecoFunc(),var->GetTrueFunc()));
     }
   }
