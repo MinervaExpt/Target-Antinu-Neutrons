@@ -50,7 +50,9 @@ namespace util
 					    {5526,"Tgt5_Fe"},
 					    {5582,"Tgt5_Pb"},
 					    {5599,"Tgt5_Buffer"},
-					    {6666,"WaterTgt"},
+					    {6666,"WaterTgt"}};
+  //Removed the below since I think the interstitial plastic is best handled separately from this list and doesn't need their own directory.
+/*,
 					    {1000,"Plastic_US1"},
 					    {2100,"Plastic_US2_DS1"},
 					    {3200,"Plastic_US3_DS2"},
@@ -58,7 +60,7 @@ namespace util
 					    {4600,"Plastic_US4_DSWater"},
 					    {5400,"Plastic_US5_DS4"},
 					    {7500,"Plastic_DS5"}};
-  
+							       */
   //Mapping from a set of values to a name.  Helper for constructing a Categorized<>
   template <class value_t>
   struct NamedCategory

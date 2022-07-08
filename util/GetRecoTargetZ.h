@@ -63,14 +63,17 @@ namespace util
 
   int GetRecoTargetCode(double vtx_x, double vtx_y, double vtx_z){
     int TgtByZ = GetRecoTargetZ(vtx_x,vtx_y,vtx_z);
-    if (TgtByZ < 0) return TgtByZ;
-    if (TgtByZ == 10) return 1000;
+    if (TgtByZ < 0) return -999;
+    //Commented out to accommodate change which removed these as options from the TargetCode list so that I can treat the plastic as cut out, and let any actually weird events find their way into the Other.
+    /*if (TgtByZ == 10) return 1000;
     if (TgtByZ == 21) return 2100;
     if (TgtByZ == 32) return 3200;
     if (TgtByZ == 63) return 6300;
     if (TgtByZ == 46) return 4600;
     if (TgtByZ == 54) return 5400;
     if (TgtByZ == 0) return 7500;
+    */
+    if (TgtByZ == 10 || TgtByZ == 21 || TgtByZ == 32 || TgtByZ == 63 || TgtByZ == 46 || TgtByZ == 54 || TgtByZ == 0) return -1;
     if (TgtByZ == 4) return 4482;
     if (TgtByZ == 6) return 6666;
     if (TgtByZ == 1){
@@ -98,7 +101,7 @@ namespace util
       if (mat == 26) return 5526;
       if (mat == 82) return 5582;
     }
-    return TgtByZ;
+    return -999;
   }
 }
 
