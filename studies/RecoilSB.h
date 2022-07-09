@@ -17,6 +17,8 @@ class PreRecoil: public Study
   private:
     std::vector<Variable*> fVars;
     std::vector<util::Categorized<Variable, int>*> fVars_ByTgt;
+    std::map<int, util::Categorized<Variable,int>*> fUS_ByTgt;
+    std::map<int, util::Categorized<Variable,int>*> fDS_ByTgt;
     std::vector<Variable2D*> fVars2D;
     std::map<int,Variable*> fRecoilBinned;
     TString fFVregionName;
@@ -47,13 +49,27 @@ class PreRecoil: public Study
 	}
       }
 
+      std::vector<double> coarseVtxBins;
+      for (int iBin=0; iBin<201;++iBin){
+	coarseVtxBins.push_back((double)iBin*2000.0/200.0+4000.0);
+      }
+
       fVars_ByTgt = {};
+      fUS_ByTgt = {};
+      fDS_ByTgt = {};
       for (auto& var : vars){
 	fVars.push_back(new Variable(false, (var->GetName()+"_PreRecoilCut").c_str(), var->GetAxisLabel(), var->GetBinVec(),var->GetRecoFunc(),var->GetTrueFunc()));
 	if (fFVregionName == "Targets"){
 	  TString nameCheck = var->GetName();
-	  if (nameCheck=="vtxZ") continue;
-	  fVars_ByTgt.push_back(new util::Categorized<Variable, int>(var->GetDirectoryName(), "ByTgt", var->IsAnaVar(), (var->GetName()+"_PreRecoilCut").c_str(),var->GetAxisLabel().c_str(), util::TgtCodeList,var->GetBinVec(),var->GetRecoFunc(),var->GetTrueFunc()));
+	  if (nameCheck=="vtxZ"){
+	    for (auto& tgt: util::TgtCodeList){
+	      fUS_ByTgt[tgt.first]=new util::Categorized<Variable, int>(("ByTgt_"+tgt.second).c_str(), "US_ByType", var->IsAnaVar(), (var->GetName()+"_ByTgt_"+tgt.second+"_PreRecoilCut").c_str(),var->GetAxisLabel().c_str(), util::TgtTypeList,coarseVtxBins,var->GetRecoFunc(),var->GetTrueFunc());
+	      fDS_ByTgt[tgt.first]=new util::Categorized<Variable, int>(("ByTgt_"+tgt.second).c_str(), "DS_ByType", var->IsAnaVar(), (var->GetName()+"_ByTgt_"+tgt.second+"_PreRecoilCut").c_str(),var->GetAxisLabel().c_str(), util::TgtTypeList,coarseVtxBins,var->GetRecoFunc(),var->GetTrueFunc());
+	    }
+	  }
+	  else{
+	    fVars_ByTgt.push_back(new util::Categorized<Variable, int>(var->GetDirectoryName(), "ByTgt", var->IsAnaVar(), (var->GetName()+"_PreRecoilCut").c_str(),var->GetAxisLabel().c_str(), util::TgtCodeList,var->GetBinVec(),var->GetRecoFunc(),var->GetTrueFunc()));
+	  }
 	}
       }
       
@@ -79,6 +95,32 @@ class PreRecoil: public Study
 		   });
       }
 
+      for(auto& tgt: fUS_ByTgt){
+	tgt.second->visit([&mc_error_bands, &truth_error_bands](Variable& var)
+		   {
+		     var.InitializeMCHists(mc_error_bands, truth_error_bands);
+		   });
+      }
+      for(auto& tgt: fUS_ByTgt){
+	tgt.second->visit([&data_error_bands](Variable& var)
+		   {
+		     var.InitializeDATAHists(data_error_bands);
+		   });
+      }
+
+      for(auto& tgt: fDS_ByTgt){
+	tgt.second->visit([&mc_error_bands, &truth_error_bands](Variable& var)
+		   {
+		     var.InitializeMCHists(mc_error_bands, truth_error_bands);
+		   });
+      }
+      for(auto& tgt: fDS_ByTgt){
+	tgt.second->visit([&data_error_bands](Variable& var)
+		   {
+		     var.InitializeDATAHists(data_error_bands);
+		   });
+      }
+
       for(auto& var: fVars2D) var->InitializeMCHists(mc_error_bands, truth_error_bands);
       for(auto& var: fVars2D) var->InitializeDATAHists(data_error_bands);
     }
@@ -97,6 +139,18 @@ class PreRecoil: public Study
 		     var.WriteMC(outFile);
 		   });
       }
+      for(auto& tgt: fUS_ByTgt){
+	tgt.second->visit([&outFile](Variable& var)
+		   {
+		     var.WriteMC(outFile);
+		   });
+      }
+      for(auto& tgt: fDS_ByTgt){
+	tgt.second->visit([&outFile](Variable& var)
+		   {
+		     var.WriteMC(outFile);
+		   });
+      }
       for (auto& var : fVars2D) var->Write(outFile);
     }
 
@@ -106,6 +160,18 @@ class PreRecoil: public Study
       for (auto& var : fVars) var->WriteData(outFile);
       for(auto& tgt: fVars_ByTgt){
 	tgt->visit([&outFile](Variable& var)
+		   {
+		     var.WriteData(outFile);
+		   });
+      }
+      for(auto& tgt: fUS_ByTgt){
+	tgt.second->visit([&outFile](Variable& var)
+		   {
+		     var.WriteData(outFile);
+		   });
+      }
+      for(auto& tgt: fDS_ByTgt){
+	tgt.second->visit([&outFile](Variable& var)
 		   {
 		     var.WriteData(outFile);
 		   });
@@ -128,8 +194,14 @@ class PreRecoil: public Study
       double vtx_y = vtx.at(1);
       double vtx_z = vtx.at(2);
 
-      //int tgtID = util::GetRecoTargetZ(vtx_x,vtx_y,vtx_z);
+      int tgtID = util::GetRecoTargetZ(vtx_x,vtx_y,vtx_z);
       int tgtCode = util::GetRecoTargetCode(vtx_x,vtx_y,vtx_z);
+      int USTgt = -1;
+      int DSTgt = -1;
+      if (tgtCode == -1){
+	USTgt = util::USTgtMap[tgtID];
+	DSTgt = util::DSTgtMap[tgtID];
+      }
       
       if (evt.IsMC()){
 	if (evt.IsSignal()){
@@ -157,6 +229,22 @@ class PreRecoil: public Study
 	      (*(*var)[tgtCode].m_SigIntTypeHists)[intType].FillUniverse(&univ, (*var)[tgtCode].GetRecoValue(univ), weight);
 	      (*(*var)[tgtCode].m_SigTargetTypeHists)[tgtType].FillUniverse(&univ, (*var)[tgtCode].GetRecoValue(univ), weight);
 	      //(*(*var)[tgtCode].m_SigLeadBlobTypeHists)[leadBlobType].FillUniverse(&univ, (*var)[tgtCode].GetRecoValue(univ), weight);
+	    }
+	  }
+	  else{
+	    if(USTgt != -1){
+	      (*(fUS_ByTgt[USTgt]))[tgtType].selectedMCReco->FillUniverse(&univ, (*(fUS_ByTgt[USTgt]))[tgtType].GetRecoValue(univ), weight); //"Fake data" for closure
+	      (*(fUS_ByTgt[USTgt]))[tgtType].selectedSignalReco->FillUniverse(&univ, (*(fUS_ByTgt[USTgt]))[tgtType].GetRecoValue(univ), weight);
+	      (*(*(fUS_ByTgt[USTgt]))[tgtType].m_SigIntTypeHists)[intType].FillUniverse(&univ, (*(fUS_ByTgt[USTgt]))[tgtType].GetRecoValue(univ), weight);
+	      (*(*(fUS_ByTgt[USTgt]))[tgtType].m_SigTargetTypeHists)[tgtType].FillUniverse(&univ, (*(fUS_ByTgt[USTgt]))[tgtType].GetRecoValue(univ), weight);
+	      //(*(*(fUS_ByTgt[USTgt]))[tgtType].m_SigLeadBlobTypeHists)[leadBlobType].FillUniverse(&univ, (*(fUS_ByTgt[USTgt]))[tgtType].GetRecoValue(univ), weight);	    
+	    }
+	    if(DSTgt != -1){
+	      (*(fDS_ByTgt[DSTgt]))[tgtType].selectedMCReco->FillUniverse(&univ, (*(fDS_ByTgt[DSTgt]))[tgtType].GetRecoValue(univ), weight); //"Fake data" for closure
+	      (*(fDS_ByTgt[DSTgt]))[tgtType].selectedSignalReco->FillUniverse(&univ, (*(fDS_ByTgt[DSTgt]))[tgtType].GetRecoValue(univ), weight);
+	      (*(*(fDS_ByTgt[DSTgt]))[tgtType].m_SigIntTypeHists)[intType].FillUniverse(&univ, (*(fDS_ByTgt[DSTgt]))[tgtType].GetRecoValue(univ), weight);
+	      (*(*(fDS_ByTgt[DSTgt]))[tgtType].m_SigTargetTypeHists)[tgtType].FillUniverse(&univ, (*(fDS_ByTgt[DSTgt]))[tgtType].GetRecoValue(univ), weight);
+	      //(*(*(fDS_ByTgt[DSTgt]))[tgtType].m_SigLeadBlobTypeHists)[leadBlobType].FillUniverse(&univ, (*(fDS_ByTgt[DSTgt]))[tgtType].GetRecoValue(univ), weight);	    
 	    }
 	  }
 
@@ -199,6 +287,22 @@ class PreRecoil: public Study
 	      //(*(*var)[tgtCode].m_BkgLeadBlobTypeHists)[leadBlobType].FillUniverse(&univ, (*var)[tgtCode].GetRecoValue(univ), weight);
 	    }
 	  }
+	  else{
+	    if(USTgt != -1){
+	      (*(fUS_ByTgt[USTgt]))[tgtType].selectedMCReco->FillUniverse(&univ, (*(fUS_ByTgt[USTgt]))[tgtType].GetRecoValue(univ), weight); //"Fake data" for closure
+	      (*(*(fUS_ByTgt[USTgt]))[tgtType].m_backgroundHists)[bkgd_ID].FillUniverse(&univ, (*(fUS_ByTgt[USTgt]))[tgtType].GetRecoValue(univ), weight);
+	      (*(*(fUS_ByTgt[USTgt]))[tgtType].m_BkgIntTypeHists)[intType].FillUniverse(&univ, (*(fUS_ByTgt[USTgt]))[tgtType].GetRecoValue(univ), weight);
+	      (*(*(fUS_ByTgt[USTgt]))[tgtType].m_BkgTargetTypeHists)[tgtType].FillUniverse(&univ, (*(fUS_ByTgt[USTgt]))[tgtType].GetRecoValue(univ), weight);
+	      //(*(*(fUS_ByTgt[USTgt]))[tgtType].m_BkgLeadBlobTypeHists)[leadBlobType].FillUniverse(&univ, (*(fUS_ByTgt[USTgt]))[tgtType].GetRecoValue(univ), weight);
+	    }
+	    if(DSTgt != -1){
+	      (*(fDS_ByTgt[DSTgt]))[tgtType].selectedMCReco->FillUniverse(&univ, (*(fDS_ByTgt[DSTgt]))[tgtType].GetRecoValue(univ), weight); //"Fake data" for closure
+	      (*(*(fDS_ByTgt[DSTgt]))[tgtType].m_backgroundHists)[bkgd_ID].FillUniverse(&univ, (*(fDS_ByTgt[DSTgt]))[tgtType].GetRecoValue(univ), weight);
+	      (*(*(fDS_ByTgt[DSTgt]))[tgtType].m_BkgIntTypeHists)[intType].FillUniverse(&univ, (*(fDS_ByTgt[DSTgt]))[tgtType].GetRecoValue(univ), weight);
+	      (*(*(fDS_ByTgt[DSTgt]))[tgtType].m_BkgTargetTypeHists)[tgtType].FillUniverse(&univ, (*(fDS_ByTgt[DSTgt]))[tgtType].GetRecoValue(univ), weight);
+	      //(*(*(fDS_ByTgt[DSTgt]))[tgtType].m_BkgLeadBlobTypeHists)[leadBlobType].FillUniverse(&univ, (*(fDS_ByTgt[DSTgt]))[tgtType].GetRecoValue(univ), weight);
+	    }
+	  }
 
 	  for(auto& var: fVars2D){
 	    var->selectedMCReco->FillUniverse(&univ, var->GetRecoValueX(univ), var->GetRecoValueY(univ), weight); //"Fake data" for closure
@@ -221,6 +325,14 @@ class PreRecoil: public Study
 	if(tgtCode != -1){
 	  for (auto& var : fVars_ByTgt){
 	    (*var)[tgtCode].dataHist->FillUniverse(&univ, (*var)[tgtCode].GetRecoValue(univ), 1);
+	  }
+	}
+	else{
+	  if(USTgt != -1){
+	    (*(fUS_ByTgt[USTgt]))[tgtType].dataHist->FillUniverse(&univ, (*(fUS_ByTgt[USTgt]))[tgtType].GetRecoValue(univ), 1);
+	  }
+	  if(DSTgt != -1){
+	    (*(fDS_ByTgt[DSTgt]))[tgtType].dataHist->FillUniverse(&univ, (*(fDS_ByTgt[DSTgt]))[tgtType].GetRecoValue(univ), 1);
 	  }
 	}
 

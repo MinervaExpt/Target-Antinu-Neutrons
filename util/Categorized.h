@@ -61,6 +61,31 @@ namespace util
 					    {5400,"Plastic_US5_DS4"},
 					    {7500,"Plastic_DS5"}};
 							       */
+
+  std::map<int, std::string> TgtTypeList = {{1, "Plastic"},
+					    {2, "USPlastic"},
+					    {3, "DSPlastic"},
+					    {6, "C"},
+					    {8, "Water"},
+					    {26, "Fe"},
+					    {82, "Pb"}};
+
+  std::map<int,int> DSTgtMap = {{0,5582},
+				{54,4482},
+				{46,6666},
+				{63,3382},
+				{32,2282},
+				{21,1182},
+				{10,-1}};
+
+  std::map<int,int> USTgtMap = {{54,5582},
+				{46,4482},
+				{63,6666},
+				{32,3382},
+				{21,2282},
+				{10,1182},
+				{0,-1}};
+
   //Mapping from a set of values to a name.  Helper for constructing a Categorized<>
   template <class value_t>
   struct NamedCategory
