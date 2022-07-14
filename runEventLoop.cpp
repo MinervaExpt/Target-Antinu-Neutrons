@@ -164,6 +164,9 @@ void LoopAndFillEventSelection(
 	int tgtZ = universe->GetTargetZ();
 	//util::GetTargetType(tgtZ,);
 
+	//get muon momentum to project into targets
+	std::vector<double> muonMom = {universe->GetMuon4V().X(),universe->GetMuon4V().Y(),universe->GetMuon4V().Z()};
+
 	std::vector<double> vtx = universe->GetVtx();
 	double vtx_x = vtx.at(0);
 	double vtx_y = vtx.at(1);
@@ -180,7 +183,7 @@ void LoopAndFillEventSelection(
 	double mc_vtx_z = mc_vtx.at(2);
 
 	int tgtID = util::GetRecoTargetZ(vtx_x,vtx_y,vtx_z);
-	int tgtCode = util::GetRecoTargetCode(vtx_x,vtx_y,vtx_z);
+	int tgtCode = util::GetRecoTargetCode(vtx_x,vtx_y,vtx_z,muonMom);
 	int trueTgtID = util::GetRecoTargetZ(mc_vtx_x,mc_vtx_y,mc_vtx_z);
 
 	int tgtType = tgtZ;
@@ -366,13 +369,15 @@ void LoopAndFillData( PlotUtils::ChainWrapper* data,
 
       if (SBStat.none()) continue;
 
+      std::vector<double> muonMom = {universe->GetMuon4V().X(),universe->GetMuon4V().Y(),universe->GetMuon4V().Z()};
+
       std::vector<double> vtx = universe->GetVtx();
       double vtx_x = vtx.at(0);
       double vtx_y = vtx.at(1);
       double vtx_z = vtx.at(2);
       
       //int tgtID = util::GetRecoTargetZ(vtx_x,vtx_y,vtx_z);
-      int tgtCode = util::GetRecoTargetCode(vtx_x,vtx_y,vtx_z);
+      int tgtCode = util::GetRecoTargetCode(vtx_x,vtx_y,vtx_z,muonMom);
 
       std::cout << std::setprecision(16);
 

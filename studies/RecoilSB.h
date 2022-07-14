@@ -188,6 +188,8 @@ class PreRecoil: public Study
       int leadBlobType = evt.GetLeadingNeutCand().GetPDGBin();
       int iBin = evt.GetBinPTPZ();
 
+      std::vector<double> muonMom = {univ.GetMuon4V().X(),univ.GetMuon4V().Y(),univ.GetMuon4V().Z()};
+
       // At some point just put this into the event structure itself.
       std::vector<double> vtx = univ.GetVtx();
       double vtx_x = vtx.at(0);
@@ -195,13 +197,17 @@ class PreRecoil: public Study
       double vtx_z = vtx.at(2);
 
       int tgtID = util::GetRecoTargetZ(vtx_x,vtx_y,vtx_z);
-      int tgtCode = util::GetRecoTargetCode(vtx_x,vtx_y,vtx_z);
+      int tgtCode = util::GetRecoTargetCode(vtx_x,vtx_y,vtx_z,muonMom);
       int USTgt = -1;
       int DSTgt = -1;
       if (tgtCode == -1){
-	USTgt = util::USTgtMap[tgtID];
-	DSTgt = util::DSTgtMap[tgtID];
+	USTgt = util::GetUSTgtCode(tgtID,vtx_x,vtx_y,vtx_z,muonMom);
+	DSTgt = util::GetDSTgtCode(tgtID,vtx_x,vtx_y,vtx_z,muonMom);
+	std::cout << "TGT ID: " << tgtID << std::endl;
+	std::cout << "US Tgt Code: " << USTgt << std::endl;
+	std::cout << "DS Tgt Code: " << DSTgt << std::endl;
       }
+
       
       if (evt.IsMC()){
 	if (evt.IsSignal()){
@@ -232,14 +238,14 @@ class PreRecoil: public Study
 	    }
 	  }
 	  else{
-	    if(USTgt != -1){
+	    if(USTgt > 0){
 	      (*(fUS_ByTgt[USTgt]))[tgtType].selectedMCReco->FillUniverse(&univ, (*(fUS_ByTgt[USTgt]))[tgtType].GetRecoValue(univ), weight); //"Fake data" for closure
 	      (*(fUS_ByTgt[USTgt]))[tgtType].selectedSignalReco->FillUniverse(&univ, (*(fUS_ByTgt[USTgt]))[tgtType].GetRecoValue(univ), weight);
 	      (*(*(fUS_ByTgt[USTgt]))[tgtType].m_SigIntTypeHists)[intType].FillUniverse(&univ, (*(fUS_ByTgt[USTgt]))[tgtType].GetRecoValue(univ), weight);
 	      (*(*(fUS_ByTgt[USTgt]))[tgtType].m_SigTargetTypeHists)[tgtType].FillUniverse(&univ, (*(fUS_ByTgt[USTgt]))[tgtType].GetRecoValue(univ), weight);
 	      //(*(*(fUS_ByTgt[USTgt]))[tgtType].m_SigLeadBlobTypeHists)[leadBlobType].FillUniverse(&univ, (*(fUS_ByTgt[USTgt]))[tgtType].GetRecoValue(univ), weight);	    
 	    }
-	    if(DSTgt != -1){
+	    if(DSTgt > 0){
 	      (*(fDS_ByTgt[DSTgt]))[tgtType].selectedMCReco->FillUniverse(&univ, (*(fDS_ByTgt[DSTgt]))[tgtType].GetRecoValue(univ), weight); //"Fake data" for closure
 	      (*(fDS_ByTgt[DSTgt]))[tgtType].selectedSignalReco->FillUniverse(&univ, (*(fDS_ByTgt[DSTgt]))[tgtType].GetRecoValue(univ), weight);
 	      (*(*(fDS_ByTgt[DSTgt]))[tgtType].m_SigIntTypeHists)[intType].FillUniverse(&univ, (*(fDS_ByTgt[DSTgt]))[tgtType].GetRecoValue(univ), weight);
@@ -288,14 +294,14 @@ class PreRecoil: public Study
 	    }
 	  }
 	  else{
-	    if(USTgt != -1){
+	    if(USTgt > 0){
 	      (*(fUS_ByTgt[USTgt]))[tgtType].selectedMCReco->FillUniverse(&univ, (*(fUS_ByTgt[USTgt]))[tgtType].GetRecoValue(univ), weight); //"Fake data" for closure
 	      (*(*(fUS_ByTgt[USTgt]))[tgtType].m_backgroundHists)[bkgd_ID].FillUniverse(&univ, (*(fUS_ByTgt[USTgt]))[tgtType].GetRecoValue(univ), weight);
 	      (*(*(fUS_ByTgt[USTgt]))[tgtType].m_BkgIntTypeHists)[intType].FillUniverse(&univ, (*(fUS_ByTgt[USTgt]))[tgtType].GetRecoValue(univ), weight);
 	      (*(*(fUS_ByTgt[USTgt]))[tgtType].m_BkgTargetTypeHists)[tgtType].FillUniverse(&univ, (*(fUS_ByTgt[USTgt]))[tgtType].GetRecoValue(univ), weight);
 	      //(*(*(fUS_ByTgt[USTgt]))[tgtType].m_BkgLeadBlobTypeHists)[leadBlobType].FillUniverse(&univ, (*(fUS_ByTgt[USTgt]))[tgtType].GetRecoValue(univ), weight);
 	    }
-	    if(DSTgt != -1){
+	    if(DSTgt > 0){
 	      (*(fDS_ByTgt[DSTgt]))[tgtType].selectedMCReco->FillUniverse(&univ, (*(fDS_ByTgt[DSTgt]))[tgtType].GetRecoValue(univ), weight); //"Fake data" for closure
 	      (*(*(fDS_ByTgt[DSTgt]))[tgtType].m_backgroundHists)[bkgd_ID].FillUniverse(&univ, (*(fDS_ByTgt[DSTgt]))[tgtType].GetRecoValue(univ), weight);
 	      (*(*(fDS_ByTgt[DSTgt]))[tgtType].m_BkgIntTypeHists)[intType].FillUniverse(&univ, (*(fDS_ByTgt[DSTgt]))[tgtType].GetRecoValue(univ), weight);
@@ -328,10 +334,10 @@ class PreRecoil: public Study
 	  }
 	}
 	else{
-	  if(USTgt != -1){
+	  if(USTgt > 0){
 	    (*(fUS_ByTgt[USTgt]))[tgtType].dataHist->FillUniverse(&univ, (*(fUS_ByTgt[USTgt]))[tgtType].GetRecoValue(univ), 1);
 	  }
-	  if(DSTgt != -1){
+	  if(DSTgt > 0){
 	    (*(fDS_ByTgt[DSTgt]))[tgtType].dataHist->FillUniverse(&univ, (*(fDS_ByTgt[DSTgt]))[tgtType].GetRecoValue(univ), 1);
 	  }
 	}
