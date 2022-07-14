@@ -10,6 +10,13 @@
 
 namespace util
 {
+  std::map<int,double> TgtDSCut = {{1,4523.0},
+			      {2,4744.0},
+			      {3,5009.0},
+			      {4,5686.0},
+			      {5,5819.0},
+			      {6,5465.0}};
+
   int GetRecoTargetZ(const double vtx_x, const double vtx_y, const double vtx_z){
     //Thickness different for different materials, so fix this later...
     double Tgt1Lo = PlotUtils::TargetUtils::Get().GetTarget1CenterZMC() - PlotUtils::TargetProp::ThicknessMC::Tgt1::Pb/2;
@@ -20,19 +27,36 @@ namespace util
     double TgtWLo = PlotUtils::TargetProp::WaterTarget::Face;
 
     if (!PlotUtils::TargetUtils::Get().IsInHexagon(vtx_x,vtx_y)) return -1;
-    if (PlotUtils::TargetUtils::Get().InTarget1ZMC(vtx_z, 82)) return 1;
-    else if (PlotUtils::TargetUtils::Get().InTarget2ZMC(vtx_z, 82)) return 2; 
-    else if (PlotUtils::TargetUtils::Get().InTarget3ZMC(vtx_z, 6)) return 3;
-    else if (PlotUtils::TargetUtils::Get().InTarget4ZMC(vtx_z, 82)) return 4;
-    else if (PlotUtils::TargetUtils::Get().InTarget5ZMC(vtx_z, 82)) return 5;
-    else if (PlotUtils::TargetUtils::Get().InWaterTargetZMC(vtx_z)) return 6;
     else if (vtx_z < Tgt1Lo) return 10;
+    else if (vtx_z < TgtDSCut[1]) return 1;
     else if (vtx_z < Tgt2Lo) return 21;
+    else if (vtx_z < TgtDSCut[2]) return 2;
     else if (vtx_z < Tgt3Lo) return 32;
+    else if (vtx_z < TgtDSCut[3]) return 3;
     else if (vtx_z < TgtWLo) return 63;
+    else if (vtx_z < TgtDSCut[6]) return 6;
     else if (vtx_z < Tgt4Lo) return 46;
+    else if (vtx_z < TgtDSCut[4]) return 4;
     else if (vtx_z < Tgt5Lo) return 54;
+    else if (vtx_z < TgtDSCut[5]) return 5;
     else return 0;
+  }
+
+  std::vector<double> XYProjToTgt(int tgt, std::vector<double> vtx, std::vector<double> muonP){
+    std::vector<double> newXY = {-999,-999};
+    newXY[0] = vtx[0];
+    newXY[1] = vtx[1];
+    double zCenter;
+    if (tgt == 1) zCenter = PlotUtils::TargetUtils::Get().GetTarget1CenterZMC();
+    else if (tgt == 2) zCenter = PlotUtils::TargetUtils::Get().GetTarget2CenterZMC();
+    else if (tgt == 3) zCenter = PlotUtils::TargetUtils::Get().GetTarget3CenterZMC();
+    else if (tgt == 4) zCenter = PlotUtils::TargetUtils::Get().GetTarget4CenterZMC();
+    else if (tgt == 5) zCenter = PlotUtils::TargetUtils::Get().GetTarget5CenterZMC();
+    else if (tgt == 6) zCenter = 0.5*(PlotUtils::TargetProp::WaterTarget::Face+PlotUtils::TargetProp::WaterTarget::Back);
+    else return newXY;
+    newXY[0] = vtx[0] + (muonP[0]/muonP[2])*(zCenter-vtx[2]);
+    newXY[1] = vtx[1] + (muonP[1]/muonP[2])*(zCenter-vtx[2]);
+    return newXY;
   }
 
   int GetRecoTarget15(double vtx_x, double vtx_y){
