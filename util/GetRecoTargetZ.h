@@ -202,6 +202,11 @@ namespace util
     }
     return GetRecoTargetCode(newXY[0], newXY[1], zCenter, muonP);
   }
+
+  bool CorrectTargetMaterial(int tgtCode, int tgtZ){
+    if (tgtCode < 1000) return false;
+    return true;
+  }
 }
 
 

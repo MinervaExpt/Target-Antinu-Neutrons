@@ -159,11 +159,13 @@ void LoopAndFillEventSelection(
         //if (!michelcuts.isMCSelected(*universe, myevent, cvWeight).all()) continue; //all is another function that will later help me with sidebands
         const double weight = model.GetWeight(*universe, myevent); //Only calculate the per-universe weight for events that will actually use it.
         //const double weight = 1.0; //Dummy weight for testing/validation pre-weight
-        const bool isSignal = michelcuts.isSignal(*universe, weight);
+        const bool isFSSignal = michelcuts.isSignal(*universe, weight);
+	const bool isTgts = vars_ByTgt.size() > 0 ? true : false; 
+	bool tmpIsSignal = isFSSignal;
 	int intType = universe->GetInteractionType();
 	int tgtZ = universe->GetTargetZ();
 	//util::GetTargetType(tgtZ,);
-
+	
 	//get muon momentum to project into targets
 	std::vector<double> muonMom = {universe->GetMuon4V().X(),universe->GetMuon4V().Y(),universe->GetMuon4V().Z()};
 
@@ -187,14 +189,26 @@ void LoopAndFillEventSelection(
 	int trueTgtID = util::GetRecoTargetZ(mc_vtx_x,mc_vtx_y,mc_vtx_z);
 
 	int tgtType = tgtZ;
-	if (tgtZ==6 && trueTgtID !=3) tgtType = 1;
-	if (tgtZ==1 && trueTgtID ==6) tgtType = 8;
-	if (tgtZ==8 && trueTgtID !=6) tgtType = -1;
+	if (tgtZ==6 && trueTgtID !=3) tgtType = 1; //Carbon not in target 3 is in plastic... Maybe need to require trueTgtCode to be carbon... but that can wait on the assumption there's no carbon outside of the carbon target.
+	if (tgtZ==1 && trueTgtID ==6) tgtType = 8; //hydrogen in target 6 (water target) is water
+	if (tgtZ==8 && trueTgtID !=6) tgtType = -1; //oxygen not in the water target is ill-defined
 
 	if (tgtType==1 && tgtID > 0 && tgtID < 7){
-	  if (mc_vtx_z < vtx_z) tgtType = 2; //US Plastic
-	  if (mc_vtx_z > vtx_z) tgtType = 3; //DS Plastic
+	  if (mc_vtx_z < vtx_z){
+	    tgtType = 2; //US Plastic has true vertex upstream
+	    intType = 62;
+	  }
+	  if (mc_vtx_z > vtx_z){
+	      tgtType = 3; //DS Plastic has true vertex downstream
+	      intType = 63;
+	  }
 	}
+
+	if (tgtID > 0 && tgtID < 7){
+	  tmpIsSignal = tmpIsSignal ? util::CorrectTargetMaterial(tgtCode,tgtZ) : tmpIsSignal; //Only call it signal if the true material for that section is correct.
+	}
+
+	const bool isSignal = tmpIsSignal;
 
 	/* Just for checking the output of GetRecoTargetZ
 	std::cout << "Checking Target Breakdown" << std::endl;
@@ -309,8 +323,13 @@ void LoopAndFillEventSelection(
         else
         {
           int bkgd_ID = -1;
-	  bkgd_ID = util::GetBackgroundID(*universe);
-
+	  if (isTgts) bkgd_ID = 44;
+	  //bkgd_ID = util::GetBackgroundID(*universe);
+	  if (tgtType == 2 || tgtType == 3){ //Separating out the plastic backgrounds
+	    bkgd_ID = intType;
+	  }
+	  else if (util::CorrectTargetMaterial(tgtCode,tgtZ)) bkgd_ID = util::GetBackgroundID(*universe);
+	  if (bkgd_ID == 44) intType = bkgd_ID;
           //for(auto& study: studies) study->SelectedSignal(*universe, myevent, weight);
 
           for(auto& var: vars){

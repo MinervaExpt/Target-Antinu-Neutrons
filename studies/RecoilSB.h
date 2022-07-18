@@ -187,7 +187,7 @@ class PreRecoil: public Study
       int tgtType = evt.GetTgtZ();
       int leadBlobType = evt.GetLeadingNeutCand().GetPDGBin();
       int iBin = evt.GetBinPTPZ();
-
+      const bool isTgts = (fVars_ByTgt.size() > 0) ? true: false;
       std::vector<double> muonMom = {univ.GetMuon4V().X(),univ.GetMuon4V().Y(),univ.GetMuon4V().Z()};
 
       // At some point just put this into the event structure itself.
@@ -198,6 +198,7 @@ class PreRecoil: public Study
 
       int tgtID = util::GetRecoTargetZ(vtx_x,vtx_y,vtx_z);
       int tgtCode = util::GetRecoTargetCode(vtx_x,vtx_y,vtx_z,muonMom);
+      int tgtZ = univ.GetTargetZ();
       int USTgt = -1;
       int DSTgt = -1;
       if (tgtCode == -1){
@@ -264,8 +265,10 @@ class PreRecoil: public Study
 	}
 	
 	else{
-	  int bkgd_ID = -1;	  
-	  bkgd_ID = util::GetBackgroundID(univ);
+	  int bkgd_ID = -1;
+	  if (isTgts) bkgd_ID = 44;
+	  if (tgtType == 2 || tgtType == 3) bkgd_ID = intType;
+	  else if (util::CorrectTargetMaterial(tgtCode,tgtZ)) bkgd_ID = util::GetBackgroundID(univ);
 	  
 	  if (fSplitRecoil){
 	    fRecoilBinned[iBin]->selectedMCReco->FillUniverse(&univ, fRecoilBinned[iBin]->GetRecoValue(univ), weight); //"Fake data" for closure

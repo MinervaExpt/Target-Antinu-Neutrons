@@ -42,13 +42,24 @@ class Variable: public PlotUtils::VariableBase<CVUniverse>
 
       std::map<int, std::string> BKGLabels = {{1, "1chargePi"},
                                               {2, "1neutPi"},
-                                              {3, "NPi"}};
+                                              {3, "NPi"},
+					      {62, "USPlastic"},
+					      {63, "DSPlastic"},
+					      {44, "Wrong Nucleus"}};
 
       //Various breakdowns for signal and background. TODO: Get the mapping correct
-      std::map<int, std::string> IntTypeLabels = {{1, "QE"},
-						  {2, "RES"},
-						  {3, "DIS"},
-						  {8, "2p2h"}};
+      std::map<int, std::string> SigIntTypeLabels = {{1, "QE"},
+						     {2, "RES"},
+						     {3, "DIS"},
+						     {8, "2p2h"}};
+
+      std::map<int, std::string> BkgIntTypeLabels = {{1, "QE"},
+						     {2, "RES"},
+						     {3, "DIS"},
+						     {8, "2p2h"},
+						     {62,"USPlastic"},
+						     {63,"DSPlastic"},
+						     {44, "Wrong Nucleus"}};
 
       std::map<int, std::string> TargetTypeLabels = {{1, "Plastic"},
 						     {2, "USPlastic"},
@@ -72,7 +83,7 @@ class Variable: public PlotUtils::VariableBase<CVUniverse>
 
       //Hists for the aforementioned various breakdowns.
       m_SigIntTypeHists = new util::Categorized<Hist, int>((GetName() + "_sig_IntType").c_str(),
-							   (GetAxisLabel()).c_str(), IntTypeLabels,
+							   (GetAxisLabel()).c_str(), SigIntTypeLabels,
 							   GetBinVec(), mc_error_bands);
 
       m_SigTargetTypeHists = new util::Categorized<Hist, int>((GetName() + "_sig_TargetType").c_str(),
@@ -86,7 +97,7 @@ class Variable: public PlotUtils::VariableBase<CVUniverse>
       */
 
       m_BkgIntTypeHists = new util::Categorized<Hist, int>((GetName() + "_bkg_IntType").c_str(),
-							   (GetAxisLabel()).c_str(), IntTypeLabels,
+							   (GetAxisLabel()).c_str(), BkgIntTypeLabels,
 							   GetBinVec(), mc_error_bands);
 
       m_BkgTargetTypeHists = new util::Categorized<Hist, int>((GetName() + "_bkg_TargetType").c_str(),
