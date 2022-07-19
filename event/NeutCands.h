@@ -168,8 +168,10 @@ namespace NeutronCandidates{
 class NeutronEvent{
  private:
   bool fIsSignal;
+  bool fIsFSSignal;
   bool fIsMC;
   int fIntType;
+  int fIntCode;
   int fTgtZ;
   int fBinPTPZ;
   double fEMNBlobs, fEMBlobE, fEMBlobNHits;
@@ -178,15 +180,17 @@ class NeutronEvent{
   NeutronCandidates::NeutCands fNeutCands;
 
  public:
-  NeutronEvent() : fNeutCands(), fIsSignal(false), fIsMC(false), fIntType(-999), fTgtZ(-999), fBinPTPZ(-1.0), fEMNBlobs(-999.0), fEMBlobE(-999.0), fEMBlobNHits(-999.0), fMaxFSNeutronKE(-999.0), fSideBands(0) { }
-  NeutronEvent(NeutronCandidates::NeutCands cands) : fIsSignal(false), fIsMC(false), fIntType(-999), fTgtZ(-999), fBinPTPZ(-1.0), fEMNBlobs(-999.0), fEMBlobE(-999.0), fEMBlobNHits(-999.0), fMaxFSNeutronKE(-999.0), fSideBands(0) { fNeutCands = cands; }
+  NeutronEvent() : fNeutCands(), fIsSignal(false), fIsFSSignal(false), fIsMC(false), fIntType(-999), fIntCode(-999), fTgtZ(-999), fBinPTPZ(-1.0), fEMNBlobs(-999.0), fEMBlobE(-999.0), fEMBlobNHits(-999.0), fMaxFSNeutronKE(-999.0), fSideBands(0) { }
+  NeutronEvent(NeutronCandidates::NeutCands cands) : fIsSignal(false), fIsFSSignal(false), fIsMC(false), fIntType(-999), fIntCode(-999), fTgtZ(-999), fBinPTPZ(-1.0), fEMNBlobs(-999.0), fEMBlobE(-999.0), fEMBlobNHits(-999.0), fMaxFSNeutronKE(-999.0), fSideBands(0) { fNeutCands = cands; }
 
   //Use in Variable-like classes
   double GetDummyVar() const { return -999.; }
 
   bool IsSignal() const { return fIsSignal; }
+  bool IsFSSignal() const { return fIsFSSignal; }
   bool IsMC() const { return fIsMC; }
   int GetIntType() const { return fIntType; }
+  int GetIntCode() const { return fIntCode; }
   int GetTgtZ() const { return fTgtZ; }
   int GetBinPTPZ() const { return fBinPTPZ; }
   double GetEMNBlobs() const { return fEMNBlobs; }
@@ -204,8 +208,10 @@ class NeutronEvent{
   NeutronCandidates::NeutCands GetNeutCands() const { return fNeutCands; }
 
   void SetSignal(bool isSignal){ fIsSignal = isSignal; }
+  void SetFSSignal(bool isFSSignal){ fIsFSSignal = isFSSignal; }
   void SetIsMC(){ fIsMC = true; }
   void SetIntType(int intType){ fIntType = intType; }
+  void SetIntCode(int intCode){ fIntCode = intCode; }
   void SetTgtZ(int tgtZ){ fTgtZ = tgtZ; }
   void SetBinPTPZ(int binPTPZ){ fBinPTPZ = binPTPZ; }
   void SetEMBlobInfo(std::vector<double> EMInfo)

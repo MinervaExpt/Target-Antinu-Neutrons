@@ -165,7 +165,8 @@ void LoopAndFillEventSelection(
 	int intType = universe->GetInteractionType();
 	int tgtZ = universe->GetTargetZ();
 	//util::GetTargetType(tgtZ,);
-	
+	myevent.SetIntCode(intType);
+
 	//get muon momentum to project into targets
 	std::vector<double> muonMom = {universe->GetMuon4V().X(),universe->GetMuon4V().Y(),universe->GetMuon4V().Z()};
 
@@ -221,6 +222,7 @@ void LoopAndFillEventSelection(
 	std::cout << "" << std::endl;
 	*/
 
+	myevent.SetFSSignal(isFSSignal);
         myevent.SetSignal(isSignal);
 	myevent.SetIntType(intType);
 	myevent.SetTgtZ(tgtType);
