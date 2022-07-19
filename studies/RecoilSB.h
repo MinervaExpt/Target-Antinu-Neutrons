@@ -53,9 +53,9 @@ class PreRecoil: public Study
 	}
       }
 
-      std::vector<double> coarseVtxBins;
-      for (int iBin=0; iBin<201;++iBin){
-	coarseVtxBins.push_back((double)iBin*2000.0/200.0+4000.0);
+      std::vector<double> coarseVtxBins;//Modified to be a number of planes instead of vertex Z values.
+      for (int iBin=0; iBin<22;++iBin){
+	coarseVtxBins.push_back((double)iBin-10.5);
       }
 
       fVars_ByTgt = {};
@@ -67,16 +67,19 @@ class PreRecoil: public Study
 	  TString nameCheck = var->GetName();
 	  if (nameCheck=="vtxZ"){
 	    for (auto& tgt: util::TgtCodeList){
-	      fVtx_US_ByTgt[tgt.first]=new util::Categorized<Variable, int>(("ByTgt_"+tgt.second).c_str(), "US_ByType", var->IsAnaVar(), (var->GetName()+"_ByTgt_"+tgt.second+"_PreRecoilCut").c_str(),var->GetAxisLabel().c_str(), util::TgtTypeList,coarseVtxBins,var->GetRecoFunc(),var->GetTrueFunc());
-	      fVtx_DS_ByTgt[tgt.first]=new util::Categorized<Variable, int>(("ByTgt_"+tgt.second).c_str(), "DS_ByType", var->IsAnaVar(), (var->GetName()+"_ByTgt_"+tgt.second+"_PreRecoilCut").c_str(),var->GetAxisLabel().c_str(), util::TgtTypeList,coarseVtxBins,var->GetRecoFunc(),var->GetTrueFunc());
+	      fVtx_US_ByTgt[tgt.first]=new util::Categorized<Variable, int>(("ByTgt_"+tgt.second).c_str(), "US_ByType", false, (var->GetName()+"_ByTgt_"+tgt.second+"_PreRecoilCut").c_str(),var->GetAxisLabel().c_str(), util::TgtTypeList,coarseVtxBins,var->GetRecoFunc(),var->GetTrueFunc());
+	      fVtx_DS_ByTgt[tgt.first]=new util::Categorized<Variable, int>(("ByTgt_"+tgt.second).c_str(), "DS_ByType", false, (var->GetName()+"_ByTgt_"+tgt.second+"_PreRecoilCut").c_str(),var->GetAxisLabel().c_str(), util::TgtTypeList,coarseVtxBins,var->GetRecoFunc(),var->GetTrueFunc());
 	    }
 	  }
+	  else if (nameCheck == "pTmu" || nameCheck == "recoilE"){
+	    fVars_ByTgt.push_back(new util::Categorized<Variable, int>(var->GetDirectoryName(), "ByTgt", false, (var->GetName()+"_PreRecoilCut").c_str(),var->GetAxisLabel().c_str(), util::TgtCodeList,var->GetBinVec(),var->GetRecoFunc(),var->GetTrueFunc()));
+	    fVars_US_ByTgt.push_back(new util::Categorized<Variable, int>(var->GetDirectoryName(), "ByTgt", false, (var->GetName()+"_InnerUSPlastic_PreRecoilCut").c_str(),var->GetAxisLabel().c_str(), util::TgtCodeList,var->GetBinVec(),var->GetRecoFunc(),var->GetTrueFunc()));
+	    fVars_DS_ByTgt.push_back(new util::Categorized<Variable, int>(var->GetDirectoryName(), "ByTgt", false, (var->GetName()+"_InnerDSPlastic_PreRecoilCut").c_str(),var->GetAxisLabel().c_str(), util::TgtCodeList,var->GetBinVec(),var->GetRecoFunc(),var->GetTrueFunc()));
+	    fVars_US_Post_ByTgt.push_back(new util::Categorized<Variable, int>(var->GetDirectoryName(), "ByTgt", false, (var->GetName()+"_InnerUSPlastic").c_str(),var->GetAxisLabel().c_str(), util::TgtCodeList,var->GetBinVec(),var->GetRecoFunc(),var->GetTrueFunc()));
+	    fVars_DS_Post_ByTgt.push_back(new util::Categorized<Variable, int>(var->GetDirectoryName(), "ByTgt", false, (var->GetName()+"_InnerDSPlastic").c_str(),var->GetAxisLabel().c_str(), util::TgtCodeList,var->GetBinVec(),var->GetRecoFunc(),var->GetTrueFunc()));
+	  }
 	  else{
-	    fVars_ByTgt.push_back(new util::Categorized<Variable, int>(var->GetDirectoryName(), "ByTgt", var->IsAnaVar(), (var->GetName()+"_PreRecoilCut").c_str(),var->GetAxisLabel().c_str(), util::TgtCodeList,var->GetBinVec(),var->GetRecoFunc(),var->GetTrueFunc()));
-	    fVars_US_ByTgt.push_back(new util::Categorized<Variable, int>(var->GetDirectoryName(), "ByTgt", var->IsAnaVar(), (var->GetName()+"_InnerUSPlastic_PreRecoilCut").c_str(),var->GetAxisLabel().c_str(), util::TgtCodeList,var->GetBinVec(),var->GetRecoFunc(),var->GetTrueFunc()));
-	    fVars_DS_ByTgt.push_back(new util::Categorized<Variable, int>(var->GetDirectoryName(), "ByTgt", var->IsAnaVar(), (var->GetName()+"_InnerDSPlastic_PreRecoilCut").c_str(),var->GetAxisLabel().c_str(), util::TgtCodeList,var->GetBinVec(),var->GetRecoFunc(),var->GetTrueFunc()));
-	    fVars_US_Post_ByTgt.push_back(new util::Categorized<Variable, int>(var->GetDirectoryName(), "ByTgt", var->IsAnaVar(), (var->GetName()+"_InnerUSPlastic").c_str(),var->GetAxisLabel().c_str(), util::TgtCodeList,var->GetBinVec(),var->GetRecoFunc(),var->GetTrueFunc()));
-	    fVars_DS_Post_ByTgt.push_back(new util::Categorized<Variable, int>(var->GetDirectoryName(), "ByTgt", var->IsAnaVar(), (var->GetName()+"_InnerDSPlastic").c_str(),var->GetAxisLabel().c_str(), util::TgtCodeList,var->GetBinVec(),var->GetRecoFunc(),var->GetTrueFunc()));
+	    fVars_ByTgt.push_back(new util::Categorized<Variable, int>(var->GetDirectoryName(), "ByTgt", false, (var->GetName()+"_PreRecoilCut").c_str(),var->GetAxisLabel().c_str(), util::TgtCodeList,var->GetBinVec(),var->GetRecoFunc(),var->GetTrueFunc()));
 	  }
 	}
       }
@@ -289,11 +292,40 @@ class PreRecoil: public Study
       if (tgtCode == -1){
 	USTgt = util::GetUSTgtCode(tgtID,vtx_x,vtx_y,vtx_z,muonMom);
 	DSTgt = util::GetDSTgtCode(tgtID,vtx_x,vtx_y,vtx_z,muonMom);
-	std::cout << "TGT ID: " << tgtID << std::endl;
-	std::cout << "US Tgt Code: " << USTgt << std::endl;
-	std::cout << "DS Tgt Code: " << DSTgt << std::endl;
-      }
+	/*Debugging removed
+	if (tgtID >= 10 && USTgt == -999 && tgtType == 1){
+	  std::cout << "TGT ID: " << tgtID << std::endl;
+	  std::cout << "US Tgt Code: " << USTgt << std::endl;
+	  std::cout << "DS Tgt Code: " << DSTgt << std::endl;
+	  std::cout << "Event Weight: " << weight << std::endl;
+	  if(evt.IsSignal()) std::cout << "Signal" << std::endl;
+	  else std::cout << "BKG" << std::endl;
+	  if (tgtID == 10) std::cout << "N Planes US: " << util::GetNPlanesUSOfTarget(1111,vtx_z) << std::endl;
+	  else if (tgtID == 21) std::cout << "N Planes US: " << util::GetNPlanesUSOfTarget(3333,vtx_z) << std::endl;
+	  else if (tgtID == 32) std::cout << "N Planes US: " << util::GetNPlanesUSOfTarget(3333,vtx_z) << std::endl;
+	  else if (tgtID == 63) std::cout << "N Planes US: " << util::GetNPlanesUSOfTarget(6666,vtx_z) << std::endl;
+	  else if (tgtID == 46) std::cout << "N Planes US: " << util::GetNPlanesUSOfTarget(4444,vtx_z) << std::endl;
+	  else if (tgtID == 54) std::cout << "N Planes US: " << util::GetNPlanesUSOfTarget(5555,vtx_z) << std::endl;
+	  std::cout << "" << std::endl;
+	}
+	else if ((tgtID == 0 || tgtID > 11) && DSTgt == -999 && tgtType == 1){
+	  std::cout << "TGT ID: " << tgtID << std::endl;
+	  std::cout << "US Tgt Code: " << USTgt << std::endl;
+	  std::cout << "DS Tgt Code: " << DSTgt << std::endl;
+	  std::cout << "Event Weight: " << weight << std::endl;
+	  if(evt.IsSignal()) std::cout << "Signal" << std::endl;
+	  else std::cout << "BKG" << std::endl;
 
+	  if(tgtID==21) std::cout << "N Planes DS: " << util::GetNPlanesDSOfTarget(1111,vtx_z) << std::endl;
+	  else if(tgtID==32) std::cout << "N Planes DS: " << util::GetNPlanesDSOfTarget(2222,vtx_z) << std::endl;
+	  else if(tgtID==63) std::cout << "N Planes DS: " << util::GetNPlanesDSOfTarget(3333,vtx_z) << std::endl;
+	  else if(tgtID==46) std::cout << "N Planes DS: " << util::GetNPlanesDSOfTarget(6666,vtx_z) << std::endl;
+	  else if(tgtID==54) std::cout << "N Planes DS: " << util::GetNPlanesDSOfTarget(4444,vtx_z) << std::endl;
+	  else if(tgtID==0) std::cout << "N Planes DS: " << util::GetNPlanesDSOfTarget(5555,vtx_z) << std::endl;
+	  std::cout << "" << std::endl;
+	}
+	*/
+      }
       
       if (evt.IsMC()){
 	if (evt.IsSignal()){
@@ -325,18 +357,36 @@ class PreRecoil: public Study
 	  }
 	  else{
 	    if(USTgt > 0){
-	      (*(fVtx_US_ByTgt[USTgt]))[tgtType].selectedMCReco->FillUniverse(&univ, (*(fVtx_US_ByTgt[USTgt]))[tgtType].GetRecoValue(univ), weight); //"Fake data" for closure
-	      (*(fVtx_US_ByTgt[USTgt]))[tgtType].selectedSignalReco->FillUniverse(&univ, (*(fVtx_US_ByTgt[USTgt]))[tgtType].GetRecoValue(univ), weight);
-	      (*(*(fVtx_US_ByTgt[USTgt]))[tgtType].m_SigIntTypeHists)[intType].FillUniverse(&univ, (*(fVtx_US_ByTgt[USTgt]))[tgtType].GetRecoValue(univ), weight);
-	      (*(*(fVtx_US_ByTgt[USTgt]))[tgtType].m_SigTargetTypeHists)[tgtType].FillUniverse(&univ, (*(fVtx_US_ByTgt[USTgt]))[tgtType].GetRecoValue(univ), weight);
-	      //(*(*(fVtx_US_ByTgt[USTgt]))[tgtType].m_SigLeadBlobTypeHists)[leadBlobType].FillUniverse(&univ, (*(fVtx_US_ByTgt[USTgt]))[tgtType].GetRecoValue(univ), weight);	    
+	      /* Debugging removed
+	      std::cout << "IsSignal" << std::endl;
+	      std::cout << "Material: " << tgtType << std::endl;
+	      std::cout << "USTgt: " << USTgt << std::endl;
+	      std::cout << "Vertex Z: " << vtx_z << std::endl;
+	      std::cout << "Variable Vtx Z: " << (*(fVtx_US_ByTgt[USTgt]))[tgtType].GetRecoValue(univ) << std::endl;
+	      std::cout << "NPlanes US for Target: " << util::GetNPlanesUSOfTarget(USTgt,(*(fVtx_US_ByTgt[USTgt]))[tgtType].GetRecoValue(univ)) << std::endl;
+	      std::cout << "" << std::endl;
+	      */
+	      (*(fVtx_US_ByTgt[USTgt]))[tgtType].selectedMCReco->FillUniverse(&univ, util::GetNPlanesUSOfTarget(USTgt,(*(fVtx_US_ByTgt[USTgt]))[tgtType].GetRecoValue(univ)), weight); //"Fake data" for closure
+	      (*(fVtx_US_ByTgt[USTgt]))[tgtType].selectedSignalReco->FillUniverse(&univ, util::GetNPlanesUSOfTarget(USTgt,(*(fVtx_US_ByTgt[USTgt]))[tgtType].GetRecoValue(univ)), weight);
+	      (*(*(fVtx_US_ByTgt[USTgt]))[tgtType].m_SigIntTypeHists)[intType].FillUniverse(&univ, util::GetNPlanesUSOfTarget(USTgt,(*(fVtx_US_ByTgt[USTgt]))[tgtType].GetRecoValue(univ)), weight);
+	      (*(*(fVtx_US_ByTgt[USTgt]))[tgtType].m_SigTargetTypeHists)[tgtType].FillUniverse(&univ, util::GetNPlanesUSOfTarget(USTgt,(*(fVtx_US_ByTgt[USTgt]))[tgtType].GetRecoValue(univ)), weight);
+	      //(*(*(fVtx_US_ByTgt[USTgt]))[tgtType].m_SigLeadBlobTypeHists)[leadBlobType].FillUniverse(&univ, util::GetNPlanesUSOfTarget(USTgt,(*(fVtx_US_ByTgt[USTgt]))[tgtType].GetRecoValue(univ)), weight);	    
 	    }
 	    if(DSTgt > 0){
-	      (*(fVtx_DS_ByTgt[DSTgt]))[tgtType].selectedMCReco->FillUniverse(&univ, (*(fVtx_DS_ByTgt[DSTgt]))[tgtType].GetRecoValue(univ), weight); //"Fake data" for closure
-	      (*(fVtx_DS_ByTgt[DSTgt]))[tgtType].selectedSignalReco->FillUniverse(&univ, (*(fVtx_DS_ByTgt[DSTgt]))[tgtType].GetRecoValue(univ), weight);
-	      (*(*(fVtx_DS_ByTgt[DSTgt]))[tgtType].m_SigIntTypeHists)[intType].FillUniverse(&univ, (*(fVtx_DS_ByTgt[DSTgt]))[tgtType].GetRecoValue(univ), weight);
-	      (*(*(fVtx_DS_ByTgt[DSTgt]))[tgtType].m_SigTargetTypeHists)[tgtType].FillUniverse(&univ, (*(fVtx_DS_ByTgt[DSTgt]))[tgtType].GetRecoValue(univ), weight);
-	      //(*(*(fVtx_DS_ByTgt[DSTgt]))[tgtType].m_SigLeadBlobTypeHists)[leadBlobType].FillUniverse(&univ, (*(fVtx_DS_ByTgt[DSTgt]))[tgtType].GetRecoValue(univ), weight);	    
+	      /*Debugging removed
+	      std::cout << "IsSignal" << std::endl;
+	      std::cout << "Material: " << tgtType << std::endl;
+	      std::cout << "DSTgt: " << DSTgt << std::endl;
+	      std::cout << "Vertex Z: " << vtx_z << std::endl;
+	      std::cout << "Variable Vtx Z: " << (*(fVtx_DS_ByTgt[DSTgt]))[tgtType].GetRecoValue(univ) << std::endl;
+	      std::cout << "NPlanes DS for Target: " << util::GetNPlanesDSOfTarget(DSTgt,(*(fVtx_DS_ByTgt[DSTgt]))[tgtType].GetRecoValue(univ)) << std::endl;
+	      std::cout << "" << std::endl;
+	      */
+	      (*(fVtx_DS_ByTgt[DSTgt]))[tgtType].selectedMCReco->FillUniverse(&univ, util::GetNPlanesDSOfTarget(DSTgt,(*(fVtx_DS_ByTgt[DSTgt]))[tgtType].GetRecoValue(univ)), weight); //"Fake data" for closure
+	      (*(fVtx_DS_ByTgt[DSTgt]))[tgtType].selectedSignalReco->FillUniverse(&univ, util::GetNPlanesDSOfTarget(DSTgt,(*(fVtx_DS_ByTgt[DSTgt]))[tgtType].GetRecoValue(univ)), weight);
+	      (*(*(fVtx_DS_ByTgt[DSTgt]))[tgtType].m_SigIntTypeHists)[intType].FillUniverse(&univ, util::GetNPlanesDSOfTarget(DSTgt,(*(fVtx_DS_ByTgt[DSTgt]))[tgtType].GetRecoValue(univ)), weight);
+	      (*(*(fVtx_DS_ByTgt[DSTgt]))[tgtType].m_SigTargetTypeHists)[tgtType].FillUniverse(&univ, util::GetNPlanesDSOfTarget(DSTgt,(*(fVtx_DS_ByTgt[DSTgt]))[tgtType].GetRecoValue(univ)), weight);
+	      //(*(*(fVtx_DS_ByTgt[DSTgt]))[tgtType].m_SigLeadBlobTypeHists)[leadBlobType].FillUniverse(&univ, util::GetNPlanesDSOfTarget(DSTgt,(*(fVtx_DS_ByTgt[DSTgt]))[tgtType].GetRecoValue(univ)), weight);	    
 	    }
 	  }
 
@@ -466,18 +516,36 @@ class PreRecoil: public Study
 	  }
 	  else{
 	    if(USTgt > 0){
-	      (*(fVtx_US_ByTgt[USTgt]))[tgtType].selectedMCReco->FillUniverse(&univ, (*(fVtx_US_ByTgt[USTgt]))[tgtType].GetRecoValue(univ), weight); //"Fake data" for closure
-	      (*(*(fVtx_US_ByTgt[USTgt]))[tgtType].m_backgroundHists)[bkgd_ID].FillUniverse(&univ, (*(fVtx_US_ByTgt[USTgt]))[tgtType].GetRecoValue(univ), weight);
-	      (*(*(fVtx_US_ByTgt[USTgt]))[tgtType].m_BkgIntTypeHists)[intType].FillUniverse(&univ, (*(fVtx_US_ByTgt[USTgt]))[tgtType].GetRecoValue(univ), weight);
-	      (*(*(fVtx_US_ByTgt[USTgt]))[tgtType].m_BkgTargetTypeHists)[tgtType].FillUniverse(&univ, (*(fVtx_US_ByTgt[USTgt]))[tgtType].GetRecoValue(univ), weight);
-	      //(*(*(fVtx_US_ByTgt[USTgt]))[tgtType].m_BkgLeadBlobTypeHists)[leadBlobType].FillUniverse(&univ, (*(fVtx_US_ByTgt[USTgt]))[tgtType].GetRecoValue(univ), weight);
+	      /* Debugging removed
+	      std::cout << "IsBKG" << std::endl;
+	      std::cout << "Material: " << tgtType << std::endl;
+	      std::cout << "USTgt: " << USTgt << std::endl;
+	      std::cout << "Vertex Z: " << vtx_z << std::endl;
+	      std::cout << "Variable Vtx Z: " << (*(fVtx_US_ByTgt[USTgt]))[tgtType].GetRecoValue(univ) << std::endl;
+	      std::cout << "NPlanes US for Target: " << util::GetNPlanesUSOfTarget(USTgt,(*(fVtx_US_ByTgt[USTgt]))[tgtType].GetRecoValue(univ)) << std::endl;
+	      std::cout << "" << std::endl;
+	      */
+	      (*(fVtx_US_ByTgt[USTgt]))[tgtType].selectedMCReco->FillUniverse(&univ, util::GetNPlanesUSOfTarget(USTgt,(*(fVtx_US_ByTgt[USTgt]))[tgtType].GetRecoValue(univ)), weight); //"Fake data" for closure
+	      (*(*(fVtx_US_ByTgt[USTgt]))[tgtType].m_backgroundHists)[bkgd_ID].FillUniverse(&univ, util::GetNPlanesUSOfTarget(USTgt,(*(fVtx_US_ByTgt[USTgt]))[tgtType].GetRecoValue(univ)), weight);
+	      (*(*(fVtx_US_ByTgt[USTgt]))[tgtType].m_BkgIntTypeHists)[intType].FillUniverse(&univ, util::GetNPlanesUSOfTarget(USTgt,(*(fVtx_US_ByTgt[USTgt]))[tgtType].GetRecoValue(univ)), weight);
+	      (*(*(fVtx_US_ByTgt[USTgt]))[tgtType].m_BkgTargetTypeHists)[tgtType].FillUniverse(&univ, util::GetNPlanesUSOfTarget(USTgt,(*(fVtx_US_ByTgt[USTgt]))[tgtType].GetRecoValue(univ)), weight);
+	      //(*(*(fVtx_US_ByTgt[USTgt]))[tgtType].m_BkgLeadBlobTypeHists)[leadBlobType].FillUniverse(&univ, util::GetNPlanesUSOfTarget(USTgt,(*(fVtx_US_ByTgt[USTgt]))[tgtType].GetRecoValue(univ)), weight);
 	    }
 	    if(DSTgt > 0){
-	      (*(fVtx_DS_ByTgt[DSTgt]))[tgtType].selectedMCReco->FillUniverse(&univ, (*(fVtx_DS_ByTgt[DSTgt]))[tgtType].GetRecoValue(univ), weight); //"Fake data" for closure
-	      (*(*(fVtx_DS_ByTgt[DSTgt]))[tgtType].m_backgroundHists)[bkgd_ID].FillUniverse(&univ, (*(fVtx_DS_ByTgt[DSTgt]))[tgtType].GetRecoValue(univ), weight);
-	      (*(*(fVtx_DS_ByTgt[DSTgt]))[tgtType].m_BkgIntTypeHists)[intType].FillUniverse(&univ, (*(fVtx_DS_ByTgt[DSTgt]))[tgtType].GetRecoValue(univ), weight);
-	      (*(*(fVtx_DS_ByTgt[DSTgt]))[tgtType].m_BkgTargetTypeHists)[tgtType].FillUniverse(&univ, (*(fVtx_DS_ByTgt[DSTgt]))[tgtType].GetRecoValue(univ), weight);
-	      //(*(*(fVtx_DS_ByTgt[DSTgt]))[tgtType].m_BkgLeadBlobTypeHists)[leadBlobType].FillUniverse(&univ, (*(fVtx_DS_ByTgt[DSTgt]))[tgtType].GetRecoValue(univ), weight);
+	      /*Debugging removed
+	      std::cout << "IsBKG" << std::endl;
+	      std::cout << "Material: " << tgtType << std::endl;
+	      std::cout << "DSTgt: " << DSTgt << std::endl;
+	      std::cout << "Vertex Z: " << vtx_z << std::endl;
+	      std::cout << "Variable Vtx Z: " << (*(fVtx_DS_ByTgt[DSTgt]))[tgtType].GetRecoValue(univ) << std::endl;
+	      std::cout << "NPlanes DS for Target: " << util::GetNPlanesDSOfTarget(DSTgt,(*(fVtx_DS_ByTgt[DSTgt]))[tgtType].GetRecoValue(univ)) << std::endl;
+	      std::cout << "" << std::endl;
+	      */
+	      (*(fVtx_DS_ByTgt[DSTgt]))[tgtType].selectedMCReco->FillUniverse(&univ, util::GetNPlanesDSOfTarget(DSTgt,(*(fVtx_DS_ByTgt[DSTgt]))[tgtType].GetRecoValue(univ)), weight); //"Fake data" for closure
+	      (*(*(fVtx_DS_ByTgt[DSTgt]))[tgtType].m_backgroundHists)[bkgd_ID].FillUniverse(&univ, util::GetNPlanesDSOfTarget(DSTgt,(*(fVtx_DS_ByTgt[DSTgt]))[tgtType].GetRecoValue(univ)), weight);
+	      (*(*(fVtx_DS_ByTgt[DSTgt]))[tgtType].m_BkgIntTypeHists)[intType].FillUniverse(&univ, util::GetNPlanesDSOfTarget(DSTgt,(*(fVtx_DS_ByTgt[DSTgt]))[tgtType].GetRecoValue(univ)), weight);
+	      (*(*(fVtx_DS_ByTgt[DSTgt]))[tgtType].m_BkgTargetTypeHists)[tgtType].FillUniverse(&univ, util::GetNPlanesDSOfTarget(DSTgt,(*(fVtx_DS_ByTgt[DSTgt]))[tgtType].GetRecoValue(univ)), weight);
+	      //(*(*(fVtx_DS_ByTgt[DSTgt]))[tgtType].m_BkgLeadBlobTypeHists)[leadBlobType].FillUniverse(&univ, util::GetNPlanesDSOfTarget(DSTgt,(*(fVtx_DS_ByTgt[DSTgt]))[tgtType].GetRecoValue(univ)), weight);
 	    }
 	  }
 
@@ -504,14 +572,31 @@ class PreRecoil: public Study
 	    (*var)[tgtCode].dataHist->FillUniverse(&univ, (*var)[tgtCode].GetRecoValue(univ), 1);
 	  }
 	}
+
+	/* REMOVE FILLING THE PLASTIC DATA. It's useless.
 	else{
 	  if(USTgt > 0){
-	    (*(fVtx_US_ByTgt[USTgt]))[tgtType].dataHist->FillUniverse(&univ, (*(fVtx_US_ByTgt[USTgt]))[tgtType].GetRecoValue(univ), 1);
+	    std::cout << "IsData" << std::endl;
+	    std::cout << "Material: " << tgtType << std::endl;
+	    std::cout << "USTgt: " << USTgt << std::endl;
+	    std::cout << "Vertex Z: " << vtx_z << std::endl;
+	    std::cout << "Variable Vtx Z: " << (*(fVtx_US_ByTgt[USTgt]))[tgtType].GetRecoValue(univ) << std::endl;
+	    std::cout << "NPlanes US for Target: " << util::GetNPlanesUSOfTarget(USTgt,(*(fVtx_US_ByTgt[USTgt]))[tgtType].GetRecoValue(univ)) << std::endl;
+	    std::cout << "" << std::endl;
+	    (*(fVtx_US_ByTgt[USTgt]))[tgtType].dataHist->FillUniverse(&univ, util::GetNPlanesUSOfTarget(USTgt,(*(fVtx_US_ByTgt[USTgt]))[tgtType].GetRecoValue(univ)), 1);
 	  }
 	  if(DSTgt > 0){
-	    (*(fVtx_DS_ByTgt[DSTgt]))[tgtType].dataHist->FillUniverse(&univ, (*(fVtx_DS_ByTgt[DSTgt]))[tgtType].GetRecoValue(univ), 1);
+	    std::cout << "IsData" << std::endl;
+	    std::cout << "Material: " << tgtType << std::endl;
+	    std::cout << "DSTgt: " << DSTgt << std::endl;
+	    std::cout << "Vertex Z: " << vtx_z << std::endl;
+	    std::cout << "Variable Vtx Z: " << (*(fVtx_DS_ByTgt[DSTgt]))[tgtType].GetRecoValue(univ) << std::endl;
+	    std::cout << "NPlanes DS for Target: " << util::GetNPlanesDSOfTarget(DSTgt,(*(fVtx_DS_ByTgt[DSTgt]))[tgtType].GetRecoValue(univ)) << std::endl;
+	    std::cout << "" << std::endl;
+	    (*(fVtx_DS_ByTgt[DSTgt]))[tgtType].dataHist->FillUniverse(&univ, util::GetNPlanesDSOfTarget(DSTgt,(*(fVtx_DS_ByTgt[DSTgt]))[tgtType].GetRecoValue(univ)), 1);
 	  }
 	}
+	*/
 
 	for (auto& var : fVars2D){
 	  var->dataHist->FillUniverse(&univ, var->GetRecoValueX(univ), var->GetRecoValueY(univ), 1);

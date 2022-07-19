@@ -1,6 +1,7 @@
 //File: GetRecoTargetZ.h
 //Brief: Get the reco. target section from vertex location.
-//TODO: Add in the material sections as well.
+//       This has expanded to do all that I need for targets and could use a 
+//       better name as a result.
 //Author: David Last dlast@sas.upenn.edu/lastd44@gmail.com
 
 #ifndef UTIL_GETRECOTGTZ_H
@@ -16,6 +17,16 @@ namespace util
 			      {4,5686.0},
 			      {5,5819.0},
 			      {6,5465.0}};
+
+  std::map<int, double> TgtUSPlaneBack = {{1,4455.0},
+					  {2,4676.0},
+					  {3,4897.0},
+					  {4,5619.0},
+					  {5,5751.0},
+					  {6,5162.0}};
+  
+  double step_big = 23.57;
+  double step_small = 20.64;
 
   int GetRecoTargetZ(const double vtx_x, const double vtx_y, const double vtx_z){
     //Thickness different for different materials, so fix this later...
@@ -267,8 +278,60 @@ namespace util
     }
     else return true;
   }
+
+  double GetNPlanesDSOfTarget(int tgtCode, double vtx_z){
+    int tgtID = tgtCode/1000;
+    //std::cout << "Calculated Tgt ID: " << tgtID << std::endl;
+    double nPlanes = -999.0;
+    double upperBound = TgtDSCut[tgtID];
+    int tmpN = 1;
+    int small = 0;
+    int nMax = 11;
+    if (tgtID == 4) nMax = 4;
+    if (vtx_z < upperBound) return nPlanes;
+    upperBound += step_small;
+    while (tmpN < nMax){
+      if (vtx_z < upperBound) break;
+      if (small == 0){
+	upperBound += step_big;
+	small = 1;
+      }
+      else{
+	upperBound += step_small;
+	small = 0;
+      }
+      tmpN++;
+    }
+    if (tmpN < nMax) nPlanes = (double)tmpN;
+    return nPlanes;
+  }
+
+  double GetNPlanesUSOfTarget(int tgtCode, double vtx_z){
+    int tgtID = tgtCode/1000;
+    //std::cout << "Calculated Tgt ID: " << tgtID << std::endl;
+    double nPlanes = -999.0;
+    double lowerBound = TgtUSPlaneBack[tgtID];
+    int tmpN = 1;
+    int small = 1;
+    int nMax = 11;
+    if (tgtID == 5) nMax = 4;
+    if (vtx_z > lowerBound) return nPlanes;
+    lowerBound -= step_small;
+    while (tmpN < nMax){
+      if (vtx_z > lowerBound) break;
+      if (small == 0){
+	lowerBound -= step_big;
+	small = 1;
+      }
+      else{
+	lowerBound -= step_small;
+	small = 0;
+      }
+      tmpN++;
+    }
+    if (tmpN < nMax) nPlanes = (double)(-1.0*tmpN);
+    return nPlanes;
+  }
 }
-
-
 
 #endif //UTIL_GETRECOTGTZ_H

@@ -262,6 +262,7 @@ void LoopAndFillEventSelection(
 	}
 	*/
 
+	//if((TString)(universe->ShortName()) == "cv"){ ONLY FOR DEBUGGING
 	for(auto& study: studies) study->Selected(*universe, myevent, weight);
 
 	if (!SBStat.all()) continue;
