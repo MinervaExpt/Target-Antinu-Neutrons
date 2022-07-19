@@ -203,9 +203,69 @@ namespace util
     return GetRecoTargetCode(newXY[0], newXY[1], zCenter, muonP);
   }
 
-  bool CorrectTargetMaterial(int tgtCode, int tgtZ){
+  bool CorrectTargetMaterial(int tgtCode, int tgtType){
     if (tgtCode < 1000) return false;
-    return true;
+    else if (tgtCode == 4482){
+      if (tgtType == 82) return true;
+      else return false;
+    }
+    else if (tgtCode == 6666){
+      if (tgtType == 8) return true;
+      else return false;
+    }
+    else if (tgtCode == 1126){
+      if (tgtType == 26) return true;
+      else return false;
+    }
+    else if (tgtCode == 1182){
+      if (tgtType == 82) return true;
+      else return false;
+    }
+    else if (tgtCode == 1199){
+      if (tgtType == 26 || tgtType == 82) return true;
+      else return false;
+    }
+    else if (tgtCode == 2226){
+      if (tgtType == 26) return true;
+      else return false;
+    }
+    else if (tgtCode == 2282){
+      if (tgtType == 82) return true;
+      else return false;
+    }
+    else if (tgtCode == 2299){
+      if (tgtType == 26 || tgtType == 82) return true;
+      else return false;
+    }
+    else if (tgtCode == 5526){
+      if (tgtType == 26) return true;
+      else return false;
+    }
+    else if (tgtCode == 5582){
+      if (tgtType == 82) return true;
+      else return false;
+    }
+    else if (tgtCode == 5599){
+      if (tgtType == 26 || tgtType == 82) return true;
+      else return false;
+    }
+    else if (tgtCode == 3306){
+      if (tgtType == 6) return true;
+      else return false;
+    }
+    else if (tgtCode == 3326){
+      if (tgtType == 26) return true;
+      else return false;
+    }
+    else if (tgtCode == 3382){
+      if (tgtType == 82) return true;
+      else return false;
+    }
+    else if (tgtCode == 3399){
+      if (tgtType == 26 || tgtType == 82 || tgtType == 6) return true;
+      else return false;
+    }
+    else return true;
   }
 }
 
