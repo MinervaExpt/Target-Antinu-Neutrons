@@ -267,7 +267,7 @@ class PreRecoil: public Study
 	else{
 	  int bkgd_ID = -1;
 	  if (isTgts) bkgd_ID = 44;
-	  if (tgtType == 2 || tgtType == 3) bkgd_ID = intType;
+	  if (tgtType == 200 || tgtType == 300) bkgd_ID = intType;
 	  else if (util::CorrectTargetMaterial(tgtCode,tgtZ)) bkgd_ID = util::GetBackgroundID(univ);
 	  
 	  if (fSplitRecoil){

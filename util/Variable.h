@@ -62,8 +62,8 @@ class Variable: public PlotUtils::VariableBase<CVUniverse>
 						     {44, "Wrong Nucleus"}};
 
       std::map<int, std::string> TargetTypeLabels = {{1, "Plastic"},
-						     {2, "USPlastic"},
-						     {3, "DSPlastic"},
+						     {200, "USPlastic"},
+						     {300, "DSPlastic"},
 						     {6, "C"},
 						     {8, "Water"},
 						     {26, "Fe"},

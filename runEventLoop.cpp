@@ -195,17 +195,17 @@ void LoopAndFillEventSelection(
 
 	if (tgtType==1 && tgtID > 0 && tgtID < 7){
 	  if (mc_vtx_z < vtx_z){
-	    tgtType = 2; //US Plastic has true vertex upstream
+	    tgtType = 200; //US Plastic has true vertex upstream
 	    intType = 62;
 	  }
 	  if (mc_vtx_z > vtx_z){
-	      tgtType = 3; //DS Plastic has true vertex downstream
-	      intType = 63;
+	    tgtType = 300; //DS Plastic has true vertex downstream
+	    intType = 63;
 	  }
 	}
 
 	if (tgtID > 0 && tgtID < 7){
-	  tmpIsSignal = tmpIsSignal ? util::CorrectTargetMaterial(tgtCode,tgtZ) : tmpIsSignal; //Only call it signal if the true material for that section is correct.
+	  tmpIsSignal = tmpIsSignal ? util::CorrectTargetMaterial(tgtCode,tgtType) : tmpIsSignal; //Only call it signal if the true material for that section is correct.
 	}
 
 	const bool isSignal = tmpIsSignal;
@@ -325,7 +325,7 @@ void LoopAndFillEventSelection(
           int bkgd_ID = -1;
 	  if (isTgts) bkgd_ID = 44;
 	  //bkgd_ID = util::GetBackgroundID(*universe);
-	  if (tgtType == 2 || tgtType == 3){ //Separating out the plastic backgrounds
+	  if (tgtType == 200 || tgtType == 300){ //Separating out the plastic backgrounds
 	    bkgd_ID = intType;
 	  }
 	  else if (util::CorrectTargetMaterial(tgtCode,tgtZ)) bkgd_ID = util::GetBackgroundID(*universe);
