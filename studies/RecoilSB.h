@@ -291,7 +291,7 @@ class PreRecoil: public Study
       int USTgt = -1;
       int DSTgt = -1;
       //std::cout << fFVregionName << std::endl;
-      if (tgtCode == -1 && fFVregionName.Contains("Target")){
+      if (tgtCode == -1  && fFVregionName.Contains("Target")){
 	//std::cout << fFVregionName << " changing USTgt and DSTgt." << std::endl;
 	USTgt = util::GetUSTgtCode(tgtID,vtx_x,vtx_y,vtx_z,muonMom,fTgtID);
 	DSTgt = util::GetDSTgtCode(tgtID,vtx_x,vtx_y,vtx_z,muonMom,fTgtID);
@@ -577,9 +577,10 @@ class PreRecoil: public Study
 	  }
 	}
 
-	/* REMOVE FILLING THE PLASTIC DATA. It's useless.
+	// REMOVE FILLING THE PLASTIC DATA. It's useless... except it's what I need to fit... wheeeeeeeeee.... so I un-removed... but this set me back a minute... oopsie...
 	else{
 	  if(USTgt > 0){
+	    /* removed debugging
 	    std::cout << "IsData" << std::endl;
 	    std::cout << "Material: " << tgtType << std::endl;
 	    std::cout << "USTgt: " << USTgt << std::endl;
@@ -587,9 +588,11 @@ class PreRecoil: public Study
 	    std::cout << "Variable Vtx Z: " << (*(fVtx_US_ByTgt[USTgt]))[tgtType].GetRecoValue(univ) << std::endl;
 	    std::cout << "NPlanes US for Target: " << util::GetNPlanesUSOfTarget(USTgt,(*(fVtx_US_ByTgt[USTgt]))[tgtType].GetRecoValue(univ)) << std::endl;
 	    std::cout << "" << std::endl;
+	    */
 	    (*(fVtx_US_ByTgt[USTgt]))[tgtType].dataHist->FillUniverse(&univ, util::GetNPlanesUSOfTarget(USTgt,(*(fVtx_US_ByTgt[USTgt]))[tgtType].GetRecoValue(univ)), 1);
 	  }
 	  if(DSTgt > 0){
+	    /* removed debugging
 	    std::cout << "IsData" << std::endl;
 	    std::cout << "Material: " << tgtType << std::endl;
 	    std::cout << "DSTgt: " << DSTgt << std::endl;
@@ -597,10 +600,10 @@ class PreRecoil: public Study
 	    std::cout << "Variable Vtx Z: " << (*(fVtx_DS_ByTgt[DSTgt]))[tgtType].GetRecoValue(univ) << std::endl;
 	    std::cout << "NPlanes DS for Target: " << util::GetNPlanesDSOfTarget(DSTgt,(*(fVtx_DS_ByTgt[DSTgt]))[tgtType].GetRecoValue(univ)) << std::endl;
 	    std::cout << "" << std::endl;
+	    */
 	    (*(fVtx_DS_ByTgt[DSTgt]))[tgtType].dataHist->FillUniverse(&univ, util::GetNPlanesDSOfTarget(DSTgt,(*(fVtx_DS_ByTgt[DSTgt]))[tgtType].GetRecoValue(univ)), 1);
 	  }
 	}
-	*/
 
 	for (auto& var : fVars2D){
 	  var->dataHist->FillUniverse(&univ, var->GetRecoValueX(univ), var->GetRecoValueY(univ), 1);
