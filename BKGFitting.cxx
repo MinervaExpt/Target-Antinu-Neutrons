@@ -478,7 +478,7 @@ int main(int argc, char* argv[]) {
   int fitMuonBins = 0;
   
   //vector<TString> namesToSave = {"pTmu","vtxZ","recoilE"}
-  vector<TString> namesToSave = {"pTmu","recoilE"};
+  vector<TString> namesToSave = {"pTmu","recoilE","NPlanes"};
 
   int lowBin = 1;//Will be truncated later. Lowest allowed value for pT or recoil fits.
   int hiBin = 50;//Will be truncated later. Highest allowed value for pT or recoil fits.
@@ -605,9 +605,16 @@ int main(int argc, char* argv[]) {
     cout << "Performing Fitting and Scaling for: " << name << endl;
     cout << "Grabbing: " << grabName << endl;
 
+    double binsNPlanes[22];
+    for (unsigned int i=0; i < 22;++i) binsNPlanes[i]=1.0*i-10.5;
+
     map<TString,MnvH1D*> varsToSave = {};
     for (auto nameSave:namesToSave){
-      if (tag.Contains("_Tgt")){
+      if (nameSave == "NPlanes"){
+	MnvH1D* hNPlanes = new MnvH1D(nameSave+tag,"",21,binsNPlanes);
+	varsToSave[nameSave+tag] = hNPlanes->Clone();
+      }
+      else if (tag.Contains("_Tgt")){
 	TObjArray* tagArr = tag.Tokenize("Tgt");
 	TString grabNameSave = "ByTgt_Tgt"+((TObjString*)(tagArr->At(tagArr->GetEntries()-1)))->String()+"/"+nameSave+tag;
 	varsToSave[nameSave+tag] = (MnvH1D*)(mcFile->Get(grabNameSave+"_selected_signal_reco"))->Clone();
