@@ -182,7 +182,7 @@ void DrawBKGCateg(string name, TFile* mcFile, TFile* dataFile, TString sample, d
   else h->GetYaxis()->SetTitle("Events / bin");
   h->GetYaxis()->SetTitleSize(0.05);
   h->GetYaxis()->SetTitleOffset(0.75);
-  if (!primPar)h->SetMaximum((dataHist->GetMaximum())*1.05);
+  if (!primPar)h->SetMaximum((dataHist->GetMaximum())*1.25);
 
   pos=0;
   if ((pos=name.find("_ENHitSB")) != string::npos){
@@ -490,7 +490,7 @@ void DrawIntType(string name_QE, TFile* mcFile, TFile* dataFile, TString sample,
   else h->GetYaxis()->SetTitle("Events / bin");
   h->GetYaxis()->SetTitleSize(0.05);
   h->GetYaxis()->SetTitleOffset(0.75);
-  if (!primPar) h->SetMaximum((dataHist->GetMaximum())*1.05);
+  if (!primPar) h->SetMaximum((dataHist->GetMaximum())*1.25);
   
   pos=0;
   if ((pos=name_sig.find("_ENHitSB")) != string::npos){
@@ -856,7 +856,7 @@ void DrawTargetType(string name_Plastic, TFile* mcFile, TFile* dataFile, TString
   else h->GetYaxis()->SetTitle("Events / bin");
   h->GetYaxis()->SetTitleSize(0.05);
   h->GetYaxis()->SetTitleOffset(0.75);
-  if (!primPar)h->SetMaximum((dataHist->GetMaximum())*1.05);
+  if (!primPar)h->SetMaximum((dataHist->GetMaximum())*1.25);
   
   pos=0;
   if ((pos=name_sig.find("_ENHitSB")) != string::npos){
@@ -1218,7 +1218,7 @@ void DrawLeadBlobType(string name_Neut, TFile* mcFile, TFile* dataFile, TString 
   else h->GetYaxis()->SetTitle("Events / bin");
   h->GetYaxis()->SetTitleSize(0.05);
   h->GetYaxis()->SetTitleOffset(0.75);
-  if (!primPar)h->SetMaximum((dataHist->GetMaximum())*1.05);
+  if (!primPar)h->SetMaximum((dataHist->GetMaximum())*1.25);
   
   pos=0;
   if ((pos=name_sig.find("_ENHitSB")) != string::npos){
