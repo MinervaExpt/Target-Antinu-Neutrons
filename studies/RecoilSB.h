@@ -27,12 +27,13 @@ class PreRecoil: public Study
     std::map<int,Variable*> fRecoilBinned;
     TString fFVregionName;
     bool fSplitRecoil;
+    int fTgtID;
 
   public:
     PreRecoil(std::vector<Variable*> vars,
 		     std::map<std::string, std::vector<CVUniverse*>>& mc_error_bands,
 		     std::map<std::string, std::vector<CVUniverse*>>& truth_error_bands,
-	      std::vector<CVUniverse*>& data_error_bands, bool splitRecoil, TString FVregionName): Study(), fSplitRecoil(splitRecoil), fFVregionName(FVregionName)
+	      std::vector<CVUniverse*>& data_error_bands, bool splitRecoil, TString FVregionName, int TgtID): Study(), fSplitRecoil(splitRecoil), fFVregionName(FVregionName), fTgtID(TgtID)
     {
 
       if (fSplitRecoil){
@@ -63,23 +64,23 @@ class PreRecoil: public Study
       fVtx_DS_ByTgt = {};
       for (auto& var : vars){
 	fVars.push_back(new Variable(false, (var->GetName()+"_PreRecoilCut").c_str(), var->GetAxisLabel(), var->GetBinVec(),var->GetRecoFunc(),var->GetTrueFunc()));
-	if (fFVregionName == "Targets"){
+	if (fFVregionName.Contains("Target")){
 	  TString nameCheck = var->GetName();
 	  if (nameCheck=="vtxZ"){
-	    for (auto& tgt: util::TgtCodeList){
+	    for (auto& tgt: util::TgtCodeList[fTgtID]){
 	      fVtx_US_ByTgt[tgt.first]=new util::Categorized<Variable, int>(("ByTgt_"+tgt.second).c_str(), "US_ByType", false, (var->GetName()+"_ByTgt_"+tgt.second+"_PreRecoilCut").c_str(),var->GetAxisLabel().c_str(), util::TgtTypeList,coarseVtxBins,var->GetRecoFunc(),var->GetTrueFunc());
 	      fVtx_DS_ByTgt[tgt.first]=new util::Categorized<Variable, int>(("ByTgt_"+tgt.second).c_str(), "DS_ByType", false, (var->GetName()+"_ByTgt_"+tgt.second+"_PreRecoilCut").c_str(),var->GetAxisLabel().c_str(), util::TgtTypeList,coarseVtxBins,var->GetRecoFunc(),var->GetTrueFunc());
 	    }
 	  }
 	  else if (nameCheck == "pTmu" || nameCheck == "recoilE"){
-	    fVars_ByTgt.push_back(new util::Categorized<Variable, int>(var->GetDirectoryName(), "ByTgt", false, (var->GetName()+"_PreRecoilCut").c_str(),var->GetAxisLabel().c_str(), util::TgtCodeList,var->GetBinVec(),var->GetRecoFunc(),var->GetTrueFunc()));
-	    fVars_US_ByTgt.push_back(new util::Categorized<Variable, int>(var->GetDirectoryName(), "ByTgt", false, (var->GetName()+"_InnerUSPlastic_PreRecoilCut").c_str(),var->GetAxisLabel().c_str(), util::TgtCodeList,var->GetBinVec(),var->GetRecoFunc(),var->GetTrueFunc()));
-	    fVars_DS_ByTgt.push_back(new util::Categorized<Variable, int>(var->GetDirectoryName(), "ByTgt", false, (var->GetName()+"_InnerDSPlastic_PreRecoilCut").c_str(),var->GetAxisLabel().c_str(), util::TgtCodeList,var->GetBinVec(),var->GetRecoFunc(),var->GetTrueFunc()));
-	    fVars_US_Post_ByTgt.push_back(new util::Categorized<Variable, int>(var->GetDirectoryName(), "ByTgt", false, (var->GetName()+"_InnerUSPlastic").c_str(),var->GetAxisLabel().c_str(), util::TgtCodeList,var->GetBinVec(),var->GetRecoFunc(),var->GetTrueFunc()));
-	    fVars_DS_Post_ByTgt.push_back(new util::Categorized<Variable, int>(var->GetDirectoryName(), "ByTgt", false, (var->GetName()+"_InnerDSPlastic").c_str(),var->GetAxisLabel().c_str(), util::TgtCodeList,var->GetBinVec(),var->GetRecoFunc(),var->GetTrueFunc()));
+	    fVars_ByTgt.push_back(new util::Categorized<Variable, int>(var->GetDirectoryName(), "ByTgt", false, (var->GetName()+"_PreRecoilCut").c_str(),var->GetAxisLabel().c_str(), util::TgtCodeList[fTgtID],var->GetBinVec(),var->GetRecoFunc(),var->GetTrueFunc()));
+	    fVars_US_ByTgt.push_back(new util::Categorized<Variable, int>(var->GetDirectoryName(), "ByTgt", false, (var->GetName()+"_InnerUSPlastic_PreRecoilCut").c_str(),var->GetAxisLabel().c_str(), util::TgtCodeList[fTgtID],var->GetBinVec(),var->GetRecoFunc(),var->GetTrueFunc()));
+	    fVars_DS_ByTgt.push_back(new util::Categorized<Variable, int>(var->GetDirectoryName(), "ByTgt", false, (var->GetName()+"_InnerDSPlastic_PreRecoilCut").c_str(),var->GetAxisLabel().c_str(), util::TgtCodeList[fTgtID],var->GetBinVec(),var->GetRecoFunc(),var->GetTrueFunc()));
+	    fVars_US_Post_ByTgt.push_back(new util::Categorized<Variable, int>(var->GetDirectoryName(), "ByTgt", false, (var->GetName()+"_InnerUSPlastic").c_str(),var->GetAxisLabel().c_str(), util::TgtCodeList[fTgtID],var->GetBinVec(),var->GetRecoFunc(),var->GetTrueFunc()));
+	    fVars_DS_Post_ByTgt.push_back(new util::Categorized<Variable, int>(var->GetDirectoryName(), "ByTgt", false, (var->GetName()+"_InnerDSPlastic").c_str(),var->GetAxisLabel().c_str(), util::TgtCodeList[fTgtID],var->GetBinVec(),var->GetRecoFunc(),var->GetTrueFunc()));
 	  }
 	  else{
-	    fVars_ByTgt.push_back(new util::Categorized<Variable, int>(var->GetDirectoryName(), "ByTgt", false, (var->GetName()+"_PreRecoilCut").c_str(),var->GetAxisLabel().c_str(), util::TgtCodeList,var->GetBinVec(),var->GetRecoFunc(),var->GetTrueFunc()));
+	    fVars_ByTgt.push_back(new util::Categorized<Variable, int>(var->GetDirectoryName(), "ByTgt", false, (var->GetName()+"_PreRecoilCut").c_str(),var->GetAxisLabel().c_str(), util::TgtCodeList[fTgtID],var->GetBinVec(),var->GetRecoFunc(),var->GetTrueFunc()));
 	  }
 	}
       }
@@ -289,9 +290,11 @@ class PreRecoil: public Study
       int tgtZ = univ.GetTargetZ();
       int USTgt = -1;
       int DSTgt = -1;
-      if (tgtCode == -1){
-	USTgt = util::GetUSTgtCode(tgtID,vtx_x,vtx_y,vtx_z,muonMom);
-	DSTgt = util::GetDSTgtCode(tgtID,vtx_x,vtx_y,vtx_z,muonMom);
+      //std::cout << fFVregionName << std::endl;
+      if (tgtCode == -1 && fFVregionName.Contains("Target")){
+	//std::cout << fFVregionName << " changing USTgt and DSTgt." << std::endl;
+	USTgt = util::GetUSTgtCode(tgtID,vtx_x,vtx_y,vtx_z,muonMom,fTgtID);
+	DSTgt = util::GetDSTgtCode(tgtID,vtx_x,vtx_y,vtx_z,muonMom,fTgtID);
 	/*Debugging removed
 	if (tgtID >= 10 && USTgt == -999 && tgtType == 1){
 	  std::cout << "TGT ID: " << tgtID << std::endl;

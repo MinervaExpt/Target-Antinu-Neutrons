@@ -156,59 +156,75 @@ namespace util
     return -999;
   }
 
-  int GetUSTgtCode(int TgtByZ, double vtx_x, double vtx_y, double vtx_z, std::vector<double> muonP){
+  int GetUSTgtCode(int TgtByZ, double vtx_x, double vtx_y, double vtx_z, std::vector<double> muonP, int ReqTgtID){
     if ( TgtByZ < 10 ) return -999;
     std::vector<double> newXY = {-999, -999};
     double zCenter = 0.0;
     if (TgtByZ == 10){
+      if (ReqTgtID != 1 && ReqTgtID != -1) return -999;
       newXY = XYProjToTgt(1,vtx_x,vtx_y,vtx_z,muonP);
       zCenter = PlotUtils::TargetUtils::Get().GetTarget1CenterZMC();
     }
     else if (TgtByZ == 21){
+      if (ReqTgtID != 2 && ReqTgtID != -1) return -999;
       newXY = XYProjToTgt(2,vtx_x,vtx_y,vtx_z,muonP);
       zCenter = PlotUtils::TargetUtils::Get().GetTarget2CenterZMC();
     }
     else if (TgtByZ == 32){ 
+      if (ReqTgtID != 3 && ReqTgtID != -1) return -999;
       newXY = XYProjToTgt(3,vtx_x,vtx_y,vtx_z,muonP);
       zCenter = PlotUtils::TargetUtils::Get().GetTarget3CenterZMC();
     }
     else if (TgtByZ == 63){
+      if (ReqTgtID != 6 && ReqTgtID != -1) return -999;
       newXY = XYProjToTgt(6,vtx_x,vtx_y,vtx_z,muonP);
       zCenter = 0.5*(PlotUtils::TargetProp::WaterTarget::Face+PlotUtils::TargetProp::WaterTarget::Back);
     }
-    else if (TgtByZ == 46){ newXY = XYProjToTgt(4,vtx_x,vtx_y,vtx_z,muonP);
+    else if (TgtByZ == 46){ 
+      if (ReqTgtID != 4 && ReqTgtID != -1) return -999;
+      newXY = XYProjToTgt(4,vtx_x,vtx_y,vtx_z,muonP);
       zCenter = PlotUtils::TargetUtils::Get().GetTarget4CenterZMC();
     }
-    else if (TgtByZ == 54){ newXY = XYProjToTgt(5,vtx_x,vtx_y,vtx_z,muonP);
+    else if (TgtByZ == 54){ 
+      if (ReqTgtID != 5 && ReqTgtID != -1) return -999;
+      newXY = XYProjToTgt(5,vtx_x,vtx_y,vtx_z,muonP);
       zCenter = PlotUtils::TargetUtils::Get().GetTarget5CenterZMC();
     }
     return GetRecoTargetCode(newXY[0], newXY[1], zCenter, muonP);
   }
 
-  int GetDSTgtCode(int TgtByZ, double vtx_x, double vtx_y, double vtx_z, std::vector<double> muonP){
+  int GetDSTgtCode(int TgtByZ, double vtx_x, double vtx_y, double vtx_z, std::vector<double> muonP, int ReqTgtID){
     if ( TgtByZ !=0 && TgtByZ < 11 ) return -999;
     std::vector<double> newXY = {-999, -999};
     double zCenter = 0.0;
     if (TgtByZ == 21){
+      if (ReqTgtID != 1 && ReqTgtID != -1) return -999;
       newXY = XYProjToTgt(1,vtx_x,vtx_y,vtx_z,muonP);
       zCenter = PlotUtils::TargetUtils::Get().GetTarget1CenterZMC();
     }
     else if (TgtByZ == 32){
+      if (ReqTgtID != 2 && ReqTgtID != -1) return -999;
       newXY = XYProjToTgt(2,vtx_x,vtx_y,vtx_z,muonP);
       zCenter = PlotUtils::TargetUtils::Get().GetTarget2CenterZMC();
     }
-    else if (TgtByZ == 63){ 
+    else if (TgtByZ == 63){
+      if (ReqTgtID != 3 && ReqTgtID != -1) return -999; 
       newXY = XYProjToTgt(3,vtx_x,vtx_y,vtx_z,muonP);
       zCenter = PlotUtils::TargetUtils::Get().GetTarget3CenterZMC();
     }
     else if (TgtByZ == 46){
+      if (ReqTgtID != 6 && ReqTgtID != -1) return -999;
       newXY = XYProjToTgt(6,vtx_x,vtx_y,vtx_z,muonP);
       zCenter = 0.5*(PlotUtils::TargetProp::WaterTarget::Face+PlotUtils::TargetProp::WaterTarget::Back);
     }
-    else if (TgtByZ == 54){ newXY = XYProjToTgt(4,vtx_x,vtx_y,vtx_z,muonP);
+    else if (TgtByZ == 54){ 
+      if (ReqTgtID != 4 && ReqTgtID != -1) return -999;
+      newXY = XYProjToTgt(4,vtx_x,vtx_y,vtx_z,muonP);
       zCenter = PlotUtils::TargetUtils::Get().GetTarget4CenterZMC();
     }
-    else if (TgtByZ == 0){ newXY = XYProjToTgt(5,vtx_x,vtx_y,vtx_z,muonP);
+    else if (TgtByZ == 0){ 
+      if (ReqTgtID != 5 && ReqTgtID != -1) return -999;
+      newXY = XYProjToTgt(5,vtx_x,vtx_y,vtx_z,muonP);
       zCenter = PlotUtils::TargetUtils::Get().GetTarget5CenterZMC();
     }
     return GetRecoTargetCode(newXY[0], newXY[1], zCenter, muonP);

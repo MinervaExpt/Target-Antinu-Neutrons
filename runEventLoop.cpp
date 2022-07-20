@@ -3,7 +3,7 @@
 
 #define USAGE \
 "\n*** USAGE ***\n"\
-"runEventLoop <dataPlaylist.txt> <mcPlaylist.txt> <skip_systematics> <MnvTune_v> <FV> optional: <fileName_tag> <NeutKE>\n\n"\
+"runEventLoop <dataPlaylist.txt> <mcPlaylist.txt> <skip_systematics> <MnvTune_v> <FV> <TgtNum> optional: <fileName_tag> <NeutKE>\n\n"\
 "*** Explanation ***\n"\
 "Reduce MasterAnaDev AnaTuples to event selection histograms to extract a\n"\
 "single-differential inclusive cross section for the 2021 MINERvA 101 tutorial.\n\n"\
@@ -25,6 +25,7 @@
 "This is useful for debugging the CV and running warping studies.\n"\
 "<MnvTune_v> has to be 1 or 2 and is the only current input control for the arguments to the function.\n"\
 "<FV> parameter needs to be set to Tracker or Targets to select vtx location.\n"\
+"<TgtNum> parameter needs to be set -1 for all targets or tracker, or 1-6 for those targets (6 is water tgt).\n"\
 "This parameter also controls the plotting range of the vtxZ variable.\n\n"\
 "*** Optional Inputs ***\n"\
 "<fileName_tag> lives as a naming tag used for extra identification of file contents if desired.\n"\
@@ -563,7 +564,7 @@ int main(const int argc, const char** argv)
   TH1::AddDirectory(false);
 
   //Validate input.
-  const int nArgsMandatory = 5;
+  const int nArgsMandatory = 6;
   const int nArgsOptional = 2;
   const int nArgsTotal = nArgsMandatory + nArgsOptional;
   if(argc < nArgsMandatory + 1 || argc > nArgsTotal + 1) //argc is the size of argv.  I check for number of arguments + 1 because
@@ -583,8 +584,16 @@ int main(const int argc, const char** argv)
   const int skipSystInt = atoi(argv[3]);
 
   const TString tuneVer = (TString)(argv[4]);
+
+  const int TgtNum = atoi(argv[6]);
+
+  TString FVregionNameTmp = (TString)FVregion;
+
+  if (FVregionNameTmp == "Targets" && TgtNum != -1){
+    FVregionNameTmp = ("SingleTarget_"+util::TgtList[TgtNum]).c_str();
+  }
   
-  const TString FVregionName = (TString)FVregion;
+  const TString FVregionName = (TString)FVregionNameTmp;
 
   TString nameExt = ".root";
 
@@ -608,8 +617,16 @@ int main(const int argc, const char** argv)
     return badCmdLine;
   }
 
-  if (FVregionName != "Tracker" && FVregionName != "Targets"){
+  if (FVregionName != "Tracker" && !FVregionName.Contains("Target")){
     std::cerr << "<FV> argument invalid. Check usage printed below. \n" << USAGE << "\n";
+    return badCmdLine;
+  }
+  if (FVregionName.Contains("SingleTarget") && (TgtNum < 1 || TgtNum > 6)){
+    std::cerr << "<TgtNum> argument invalid. Check usage printed below. \n" << USAGE << "\n";
+    return badCmdLine;
+  }
+  if (FVregionName == "Tracker" && TgtNum != -1){
+    std::cerr << "<TgtNum> argument invalid. Check usage printed below. \n" << USAGE << "\n";
     return badCmdLine;
   }
 
@@ -648,7 +665,11 @@ int main(const int argc, const char** argv)
     maxZtmp = 8422;
   }
   else if (FVregionName == "Targets"){
-    minZtmp = 4400;
+    minZtmp = 4200;
+    maxZtmp = 5980;
+  }
+  else if (FVregionName.Contains("Single")){
+    minZtmp = 4200;
     maxZtmp = 5980;
   }
   else{
@@ -808,7 +829,7 @@ int main(const int argc, const char** argv)
     for(auto& var: vars){ 
       TString nameCheck = var->GetName();
       if (nameCheck == "vtxZ") continue;
-      vars_ByTgt.push_back(new util::Categorized<Variable, int>(var->GetDirectoryName(), "ByTgt", var->IsAnaVar(), var->GetName().c_str(),var->GetAxisLabel().c_str(),util::TgtCodeList,var->GetBinVec(),var->GetRecoFunc(),var->GetTrueFunc()));
+      vars_ByTgt.push_back(new util::Categorized<Variable, int>(var->GetDirectoryName(), "ByTgt", var->IsAnaVar(), var->GetName().c_str(),var->GetAxisLabel().c_str(),util::TgtCodeList[TgtNum],var->GetBinVec(),var->GetRecoFunc(),var->GetTrueFunc()));
     }
   }
 
@@ -841,7 +862,7 @@ int main(const int argc, const char** argv)
     //new MichelAndNBlobSB(vars, error_bands, truth_bands, data_band),
     //new NeutronVariables(maxZ, minZ, error_bands, truth_bands, data_band),
     //new RecoilSB(vars, error_bands, truth_bands, data_band, splitRecoil),
-    new PreRecoil(vars, error_bands, truth_bands, data_band, splitRecoil, FVregionName),
+    new PreRecoil(vars, error_bands, truth_bands, data_band, splitRecoil, FVregionName, TgtNum),
   };
 
   for(auto& var: vars) var->InitializeMCHists(error_bands, truth_bands);
