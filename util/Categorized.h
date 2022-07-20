@@ -61,7 +61,7 @@ namespace util
 								 {3382,"Tgt3_Pb"},
 								 {3306,"Tgt3_C"},
 								 {3399,"Tgt3_Buffer"}}},
-							    {4, {{4482,"Tgt2_Fe"}}},
+							    {4, {{4482,"Tgt4_Pb"}}},
 							    {5, {{5526,"Tgt5_Fe"},
 								 {5582,"Tgt5_Pb"},
 								 {5599,"Tgt5_Buffer"}}},
