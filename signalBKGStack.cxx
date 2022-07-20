@@ -83,7 +83,6 @@ void DrawBKGCateg(string name, TFile* mcFile, TFile* dataFile, TString sample, d
   h_1PiC_Bkg->SetLineColor(TColor::GetColor("#88CCEE"));
   h_1PiC_Bkg->SetFillColor(TColor::GetColor("#88CCEE"));
 
-
   MnvH1D* h_1Pi0_Bkg_Top = (MnvH1D*)mcFile->Get((TString)name_bkg+"_background_1neutPi");
   MnvH1D* h_1Pi0_Bkg = new MnvH1D(h_1Pi0_Bkg_Top->GetBinNormalizedCopy());
   h_1Pi0_Bkg->Scale(scale);
@@ -98,6 +97,27 @@ void DrawBKGCateg(string name, TFile* mcFile, TFile* dataFile, TString sample, d
   h_NPi_Bkg->SetLineColor(TColor::GetColor("#CC6677"));
   h_NPi_Bkg->SetFillColor(TColor::GetColor("#CC6677"));
 
+  MnvH1D* h_USPlastic_Bkg_Top = (MnvH1D*)mcFile->Get((TString)name_bkg+"_background_USPlastic");
+  MnvH1D* h_USPlastic_Bkg = new MnvH1D(h_USPlastic_Bkg_Top->GetBinNormalizedCopy());
+  h_USPlastic_Bkg->Scale(scale);
+  mcSum->Add(h_USPlastic_Bkg);
+  h_USPlastic_Bkg->SetLineColor(TColor::GetColor("#A26E1C"));
+  h_USPlastic_Bkg->SetFillColor(TColor::GetColor("#A26E1C"));
+
+  MnvH1D* h_DSPlastic_Bkg_Top = (MnvH1D*)mcFile->Get((TString)name_bkg+"_background_DSPlastic");
+  MnvH1D* h_DSPlastic_Bkg = new MnvH1D(h_DSPlastic_Bkg_Top->GetBinNormalizedCopy());
+  h_DSPlastic_Bkg->Scale(scale);
+  mcSum->Add(h_DSPlastic_Bkg);
+  h_DSPlastic_Bkg->SetLineColor(TColor::GetColor("#C1B185"));
+  h_DSPlastic_Bkg->SetFillColor(TColor::GetColor("#C1B185"));
+
+  MnvH1D* h_Wrong_Nucleus_Bkg_Top = (MnvH1D*)mcFile->Get((TString)name_bkg+"_background_Wrong_Nucleus");
+  MnvH1D* h_Wrong_Nucleus_Bkg = new MnvH1D(h_Wrong_Nucleus_Bkg_Top->GetBinNormalizedCopy());
+  h_Wrong_Nucleus_Bkg->Scale(scale);
+  mcSum->Add(h_Wrong_Nucleus_Bkg);
+  h_Wrong_Nucleus_Bkg->SetLineColor(TColor::GetColor("#909497"));
+  h_Wrong_Nucleus_Bkg->SetFillColor(TColor::GetColor("#909497"));
+
   MnvH1D* h_Other_Bkg_Top = (MnvH1D*)mcFile->Get((TString)name_bkg+"_background_Other");
   MnvH1D* h_Other_Bkg = new MnvH1D(h_Other_Bkg_Top->GetBinNormalizedCopy());
   h_Other_Bkg->Scale(scale);
@@ -111,6 +131,9 @@ void DrawBKGCateg(string name, TFile* mcFile, TFile* dataFile, TString sample, d
   h_data->AddMissingErrorBandsAndFillWithCV(*h_Sig);
 
   THStack* h = new THStack();
+  h->Add((TH1D*)h_Wrong_Nucleus_Bkg->GetCVHistoWithError().Clone());
+  h->Add((TH1D*)h_USPlastic_Bkg->GetCVHistoWithError().Clone());
+  h->Add((TH1D*)h_DSPlastic_Bkg->GetCVHistoWithError().Clone());
   h->Add((TH1D*)h_Other_Bkg->GetCVHistoWithError().Clone());
   h->Add((TH1D*)h_NPi_Bkg->GetCVHistoWithError().Clone());
   h->Add((TH1D*)h_1Pi0_Bkg->GetCVHistoWithError().Clone());
@@ -210,6 +233,9 @@ void DrawBKGCateg(string name, TFile* mcFile, TFile* dataFile, TString sample, d
   leg->AddEntry(h_1Pi0_Bkg,"single #pi^{0}");
   leg->AddEntry(h_NPi_Bkg,"N#pi");
   leg->AddEntry(h_Other_Bkg,"Other");
+  leg->AddEntry(h_DSPlastic_Bkg,"DS Plastic");
+  leg->AddEntry(h_USPlastic_Bkg,"US Plastic");
+  leg->AddEntry(h_Wrong_Nucleus_Bkg,"Wrong Nucleus");
 
   leg->Draw();
   c1->Update();
@@ -270,6 +296,9 @@ void DrawBKGCateg(string name, TFile* mcFile, TFile* dataFile, TString sample, d
   delete h_1PiC_Bkg;
   delete h_1Pi0_Bkg;
   delete h_NPi_Bkg;
+  delete h_USPlastic_Bkg;
+  delete h_DSPlastic_Bkg;
+  delete h_Wrong_Nucleus_Bkg;
   delete h_Other_Bkg;
   delete c1;
 
@@ -342,7 +371,7 @@ void DrawIntType(string name_QE, TFile* mcFile, TFile* dataFile, TString sample,
   mcSum->Add(h_QE_Bkg);
   h_QE_Bkg->SetLineColor(TColor::GetColor("#88CCEE"));
   h_QE_Bkg->SetFillColor(TColor::GetColor("#88CCEE"));
-  h_QE_Bkg->SetFillStyle(3444);
+  h_QE_Bkg->SetFillStyle(3003);
 
   MnvH1D* h_RES_Bkg_Top = (MnvH1D*)mcFile->Get((TString)name_bkg+"_bkg_IntType_RES");
   MnvH1D* h_RES_Bkg = new MnvH1D(h_RES_Bkg_Top->GetBinNormalizedCopy());
@@ -350,7 +379,7 @@ void DrawIntType(string name_QE, TFile* mcFile, TFile* dataFile, TString sample,
   mcSum->Add(h_RES_Bkg);
   h_RES_Bkg->SetLineColor(TColor::GetColor("#117733"));
   h_RES_Bkg->SetFillColor(TColor::GetColor("#117733"));
-  h_RES_Bkg->SetFillStyle(3444);
+  h_RES_Bkg->SetFillStyle(3003);
 
   MnvH1D* h_DIS_Bkg_Top = (MnvH1D*)mcFile->Get((TString)name_bkg+"_bkg_IntType_DIS");
   MnvH1D* h_DIS_Bkg = new MnvH1D(h_DIS_Bkg_Top->GetBinNormalizedCopy());
@@ -358,7 +387,7 @@ void DrawIntType(string name_QE, TFile* mcFile, TFile* dataFile, TString sample,
   mcSum->Add(h_DIS_Bkg);
   h_DIS_Bkg->SetLineColor(TColor::GetColor("#CC6677"));
   h_DIS_Bkg->SetFillColor(TColor::GetColor("#CC6677"));
-  h_DIS_Bkg->SetFillStyle(3444);
+  h_DIS_Bkg->SetFillStyle(3003);
 
   MnvH1D* h_2p2h_Bkg_Top = (MnvH1D*)mcFile->Get((TString)name_bkg+"_bkg_IntType_2p2h");
   MnvH1D* h_2p2h_Bkg = new MnvH1D(h_2p2h_Bkg_Top->GetBinNormalizedCopy());
@@ -366,7 +395,31 @@ void DrawIntType(string name_QE, TFile* mcFile, TFile* dataFile, TString sample,
   mcSum->Add(h_2p2h_Bkg);
   h_2p2h_Bkg->SetLineColor(TColor::GetColor("#44AA99"));
   h_2p2h_Bkg->SetFillColor(TColor::GetColor("#44AA99"));
-  h_2p2h_Bkg->SetFillStyle(3444);
+  h_2p2h_Bkg->SetFillStyle(3003);
+
+  MnvH1D* h_USPlastic_Bkg_Top = (MnvH1D*)mcFile->Get((TString)name_bkg+"_bkg_IntType_USPlastic");
+  MnvH1D* h_USPlastic_Bkg = new MnvH1D(h_USPlastic_Bkg_Top->GetBinNormalizedCopy());
+  h_USPlastic_Bkg->Scale(scale);
+  mcSum->Add(h_USPlastic_Bkg);
+  h_USPlastic_Bkg->SetLineColor(TColor::GetColor("#A26E1C"));
+  h_USPlastic_Bkg->SetFillColor(TColor::GetColor("#A26E1C"));
+  h_USPlastic_Bkg->SetFillStyle(3003);
+
+  MnvH1D* h_DSPlastic_Bkg_Top = (MnvH1D*)mcFile->Get((TString)name_bkg+"_bkg_IntType_DSPlastic");
+  MnvH1D* h_DSPlastic_Bkg = new MnvH1D(h_DSPlastic_Bkg_Top->GetBinNormalizedCopy());
+  h_DSPlastic_Bkg->Scale(scale);
+  mcSum->Add(h_DSPlastic_Bkg);
+  h_DSPlastic_Bkg->SetLineColor(TColor::GetColor("#C1B185"));
+  h_DSPlastic_Bkg->SetFillColor(TColor::GetColor("#C1B185"));
+  h_DSPlastic_Bkg->SetFillStyle(3003);
+
+  MnvH1D* h_Wrong_Nucleus_Bkg_Top = (MnvH1D*)mcFile->Get((TString)name_bkg+"_bkg_IntType_Wrong_Nucleus");
+  MnvH1D* h_Wrong_Nucleus_Bkg = new MnvH1D(h_Wrong_Nucleus_Bkg_Top->GetBinNormalizedCopy());
+  h_Wrong_Nucleus_Bkg->Scale(scale);
+  mcSum->Add(h_Wrong_Nucleus_Bkg);
+  h_Wrong_Nucleus_Bkg->SetLineColor(TColor::GetColor("#909497"));
+  h_Wrong_Nucleus_Bkg->SetFillColor(TColor::GetColor("#909497"));
+  h_Wrong_Nucleus_Bkg->SetFillStyle(3003);
 
   MnvH1D* h_Other_Bkg_Top = (MnvH1D*)mcFile->Get((TString)name_bkg+"_bkg_IntType_Other");
   MnvH1D* h_Other_Bkg = new MnvH1D(h_Other_Bkg_Top->GetBinNormalizedCopy());
@@ -374,7 +427,7 @@ void DrawIntType(string name_QE, TFile* mcFile, TFile* dataFile, TString sample,
   mcSum->Add(h_Other_Bkg);
   h_Other_Bkg->SetLineColor(TColor::GetColor("#882255"));
   h_Other_Bkg->SetFillColor(TColor::GetColor("#882255"));
-  h_Other_Bkg->SetFillStyle(3444);
+  h_Other_Bkg->SetFillStyle(3003);
 
   MnvH1D* h_data_Top = (MnvH1D*)dataFile->Get((TString)name_bkg+"_data");
   MnvH1D* h_data = new MnvH1D(h_data_Top->GetBinNormalizedCopy());
@@ -382,6 +435,9 @@ void DrawIntType(string name_QE, TFile* mcFile, TFile* dataFile, TString sample,
   h_data->AddMissingErrorBandsAndFillWithCV(*h_QE_Sig);
 
   THStack* h = new THStack();
+  h->Add((TH1D*)h_Wrong_Nucleus_Bkg->GetCVHistoWithError().Clone());
+  h->Add((TH1D*)h_USPlastic_Bkg->GetCVHistoWithError().Clone());
+  h->Add((TH1D*)h_DSPlastic_Bkg->GetCVHistoWithError().Clone());
   h->Add((TH1D*)h_Other_Bkg->GetCVHistoWithError().Clone());
   h->Add((TH1D*)h_2p2h_Bkg->GetCVHistoWithError().Clone());
   h->Add((TH1D*)h_DIS_Bkg->GetCVHistoWithError().Clone());
@@ -477,6 +533,10 @@ void DrawIntType(string name_QE, TFile* mcFile, TFile* dataFile, TString sample,
   dataHist->Draw("same");
   c1->Update();
 
+  TH1D* hTmp = new TH1D();
+  hTmp->SetFillColor(kWhite);
+  hTmp->SetLineColor(kWhite);
+
   TLegend* leg = new TLegend(0.7,0.7,0.9,0.9);
 
   leg->SetNColumns(2);
@@ -498,6 +558,15 @@ void DrawIntType(string name_QE, TFile* mcFile, TFile* dataFile, TString sample,
 
   leg->AddEntry(h_Other_Sig,"Sig. + Other");
   leg->AddEntry(h_Other_Bkg,"Bkg. + Other");
+
+  leg->AddEntry(hTmp,"","f");
+  leg->AddEntry(h_DSPlastic_Bkg,"DS Plastic");
+
+  leg->AddEntry(hTmp,"","f");
+  leg->AddEntry(h_USPlastic_Bkg,"US Plastic");
+
+  leg->AddEntry(hTmp,"","f");
+  leg->AddEntry(h_Wrong_Nucleus_Bkg,"Wrong Nucleus");
 
   leg->Draw();
   c1->Update();
@@ -554,6 +623,9 @@ void DrawIntType(string name_QE, TFile* mcFile, TFile* dataFile, TString sample,
   delete ratio;
   delete straightLine;
   delete h_data;
+  delete h_Wrong_Nucleus_Bkg;
+  delete h_DSPlastic_Bkg;
+  delete h_USPlastic_Bkg;
   delete h_Other_Bkg;
   delete h_2p2h_Bkg;
   delete h_DIS_Bkg;
@@ -565,6 +637,8 @@ void DrawIntType(string name_QE, TFile* mcFile, TFile* dataFile, TString sample,
   delete h_RES_Sig;
   delete h_QE_Sig;
   delete c1;
+
+  delete hTmp;
 
   return;
 }
@@ -660,7 +734,7 @@ void DrawTargetType(string name_Plastic, TFile* mcFile, TFile* dataFile, TString
   mcSum->Add(h_Plastic_Bkg);
   h_Plastic_Bkg->SetLineColor(TColor::GetColor("#DDCC77"));
   h_Plastic_Bkg->SetFillColor(TColor::GetColor("#DDCC77"));
-  h_Plastic_Bkg->SetFillStyle(3444);
+  h_Plastic_Bkg->SetFillStyle(3003);
 
   MnvH1D* h_US_Bkg_Top = (MnvH1D*)mcFile->Get((TString)name_bkg+"_bkg_TargetType_USPlastic");
   MnvH1D* h_US_Bkg = new MnvH1D(h_US_Bkg_Top->GetBinNormalizedCopy());
@@ -668,7 +742,7 @@ void DrawTargetType(string name_Plastic, TFile* mcFile, TFile* dataFile, TString
   mcSum->Add(h_US_Bkg);
   h_US_Bkg->SetLineColor(TColor::GetColor("#A26E1C"));
   h_US_Bkg->SetFillColor(TColor::GetColor("#A26E1C"));
-  h_US_Bkg->SetFillStyle(3444);
+  h_US_Bkg->SetFillStyle(3003);
 
   MnvH1D* h_DS_Bkg_Top = (MnvH1D*)mcFile->Get((TString)name_bkg+"_bkg_TargetType_DSPlastic");
   MnvH1D* h_DS_Bkg = new MnvH1D(h_DS_Bkg_Top->GetBinNormalizedCopy());
@@ -676,7 +750,7 @@ void DrawTargetType(string name_Plastic, TFile* mcFile, TFile* dataFile, TString
   mcSum->Add(h_DS_Bkg);
   h_DS_Bkg->SetLineColor(TColor::GetColor("#C1B185"));
   h_DS_Bkg->SetFillColor(TColor::GetColor("#C1B185"));
-  h_DS_Bkg->SetFillStyle(3444);
+  h_DS_Bkg->SetFillStyle(3003);
 
   MnvH1D* h_Fe_Bkg_Top = (MnvH1D*)mcFile->Get((TString)name_bkg+"_bkg_TargetType_Fe");
   MnvH1D* h_Fe_Bkg = new MnvH1D(h_Fe_Bkg_Top->GetBinNormalizedCopy());
@@ -684,7 +758,7 @@ void DrawTargetType(string name_Plastic, TFile* mcFile, TFile* dataFile, TString
   mcSum->Add(h_Fe_Bkg);
   h_Fe_Bkg->SetLineColor(TColor::GetColor("#882255"));
   h_Fe_Bkg->SetFillColor(TColor::GetColor("#882255"));
-  h_Fe_Bkg->SetFillStyle(3444);
+  h_Fe_Bkg->SetFillStyle(3003);
 
   MnvH1D* h_Pb_Bkg_Top = (MnvH1D*)mcFile->Get((TString)name_bkg+"_bkg_TargetType_Pb");
   MnvH1D* h_Pb_Bkg = new MnvH1D(h_Pb_Bkg_Top->GetBinNormalizedCopy());
@@ -692,7 +766,7 @@ void DrawTargetType(string name_Plastic, TFile* mcFile, TFile* dataFile, TString
   mcSum->Add(h_Pb_Bkg);
   h_Pb_Bkg->SetLineColor(TColor::GetColor("#117733"));
   h_Pb_Bkg->SetFillColor(TColor::GetColor("#117733"));
-  h_Pb_Bkg->SetFillStyle(3444);
+  h_Pb_Bkg->SetFillStyle(3003);
 
   MnvH1D* h_Water_Bkg_Top = (MnvH1D*)mcFile->Get((TString)name_bkg+"_bkg_TargetType_Water");
   MnvH1D* h_Water_Bkg = new MnvH1D(h_Water_Bkg_Top->GetBinNormalizedCopy());
@@ -700,7 +774,7 @@ void DrawTargetType(string name_Plastic, TFile* mcFile, TFile* dataFile, TString
   mcSum->Add(h_Water_Bkg);
   h_Water_Bkg->SetLineColor(TColor::GetColor("#332288"));
   h_Water_Bkg->SetFillColor(TColor::GetColor("#332288"));
-  h_Water_Bkg->SetFillStyle(3444);
+  h_Water_Bkg->SetFillStyle(3003);
 
   MnvH1D* h_C_Bkg_Top = (MnvH1D*)mcFile->Get((TString)name_bkg+"_bkg_TargetType_C");
   MnvH1D* h_C_Bkg = new MnvH1D(h_C_Bkg_Top->GetBinNormalizedCopy());
@@ -708,7 +782,7 @@ void DrawTargetType(string name_Plastic, TFile* mcFile, TFile* dataFile, TString
   mcSum->Add(h_C_Bkg);
   h_C_Bkg->SetLineColor(TColor::GetColor("#88CCEE"));
   h_C_Bkg->SetFillColor(TColor::GetColor("#88CCEE"));
-  h_C_Bkg->SetFillStyle(3444);
+  h_C_Bkg->SetFillStyle(3003);
 
   MnvH1D* h_Other_Bkg_Top = (MnvH1D*)mcFile->Get((TString)name_bkg+"_bkg_TargetType_Other");
   MnvH1D* h_Other_Bkg = new MnvH1D(h_Other_Bkg_Top->GetBinNormalizedCopy());
@@ -716,7 +790,7 @@ void DrawTargetType(string name_Plastic, TFile* mcFile, TFile* dataFile, TString
   mcSum->Add(h_Other_Bkg);
   h_Other_Bkg->SetLineColor(TColor::GetColor("#CC6677"));
   h_Other_Bkg->SetFillColor(TColor::GetColor("#CC6677"));
-  h_Other_Bkg->SetFillStyle(3444);
+  h_Other_Bkg->SetFillStyle(3003);
 
   MnvH1D* h_data_Top = (MnvH1D*)dataFile->Get((TString)name_bkg+"_data");
   MnvH1D* h_data = new MnvH1D(h_data_Top->GetBinNormalizedCopy());
@@ -1020,7 +1094,7 @@ void DrawLeadBlobType(string name_Neut, TFile* mcFile, TFile* dataFile, TString 
   mcSum->Add(h_Neut_Bkg);
   h_Neut_Bkg->SetLineColor(TColor::GetColor("#88CCEE"));
   h_Neut_Bkg->SetFillColor(TColor::GetColor("#88CCEE"));
-  h_Neut_Bkg->SetFillStyle(3444);
+  h_Neut_Bkg->SetFillStyle(3003);
 
   MnvH1D* h_Mu_Bkg_Top = (MnvH1D*)mcFile->Get((TString)name_bkg+"_bkg_LeadBlobType_mu");
   MnvH1D* h_Mu_Bkg = new MnvH1D(h_Mu_Bkg_Top->GetBinNormalizedCopy());
@@ -1028,7 +1102,7 @@ void DrawLeadBlobType(string name_Neut, TFile* mcFile, TFile* dataFile, TString 
   mcSum->Add(h_Mu_Bkg);
   h_Mu_Bkg->SetLineColor(TColor::GetColor("#44AA99"));
   h_Mu_Bkg->SetFillColor(TColor::GetColor("#44AA99"));
-  h_Mu_Bkg->SetFillStyle(3444);
+  h_Mu_Bkg->SetFillStyle(3003);
 
   MnvH1D* h_Pi0_Bkg_Top = (MnvH1D*)mcFile->Get((TString)name_bkg+"_bkg_LeadBlobType_pi0");
   MnvH1D* h_Pi0_Bkg = new MnvH1D(h_Pi0_Bkg_Top->GetBinNormalizedCopy());
@@ -1036,7 +1110,7 @@ void DrawLeadBlobType(string name_Neut, TFile* mcFile, TFile* dataFile, TString 
   mcSum->Add(h_Pi0_Bkg);
   h_Pi0_Bkg->SetLineColor(TColor::GetColor("#117733"));
   h_Pi0_Bkg->SetFillColor(TColor::GetColor("#117733"));
-  h_Pi0_Bkg->SetFillStyle(3444);
+  h_Pi0_Bkg->SetFillStyle(3003);
 
   MnvH1D* h_PiM_Bkg_Top = (MnvH1D*)mcFile->Get((TString)name_bkg+"_bkg_LeadBlobType_pim");
   MnvH1D* h_PiM_Bkg = new MnvH1D(h_PiM_Bkg_Top->GetBinNormalizedCopy());
@@ -1044,7 +1118,7 @@ void DrawLeadBlobType(string name_Neut, TFile* mcFile, TFile* dataFile, TString 
   mcSum->Add(h_PiM_Bkg);
   h_PiM_Bkg->SetLineColor(TColor::GetColor("#332288"));
   h_PiM_Bkg->SetFillColor(TColor::GetColor("#332288"));
-  h_PiM_Bkg->SetFillStyle(3444);
+  h_PiM_Bkg->SetFillStyle(3003);
 
   MnvH1D* h_PiP_Bkg_Top = (MnvH1D*)mcFile->Get((TString)name_bkg+"_bkg_LeadBlobType_pip");
   MnvH1D* h_PiP_Bkg = new MnvH1D(h_PiP_Bkg_Top->GetBinNormalizedCopy());
@@ -1052,7 +1126,7 @@ void DrawLeadBlobType(string name_Neut, TFile* mcFile, TFile* dataFile, TString 
   mcSum->Add(h_PiP_Bkg);
   h_PiP_Bkg->SetLineColor(TColor::GetColor("#DDCC77"));
   h_PiP_Bkg->SetFillColor(TColor::GetColor("#DDCC77"));
-  h_PiP_Bkg->SetFillStyle(3444);
+  h_PiP_Bkg->SetFillStyle(3003);
 
   MnvH1D* h_Prot_Bkg_Top = (MnvH1D*)mcFile->Get((TString)name_bkg+"_bkg_LeadBlobType_prot");
   MnvH1D* h_Prot_Bkg = new MnvH1D(h_Prot_Bkg_Top->GetBinNormalizedCopy());
@@ -1060,7 +1134,7 @@ void DrawLeadBlobType(string name_Neut, TFile* mcFile, TFile* dataFile, TString 
   mcSum->Add(h_Prot_Bkg);
   h_Prot_Bkg->SetLineColor(TColor::GetColor("#999933"));
   h_Prot_Bkg->SetFillColor(TColor::GetColor("#999933"));
-  h_Prot_Bkg->SetFillStyle(3444);
+  h_Prot_Bkg->SetFillStyle(3003);
 
   MnvH1D* h_Other_Bkg_Top = (MnvH1D*)mcFile->Get((TString)name_bkg+"_bkg_LeadBlobType_Other");
   MnvH1D* h_Other_Bkg = new MnvH1D(h_Other_Bkg_Top->GetBinNormalizedCopy());
@@ -1068,7 +1142,7 @@ void DrawLeadBlobType(string name_Neut, TFile* mcFile, TFile* dataFile, TString 
   mcSum->Add(h_Other_Bkg);
   h_Other_Bkg->SetLineColor(TColor::GetColor("#CC6677"));
   h_Other_Bkg->SetFillColor(TColor::GetColor("#CC6677"));
-  h_Other_Bkg->SetFillStyle(3444);
+  h_Other_Bkg->SetFillStyle(3003);
 
   MnvH1D* h_None_Bkg_Top = (MnvH1D*)mcFile->Get((TString)name_bkg+"_bkg_LeadBlobType_None");
   MnvH1D* h_None_Bkg = new MnvH1D(h_None_Bkg_Top->GetBinNormalizedCopy());
@@ -1076,7 +1150,7 @@ void DrawLeadBlobType(string name_Neut, TFile* mcFile, TFile* dataFile, TString 
   mcSum->Add(h_None_Bkg);
   h_None_Bkg->SetLineColor(TColor::GetColor("#882255"));
   h_None_Bkg->SetFillColor(TColor::GetColor("#882255"));
-  h_None_Bkg->SetFillStyle(3444);
+  h_None_Bkg->SetFillStyle(3003);
 
   MnvH1D* h_data_Top = (MnvH1D*)dataFile->Get((TString)name_bkg+"_data");
   MnvH1D* h_data = new MnvH1D(h_data_Top->GetBinNormalizedCopy());
@@ -1404,7 +1478,7 @@ int main(int argc, char* argv[]) {
 	string nameInt = (string)keyInt->GetName();
 	string name = (string)key->GetName() + "/"+nameInt;
 	pos=0;
-	if ((pos=nameInt.find("TwoD")) != string::npos || (pos=nameInt.find("vtxZ")) != string::npos) continue;
+	if ((pos=nameInt.find("TwoD")) != string::npos || (pos=nameInt.find("vtxZ")) != string::npos || (pos=name.find("Inner")) != string::npos) continue;
 	else if((pos = name.find("_sig_IntType_QE")) != string::npos){
 	  string nameToSave = nameInt;
 	  nameToSave.erase(nameToSave.length()-15,nameToSave.length());
@@ -1434,7 +1508,7 @@ int main(int argc, char* argv[]) {
 
     pos=0;
     string name=(string)key->GetName();
-    if((pos=name.find("TwoD")) != string::npos || (pos=name.find("vtxZ")) != string::npos) continue;
+    if((pos=name.find("TwoD")) != string::npos || (pos=name.find("vtxZ")) != string::npos || (pos=name.find("Inner")) != string::npos) continue;
     else if((pos = name.find("_sig_IntType_QE")) != string::npos){
       string nameToSave = name;
       nameToSave.erase(nameToSave.length()-15,nameToSave.length());
