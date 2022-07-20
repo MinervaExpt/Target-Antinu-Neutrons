@@ -68,12 +68,15 @@ TCanvas* DrawRatio(string name, TFile* file1, TFile* file2){
 
   TH1D* h1 = (TH1D*)m1->GetCVHistoWithStatError().Clone();
   TH1D* h2 = (TH1D*)m2->GetCVHistoWithStatError().Clone();
+  
+  cout << fixed;
+  cout << setprecision(6);
 
-  cout << "Maximum: Pre-Divide" << h1->GetMaximum() << endl;
+  cout << "Maximum Pre-Divide: " << h1->GetMaximum() << endl;
 
   h1->Divide(h2);
 
-  cout << "Maximum: Post-Divide" << h1->GetMaximum() << endl;
+  cout << "Maximum Post-Divide: " << h1->GetMaximum() << endl;
 
   h1->SetTitle("Ratio for "+(TString)name+" of file 1 to file 2.");
   h1->GetYaxis()->SetRangeUser(0.5,1.5);
@@ -177,8 +180,7 @@ int main(int argc, char* argv[]) {
   TKey* key;
   while ( key = (TKey*)next() ){
     TString nameClass = (TString)(key->GetClassName());
-    if (nameClass == "TDirectoryFile")
-    {
+    if (nameClass == "TDirectoryFile"){
       TDirectoryFile* dirInt = (TDirectoryFile*)file1->Get(key->GetName());
       TList* keyListInt = dirInt->GetListOfKeys();
       if (!keyListInt){
@@ -190,72 +192,56 @@ int main(int argc, char* argv[]) {
       TKey* keyInt;
       while ( keyInt = (TKey*)nextInt() ){
 	TString nameClassInt = (TString)(keyInt->GetClassName());
-	if (nameClassInt.Contains("2") || nameClassInt.Contains("TParameter")) continue; 
-	string nameInt = (string)keyInt->GetName();
-	string name = (string)key->GetName() + "/"+nameInt;
-	cout << name << " of class type: " << nameClassInt <<endl;
-	/*
-	pos=0;
-	if ((pos=nameInt.find("TwoD")) != string::npos) continue;
-	else if((pos = name.find("_sig_IntType_QE")) != string::npos){
-	  TCanvas* c1 = DrawIntType(name,mcFile,dataFile,label,scale);
-	  TPad* top = (TPad*)c1->GetPrimitive("Overlay");
-	  name.erase(name.length()-15,name.length());
-	  c1->Print((TString)outDir+(TString)nameInt+"_IntType_stacked.pdf");
-	  c1->Print((TString)outDir+(TString)nameInt+"_IntType_stacked.png");
-	  top->SetLogy();
-	  c1->Update();
-	  c1->Print((TString)outDir+(TString)nameInt+"_IntType_stacked_log.pdf");
-	  c1->Print((TString)outDir+(TString)nameInt+"_IntType_stacked_log.png");
+	if(nameClassInt == "TDirectoryFile"){
+	  TDirectoryFile* dirDoubleInt = (TDirectoryFile*)dirInt->Get(keyInt->GetName());
+	  TList* keyListDoubleInt = dirDoubleInt->GetListOfKeys();
+	  if (!keyListDoubleInt){
+	    cout << "List of keys failed to get inside directory." << endl;
+	    return 5;
+	  }
+	  TIter nextDoubleInt(keyListDoubleInt);
+	  TKey* keyDoubleInt;
+	  while ( keyDoubleInt = (TKey*)nextDoubleInt() ){
+	    TString nameClassDoubleInt = (TString)(keyDoubleInt->GetClassName());
+	    if (nameClassDoubleInt.Contains("2") || nameClassDoubleInt.Contains("TParameter") || nameClassDoubleInt == "TDirectoryFile") continue;
+	    string nameDoubleInt = (string)keyDoubleInt->GetName();
+	    string nameInt = (string)keyInt->GetName();
+	    string name = (string)key->GetName() + "/"+nameInt+"/"+nameDoubleInt;
+	    string nameOut = (string)key->GetName()+"_"+nameInt+"_"+nameDoubleInt;
+	    cout << name << " of class type: " << nameClassDoubleInt <<endl;
+	    TCanvas* c1 = DrawRatio(name,file1,file2);
+	    if (!c1){
+	      cout << "See above for why ratio couldn't be plotted." << endl;
+	      continue;
+	    }
+	    c1->Print((TString)outDir+(TString)nameOut+"_ratio_for_"+label+".pdf");
+	    c1->Print((TString)outDir+(TString)nameOut+"_ratio_for_"+label+".png");
+	    cout << "" << endl;
+	    delete c1;
+	  } 
+	}
+	else if (nameClassInt.Contains("2") || nameClassInt.Contains("TParameter")) continue; 
+	else {
+	  string nameInt = (string)keyInt->GetName();
+	  string name = (string)key->GetName() + "/"+nameInt;
+	  string nameOut = (string)key->GetName()+"_"+nameInt;
+	  cout << name << " of class type: " << nameClassInt <<endl;
+	  TCanvas* c1 = DrawRatio(name,file1,file2);
+	  if (!c1){
+	    cout << "See above for why ratio couldn't be plotted." << endl;
+	    continue;
+	  }
+	  c1->Print((TString)outDir+(TString)nameOut+"_ratio_for_"+label+".pdf");
+	  c1->Print((TString)outDir+(TString)nameOut+"_ratio_for_"+label+".png");
 	  cout << "" << endl;
 	  delete c1;
 	}
-	else if ((pos = name.find("_sig_TargetType_C")) != string::npos){
-	  TCanvas* c1 = DrawTargetType(name,mcFile,dataFile,label,scale);
-	  TPad* top = (TPad*)c1->GetPrimitive("Overlay");
-	  nameInt.erase(nameInt.length()-17,nameInt.length());
-	  c1->Print((TString)outDir+(TString)nameInt+"_TargetType_stacked.pdf");
-	  c1->Print((TString)outDir+(TString)nameInt+"_TargetType_stacked.png");
-	  top->SetLogy();
-	  c1->Update();
-	  c1->Print((TString)outDir+(TString)nameInt+"_TargetType_stacked_log.pdf");
-	  c1->Print((TString)outDir+(TString)nameInt+"_TargetType_stacked_log.png");
-	  cout << "" << endl;
-	  delete c1;
-	}
-	else if ((pos = name.find("_sig_LeadBlobType_neut")) != string::npos){
-	  TCanvas* c1 = DrawLeadBlobType(name,mcFile,dataFile,label,scale);
-	  TPad* top = (TPad*)c1->GetPrimitive("Overlay");
-	  nameInt.erase(nameInt.length()-22,nameInt.length());
-	  c1->Print((TString)outDir+(TString)nameInt+"_LeadBlobType_stacked.pdf");
-	  c1->Print((TString)outDir+(TString)nameInt+"_LeadBlobType_stacked.png");
-	  top->SetLogy();
-	  c1->Update();
-	  c1->Print((TString)outDir+(TString)nameInt+"_LeadBlobType_stacked_log.pdf");
-	  c1->Print((TString)outDir+(TString)nameInt+"_LeadBlobType_stacked_log.png");
-	  cout << "" << endl;
-	  delete c1;
-	}
-	else if ((pos = name.find("_selected_signal_reco")) != string::npos){
-	  TCanvas* c1 = DrawBKGCateg(name,mcFile,dataFile,label,scale);
-	  TPad* top = (TPad*)c1->GetPrimitive("Overlay");
-	  nameInt.erase(nameInt.length()-21,nameInt.length());
-	  c1->Print((TString)outDir+(TString)nameInt+"_BKG_stacked.pdf");
-	  c1->Print((TString)outDir+(TString)nameInt+"_BKG_stacked.png");
-	  top->SetLogy();
-	  c1->Update();
-	  c1->Print((TString)outDir+(TString)nameInt+"_BKG_stacked_log.pdf");
-	  c1->Print((TString)outDir+(TString)nameInt+"_BKG_stacked_log.png");
-	  cout << "" << endl;
-	  delete c1;
-	}
-	*/	
       }
     }
     else if (nameClass.Contains("2") || nameClass.Contains("TParameter")) continue;
     else {
       string name=(string)key->GetName();
-      //cout << name << " of class type: " << nameClass << endl;
+      cout << name << " of class type: " << nameClass << endl;
       //if ((pos=name.find("SB")) != string::npos) continue;
       //cout << "Plotting error summary for: " << name << endl;
       TCanvas* c1 = DrawRatio(name,file1,file2);
