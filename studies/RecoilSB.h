@@ -490,6 +490,7 @@ class PreRecoil: public Study
 	    bkgd_ID = intType;
 	  }
 	  else if (util::CorrectTargetMaterial(tgtCode,tgtZ)) bkgd_ID = util::GetBackgroundID(univ);
+	  if (bkgd_ID == 44) intType = bkgd_ID;
 	  
 	  if (fSplitRecoil){
 	    fRecoilBinned[iBin]->selectedMCReco->FillUniverse(&univ, fRecoilBinned[iBin]->GetRecoValue(univ), weight); //"Fake data" for closure
