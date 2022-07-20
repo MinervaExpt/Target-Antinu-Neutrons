@@ -348,6 +348,25 @@ namespace util
     if (tmpN < nMax) nPlanes = (double)(-1.0*tmpN);
     return nPlanes;
   }
+
+  double GetLoZ(int TgtID){
+    if (TgtID < 2 || TgtID > 6) return -999;
+    if (TgtID == 2) return TgtDSCut[1];
+    if (TgtID == 3) return TgtDSCut[2];
+    if (TgtID == 6) return TgtDSCut[3];
+    if (TgtID == 4) return TgtDSCut[6];
+    if (TgtID == 5) return TgtDSCut[4];
+    return -999;
+  }
+  double GetHiZ(int TgtID){
+    if (TgtID < 1 || TgtID == 5 || TgtID > 6) return -999;
+    if (TgtID == 1) return PlotUtils::TargetUtils::Get().GetTarget2CenterZMC() - PlotUtils::TargetProp::ThicknessMC::Tgt2::Pb/2;
+    if (TgtID == 2) return PlotUtils::TargetUtils::Get().GetTarget3CenterZMC() - PlotUtils::TargetProp::ThicknessMC::Tgt3::Pb/2;
+    if (TgtID == 3) return PlotUtils::TargetProp::WaterTarget::Face;
+    if (TgtID == 6) return PlotUtils::TargetUtils::Get().GetTarget4CenterZMC() - PlotUtils::TargetProp::ThicknessMC::Tgt4::Pb/2;
+    if (TgtID == 4) return PlotUtils::TargetUtils::Get().GetTarget5CenterZMC() - PlotUtils::TargetProp::ThicknessMC::Tgt5::Pb/2;
+    return -999;
+  }
 }
 
 #endif //UTIL_GETRECOTGTZ_H
