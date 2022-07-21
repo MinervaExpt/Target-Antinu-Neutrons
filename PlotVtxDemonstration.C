@@ -143,8 +143,8 @@ TCanvas* DrawStack(TString tag, TString Side, TFile* inFile, MnvH1D* h_data, dou
 
 void PlotVtxDemonstration(TString tag = "Fe", TString Side = "US") {
 
-  TString fileName="runEventLoopMC_MnvTuneV1_FVregion_SingleTarget_Tgt1_wNeutCuts_neutKE_10.000000.root";
-  TString dataName="runEventLoopData_MnvTuneV1_FVregion_SingleTarget_Tgt1_wNeutCuts_neutKE_10.000000.root";
+  TString fileName="runEventLoopMC_SkippedSyst_MnvTuneV1_FVregion_SingleTarget_Tgt1_wNeutCuts_neutKE_10.000000.root";
+  TString dataName="runEventLoopData_SkippedSyst_MnvTuneV1_FVregion_SingleTarget_Tgt1_wNeutCuts_neutKE_10.000000.root";
   TString outDir="Tgt1_VtxDemonstration/";
 
   TFile* inFile = new TFile(fileName,"READ");
