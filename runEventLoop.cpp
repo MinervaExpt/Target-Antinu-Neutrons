@@ -669,11 +669,11 @@ int main(const int argc, const char** argv)
   }
   else if (FVregionName == "Targets"){
     minZtmp = 4200;
-    maxZtmp = 5900;
+    maxZtmp = 5980;
   }
   else if (FVregionName.Contains("Single")){
     minZtmp = (TgtNum == 1) ? 4200 : util::GetLoZ(TgtNum);
-    maxZtmp = (TgtNum == 5) ? 5900 : util::GetHiZ(TgtNum);
+    maxZtmp = (TgtNum == 5) ? 5980 : util::GetHiZ(TgtNum);
   }
   else{
     std::cerr << "<FV> argument invalid, but passed initial check. Check usage printed below, and try and understand why the checks aren't consistent. \n" << USAGE << "\n";
