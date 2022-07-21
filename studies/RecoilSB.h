@@ -490,7 +490,7 @@ class PreRecoil: public Study
 	      }
 	      bkgd_ID = intType;
 	    }
-	    else if (util::CorrectTargetMaterial(tgtCode,tgtType)) bkgd_ID = util::GetBackgroundID(univ);
+	    else if (util::CorrectTargetMaterial(tgtCode,tgtType) || tgtCode == -1) bkgd_ID = util::GetBackgroundID(univ);
 	    if (bkgd_ID == 44) intType = bkgd_ID;
 	  }
 	  else bkgd_ID = util::GetBackgroundID(univ);
