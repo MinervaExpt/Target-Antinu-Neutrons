@@ -189,7 +189,7 @@ void DrawUSDSVtx(int tgtNum, TString tag, TFile* inFile, TFile* dataFile, double
   dataHist->Draw("same");
   c1->Update();
 
-  TLegend* leg = new TLegend(0.7,0.7,0.9,0.9);
+  TLegend* leg = new TLegend(0.15,0.7,0.35,0.9);
 
   leg->AddEntry(dataHist,"DATA");
   leg->AddEntry(h_sig,"Plastic Signal");
@@ -197,7 +197,8 @@ void DrawUSDSVtx(int tgtNum, TString tag, TFile* inFile, TFile* dataFile, double
   leg->AddEntry(h_1Pi0_Bkg,"Plastic single #pi^{0}");
   leg->AddEntry(h_NPi_Bkg,"Plastic N#pi");
   leg->AddEntry(h_Other_Bkg,"Plastic Other BKG");
-  leg->AddEntry(h_Mat_Bkg,tag);
+  if (tgtNum!=6) leg->AddEntry(h_Mat_Bkg,tag);
+  else leg->AddEntry(h_Mat_Bkg,"Water");
   leg->AddEntry(h_All_Bkg,"Other Materials");
 
   leg->Draw();
