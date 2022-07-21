@@ -86,6 +86,10 @@ add_executable(signalBKGStack signalBKGStack.cxx)
 target_link_libraries(signalBKGStack ${ROOT_LIBRARIES} MAT MAT-MINERvA)
 install(TARGETS signalBKGStack DESTINATION bin)
 
+add_executable(PlotNPlanesByTgt PlotNPlanesByTgt.cxx)
+target_link_libraries(PlotNPlanesByTgt ${ROOT_LIBRARIES} MAT MAT-MINERvA)
+install(TARGETS PlotNPlanesByTgt DESTINATION bin)
+
 add_executable(twoPlotComparison twoPlotComparison.cxx)
 target_link_libraries(twoPlotComparison ${ROOT_LIBRARIES} MAT MAT-MINERvA)
 install(TARGETS twoPlotComparison DESTINATION bin)
