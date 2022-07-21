@@ -78,8 +78,8 @@ namespace util
 							       */
 
   std::map<int, std::string> TgtTypeList = {{1, "Plastic"},
-					    {2, "USPlastic"},
-					    {3, "DSPlastic"},
+					    {200, "USPlastic"},
+					    {300, "DSPlastic"},
 					    {6, "C"},
 					    {8, "Water"},
 					    {26, "Fe"},
