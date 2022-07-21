@@ -825,7 +825,7 @@ int main(const int argc, const char** argv)
   */
 
   std::vector<util::Categorized<Variable, int>*> vars_ByTgt = {};
-  if (FVregionName == "Targets"){
+  if (FVregionName.Contains("Target")){
     for(auto& var: vars){ 
       TString nameCheck = var->GetName();
       if (nameCheck == "vtxZ") continue;
