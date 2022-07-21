@@ -327,13 +327,16 @@ void LoopAndFillEventSelection(
         else
         {
           int bkgd_ID = -1;
-	  if (isTgts) bkgd_ID = 44;
-	  //bkgd_ID = util::GetBackgroundID(*universe);
-	  if (tgtType == 200 || tgtType == 300){ //Separating out the plastic backgrounds
-	    bkgd_ID = intType;
+	  if (isTgts){
+	    bkgd_ID = 44;
+	    //bkgd_ID = util::GetBackgroundID(*universe);
+	    if (tgtType == 200 || tgtType == 300){ //Separating out the plastic backgrounds
+	      bkgd_ID = intType;
+	    }
+	    else if (util::CorrectTargetMaterial(tgtCode,tgtZ)) bkgd_ID = util::GetBackgroundID(*universe);
+	    if (bkgd_ID == 44) intType = bkgd_ID;
 	  }
-	  else if (util::CorrectTargetMaterial(tgtCode,tgtZ)) bkgd_ID = util::GetBackgroundID(*universe);
-	  if (bkgd_ID == 44) intType = bkgd_ID;
+	  else bkgd_ID = util::GetBackgroundID(*universe);
           //for(auto& study: studies) study->SelectedSignal(*universe, myevent, weight);
 
           for(auto& var: vars){
