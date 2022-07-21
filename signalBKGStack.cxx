@@ -1478,7 +1478,7 @@ int main(int argc, char* argv[]) {
 	string nameInt = (string)keyInt->GetName();
 	string name = (string)key->GetName() + "/"+nameInt;
 	pos=0;
-	if ((pos=nameInt.find("TwoD")) != string::npos || (pos=nameInt.find("vtxZ")) != string::npos || (pos=name.find("Inner")) != string::npos) continue;
+	if ((pos=nameInt.find("TwoD")) != string::npos || /*(pos=nameInt.find("vtxZ")) != string::npos ||*/ (pos=name.find("Inner")) != string::npos) continue;
 	else if((pos = name.find("_sig_IntType_QE")) != string::npos){
 	  string nameToSave = nameInt;
 	  nameToSave.erase(nameToSave.length()-15,nameToSave.length());
@@ -1508,7 +1508,7 @@ int main(int argc, char* argv[]) {
 
     pos=0;
     string name=(string)key->GetName();
-    if((pos=name.find("TwoD")) != string::npos || (pos=name.find("vtxZ")) != string::npos || (pos=name.find("Inner")) != string::npos) continue;
+    if((pos=name.find("TwoD")) != string::npos || /*(pos=name.find("vtxZ")) != string::npos ||*/ (pos=name.find("Inner")) != string::npos) continue;
     else if((pos = name.find("_sig_IntType_QE")) != string::npos){
       string nameToSave = name;
       nameToSave.erase(nameToSave.length()-15,nameToSave.length());
