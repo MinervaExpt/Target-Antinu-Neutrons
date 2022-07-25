@@ -65,7 +65,7 @@ void allErrSummaries(TString fileName, TString outDir) {
     string name=(string)key->GetName();
     if((pos = name.find("_data")) != string::npos){
       pos=0;
-      if ((pos = name.find("SB")) != string::npos) continue;
+      if ((pos = name.find("SB")) != string::npos || (pos = name.find("vtxZ")) != string::npos ) continue;
       cout << "Plotting error summary for: " << name << endl;      
       TCanvas* c1 = new TCanvas("c1","c1",1200,800);
       MnvH1D* h_mc_data = (MnvH1D*)inFile->Get((TString)name);      
