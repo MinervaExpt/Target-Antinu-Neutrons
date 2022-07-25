@@ -59,6 +59,8 @@ void DrawBKGCateg(string name, TFile* mcFile, TFile* dataFile, TString sample, d
 
   TString sampleName = sample;
 
+  bool isTracker = sampleName.Contains("Tracker") ? true : false;
+
   MnvH1D* h_Sig_Top = (MnvH1D*)mcFile->Get((TString)name);
   MnvH1D* h_Sig = new MnvH1D(h_Sig_Top->GetBinNormalizedCopy());
   h_Sig->Scale(scale);
@@ -128,6 +130,8 @@ void DrawBKGCateg(string name, TFile* mcFile, TFile* dataFile, TString sample, d
   MnvH1D* h_data_Top = (MnvH1D*)dataFile->Get((TString)name_bkg+"_data");
   MnvH1D* h_data = new MnvH1D(h_data_Top->GetBinNormalizedCopy());
   TH1D* dataHist = (TH1D*)h_data->GetCVHistoWithError().Clone();
+  dataHist->SetLineColor(kBlack);
+  dataHist->SetLineWidth(3);
   h_data->AddMissingErrorBandsAndFillWithCV(*h_Sig);
 
   THStack* h = new THStack();
@@ -158,6 +162,12 @@ void DrawBKGCateg(string name, TFile* mcFile, TFile* dataFile, TString sample, d
   c1->Update();
 
   size_t pos = 0;
+  if ((pos=name.find("pTmu_")) != string::npos){
+    cout << "Fixing Axis?" << endl;
+    h->GetXaxis()->SetRangeUser(0,2.5);
+  }
+
+  pos = 0;
   if ((pos=name.find("_primary_parent")) != string::npos){
     h->GetXaxis()->SetBinLabel(1,"Other");
     h->GetXaxis()->SetBinLabel(2,"");
@@ -225,7 +235,7 @@ void DrawBKGCateg(string name, TFile* mcFile, TFile* dataFile, TString sample, d
   dataHist->Draw("same");
   c1->Update();
 
-  TLegend* leg = new TLegend(0.7,0.7,0.9,0.9);
+  TLegend* leg = new TLegend(0.6,0.5,0.9,0.9);
 
   leg->AddEntry(dataHist,"DATA");
   leg->AddEntry(h_Sig,"Signal");
@@ -233,9 +243,9 @@ void DrawBKGCateg(string name, TFile* mcFile, TFile* dataFile, TString sample, d
   leg->AddEntry(h_1Pi0_Bkg,"single #pi^{0}");
   leg->AddEntry(h_NPi_Bkg,"N#pi");
   leg->AddEntry(h_Other_Bkg,"Other");
-  leg->AddEntry(h_DSPlastic_Bkg,"DS Plastic");
-  leg->AddEntry(h_USPlastic_Bkg,"US Plastic");
-  leg->AddEntry(h_Wrong_Nucleus_Bkg,"Wrong Nucleus");
+  if (!isTracker) leg->AddEntry(h_DSPlastic_Bkg,"DS Plastic");
+  if (!isTracker) leg->AddEntry(h_USPlastic_Bkg,"US Plastic");
+  if (!isTracker) leg->AddEntry(h_Wrong_Nucleus_Bkg,"Wrong Nucleus");
 
   leg->Draw();
   c1->Update();
@@ -266,6 +276,12 @@ void DrawBKGCateg(string name, TFile* mcFile, TFile* dataFile, TString sample, d
   ratio->GetXaxis()->SetTitleSize(0.04*areaScale);
   ratio->SetMinimum(0.5);
   ratio->SetMaximum(1.5);
+
+  pos=0;
+  if ((pos=name.find("pTmu_")) != string::npos){
+    cout << "Fixing Axis?" << endl;
+    ratio->GetXaxis()->SetRangeUser(0,2.5);
+  }
   ratio->Draw();
 
   mcRatio->SetLineColor(kRed);
@@ -276,6 +292,8 @@ void DrawBKGCateg(string name, TFile* mcFile, TFile* dataFile, TString sample, d
   TH1D* straightLine = (TH1D*)mcRatio->Clone();
   straightLine->SetFillStyle(0);
   straightLine->Draw("HIST SAME");
+
+  ratio->Draw("SAME");
 
   c1->Update();
 
@@ -310,6 +328,8 @@ void DrawIntType(string name_QE, TFile* mcFile, TFile* dataFile, TString sample,
   bool primPar = false;
 
   TString sampleName = sample;
+
+  bool isTracker = sampleName.Contains("Tracker") ? true : false;
 
   MnvH1D* h_QE_Sig_Top = (MnvH1D*)mcFile->Get((TString)name_QE);
   MnvH1D* h_QE_Sig = new MnvH1D(h_QE_Sig_Top->GetBinNormalizedCopy());
@@ -432,6 +452,8 @@ void DrawIntType(string name_QE, TFile* mcFile, TFile* dataFile, TString sample,
   MnvH1D* h_data_Top = (MnvH1D*)dataFile->Get((TString)name_bkg+"_data");
   MnvH1D* h_data = new MnvH1D(h_data_Top->GetBinNormalizedCopy());
   TH1D* dataHist = (TH1D*)h_data->GetCVHistoWithError().Clone();
+  dataHist->SetLineColor(kBlack);
+  dataHist->SetLineWidth(3);
   h_data->AddMissingErrorBandsAndFillWithCV(*h_QE_Sig);
 
   THStack* h = new THStack();
@@ -466,6 +488,12 @@ void DrawIntType(string name_QE, TFile* mcFile, TFile* dataFile, TString sample,
   c1->Update();
 
   size_t pos = 0;
+  if ((pos=name_sig.find("pTmu_")) != string::npos){
+    cout << "Fixing Axis?" << endl;
+    h->GetXaxis()->SetRangeUser(0,2.5);
+  }
+
+  pos = 0;
   if ((pos=name_sig.find("_primary_parent")) != string::npos){
     h->GetXaxis()->SetBinLabel(1,"Other");
     h->GetXaxis()->SetBinLabel(2,"");
@@ -537,7 +565,7 @@ void DrawIntType(string name_QE, TFile* mcFile, TFile* dataFile, TString sample,
   hTmp->SetFillColor(kWhite);
   hTmp->SetLineColor(kWhite);
 
-  TLegend* leg = new TLegend(0.7,0.7,0.9,0.9);
+  TLegend* leg = new TLegend(0.6,0.5,0.9,0.9);
 
   leg->SetNColumns(2);
 
@@ -559,14 +587,16 @@ void DrawIntType(string name_QE, TFile* mcFile, TFile* dataFile, TString sample,
   leg->AddEntry(h_Other_Sig,"Sig. + Other");
   leg->AddEntry(h_Other_Bkg,"Bkg. + Other");
 
-  leg->AddEntry(hTmp,"","f");
-  leg->AddEntry(h_DSPlastic_Bkg,"DS Plastic");
+  if (!isTracker){
+    leg->AddEntry(hTmp,"","f");
+    leg->AddEntry(h_DSPlastic_Bkg,"DS Plastic");
 
-  leg->AddEntry(hTmp,"","f");
-  leg->AddEntry(h_USPlastic_Bkg,"US Plastic");
+    leg->AddEntry(hTmp,"","f");
+    leg->AddEntry(h_USPlastic_Bkg,"US Plastic");
 
-  leg->AddEntry(hTmp,"","f");
-  leg->AddEntry(h_Wrong_Nucleus_Bkg,"Wrong Nucleus");
+    leg->AddEntry(hTmp,"","f");
+    leg->AddEntry(h_Wrong_Nucleus_Bkg,"Wrong Nucleus");
+  }
 
   leg->Draw();
   c1->Update();
@@ -597,6 +627,12 @@ void DrawIntType(string name_QE, TFile* mcFile, TFile* dataFile, TString sample,
   ratio->GetXaxis()->SetTitleSize(0.04*areaScale);
   ratio->SetMinimum(0.5);
   ratio->SetMaximum(1.5);
+
+  pos=0;
+  if ((pos=name_sig.find("pTmu_")) != string::npos){
+    cout << "Fixing Axis?" << endl;
+    ratio->GetXaxis()->SetRangeUser(0,2.5);
+  }
   ratio->Draw();
 
   mcRatio->SetLineColor(kRed);
@@ -607,6 +643,8 @@ void DrawIntType(string name_QE, TFile* mcFile, TFile* dataFile, TString sample,
   TH1D* straightLine = (TH1D*)mcRatio->Clone();
   straightLine->SetFillStyle(0);
   straightLine->Draw("HIST SAME");
+
+  ratio->Draw("SAME");
 
   c1->Update();
 
@@ -794,7 +832,9 @@ void DrawTargetType(string name_Plastic, TFile* mcFile, TFile* dataFile, TString
 
   MnvH1D* h_data_Top = (MnvH1D*)dataFile->Get((TString)name_bkg+"_data");
   MnvH1D* h_data = new MnvH1D(h_data_Top->GetBinNormalizedCopy());
-  TH1D* dataHist = (TH1D*)h_data->GetCVHistoWithError().Clone();
+  TH1D* dataHist = (TH1D*)h_data->GetCVHistoWithError().Clone(); 
+  dataHist->SetLineColor(kBlack);
+  dataHist->SetLineWidth(3);
   h_data->AddMissingErrorBandsAndFillWithCV(*h_Plastic_Sig);
 
   THStack* h = new THStack();
@@ -831,7 +871,13 @@ void DrawTargetType(string name_Plastic, TFile* mcFile, TFile* dataFile, TString
   h->Draw("hist");
   c1->Update();
 
-  size_t pos=0;
+  size_t pos = 0;
+  if ((pos=name_sig.find("pTmu_")) != string::npos){
+    cout << "Fixing Axis?" << endl;
+    h->GetXaxis()->SetRangeUser(0,2.5);
+  }
+
+  pos=0;
   if ((pos=name_sig.find("_primary_parent")) != string::npos){
     h->GetXaxis()->SetBinLabel(1,"None");
     h->GetXaxis()->SetBinLabel(2,"");
@@ -899,7 +945,7 @@ void DrawTargetType(string name_Plastic, TFile* mcFile, TFile* dataFile, TString
   dataHist->Draw("same");
   c1->Update();
 
-  TLegend* leg = new TLegend(0.7,0.7,0.9,0.9);
+  TLegend* leg = new TLegend(0.6,0.5,0.9,0.9);
 
   leg->SetNColumns(2);
 
@@ -955,10 +1001,16 @@ void DrawTargetType(string name_Plastic, TFile* mcFile, TFile* dataFile, TString
   ratio->GetYaxis()->SetTitleOffset(0.75/areaScale);
   ratio->GetYaxis()->SetLabelSize(ratio->GetYaxis()->GetLabelSize()*areaScale);
 
-  ratio->GetXaxis()->SetLabelSize(ratio->GetXaxis()->GetLabelSize()*areaScale);  
+  ratio->GetXaxis()->SetLabelSize(ratio->GetXaxis()->GetLabelSize()*areaScale);
   ratio->GetXaxis()->SetTitleSize(0.04*areaScale);
   ratio->SetMinimum(0.5);
   ratio->SetMaximum(1.5);
+
+  pos=0;
+  if ((pos=name_sig.find("pTmu_")) != string::npos){
+    cout << "Fixing Axis?" << endl;
+    ratio->GetXaxis()->SetRangeUser(0,2.5);
+  }
   ratio->Draw();
 
   mcRatio->SetLineColor(kRed);
@@ -969,6 +1021,8 @@ void DrawTargetType(string name_Plastic, TFile* mcFile, TFile* dataFile, TString
   TH1D* straightLine = (TH1D*)mcRatio->Clone();
   straightLine->SetFillStyle(0);
   straightLine->Draw("HIST SAME");
+
+  ratio->Draw("SAME");
 
   c1->Update();
 
@@ -1155,6 +1209,8 @@ void DrawLeadBlobType(string name_Neut, TFile* mcFile, TFile* dataFile, TString 
   MnvH1D* h_data_Top = (MnvH1D*)dataFile->Get((TString)name_bkg+"_data");
   MnvH1D* h_data = new MnvH1D(h_data_Top->GetBinNormalizedCopy());
   TH1D* dataHist = (TH1D*)h_data->GetCVHistoWithError().Clone();
+  dataHist->SetLineColor(kBlack);
+  dataHist->SetLineWidth(3);
   h_data->AddMissingErrorBandsAndFillWithCV(*h_Neut_Sig);
 
   THStack* h = new THStack();
@@ -1193,7 +1249,13 @@ void DrawLeadBlobType(string name_Neut, TFile* mcFile, TFile* dataFile, TString 
 
   //ToDo: Get the naming of the axes fixed to be what it needs to be/make it easier to automate. This will need to be accompanied by a change to the Variable class to get the labels correct there. Current changes temporary in the interest of making plots for a talk on Oct. 14, 2021 in the exclusives meeting.
 
-  size_t pos=0;
+  size_t pos = 0;
+  if ((pos=name_sig.find("pTmu_")) != string::npos){
+    cout << "Fixing Axis?" << endl;
+    h->GetXaxis()->SetRangeUser(0,2.5);
+  }
+
+  pos=0;
   if ((pos=name_sig.find("_primary_parent")) != string::npos){
     h->GetXaxis()->SetBinLabel(1,"None");
     h->GetXaxis()->SetBinLabel(2,"");
@@ -1261,7 +1323,7 @@ void DrawLeadBlobType(string name_Neut, TFile* mcFile, TFile* dataFile, TString 
   dataHist->Draw("same");
   c1->Update();
 
-  TLegend* leg = new TLegend(0.7,0.7,0.9,0.9);
+  TLegend* leg = new TLegend(0.6,0.5,0.9,0.9);
 
   leg->SetNColumns(2);
 
@@ -1321,6 +1383,12 @@ void DrawLeadBlobType(string name_Neut, TFile* mcFile, TFile* dataFile, TString 
   ratio->GetXaxis()->SetTitleSize(0.04*areaScale);
   ratio->SetMinimum(0.5);
   ratio->SetMaximum(1.5);
+
+  pos=0;
+  if ((pos=name_sig.find("pTmu_")) != string::npos){
+    cout << "Fixing Axis?" << endl;
+    ratio->GetXaxis()->SetRangeUser(0,2.5);
+  }
   ratio->Draw();
 
   mcRatio->SetLineColor(kRed);
@@ -1331,6 +1399,8 @@ void DrawLeadBlobType(string name_Neut, TFile* mcFile, TFile* dataFile, TString 
   TH1D* straightLine = (TH1D*)mcRatio->Clone();
   straightLine->SetFillStyle(0);
   straightLine->Draw("HIST SAME");
+
+  ratio->Draw("SAME");
 
   c1->Update();
 

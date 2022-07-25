@@ -159,6 +159,8 @@ void DrawFromMnvH1Ds(MnvH1D* h_data, map<TString, MnvH1D*> hFit, map<TString, Mn
   h->Add((TH1D*)h_sig->GetCVHistoWithError().Clone());
 
   TH1D* dataHist = (TH1D*)h_data->GetCVHistoWithError().Clone();
+  dataHist->SetLineColor(kBlack);
+  dataHist->SetLineWidth(3);
 
   //cout << "Drawing hists." << endl;
 
@@ -232,6 +234,8 @@ void DrawFromMnvH1Ds(MnvH1D* h_data, map<TString, MnvH1D*> hFit, map<TString, Mn
   TH1D* straightLine = (TH1D*)mcRatio->Clone();
   straightLine->SetFillStyle(0);
   straightLine->Draw("HIST SAME");
+
+  ratio->Draw("SAME");
 
   c1->Update();
   c1->Print(nameToSave+".pdf");

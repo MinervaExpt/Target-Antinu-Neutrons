@@ -156,6 +156,8 @@ void DrawUSDSVtx(int tgtNum, TString tag, TFile* inFile, TFile* dataFile, double
   cout << "data" << endl;
   h_data->Add((MnvH1D*)(dataFile->Get("ByTgt_"+tgtName+mat+"/DS_ByType_Other/vtxZ_ByTgt_"+tgtName+mat+"_PreRecoilCut_Other_data")));
   TH1D* dataHist = (TH1D*)h_data->GetCVHistoWithError().Clone();
+  dataHist->SetLineColor(kBlack);
+  dataHist->SetLineWidth(3);
   h_data->AddMissingErrorBandsAndFillWithCV(*h_sig);
 
   THStack* h = new THStack();
@@ -240,6 +242,8 @@ void DrawUSDSVtx(int tgtNum, TString tag, TFile* inFile, TFile* dataFile, double
   TH1D* straightLine = (TH1D*)mcRatio->Clone();
   straightLine->SetFillStyle(0);
   straightLine->Draw("HIST SAME");
+
+  ratio->Draw("SAME");
 
   c1->Update();
 
