@@ -588,11 +588,11 @@ int main(int argc, char* argv[]) {
 
   map<TString,MnvH1D*> scaledHists = {};
   scaledHists["Plastic"]=(MnvH1D*)h_Plastic->Clone();
+
   for(auto hists:scaledHists){
     hists.second->Multiply(hists.second,result["NPlanes"][hists.first]);
-    for (auto var:result)var.second[hists.first]->SetDirectory(outFile);
   }
-  DrawFromMnvH1Ds(dataHist,scaledHists,unfitHists,true,outDir+"TEST_NEW_NPlanes_postFit");
+  DrawFromMnvH1Ds(h_data,scaledHists,unfitHists,true,outDir+"TEST_NEW_NPlanes_postFit");
   
   for (auto hist:result){
     for (auto var:hist.second) delete var.second;
