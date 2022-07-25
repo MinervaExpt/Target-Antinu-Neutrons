@@ -94,6 +94,10 @@ add_executable(PlotNPlanesByTgt PlotNPlanesByTgt.cxx)
 target_link_libraries(PlotNPlanesByTgt ${ROOT_LIBRARIES} MAT MAT-MINERvA)
 install(TARGETS PlotNPlanesByTgt DESTINATION bin)
 
+add_executable(FitNPlanes FitNPlanes.cxx)
+target_link_libraries(FitNPlanes ${ROOT_LIBRARIES} fits MAT MAT-MINERvA)
+install(TARGETS FitNPlanes DESTINATION bin)
+
 add_executable(twoPlotComparison twoPlotComparison.cxx)
 target_link_libraries(twoPlotComparison ${ROOT_LIBRARIES} MAT MAT-MINERvA)
 install(TARGETS twoPlotComparison DESTINATION bin)
