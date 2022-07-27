@@ -455,7 +455,7 @@ int main(int argc, char* argv[]) {
   #endif
 
   //Pass an input file name to this script now
-  if (argc < 6 || argc > 10) {
+  if (argc < 6 || argc > 8) {
     cout << "Check usage..." << endl;
     return 2;
   }
@@ -463,18 +463,16 @@ int main(int argc, char* argv[]) {
   string MCfileName = string(argv[1]);
   string DATAfileName = string(argv[2]);
   string outDir = string(argv[3]);
-  int tgtNum = atoi(argv[4]);
-  TString tgtName = (tgtNum != 6) ? "Tgt"+to_string(tgtNum) : "WaterTgt";
-  TString material = argv[5];
+  //int tgtNum = atoi(argv[4]);
+  //TString tgtName = (tgtNum != 6) ? "Tgt"+to_string(tgtNum) : "WaterTgt";
+  TString material = argv[4];
   TString mat = "_"+material;
-  bool doSyst = (bool)(atoi(argv[6]));
-  int fitMuonBins = 0;
+  bool doSyst = (bool)(atoi(argv[5]));
   
-  int lowBin = -3;//Will be truncated later. Lowest allowed value for pT or recoil fits.
-  int hiBin = -6;//Will be truncated later. Highest allowed value for pT or recoil fits.
-  if (argc > 7) lowBin = max(atoi(argv[7]),1);//Not allowed lower than 1
-  if (argc > 8) hiBin = min(50, atoi(argv[8]));//Not allowed higher than 50
-  if (argc > 9) fitMuonBins = atoi(argv[9]);
+  int lowBin = -3;//This is US default
+  int hiBin = -6;//This is US default
+  if (argc > 6) lowBin = max(atoi(argv[6]),1);//Forced to be 1+
+  if (argc > 7) hiBin = min(50, atoi(argv[7]));//Forced to be 50-
 
   string rootExt = ".root";
   string slash = "/";
@@ -533,22 +531,22 @@ int main(int argc, char* argv[]) {
 
   double scale = dataPOT->GetVal()/mcPOT->GetVal();
 
-  MnvH1D* h_sig = (MnvH1D*)(mcFile->Get("ByTgt_"+tgtName+mat+"/US_ByType_Plastic/vtxZ_ByTgt_"+tgtName+mat+"_PreRecoilCut_Plastic_selected_signal_reco"))->Clone();
+  MnvH1D* h_sig = (MnvH1D*)(mcFile->Get("US_ByType_Plastic/vtxZ_ByTgt_"+material+"_PreRecoilCut_Plastic_selected_signal_reco"))->Clone();
   h_sig->Scale(scale);
 
-  MnvH1D* h_1PiC_Bkg = (MnvH1D*)(mcFile->Get("ByTgt_"+tgtName+mat+"/US_ByType_Plastic/vtxZ_ByTgt_"+tgtName+mat+"_PreRecoilCut_Plastic_background_1chargePi"))->Clone();
+  MnvH1D* h_1PiC_Bkg = (MnvH1D*)(mcFile->Get("US_ByType_Plastic/vtxZ_ByTgt_"+material+"_PreRecoilCut_Plastic_background_1chargePi"))->Clone();
   h_1PiC_Bkg->Scale(scale);
 
-  MnvH1D* h_1Pi0_Bkg = (MnvH1D*)(mcFile->Get("ByTgt_"+tgtName+mat+"/US_ByType_Plastic/vtxZ_ByTgt_"+tgtName+mat+"_PreRecoilCut_Plastic_background_1neutPi"))->Clone();
+  MnvH1D* h_1Pi0_Bkg = (MnvH1D*)(mcFile->Get("US_ByType_Plastic/vtxZ_ByTgt_"+material+"_PreRecoilCut_Plastic_background_1neutPi"))->Clone();
   h_1Pi0_Bkg->Scale(scale);
 
-  MnvH1D* h_NPi_Bkg = (MnvH1D*)(mcFile->Get("ByTgt_"+tgtName+mat+"/US_ByType_Plastic/vtxZ_ByTgt_"+tgtName+mat+"_PreRecoilCut_Plastic_background_NPi"))->Clone();
+  MnvH1D* h_NPi_Bkg = (MnvH1D*)(mcFile->Get("US_ByType_Plastic/vtxZ_ByTgt_"+material+"_PreRecoilCut_Plastic_background_NPi"))->Clone();
   h_NPi_Bkg->Scale(scale);
 
-  MnvH1D* h_Other_Bkg = (MnvH1D*)(mcFile->Get("ByTgt_"+tgtName+mat+"/US_ByType_Plastic/vtxZ_ByTgt_"+tgtName+mat+"_PreRecoilCut_Plastic_background_Other"))->Clone();
-  h_Other_Bkg->Add((MnvH1D*)(mcFile->Get("ByTgt_"+tgtName+mat+"/US_ByType_Plastic/vtxZ_ByTgt_"+tgtName+mat+"_PreRecoilCut_Plastic_background_Wrong_Nucleus")));
-  h_Other_Bkg->Add((MnvH1D*)(mcFile->Get("ByTgt_"+tgtName+mat+"/US_ByType_Plastic/vtxZ_ByTgt_"+tgtName+mat+"_PreRecoilCut_Plastic_background_DSPlastic")));
-  h_Other_Bkg->Add((MnvH1D*)(mcFile->Get("ByTgt_"+tgtName+mat+"/US_ByType_Plastic/vtxZ_ByTgt_"+tgtName+mat+"_PreRecoilCut_Plastic_background_USPlastic")));
+  MnvH1D* h_Other_Bkg = (MnvH1D*)(mcFile->Get("US_ByType_Plastic/vtxZ_ByTgt_"+material+"_PreRecoilCut_Plastic_background_Other"))->Clone();
+  h_Other_Bkg->Add((MnvH1D*)(mcFile->Get("US_ByType_Plastic/vtxZ_ByTgt_"+material+"_PreRecoilCut_Plastic_background_Wrong_Nucleus")));
+  h_Other_Bkg->Add((MnvH1D*)(mcFile->Get("US_ByType_Plastic/vtxZ_ByTgt_"+material+"_PreRecoilCut_Plastic_background_DSPlastic")));
+  h_Other_Bkg->Add((MnvH1D*)(mcFile->Get("US_ByType_Plastic/vtxZ_ByTgt_"+material+"_PreRecoilCut_Plastic_background_USPlastic")));
   cout << "Other" << endl;
   h_Other_Bkg->Scale(scale);
 
@@ -558,7 +556,7 @@ int main(int argc, char* argv[]) {
   h_Plastic->Add(h_NPi_Bkg);
   h_Plastic->Add(h_Other_Bkg);
 
-  MnvH1D* h_Mat_Bkg = (tgtName != "WaterTgt") ? (MnvH1D*)(mcFile->Get("ByTgt_"+tgtName+mat+"/US_ByType"+mat+"/vtxZ_ByTgt_"+tgtName+mat+"_PreRecoilCut"+mat+"_data"))->Clone() : (MnvH1D*)(mcFile->Get("ByTgt_"+tgtName+mat+"/US_ByType_Water/vtxZ_ByTgt_"+tgtName+mat+"_PreRecoilCut_Water_data"))->Clone();
+  MnvH1D* h_Mat_Bkg = (MnvH1D*)(mcFile->Get("US_ByType"+mat+"/vtxZ_ByTgt_"+material+"_PreRecoilCut"+mat+"_data"))->Clone();
   cout << "Mat" << endl;
   h_Mat_Bkg->Scale(scale);
 
@@ -566,21 +564,21 @@ int main(int argc, char* argv[]) {
   h_All_Bkg->AddMissingErrorBandsAndFillWithCV(*h_sig);
   //LOOP HERE For All Materials, skip the one we're interested in.
   for (auto typeName : TgtTypes){
-    TString compare = "_"+typeName;
-    if (compare == mat || (tgtName == "WaterTgt" && typeName == "Water")) continue;
-    h_All_Bkg->Add((MnvH1D*)(mcFile->Get("ByTgt_"+tgtName+mat+"/US_ByType_"+typeName+"/vtxZ_ByTgt_"+tgtName+mat+"_PreRecoilCut_"+typeName+"_data")));
+    if (typeName == material) continue;
+    h_All_Bkg->Add((MnvH1D*)(mcFile->Get("US_ByType_"+typeName+"/vtxZ_ByTgt_"+material+"_PreRecoilCut_"+typeName+"_data")));
   }
   h_All_Bkg->Scale(scale);
 
-  MnvH1D* h_data = (MnvH1D*)(dataFile->Get("ByTgt_"+tgtName+mat+"/US_ByType_Other/vtxZ_ByTgt_"+tgtName+mat+"_PreRecoilCut_Other_data"))->Clone();
+  MnvH1D* h_data = (MnvH1D*)(dataFile->Get("US_ByType_Other/vtxZ_ByTgt_"+material+"_PreRecoilCut_Other_data"))->Clone();
 
   map<TString,MnvH1D*> varsToSave = {};
 
   map<TString, MnvH1D*> fitHists, unfitHists;
 
   fitHists["Plastic"] = (MnvH1D*)h_Plastic->Clone();
-  if (tgtNum !=6) unfitHists[material] = (MnvH1D*)h_Mat_Bkg->Clone();
-  else unfitHists["Water"] = (MnvH1D*)h_Mat_Bkg->Clone();
+  unfitHists[material] = (MnvH1D*)h_Mat_Bkg->Clone();
+  //"if" the above line constrained by tgtNum != 6...
+  //else unfitHists["Water"] = (MnvH1D*)h_Mat_Bkg->Clone();
   unfitHists["Other Materials"] = (MnvH1D*)h_All_Bkg->Clone();
   
   cout << "Fitting Vtx" << endl;
