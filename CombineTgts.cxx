@@ -1,4 +1,4 @@
-//File: signalBKGStack.cxx
+//File: CombineTgts.cxx
 //Info: This is a script to add up all the histograms across various files so that the materials in the targets are combined.
 //
 //Usage: CombineTgts <data/MC> <Material> <outDir> <Tgt1 FileName>
@@ -83,10 +83,22 @@ bool PathExists(string path){
 int main(int argc, char* argv[]) {
 
   map<TString,vector<TString>> tgtsByMat; 
-  tgtsByMat["Fe"]={"Tgt1","Tgt2","Tgt3","Tgt5"}; 
+  tgtsByMat["Fe"]={"Tgt1","Tgt2","Tgt3","Tgt5"};
   tgtsByMat["Pb"]={"Tgt1","Tgt2","Tgt3","Tgt4","Tgt5"};
   tgtsByMat["C"]={"Tgt3"};
   tgtsByMat["Water"]={"WaterTgt"};
+
+  map<TString,vector<TString>> UStgtsByMat;
+  UStgtsByMat["Fe"]={"Tgt2","Tgt3"};
+  UStgtsByMat["Pb"]={"Tgt2","Tgt3","Tgt4"};
+  UStgtsByMat["C"]={"Tgt3"};
+  UStgtsByMat["Water"]={"WaterTgt"};
+
+  map<TString,vector<TString>> DStgtsByMat;
+  DStgtsByMat["Fe"]={"Tgt1","Tgt2","Tgt3","Tgt5"};
+  DStgtsByMat["Pb"]={"Tgt1","Tgt2","Tgt3","Tgt5"};
+  DStgtsByMat["C"]={"Tgt3"};
+  DStgtsByMat["Water"]={"WaterTgt"};
 
   #ifndef NCINTEX
   ROOT::Cintex::Cintex::Enable();
@@ -187,7 +199,71 @@ int main(int argc, char* argv[]) {
     TString className = (TString)key->GetClassName();
     TString nameObj = (TString)key->GetName();
     cout << "AT Object: " << nameObj << endl;
-    if (className == "TDirectoryFile" || !className.Contains("PlotUtils::MnvH")) continue;
+
+    if (className == "TDirectoryFile"){
+      TDirectory* newOutDir = outFile->mkdir(nameObj);
+      TDirectoryFile* dirInt = (TDirectoryFile*)files[firstName]->Get(dirBase+firstName+matName+"/"+nameObj);
+      TList*  keyIntList = dirInt->GetListOfKeys();
+      if(!keyIntList){
+	cout << "List of keys failed to get inside second directory" << endl;
+	return 20;
+      }
+      TIter nextKeyInt(keyIntList);
+      TKey* keyInt;
+      while ( keyInt = (TKey*)nextKeyInt() ){
+	TString classNameInt = (TString)keyInt->GetClassName();
+	TString nameObjInt = (TString)keyInt->GetName();
+	cout << "AT Object: " << nameObjInt << endl;
+	if (!classNameInt.Contains("PlotUtils::MnvH1")) continue;
+	cout << "Getting: " << nameObjInt << endl;
+	cout << "" << endl;
+	vector<TString> nameObjIntPieces = BreakName(firstName+matName,nameObjInt);
+	TString matNameObjInt = MashNames(material,nameObjIntPieces);
+	
+	if (nameObj.Contains("US_ByType")){
+	  MnvH1D* h1D = nullptr;
+	  bool first = true;
+	  for (auto tgt : UStgtsByMat[material]){
+	    cout << "US of Tgt: " << tgt << endl;
+	    if (first){
+	      TString newNameObjInt = MashNames(tgt+matName,nameObjIntPieces);
+	      h1D = (MnvH1D*)(files[tgt]->Get(dirBase+tgt+matName+"/"+nameObj+"/"+newNameObjInt))->Clone(matNameObjInt);
+	      first = false;
+	    }
+	    else{
+	      TString newNameObjInt = MashNames(tgt+matName,nameObjIntPieces);
+	      h1D->Add((MnvH1D*)(files[tgt]->Get(dirBase+tgt+matName+"/"+nameObj+"/"+newNameObjInt)));
+	    }
+	  }
+	  newOutDir->cd();
+	  h1D->Write();
+	  delete h1D;
+	}
+	
+	if (nameObj.Contains("DS_ByType")){
+	  MnvH1D* h1D = nullptr;
+	  bool first = true;
+	  for (auto tgt:DStgtsByMat[material]){
+	    cout << "DS of Tgt: " << tgt << endl;
+	    if (first){
+	      TString newNameObjInt = MashNames(tgt+matName,nameObjIntPieces);
+	      h1D = (MnvH1D*)(files[tgt]->Get(dirBase+tgt+matName+"/"+nameObj+"/"+newNameObjInt))->Clone(matNameObjInt);
+	      first = false;
+	    }
+	    else{
+	      TString newNameObjInt = MashNames(tgt+matName,nameObjIntPieces);
+	      h1D->Add((MnvH1D*)(files[tgt]->Get(dirBase+tgt+matName+"/"+nameObj+"/"+newNameObjInt)));
+	    }
+	  }
+	  newOutDir->cd();
+	  h1D->Write();
+	  delete h1D;
+	}
+      }
+      //continue;
+    }
+
+    else if (!className.Contains("PlotUtils::MnvH")) continue;
     cout << "Getting: " << nameObj << endl;
     cout << "" << endl;
     vector<TString> nameObjPieces = BreakName(firstName+matName,nameObj);
