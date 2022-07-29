@@ -101,6 +101,7 @@ enum ErrorCodes
 
 //ROOT includes
 #include "TParameter.h"
+#include "TMath.h"
 
 //c++ includes
 #include <iostream>
@@ -766,7 +767,8 @@ int main(const int argc, const char** argv)
 		      myRecoilBins,
 		      myRecoilQ2Bins,
 		      myPmuBins,
-		      myVtxZBins//,
+		      myVtxZBins,
+		      myNeutAngleBins//,
 		      //myBlobEBins
 		      ;
 
@@ -788,6 +790,13 @@ int main(const int argc, const char** argv)
   const double myPmuBinWidth = 0.5;
   for(int whichBin = 0; whichBin < 41; ++whichBin) myPmuBins.push_back(myPmuBinWidth * whichBin);
 
+  const double nBinsNeutAngle = 180./15.;
+  for(int whichBin = 0; whichBin <= nBinsNeutAngle+1;++whichBin){
+    myNeutAngleBins.push_back((double)(whichBin)*(15.)*(TMath::Pi()/180.));
+  }
+
+
+
   const double myVtxZBinWidth = 1.;
   //const double myVtxZBase = 5800.; //Tracker for plot testing
   const double myVtxZBase = minZ; //Targets for later!!!
@@ -799,6 +808,7 @@ int main(const int argc, const char** argv)
 
   std::vector<Variable*> vars = {
     new Variable(true, "pTmu", "p_{T, #mu} [GeV/c]", dansPTBins, &CVUniverse::GetMuonPT, &CVUniverse::GetMuonPTTrue),
+    new Variable(false, "neutAngle", "[radian]", myNeutAngleBins, &CVUniverse::GetLeadNeutAngle),
     //new Variable((TString)("MyBins"),"pTmu_MYBins", "p_{T, #mu} [GeV/c]", myPTBins, &CVUniverse::GetMuonPT, &CVUniverse::GetMuonPTTrue),
     new Variable(false, "pTmu_MYBins", "p_{T, #mu} [GeV/c]", myPTBins, &CVUniverse::GetMuonPT, &CVUniverse::GetMuonPTTrue),
     new Variable(false, "nBlobs", "No.", nBlobsBins, &CVUniverse::GetNNeutBlobs),//Don't need GetDummyTrue perhaps...
