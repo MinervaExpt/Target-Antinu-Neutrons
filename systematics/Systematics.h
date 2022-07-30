@@ -6,6 +6,7 @@
 //==============================================================================
 
 #include "event/CVUniverse.h"
+#include "systematics/MonaSystematic.h"
 #include "PlotUtils/FluxSystematics.h"
 #include "PlotUtils/GenieSystematics.h"
 #include "PlotUtils/MinosEfficiencySystematics.h"
@@ -16,7 +17,7 @@
 
 typedef std::map<std::string, std::vector<CVUniverse*>> UniverseMap;
 
-UniverseMap GetStandardSystematics(PlotUtils::ChainWrapper* chain)
+UniverseMap GetStandardSystematics(PlotUtils::ChainWrapper* chain, bool doMona = true)
 {
   // return map
   UniverseMap error_bands;
@@ -82,6 +83,12 @@ UniverseMap GetStandardSystematics(PlotUtils::ChainWrapper* chain)
   // Beam angle
   UniverseMap bands_angle = PlotUtils::GetAngleSystematicsMap<CVUniverse>(chain);
   error_bands.insert(bands_angle.begin(), bands_angle.end());
+
+  //Andrew's MONA Neutron Inelastic Reweight
+  if (doMona){
+    UniverseMap bands_mona = GetMonaSystematicMap(chain);
+    error_bands.insert(bands_mona.begin(), bands_mona.end());
+  }
 
   // Hadron inelastics cross sections
   //TODO: There's some special recoil function I need to write for the response systematics to work correctly
