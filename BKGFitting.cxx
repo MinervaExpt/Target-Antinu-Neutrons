@@ -280,12 +280,16 @@ map<TString,map<TString,MnvH1D*>> FitScaleFactorsAndDraw(MnvH1D* dataHist, map<T
   vector<TH1D*> unfitHists = {};
 
   for (auto hists:fitHistsAndNames){
+    TString dumpTag = "";//tag which lets you know which histos to scale later.
+    for (auto tag:tagsToSave[hists.first]){
+      dumpTag = dumpTag+tag;
+    }
     fitHists.push_back((TH1D*)hists.second->GetCVHistoWithStatError().Clone());
     for (auto var:varsToSave){
       if (var.first == varName) continue;
-      scaleHists[var.first][hists.first] = new MnvH1D(var.first+"_fit_"+name+"_"+hists.first,"",var.second->GetNbinsX(),var.second->GetXaxis()->GetXbins()->GetArray());
+      scaleHists[var.first][hists.first] = new MnvH1D(var.first+"_fit_"+name+dumpTag+"_"+hists.first,"",var.second->GetNbinsX(),var.second->GetXaxis()->GetXbins()->GetArray());
     }
-    scaleHists[varName][hists.first]= new MnvH1D(varName+"_fit_"+name+"_"+hists.first,"",hists.second->GetNbinsX(),hists.second->GetXaxis()->GetXbins()->GetArray());
+    scaleHists[varName][hists.first]= new MnvH1D(varName+"_fit_"+name+dumpTag+"_"+hists.first,"",hists.second->GetNbinsX(),hists.second->GetXaxis()->GetXbins()->GetArray());
   }
 
   for (auto hists:unfitHistsAndNames){
