@@ -249,7 +249,6 @@ void LoopAndFillEventSelection(
 	*/
 
 	int leadBlobType = myevent.GetLeadingNeutCand().GetPDGBin();
-
 	/*
 	if ((TString)(universe->ShortName()) == "cv"){
 	  std::cout << "Event in MC CV: " << universe->GetDouble("eventID") << std::endl;
@@ -268,6 +267,31 @@ void LoopAndFillEventSelection(
 	for(auto& study: studies) study->Selected(*universe, myevent, weight);
 
 	if (!SBStat.all()) continue;
+
+	TVector3 dumpVtx(vtx_x,vtx_y,vtx_z);
+        TVector3 leadBlobBeg = myevent.GetLeadingNeutCand().GetBegPos();
+        TVector3 leadBlobEnd = myevent.GetLeadingNeutCand().GetEndPos();
+        TVector3 leadBlobFP = myevent.GetLeadingNeutCand().GetFlightPath();
+	TVector3 leadBlobEndDist = leadBlobEnd-dumpVtx;
+        TVector3 momMuon(muonMom[0],muonMom[1],muonMom[2]);
+        double leadBlobAngle = leadBlobFP.Angle(momMuon);
+	std::cout << "Vtx Pos.: " << vtx_x << ", " << vtx_y << ", " << vtx_z << std::endl;
+	std::cout << "Lead Blob Beg: " << leadBlobBeg.X() << ", " << leadBlobBeg.Y() << ", " << leadBlobBeg.Z() << std::endl;
+	std::cout << "Lead Blob End: " << leadBlobEnd.X() << ", " << leadBlobEnd.Y() << ", " << leadBlobEnd.Z() << std::endl;
+	std::cout << "Beg End Z Diff" << leadBlobEnd.Z() - leadBlobBeg.Z() << std::endl;	
+	std::cout << "Lead Blob FP: " << leadBlobFP.X() << ", " << leadBlobFP.Y() << ", " << leadBlobFP.Z() << std::endl;
+	std::cout << "FP Mag." << leadBlobFP.Mag() << std::endl;
+	std::cout << "End-Vtx Mag." << leadBlobEndDist.Mag() << std::endl;
+	std::cout << "Flight Path Mag Diff: " << leadBlobEndDist.Mag()-leadBlobFP.Mag() << std::endl;
+	std::cout << "Muon Momentum Saved: " << momMuon.X() << ", " << momMuon.Y() << ", " << momMuon.Z() << std::endl;
+	std::cout << "Muon Momentum Grabbed: " << universe->GetMuon4V().X() << ", " << universe->GetMuon4V().Y() << ", " << universe->GetMuon4V().Z() << std::endl;
+	std::cout << "Muon Momentum Diff: " << momMuon.X() - universe->GetMuon4V().X() << ", " << momMuon.Y() - universe->GetMuon4V().Y() << ", " << momMuon.Z() - universe->GetMuon4V().Z() << std::endl;
+	std::cout << "Angle from calculated: " << leadBlobAngle << std::endl;
+	std::cout << "Angle from universe: " << universe->GetLeadNeutAngle() << std::endl;
+	std::cout << "Angle diff: " << leadBlobAngle-universe->GetLeadNeutAngle() << std::endl;
+	std::cout << "Angle dist to pi/2: " << leadBlobAngle-TMath::Pi()/2.0 << std::endl;
+	std::cout << "Lead Blob Type: " << leadBlobType << std::endl;
+	std::cout << "" << std::endl;
 
         for(auto& var: vars) var->selectedMCReco->FillUniverse(universe, var->GetRecoValue(*universe), weight); //"Fake data" for closure
 
@@ -292,7 +316,7 @@ void LoopAndFillEventSelection(
 	    //Various breakdowns of selected signal reco
 	    (*var->m_SigIntTypeHists)[intType].FillUniverse(universe, var->GetRecoValue(*universe), weight);
 	    (*var->m_SigTargetTypeHists)[tgtType].FillUniverse(universe, var->GetRecoValue(*universe), weight);
-	    //(*var->m_SigLeadBlobTypeHists)[leadBlobType].FillUniverse(universe, var->GetRecoValue(*universe), weight);
+	    (*var->m_SigLeadBlobTypeHists)[leadBlobType].FillUniverse(universe, var->GetRecoValue(*universe), weight);
           }
 
 	  //Only fill by tgt for non-interstitial plastic events
@@ -306,7 +330,7 @@ void LoopAndFillEventSelection(
 	      //Various breakdowns of selected signal reco
 	      (*(*var)[tgtCode].m_SigIntTypeHists)[intType].FillUniverse(universe, (*var)[tgtCode].GetRecoValue(*universe), weight);
 	      (*(*var)[tgtCode].m_SigTargetTypeHists)[tgtType].FillUniverse(universe, (*var)[tgtCode].GetRecoValue(*universe), weight);
-	      //(*(*var)[tgtCode].m_SigLeadBlobTypeHists)[leadBlobType].FillUniverse(universe, (*var)[tgtCode].GetRecoValue(*universe), weight);
+	      (*(*var)[tgtCode].m_SigLeadBlobTypeHists)[leadBlobType].FillUniverse(universe, (*var)[tgtCode].GetRecoValue(*universe), weight);
 	    }
 	  }
 	  
@@ -319,7 +343,7 @@ void LoopAndFillEventSelection(
 	    //Various breakdowns of selected signal reco
 	    (*var->m_SigIntTypeHists)[intType].FillUniverse(universe, var->GetRecoValueX(*universe), var->GetRecoValueY(*universe), weight);;
 	    (*var->m_SigTargetTypeHists)[tgtType].FillUniverse(universe, var->GetRecoValueX(*universe), var->GetRecoValueY(*universe), weight);;
-	    //(*var->m_SigLeadBlobTypeHists)[leadBlobType].FillUniverse(universe, var->GetRecoValueX(*universe), var->GetRecoValueY(*universe), weight);
+	    (*var->m_SigLeadBlobTypeHists)[leadBlobType].FillUniverse(universe, var->GetRecoValueX(*universe), var->GetRecoValueY(*universe), weight);
 
             //var->efficiencyNumerator->FillUniverse(universe, var->GetTrueValueX(*universe), var->GetTrueValueY(*universe), weight);
           }
@@ -345,7 +369,7 @@ void LoopAndFillEventSelection(
 	    //Various breakdowns of selected backgrounds
 	    (*var->m_BkgIntTypeHists)[intType].FillUniverse(universe, var->GetRecoValue(*universe), weight);
 	    (*var->m_BkgTargetTypeHists)[tgtType].FillUniverse(universe, var->GetRecoValue(*universe), weight);
-	    //(*var->m_BkgLeadBlobTypeHists)[leadBlobType].FillUniverse(universe, var->GetRecoValue(*universe), weight);
+	    (*var->m_BkgLeadBlobTypeHists)[leadBlobType].FillUniverse(universe, var->GetRecoValue(*universe), weight);
 	  }
 
 	//Only fill by tgt for non-interstitial plastic events
@@ -355,7 +379,7 @@ void LoopAndFillEventSelection(
 	      //Various breakdowns of selected backgrounds
 	      (*(*var)[tgtCode].m_BkgIntTypeHists)[intType].FillUniverse(universe, (*var)[tgtCode].GetRecoValue(*universe), weight);
 	      (*(*var)[tgtCode].m_BkgTargetTypeHists)[tgtType].FillUniverse(universe, (*var)[tgtCode].GetRecoValue(*universe), weight);
-	      //(*(*var)[tgtCode].m_BkgLeadBlobTypeHists)[leadBlobType].FillUniverse(universe, (*var)[tgtCode].GetRecoValue(*universe), weight);
+	      (*(*var)[tgtCode].m_BkgLeadBlobTypeHists)[leadBlobType].FillUniverse(universe, (*var)[tgtCode].GetRecoValue(*universe), weight);
 	    }
 	  }
 	  
@@ -364,7 +388,7 @@ void LoopAndFillEventSelection(
 	    //Various breakdowns of selected backgrounds
 	    (*var->m_BkgIntTypeHists)[intType].FillUniverse(universe, var->GetRecoValueX(*universe), var->GetRecoValueY(*universe), weight);
 	    (*var->m_BkgTargetTypeHists)[tgtType].FillUniverse(universe, var->GetRecoValueX(*universe), var->GetRecoValueY(*universe), weight);
-	    //(*var->m_BkgLeadBlobTypeHists)[leadBlobType].FillUniverse(universe, var->GetRecoValueX(*universe), var->GetRecoValueY(*universe), weight);
+	    (*var->m_BkgLeadBlobTypeHists)[leadBlobType].FillUniverse(universe, var->GetRecoValueX(*universe), var->GetRecoValueY(*universe), weight);
 	  }
         }
       } // End band's universe loop
