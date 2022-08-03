@@ -275,23 +275,23 @@ void LoopAndFillEventSelection(
 	TVector3 leadBlobEndDist = leadBlobEnd-dumpVtx;
         TVector3 momMuon(muonMom[0],muonMom[1],muonMom[2]);
         double leadBlobAngle = leadBlobFP.Angle(momMuon);
-	std::cout << "Vtx Pos.: " << vtx_x << ", " << vtx_y << ", " << vtx_z << std::endl;
-	std::cout << "Lead Blob Beg: " << leadBlobBeg.X() << ", " << leadBlobBeg.Y() << ", " << leadBlobBeg.Z() << std::endl;
-	std::cout << "Lead Blob End: " << leadBlobEnd.X() << ", " << leadBlobEnd.Y() << ", " << leadBlobEnd.Z() << std::endl;
-	std::cout << "Beg End Z Diff" << leadBlobEnd.Z() - leadBlobBeg.Z() << std::endl;	
-	std::cout << "Lead Blob FP: " << leadBlobFP.X() << ", " << leadBlobFP.Y() << ", " << leadBlobFP.Z() << std::endl;
-	std::cout << "FP Mag." << leadBlobFP.Mag() << std::endl;
-	std::cout << "End-Vtx Mag." << leadBlobEndDist.Mag() << std::endl;
-	std::cout << "Flight Path Mag Diff: " << leadBlobEndDist.Mag()-leadBlobFP.Mag() << std::endl;
-	std::cout << "Muon Momentum Saved: " << momMuon.X() << ", " << momMuon.Y() << ", " << momMuon.Z() << std::endl;
-	std::cout << "Muon Momentum Grabbed: " << universe->GetMuon4V().X() << ", " << universe->GetMuon4V().Y() << ", " << universe->GetMuon4V().Z() << std::endl;
-	std::cout << "Muon Momentum Diff: " << momMuon.X() - universe->GetMuon4V().X() << ", " << momMuon.Y() - universe->GetMuon4V().Y() << ", " << momMuon.Z() - universe->GetMuon4V().Z() << std::endl;
-	std::cout << "Angle from calculated: " << leadBlobAngle << std::endl;
-	std::cout << "Angle from universe: " << universe->GetLeadNeutAngle() << std::endl;
-	std::cout << "Angle diff: " << leadBlobAngle-universe->GetLeadNeutAngle() << std::endl;
-	std::cout << "Angle dist to pi/2: " << leadBlobAngle-TMath::Pi()/2.0 << std::endl;
-	std::cout << "Lead Blob Type: " << leadBlobType << std::endl;
-	std::cout << "" << std::endl;
+	//std::cout << "Vtx Pos.: " << vtx_x << ", " << vtx_y << ", " << vtx_z << std::endl;
+	//std::cout << "Lead Blob Beg: " << leadBlobBeg.X() << ", " << leadBlobBeg.Y() << ", " << leadBlobBeg.Z() << std::endl;
+	//std::cout << "Lead Blob End: " << leadBlobEnd.X() << ", " << leadBlobEnd.Y() << ", " << leadBlobEnd.Z() << std::endl;
+	//std::cout << "Beg End Z Diff" << leadBlobEnd.Z() - leadBlobBeg.Z() << std::endl;	
+	//std::cout << "Lead Blob FP: " << leadBlobFP.X() << ", " << leadBlobFP.Y() << ", " << leadBlobFP.Z() << std::endl;
+	//std::cout << "FP Mag." << leadBlobFP.Mag() << std::endl;
+	//std::cout << "End-Vtx Mag." << leadBlobEndDist.Mag() << std::endl;
+	//std::cout << "Flight Path Mag Diff: " << leadBlobEndDist.Mag()-leadBlobFP.Mag() << std::endl;
+	//std::cout << "Muon Momentum Saved: " << momMuon.X() << ", " << momMuon.Y() << ", " << momMuon.Z() << std::endl;
+	//std::cout << "Muon Momentum Grabbed: " << universe->GetMuon4V().X() << ", " << universe->GetMuon4V().Y() << ", " << universe->GetMuon4V().Z() << std::endl;
+	//std::cout << "Muon Momentum Diff: " << momMuon.X() - universe->GetMuon4V().X() << ", " << momMuon.Y() - universe->GetMuon4V().Y() << ", " << momMuon.Z() - universe->GetMuon4V().Z() << std::endl;
+	//std::cout << "Angle from calculated: " << leadBlobAngle << std::endl;
+	//std::cout << "Angle from universe: " << universe->GetLeadNeutAngle() << std::endl;
+	//std::cout << "Angle diff: " << leadBlobAngle-universe->GetLeadNeutAngle() << std::endl;
+	//std::cout << "Angle dist to pi/2: " << leadBlobAngle-TMath::Pi()/2.0 << std::endl;
+	//std::cout << "Lead Blob Type: " << leadBlobType << std::endl;
+	//std::cout << "" << std::endl;
 
         for(auto& var: vars) var->selectedMCReco->FillUniverse(universe, var->GetRecoValue(*universe), weight); //"Fake data" for closure
 
