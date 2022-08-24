@@ -7,6 +7,7 @@
 #define NEUTCANDS_H
 
 #include "TVector3.h"
+#include "TLorentzVector.h"
 #include "stdlib.h"
 #include <string>
 #include <vector>
@@ -42,6 +43,8 @@ namespace NeutronCandidates{
     TVector3 fEndPos;
     TVector3 fDirection;
     TVector3 fFlightPath;
+    TLorentzVector fTopMCMom;
+    TLorentzVector fTopMCPos;
 
     void init();
 
@@ -93,6 +96,10 @@ namespace NeutronCandidates{
     TVector3 GetFlightPath() const { return fFlightPath; };
     TVector3 GetDirection() const { return fDirection; };
     TVector3 GetEvtVtx() const { return fEvtVtx; };
+
+    TLorentzVector GetTopMCPos() const { return fTopMCPos; };
+    TLorentzVector GetTopMCMom() const { return fTopMCMom; };
+
     std::bitset<4> GetClassifier();
 
     void SetID(std::vector<int> ID){ fID=ID.at(0); };
@@ -125,6 +132,12 @@ namespace NeutronCandidates{
       else {
 	fAngleToFP = -9999.0;
       }
+    };
+    void SetTopMCPos(std::vector<double> TopMCPos){
+      fTopMCPos.SetXYZT(TopMCPos.at(0),TopMCPos.at(1),TopMCPos.at(2),TopMCPos.at(3));
+    };
+    void SetTopMCMom(std::vector<double> TopMCMom){
+      fTopMCPos.SetPxPyPzE(TopMCMom.at(0),TopMCMom.at(1),TopMCMom.at(2),TopMCMom.at(3));
     };
 
     //DTOR

@@ -28,7 +28,7 @@ namespace NeutronCandidates{
 
   doubleBranchMap GetBranchDoubleMap(){
     //return {{"SetTotE",{"MasterAnaDev_BlobTotalE"}},{"SetBegPos",{"MasterAnaDev_BlobBegX","MasterAnaDev_BlobBegY","MasterAnaDev_BlobBegZ"}},{"SetEndPos",{"MasterAnaDev_BlobEndX","MasterAnaDev_BlobEndY","MasterAnaDev_BlobEndZ"}}, };
-    return {{"SetTotE",{"_BlobTotalE"}},{"SetBegPos",{"_BlobBegX","_BlobBegY","_BlobBegZ"}},{"SetEndPos",{"_BlobEndX","_BlobEndY","_BlobEndZ"}}, };
+    return {{"SetTotE",{"_BlobTotalE"}},{"SetBegPos",{"_BlobBegX","_BlobBegY","_BlobBegZ"}},{"SetEndPos",{"_BlobEndX","_BlobEndY","_BlobEndZ"}}, {"SetTopMCMom",{"_BlobMCTrackPx","_BlobMCTrackPy","_BlobMCTrackPz","_BlobMCTrackE"}}, {"SetTopMCPos",{"_BlobMCTrackX","_BlobMCTrackY","_BlobMCTrackZ","_BlobMCTrackT"}}, };
   }
 
   NeutCand::NeutCand(){
@@ -51,6 +51,8 @@ namespace NeutronCandidates{
       if (function.first=="SetTotE") this->SetTotalE(function.second);
       else if (function.first=="SetBegPos") this->SetBegPos(function.second);
       else if (function.first=="SetEndPos") this->SetEndPos(function.second);
+      else if (function.first=="SetTopMCMom") this->SetTopMCMom(function.second);
+      else if (function.first=="SetTopMCPos") this->SetTopMCPos(function.second);
       else continue;
     }
   }
@@ -58,6 +60,8 @@ namespace NeutronCandidates{
   void NeutCand::init(){
     TVector3 tmp;
     tmp.SetXYZ(0.0,0.0,0.0);
+    TLorentzVector tmp2;
+    tmp2.SetXYZT(0.0,0.0,0.0,0.0);
     fID = -1;
     fIs3D = -999;
     fMCPID = -999;
@@ -70,7 +74,10 @@ namespace NeutronCandidates{
     fBegPos=tmp;
     fDirection=tmp;
     fFlightPath=tmp;
+    fTopMCPos=tmp2;
+    fTopMCMom=tmp2;
     tmp.~TVector3();
+    tmp2.~TLorentzVector();
   }
 
   std::bitset<4> NeutCand::GetClassifier(){
