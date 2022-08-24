@@ -1,0 +1,2 @@
+root://fndca1.fnal.gov:1094/pnfs/fnal.gov/usr/minerva/persistent/users/dlast/merged_MAD_MC/6A/August_2022_merge/tracker_BLOB_TRUTH_INFO_MODDED/MasterAnaDev_mc_AnaTuple_run00122000_Playlist.root
+root://fndca1.fnal.gov:1094/pnfs/fnal.gov/usr/minerva/persistent/users/dlast/merged_MAD_MC/6A/August_2022_merge/tracker_BLOB_TRUTH_INFO_MODDED/MasterAnaDev_mc_AnaTuple_run00122001_Playlist.root
