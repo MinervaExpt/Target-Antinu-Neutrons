@@ -24,6 +24,7 @@
 //Needed for neutron candidates business... May change at some point, but for now this is what we're working with.
 #include "event/NeutCands.h"
 #include "TVector3.h"
+#include "TLorentzVector.h"
 
 class CVUniverse : public PlotUtils::MinervaUniverse {
 
@@ -260,6 +261,24 @@ class CVUniverse : public PlotUtils::MinervaUniverse {
       if (PDGs.at(iFS) == 2112 && KE > max_KE) max_KE = KE;
     }
     return max_KE;
+  }
+
+  virtual TLorentzVector GetMaxFSNeutronMom() const {
+    double max_E = -999.;
+    TLorentzVector maxMom;
+    maxMom.SetPxPyPzE(max_E,max_E,max_E,max_E);
+    std::vector<int> PDGs = GetFSPartPDG();
+    std::vector<double> Es = GetFSPartE();
+    std::vector<double> Pxs = GetFSPartPx();
+    std::vector<double> Pys = GetFSPartPy();
+    std::vector<double> Pzs = GetFSPartPz();
+    for (int iFS=0; iFS<PDGs.size(); ++iFS){
+      if (PDGs.at(iFS) == 2112 && Es.at(iFS) > max_E){
+	max_E = Es.at(iFS);
+	maxMom.SetPxPyPzE(Pxs.at(iFS),Pys.at(iFS),Pzs.at(iFS),max_E);
+      }
+    }
+    return maxMom;
   }
 
   virtual int GetNImprovedMichel() const { return GetInt("improved_michel_vertex_type_sz"); }

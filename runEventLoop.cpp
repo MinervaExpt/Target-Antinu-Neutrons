@@ -76,6 +76,7 @@ enum ErrorCodes
 #include "studies/EMSideBands.h"
 #include "studies/MichelAndNBlobSB.h"
 #include "studies/RecoilSB.h"
+#include "studies/LeadNeutStudy.h"
 //#include "Binning.h" //TODO: Fix me
 
 //PlotUtils includes
@@ -900,6 +901,7 @@ int main(const int argc, const char** argv)
     //new NeutronVariables(maxZ, minZ, error_bands, truth_bands, data_band),
     //new RecoilSB(vars, error_bands, truth_bands, data_band, splitRecoil),
     new PreRecoil(vars, error_bands, truth_bands, data_band, splitRecoil, FVregionName, TgtNum),
+    new LeadNeutStudy(error_bands, truth_bands, data_band),
   };
 
   for(auto& var: vars) var->InitializeMCHists(error_bands, truth_bands);
