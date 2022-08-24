@@ -56,6 +56,7 @@ namespace NeutronCandidates{
     //Here for use in Variable-like classes
     double GetDummyVar() const { return -999.; }
 
+    int MatchesFSNeutron(TLorentzVector neutMom, double tolerance);
     int GetID() const { return fID; };
     int GetIs3D() const { return fIs3D; };
     int GetMCPID() const { return fMCPID; };
