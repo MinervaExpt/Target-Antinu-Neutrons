@@ -768,14 +768,14 @@ int main(const int argc, const char** argv)
   std::cout << nameExt << std::endl;
 
   std::map< std::string, std::vector<CVUniverse*> > error_bands;
-  if(doSystematics) error_bands = GetStandardSystematics(options.m_mc);
+  if(doSystematics) error_bands = GetStandardSystematics(options.m_mc, false);
   else{
     std::map<std::string, std::vector<CVUniverse*> > band_flux = PlotUtils::GetFluxSystematicsMap<CVUniverse>(options.m_mc, CVUniverse::GetNFluxUniverses());
     error_bands.insert(band_flux.begin(), band_flux.end()); //Necessary to get flux integral later...
   }
   error_bands["cv"] = {new CVUniverse(options.m_mc)};
   std::map< std::string, std::vector<CVUniverse*> > truth_bands;
-  if(doSystematics) truth_bands = GetStandardSystematics(options.m_truth);
+  if(doSystematics) truth_bands = GetStandardSystematics(options.m_truth, false);
   truth_bands["cv"] = {new CVUniverse(options.m_truth)};
   
   //Same as Amit's seemingly. Bin normalized these are smoother.
