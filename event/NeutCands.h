@@ -14,6 +14,7 @@
 #include <map>
 #include <unordered_map>
 #include <bitset>
+#include <iostream>
 
 namespace NeutronCandidates{
   typedef std::map<std::string, std::vector<std::string>> intBranchMap;
@@ -138,7 +139,7 @@ namespace NeutronCandidates{
       fTopMCPos.SetXYZT(TopMCPos.at(0),TopMCPos.at(1),TopMCPos.at(2),TopMCPos.at(3));
     };
     void SetTopMCMom(std::vector<double> TopMCMom){
-      fTopMCPos.SetPxPyPzE(TopMCMom.at(0),TopMCMom.at(1),TopMCMom.at(2),TopMCMom.at(3));
+      fTopMCMom.SetPxPyPzE(TopMCMom.at(0),TopMCMom.at(1),TopMCMom.at(2),TopMCMom.at(3));
     };
 
     //DTOR

@@ -22,7 +22,7 @@ class LeadNeutStudy: public Study
     {
       std::vector<double> myBins = {-1.5,-0.5,0.5,1.5};
 
-      fMatchesLead = new Variable("LeadCandMatches");
+      fMatchesLead = new Variable(false,"LeadCandMatches","",myBins);
 
       fMatchesLead->InitializeMCHists(mc_error_bands, truth_error_bands);
       fMatchesLead->InitializeDATAHists(data_error_bands);
@@ -46,6 +46,7 @@ class LeadNeutStudy: public Study
     //Overriding base class functions
     //Do nothing for now...  Good place for data comparisons in the future. 
     void fillSelected(const CVUniverse& univ, const NeutronEvent& evt, const double weight) {
+      if (!evt.GetSideBandStat().all()) return;
       NeutronCandidates::NeutCand leadCand = evt.GetLeadingNeutCand();
       int intType = evt.GetIntType();
       int tgtType = evt.GetTgtZ();
@@ -53,8 +54,9 @@ class LeadNeutStudy: public Study
       TLorentzVector maxFSNeutMom = univ.GetMaxFSNeutronMom();
       TLorentzVector leadFSMom = leadCand.GetTopMCMom();
       int matchValue = leadCand.MatchesFSNeutron(maxFSNeutMom,0.01);
+      /*
       std::cout << "DEBUGGING" << std::endl;
-      std::cout << "Lead Blob Type: " << leadBlobType << std::endl;
+      std::cout << "Lead Blob Top MCPID: " << leadCand.GetTopMCPID() << std::endl;
       std::cout << "Lead Blob Type: " << leadBlobType << std::endl;
       std::cout << "Max FS Neutron 4-Momentum:" << std::endl;
       std::cout << "Px: " << maxFSNeutMom.X() << ", Py: " << maxFSNeutMom.Y() << ", Pz: " << maxFSNeutMom.Z() << ", E: " << maxFSNeutMom.T() << std::endl;
@@ -62,11 +64,11 @@ class LeadNeutStudy: public Study
       std::cout << "Px: " << leadFSMom.X() << ", Py: " << leadFSMom.Y() << ", Pz: " << leadFSMom.Z() << ", E: " << leadFSMom.T() << std::endl;
       std::cout << "Reported Match Value: " << matchValue << std::endl;
       std::cout << std::endl;
-
+      */
       if (evt.IsMC()){
 	if (evt.IsSignal()){
 	  fMatchesLead->selectedMCReco->FillUniverse(&univ, matchValue, weight);
-	  fMatchesLead->dataHist->FillUniverse(&univ, matchValue, weight);
+	  //fMatchesLead->dataHist->FillUniverse(&univ, matchValue, weight);
 	  fMatchesLead->selectedSignalReco->FillUniverse(&univ, matchValue, weight);
 	  (*fMatchesLead->m_SigIntTypeHists)[intType].FillUniverse(&univ, matchValue, weight);
 	  (*fMatchesLead->m_SigTargetTypeHists)[tgtType].FillUniverse(&univ, matchValue, weight);
@@ -78,7 +80,7 @@ class LeadNeutStudy: public Study
 	  bkgd_ID = util::GetBackgroundID(univ);
 
 	  fMatchesLead->selectedMCReco->FillUniverse(&univ, matchValue, weight);
-	  fMatchesLead->dataHist->FillUniverse(&univ, matchValue, weight);
+	  //fMatchesLead->dataHist->FillUniverse(&univ, matchValue, weight);
 	  (*fMatchesLead->m_backgroundHists)[bkgd_ID].FillUniverse(&univ, matchValue, weight);
 	  (*fMatchesLead->m_BkgIntTypeHists)[intType].FillUniverse(&univ, matchValue, weight);
 	  (*fMatchesLead->m_BkgTargetTypeHists)[tgtType].FillUniverse(&univ, matchValue, weight);
