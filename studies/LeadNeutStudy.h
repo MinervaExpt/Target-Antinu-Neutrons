@@ -46,7 +46,7 @@ class LeadNeutStudy: public Study
     //Overriding base class functions
     //Do nothing for now...  Good place for data comparisons in the future. 
     void fillSelected(const CVUniverse& univ, const NeutronEvent& evt, const double weight) {
-      if (!evt.GetSideBandStat().all()) return;
+      if (!evt.GetSideBandStat().all() || !evt.IsMC()) return;
       NeutronCandidates::NeutCand leadCand = evt.GetLeadingNeutCand();
       int intType = evt.GetIntType();
       int tgtType = evt.GetTgtZ();
