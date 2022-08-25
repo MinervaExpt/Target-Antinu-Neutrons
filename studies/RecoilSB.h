@@ -290,7 +290,7 @@ class PreRecoil: public Study
 
       int tgtID = util::GetRecoTargetZ(vtx_x,vtx_y,vtx_z);
       int tgtCode = util::GetRecoTargetCode(vtx_x,vtx_y,vtx_z,muonMom);
-      int tgtZ = univ.GetTargetZ();
+      //int tgtZ = univ.GetTargetZ();
       int USTgt = -1;
       int DSTgt = -1;
       //std::cout << fFVregionName << std::endl;
