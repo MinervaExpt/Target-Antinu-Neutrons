@@ -235,7 +235,8 @@ void DrawBKGCateg(string name, TFile* mcFile, TFile* dataFile, TString sample, d
   dataHist->Draw("same");
   c1->Update();
 
-  TLegend* leg = new TLegend(0.6,0.5,0.9,0.9);
+  //TLegend* leg = new TLegend(1.0-0.6,1.0-0.5,1.0-0.9,1.0-0.9);
+  TLegend* leg = new TLegend(0.1,0.5,0.4,0.9);
 
   leg->AddEntry(dataHist,"DATA");
   leg->AddEntry(h_Sig,"Signal");
@@ -565,7 +566,8 @@ void DrawIntType(string name_QE, TFile* mcFile, TFile* dataFile, TString sample,
   hTmp->SetFillColor(kWhite);
   hTmp->SetLineColor(kWhite);
 
-  TLegend* leg = new TLegend(0.6,0.5,0.9,0.9);
+  //egend* leg = new TLegend(0.6,0.5,0.9,0.9);
+  TLegend* leg = new TLegend(0.1,0.5,0.4,0.9);
 
   leg->SetNColumns(2);
 
@@ -945,7 +947,8 @@ void DrawTargetType(string name_Plastic, TFile* mcFile, TFile* dataFile, TString
   dataHist->Draw("same");
   c1->Update();
 
-  TLegend* leg = new TLegend(0.6,0.5,0.9,0.9);
+  //TLegend* leg = new TLegend(0.6,0.5,0.9,0.9);
+  TLegend* leg = new TLegend(0.1,0.5,0.4,0.9);
 
   leg->SetNColumns(2);
 
@@ -1323,7 +1326,8 @@ void DrawLeadBlobType(string name_Neut, TFile* mcFile, TFile* dataFile, TString 
   dataHist->Draw("same");
   c1->Update();
 
-  TLegend* leg = new TLegend(0.6,0.5,0.9,0.9);
+  //TLegend* leg = new TLegend(0.6,0.5,0.9,0.9);
+  TLegend* leg = new TLegend(0.1,0.5,0.4,0.9);
 
   leg->SetNColumns(2);
 
