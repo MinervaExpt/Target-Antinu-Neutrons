@@ -304,8 +304,11 @@ class CVUniverse : public PlotUtils::MinervaUniverse {
   double MeVGeV=0.001;
 
   virtual double GetCalRecoilEnergy() const{
-    if (GetVec<double>("recoil_summed_energy").size()==0) return -999.0;
+    return GetDouble("recoil_energy_nonmuon_nonvtx100mm");
+  /*
+  if (GetVec<double>("recoil_summed_energy").size()==0) return -999.0;
     return (GetVec<double>("recoil_summed_energy")[0]-GetDouble("recoil_energy_nonmuon_vtx100mm"));
+  */
   }
 
   virtual double GetNonCalRecoilEnergy() const{
@@ -313,7 +316,8 @@ class CVUniverse : public PlotUtils::MinervaUniverse {
   }
 
   virtual double GetDANRecoilEnergyGeV() const{
-    double recoilE = GetDouble("recoil_energy_nonmuon_nonvtx100mm")*MeVGeV;
+  //double recoilE = GetDouble("recoil_energy_nonmuon_nonvtx100mm")*MeVGeV;
+    double recoilE = GetCalRecoilEnergy()*MeVGeV;
     return recoilE;
   }
 
