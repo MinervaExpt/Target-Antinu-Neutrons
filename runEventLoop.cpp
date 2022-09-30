@@ -864,14 +864,17 @@ int main(const int argc, const char** argv)
     }
   }
 
-  std::vector<Variable2D*> vars2D = {
+  std::vector<Variable2D*> vars2D = {};
+  /*
     new Variable2D(true,"pmu2D",*vars[1],*vars[0]),//pT v. p"z"
     //new Variable2D(false, *vars[5],*vars[4]),//recoil v. Q2
     //new Variable2D(false, *vars[vars.size()-1],*vars[0]),//pT v. recoilQ2Bin
-  };
+    };*/
+
+  if (!doNeutronCuts) vars2D.push_back(new Variable2D(true,"pmu2D",*vars[1],*vars[0]));
 
   std::vector<util::Categorized<Variable2D, int>*> vars2D_ByTgt = {};
-  vars2D_ByTgt.push_back(new util::Categorized<Variable2D, int>("", "ByTgt", true, "pmu2D", util::TgtCodeList[TgtNum], *vars[1], *vars[0]));
+  if (!doNeutronCuts && FVregionName.Contains("Target")) vars2D_ByTgt.push_back(new util::Categorized<Variable2D, int>("", "ByTgt", true, "pmu2D", util::TgtCodeList[TgtNum], *vars[1], *vars[0]));
   
   //Commented out during testing of analysis variable flag
   /*
