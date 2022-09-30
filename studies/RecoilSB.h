@@ -239,7 +239,7 @@ class PreRecoil: public Study
 		     var.WriteMC(outFile);
 		   });
       }
-      for (auto& var : fVars2D) var->Write(outFile);
+      for (auto& var : fVars2D) var->WriteMC(outFile);
     }
 
     void SaveOrDrawData(TFile& outFile)
@@ -689,8 +689,8 @@ class RecoilSB: public Study
       }
 
       fVars2D = {
-	new Variable2D(*fVars[4],*fVars[3]),//recoil v. Q2     
-	new Variable2D(*fVars[fVars.size()-1],*fVars[0]),//pT v. recoilQ2Bin     
+	new Variable2D(false, *fVars[4],*fVars[3]),//recoil v. Q2     
+	new Variable2D(false, *fVars[fVars.size()-1],*fVars[0]),//pT v. recoilQ2Bin     
       };
 
       for(auto& var: fVars) var->InitializeMCHists(mc_error_bands, truth_error_bands);
@@ -708,7 +708,7 @@ class RecoilSB: public Study
     {
       for (auto& recoil : fRecoilBinned) recoil.second->WriteMC(outFile);
       for (auto& var : fVars) var->WriteMC(outFile);
-      for (auto& var : fVars2D) var->Write(outFile);
+      for (auto& var : fVars2D) var->WriteMC(outFile);
     }
 
     void SaveOrDrawData(TFile& outFile)

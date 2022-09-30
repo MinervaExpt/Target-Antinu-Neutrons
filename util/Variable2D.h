@@ -9,10 +9,16 @@ class Variable2D: public PlotUtils::Variable2DBase<CVUniverse>
 {
   private:
     typedef PlotUtils::Hist2DWrapper<CVUniverse> Hist;
-    std::string fDirName;
+    bool fAnaVar;
+    TString fDirName;
   public:
     template <class ...ARGS>
-    Variable2D(ARGS... args): PlotUtils::Variable2DBase<CVUniverse>(args...), fDirName("TwoD")
+    Variable2D(bool isAnalysisVar, ARGS... args): PlotUtils::Variable2DBase<CVUniverse>(args...), fAnaVar(isAnalysisVar), fDirName("TwoD")
+    {
+    }
+
+    template <class ...ARGS>
+    Variable2D(TString name, bool isAnalysisVar, ARGS... args): PlotUtils::Variable2DBase<CVUniverse>(args...), fAnaVar(isAnalysisVar), fDirName(name+"/TwoD")
     {
     }
 
@@ -106,7 +112,24 @@ class Variable2D: public PlotUtils::Variable2DBase<CVUniverse>
       //dataHist = new Hist(Form("_data_%s", name), name, GetBinVecX(), GetBinVecY(), data_error_bands);
     }
 
-    void Write(TFile& file)
+    //Repurposing to not write but just set the directory. The writing will be handled by TFile::Write.                                               
+    void WriteData(TFile& file)
+    {
+      TString dirName = (TString)(fDirName);
+      TDirectory* dir;
+      dir = file.GetDirectory(dirName);
+      if (dir == NULL){
+        file.mkdir(dirName);
+      }
+      dir = file.GetDirectory(dirName);
+
+      if (dataHist->hist) {
+        dataHist->hist->SetDirectory(dir);
+        //dataHist->hist->Write();
+      }
+    }
+
+    void WriteMC(TFile& file)
     {
       SyncCVHistos();
 

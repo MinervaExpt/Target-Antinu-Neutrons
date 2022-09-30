@@ -115,6 +115,7 @@ void LoopAndFillEventSelection(
     std::vector<Variable*> vars,
     std::vector<util::Categorized<Variable, int>*> vars_ByTgt,
     std::vector<Variable2D*> vars2D,
+    std::vector<util::Categorized<Variable2D, int>*> vars2D_ByTgt,
     std::vector<Study*> studies,
     PlotUtils::Cutter<CVUniverse, NeutronEvent>& michelcuts,
     PlotUtils::Model<CVUniverse, NeutronEvent>& model)
@@ -377,6 +378,7 @@ void LoopAndFillData( PlotUtils::ChainWrapper* data,
 				std::vector<Variable*> vars,
 		                std::vector<util::Categorized<Variable, int>*> vars_ByTgt,
                                 std::vector<Variable2D*> vars2D,
+		                std::vector<util::Categorized<Variable2D, int>*> vars2D_ByTgt,
                                 std::vector<Study*> studies,
 				PlotUtils::Cutter<CVUniverse, NeutronEvent>& michelcuts)
 
@@ -799,6 +801,7 @@ int main(const int argc, const char** argv)
 
   std::vector<Variable*> vars = {
     new Variable(true, "pTmu", "p_{T, #mu} [GeV/c]", dansPTBins, &CVUniverse::GetMuonPT, &CVUniverse::GetMuonPTTrue),
+    new Variable(false, "pzmu", "p_{||, #mu} [GeV/c]", dansPzBins, &CVUniverse::GetMuonPz, &CVUniverse::GetMuonPzTrue),
     //new Variable((TString)("MyBins"),"pTmu_MYBins", "p_{T, #mu} [GeV/c]", myPTBins, &CVUniverse::GetMuonPT, &CVUniverse::GetMuonPTTrue),
     new Variable(false, "pTmu_MYBins", "p_{T, #mu} [GeV/c]", myPTBins, &CVUniverse::GetMuonPT, &CVUniverse::GetMuonPTTrue),
     new Variable(false, "nBlobs", "No.", nBlobsBins, &CVUniverse::GetNNeutBlobs),//Don't need GetDummyTrue perhaps...
@@ -837,16 +840,19 @@ int main(const int argc, const char** argv)
   }
 
   std::vector<Variable2D*> vars2D = {
-    //new Variable2D(*vars[4],*vars[3]),//recoil v. Q2
-    //new Variable2D(*vars[vars.size()-1],*vars[0]),//pT v. recoilQ2Bin
+    new Variable2D(true,"pmu2D",*vars[1],*vars[0]),//pT v. p"z"
+    //new Variable2D(false, *vars[5],*vars[4]),//recoil v. Q2
+    //new Variable2D(false, *vars[vars.size()-1],*vars[0]),//pT v. recoilQ2Bin
   };
 
+  std::vector<util::Categorized<Variable2D, int>*> vars2D_ByTgt = {};
+  vars2D_ByTgt.push_back(new util::Categorized<Variable2D, int>("", "ByTgt", true, "pmu2D", util::TgtCodeList[TgtNum], *vars[1], *vars[0]));
+  
   //Commented out during testing of analysis variable flag
   /*
   if(doCCQENuValidation)
   {
-    std::cerr << "Detected that tree name is CCQENu.  Making validation histograms.\n";
-    vars.push_back(new Variable("pzmu", "p_{||, #mu} [GeV/c]", dansPzBins, &CVUniverse::GetMuonPz, &CVUniverse::GetMuonPzTrue));
+  std::cerr << "Detected that tree name is CCQENu.  Making validation histograms.\n";
     vars.push_back(new Variable("Emu", "E_{#mu} [GeV]", robsEmuBins, &CVUniverse::GetEmuGeV, &CVUniverse::GetElepTrueGeV));
     vars.push_back(new Variable("Erecoil", "E_{recoil}", robsRecoilBins, &CVUniverse::GetRecoilE, &CVUniverse::Getq0True)); //TODO: q0 is not the same as recoil energy without a spline correction
     vars2D.push_back(new Variable2D(*vars[1], *vars[0]));
@@ -887,11 +893,24 @@ int main(const int argc, const char** argv)
   for(auto& var: vars2D) var->InitializeMCHists(error_bands, truth_bands);
   for(auto& var: vars2D) var->InitializeDATAHists(data_band);
 
+  for(auto& tgt: vars2D_ByTgt){ 
+    tgt->visit([&error_bands, &truth_bands](Variable2D& var)
+	       {
+		 var.InitializeMCHists(error_bands, truth_bands);
+	       });
+  }
+  for(auto& tgt: vars2D_ByTgt){ 
+    tgt->visit([&data_band](Variable2D& var)
+	       {
+		 var.InitializeDATAHists(data_band);
+	       });
+  }
+
   // Loop entries and fill
   try
   {
     CVUniverse::SetTruth(false);
-    LoopAndFillEventSelection(options.m_mc, error_bands, vars, vars_ByTgt, vars2D, studies, mycuts, model);
+    LoopAndFillEventSelection(options.m_mc, error_bands, vars, vars_ByTgt, vars2D, vars2D_ByTgt, studies, mycuts, model);
     CVUniverse::SetTruth(true);
     LoopAndFillEffDenom(options.m_truth, truth_bands, vars, vars2D, mycuts, model);
     options.PrintMacroConfiguration(argv[0]);
@@ -899,7 +918,7 @@ int main(const int argc, const char** argv)
     mycuts.resetStats();
 
     CVUniverse::SetTruth(false);
-    LoopAndFillData(options.m_data, data_band, vars, vars_ByTgt, vars2D, studies, mycuts);
+    LoopAndFillData(options.m_data, data_band, vars, vars_ByTgt, vars2D, vars2D_ByTgt, studies, mycuts);
     std::cout << "Data cut summary:\n" << mycuts << "\n";
 
     std::cout << "Writing MC Output File." << std::endl;
@@ -923,7 +942,13 @@ int main(const int argc, const char** argv)
 		 });
     }
 
-    for(auto& var: vars2D) var->Write(*mcOutDir);
+    for(auto& var: vars2D) var->WriteMC(*mcOutDir);
+    for(auto& tgt: vars2D_ByTgt){ 
+      tgt->visit([mcOutDir](Variable2D& var)
+		 {
+		   var.WriteMC(*mcOutDir);
+		 });
+    }
 
     std::cout << "Writing" << std::endl;
 
@@ -963,6 +988,13 @@ int main(const int argc, const char** argv)
     for(auto& var: vars) var->WriteData(*dataOutDir);
     for(auto& tgt: vars_ByTgt){
       tgt->visit([dataOutDir](Variable& var)
+		 {
+		   var.WriteData(*dataOutDir);
+		 });
+    }
+    for(auto& var: vars2D) var->WriteData(*dataOutDir);
+    for(auto& tgt: vars2D_ByTgt){ 
+      tgt->visit([dataOutDir](Variable2D& var)
 		 {
 		   var.WriteData(*dataOutDir);
 		 });
