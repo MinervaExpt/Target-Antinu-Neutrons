@@ -1,10 +1,9 @@
-//File: CategoryPlots.cpp
+//File: CategoryPlots.h
 //Definitions of useful plotting functions to be used by multiple plotting scripts
 //
 //Author: David Last dlast@sas.upenn.edu/lastd44@gmail.com
 
-//No idea what I need/want to actually include here.
-//Could also not do the class structure. Not sure it's totally necessary here. We'll see what I decide... For now, just see about building it in as an include directory instead. Means different
+//Don't know what needs including... can go through at some point and test I guess...
 
 //C++ includes
 #include <iostream>
@@ -46,12 +45,174 @@
 #include "PlotUtils/MnvH1D.h"
 #include "PlotUtils/MnvPlotter.h"
 
+//My includes
+#include "plotTools/plot.h"
+
 #ifndef NCINTEX
 #include "Cintex/Cintex.h"
 #endif
 
 using namespace std;
 using namespace PlotUtils;
+
+void TESTDraw2DBKGCategLines(string name, TFile* mcFile, TFile* dataFile, TString sample, double scale, TString nameToSave){
+
+  bool primPar = false;
+
+  TString sampleName = sample;
+
+  bool isTracker = sampleName.Contains("Tracker") ? true : false;
+
+  MnvH2D* h_Sig_Top = (MnvH2D*)mcFile->Get((TString)name);
+  //MnvH2D* h_Sig = new MnvH1D(h_Sig_Top->GetBinNormalizedCopy());
+  TH2* h_Sig = (TH2*)h_Sig_Top->GetCVHistoWithError().Clone();
+  h_Sig->Scale(scale);
+  h_Sig->SetLineColor(TColor::GetColor("#999933"));
+  h_Sig->SetFillColor(TColor::GetColor("#999933"));
+
+  TH2* mcSum = (TH2*)h_Sig->Clone();
+  mcSum->SetLineColor(kRed);
+  mcSum->SetLineWidth(3);
+
+  cout << "Handling: " << name << endl;
+  string title = (string)h_Sig->GetTitle();
+  TString Xtitle = h_Sig->GetXaxis()->GetTitle();
+  TString Ytitle = h_Sig->GetYaxis()->GetTitle();
+  string units = Xtitle.Data();
+  units.erase(0,units.find("["));
+
+  string name_bkg = name;
+  name_bkg.erase(name_bkg.length()-21,name_bkg.length());
+
+  MnvH2D* h_1PiC_Bkg_Top = (MnvH2D*)mcFile->Get((TString)name_bkg+"_by_BKG_Label_1chargePi");
+  //MnvH2D* h_1PiC_Bkg = new MnvH1D(h_1PiC_Bkg_Top->GetBinNormalizedCopy());
+  TH2* h_1PiC_Bkg = (TH2*)h_1PiC_Bkg_Top->GetCVHistoWithError().Clone();
+  h_1PiC_Bkg->Scale(scale);
+  mcSum->Add(h_1PiC_Bkg);
+  h_1PiC_Bkg->SetLineColor(TColor::GetColor("#88CCEE"));
+  h_1PiC_Bkg->SetFillColor(TColor::GetColor("#88CCEE"));
+
+  MnvH2D* h_1Pi0_Bkg_Top = (MnvH2D*)mcFile->Get((TString)name_bkg+"_by_BKG_Label_1neutPi");
+  //MnvH2D* h_1Pi0_Bkg = new MnvH1D(h_1Pi0_Bkg_Top->GetBinNormalizedCopy());
+  TH2* h_1Pi0_Bkg = (TH2*)h_1Pi0_Bkg_Top->GetCVHistoWithError().Clone();
+  h_1Pi0_Bkg->Scale(scale);
+  mcSum->Add(h_1Pi0_Bkg);
+  h_1Pi0_Bkg->SetLineColor(TColor::GetColor("#117733"));
+  h_1Pi0_Bkg->SetFillColor(TColor::GetColor("#117733"));
+
+  MnvH2D* h_NPi_Bkg_Top = (MnvH2D*)mcFile->Get((TString)name_bkg+"_by_BKG_Label_NPi");
+  //MnvH2D* h_NPi_Bkg = new MnvH1D(h_NPi_Bkg_Top->GetBinNormalizedCopy());
+  TH2* h_NPi_Bkg = (TH2*)h_NPi_Bkg_Top->GetCVHistoWithError().Clone();
+  h_NPi_Bkg->Scale(scale);
+  mcSum->Add(h_NPi_Bkg);
+  h_NPi_Bkg->SetLineColor(TColor::GetColor("#CC6677"));
+  h_NPi_Bkg->SetFillColor(TColor::GetColor("#CC6677"));
+
+  /*
+  MnvH2D* h_USPlastic_Bkg_Top = (MnvH2D*)mcFile->Get((TString)name_bkg+"_background_USPlastic");
+  //MnvH2D* h_USPlastic_Bkg = new MnvH1D(h_USPlastic_Bkg_Top->GetBinNormalizedCopy());
+  TH2* h_USPlastic_Bkg = (TH2*)h_USPlastic_Bkg_Top->GetCVHistoWithError().Clone();
+  h_USPlastic_Bkg->Scale(scale);
+  mcSum->Add(h_USPlastic_Bkg);
+  h_USPlastic_Bkg->SetLineColor(TColor::GetColor("#A26E1C"));
+  h_USPlastic_Bkg->SetFillColor(TColor::GetColor("#A26E1C"));
+
+  MnvH2D* h_DSPlastic_Bkg_Top = (MnvH2D*)mcFile->Get((TString)name_bkg+"_background_DSPlastic");
+  //MnvH2D* h_DSPlastic_Bkg = new MnvH1D(h_DSPlastic_Bkg_Top->GetBinNormalizedCopy());
+  TH2* h_DSPlastic_Bkg = (TH2*)h_DSPlastic_Bkg_Top->GetCVHistoWithError().Clone();
+  h_DSPlastic_Bkg->Scale(scale);
+  mcSum->Add(h_DSPlastic_Bkg);
+  h_DSPlastic_Bkg->SetLineColor(TColor::GetColor("#C1B185"));
+  h_DSPlastic_Bkg->SetFillColor(TColor::GetColor("#C1B185"));
+
+  MnvH2D* h_Wrong_Nucleus_Bkg_Top = (MnvH2D*)mcFile->Get((TString)name_bkg+"_background_Wrong_Nucleus");
+  //MnvH2D* h_Wrong_Nucleus_Bkg = new MnvH1D(h_Wrong_Nucleus_Bkg_Top->GetBinNormalizedCopy());
+  TH2* h_Wrong_Nucleus_Bkg = (TH2*)h_Wrong_Nucleus_Bkg_Top->GetCVHistoWithError().Clone();
+  h_Wrong_Nucleus_Bkg->Scale(scale);
+  mcSum->Add(h_Wrong_Nucleus_Bkg);
+  h_Wrong_Nucleus_Bkg->SetLineColor(TColor::GetColor("#909497"));
+  h_Wrong_Nucleus_Bkg->SetFillColor(TColor::GetColor("#909497"));
+  */
+
+  MnvH2D* h_Other_Bkg_Top = (MnvH2D*)mcFile->Get((TString)name_bkg+"_by_BKG_Label_Other");
+  //MnvH2D* h_Other_Bkg = new MnvH1D(h_Other_Bkg_Top->GetBinNormalizedCopy());
+  TH2* h_Other_Bkg = (TH2*)h_Other_Bkg_Top->GetCVHistoWithError().Clone();
+  h_Other_Bkg->Scale(scale);
+  mcSum->Add(h_Other_Bkg);
+  h_Other_Bkg->SetLineColor(TColor::GetColor("#882255"));
+  h_Other_Bkg->SetFillColor(TColor::GetColor("#882255"));
+
+  MnvH2D* h_data_Top = (MnvH2D*)dataFile->Get((TString)name_bkg+"_data");
+  //MnvH2D* h_data = new MnvH1D(h_data_Top->GetBinNormalizedCopy());
+  TH2* dataHist = (TH2*)h_data_Top->GetCVHistoWithError().Clone();
+  dataHist->SetLineColor(kBlack);
+  dataHist->SetLineWidth(3);
+
+  vector<pair<TH2*, const char*>> hVec;
+  //hVec.push_back(make_pair(h_Wrong_Nucleus_Bkg,"hists"));
+  //hVec.push_back(make_pair(h_USPlastic_Bkg,"hists"));
+  //hVec.push_back(make_pair(h_DSPlastic_Bkg,"hists"));
+  hVec.push_back(make_pair(h_Other_Bkg,"hists"));
+  hVec.push_back(make_pair(h_NPi_Bkg,"hists"));
+  hVec.push_back(make_pair(h_1Pi0_Bkg,"hists"));
+  hVec.push_back(make_pair(h_1PiC_Bkg,"hists"));
+  hVec.push_back(make_pair(h_Sig,"hists"));
+  hVec.push_back(make_pair(mcSum,"E2"));
+  hVec.push_back(make_pair(dataHist,""));
+
+  double multipliers[]={1,1,1,1,
+			1,1,1,1,
+			1,1,1,1};
+
+  GridCanvas* gc=plotYAxis1D(hVec, "Eh","Eh-err", multipliers);
+  gc->Print(nameToSave+"_BKG_stacked.pdf");
+  gc->Print(nameToSave+"_BKG_stacked.png");
+
+  /*
+  THStack* h = new THStack();
+  h->Add((TH2D*)h_Wrong_Nucleus_Bkg->GetCVHistoWithError().Clone());
+  h->Add((TH2D*)h_USPlastic_Bkg->GetCVHistoWithError().Clone());
+  h->Add((TH2D*)h_DSPlastic_Bkg->GetCVHistoWithError().Clone());
+  h->Add((TH2D*)h_Other_Bkg->GetCVHistoWithError().Clone());
+  h->Add((TH2D*)h_NPi_Bkg->GetCVHistoWithError().Clone());
+  h->Add((TH2D*)h_1Pi0_Bkg->GetCVHistoWithError().Clone());
+  h->Add((TH2D*)h_1PiC_Bkg->GetCVHistoWithError().Clone());
+  h->Add((TH2D*)h_Sig->GetCVHistoWithError().Clone());
+
+  //TLegend* leg = new TLegend(1.0-0.6,1.0-0.5,1.0-0.9,1.0-0.9);
+  TLegend* leg = new TLegend(0.1,0.5,0.4,0.9);
+
+  leg->AddEntry(dataHist,"DATA");
+  leg->AddEntry(h_Sig,"Signal");
+  leg->AddEntry(h_1PiC_Bkg,"single #pi^{#pm}");
+  leg->AddEntry(h_1Pi0_Bkg,"single #pi^{0}");
+  leg->AddEntry(h_NPi_Bkg,"N#pi");
+  leg->AddEntry(h_Other_Bkg,"Other");
+  if (!isTracker) leg->AddEntry(h_DSPlastic_Bkg,"DS Plastic");
+  if (!isTracker) leg->AddEntry(h_USPlastic_Bkg,"US Plastic");
+  if (!isTracker) leg->AddEntry(h_Wrong_Nucleus_Bkg,"Wrong Nucleus");
+
+  leg->Draw();
+
+  TH2D* mcRatio = new TH2D(mcSum->GetTotalError(false, true, false));
+  */
+  
+  delete mcSum;
+  delete dataHist;
+  //delete straightLine;
+  //delete h_data;
+  delete h_Sig;
+  delete h_1PiC_Bkg;
+  delete h_1Pi0_Bkg;
+  delete h_NPi_Bkg;
+  //delete h_USPlastic_Bkg;
+  //delete h_DSPlastic_Bkg;
+  //delete h_Wrong_Nucleus_Bkg;
+  delete h_Other_Bkg;
+  delete gc;
+
+  return;
+}
 
 void DrawBKGCategTEST(string name, TFile* mcFile, TFile* dataFile, TString sample, double scale, TString nameToSave){
 

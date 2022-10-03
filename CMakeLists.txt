@@ -87,6 +87,10 @@ add_executable(signalBKGStack signalBKGStack.cxx)
 target_link_libraries(signalBKGStack ${ROOT_LIBRARIES} MAT MAT-MINERvA)# plotTools)
 install(TARGETS signalBKGStack DESTINATION bin)
 
+add_executable(Test2DPlots Test2DPlots.cxx)
+target_link_libraries(Test2DPlots ${ROOT_LIBRARIES} MAT MAT-MINERvA)# plotTools)
+install(TARGETS Test2DPlots DESTINATION bin)
+
 add_executable(CombineTgts CombineTgts.cxx)
 target_link_libraries(CombineTgts ${ROOT_LIBRARIES} MAT MAT-MINERvA)
 install(TARGETS CombineTgts DESTINATION bin)
