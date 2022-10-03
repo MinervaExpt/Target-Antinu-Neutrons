@@ -1,10 +1,10 @@
-//File: signalBKGStack.cxx
-//Info: This is a script to run a loop over all MC breakdown plots in a single histos file and save nice plots from them. Primarily used for validation against older plots.
+//File: CategoryPlots.cpp
+//Definitions of useful plotting functions to be used by multiple plotting scripts
 //
-//Usage: signalBKGStack <mc_file> <data_file> <output_directory> <plot_label>
 //Author: David Last dlast@sas.upenn.edu/lastd44@gmail.com
 
-//TODO: FIX SEGFAULT ISSUE AT END OF EXECUTION... UNCLEAR WHY THAT'S HAPPENING AND IT DOESN'T SEEM TO AFFECT ANYTHING... MAYBE NEED TO CLOSE FILES? Cloning maybe tries to add keys to the file and it doesn't close well when that's the case?
+//No idea what I need/want to actually include here.
+//Could also not do the class structure. Not sure it's totally necessary here. We'll see what I decide... For now, just see about building it in as an include directory instead. Means different
 
 //C++ includes
 #include <iostream>
@@ -46,9 +46,6 @@
 #include "PlotUtils/MnvH1D.h"
 #include "PlotUtils/MnvPlotter.h"
 
-//Local includes
-#include "plotTools/CategoryPlots.h"
-
 #ifndef NCINTEX
 #include "Cintex/Cintex.h"
 #endif
@@ -56,7 +53,7 @@
 using namespace std;
 using namespace PlotUtils;
 
-void DrawBKGCateg(string name, TFile* mcFile, TFile* dataFile, TString sample, double scale, TString nameToSave){
+void DrawBKGCategTEST(string name, TFile* mcFile, TFile* dataFile, TString sample, double scale, TString nameToSave){
 
   bool primPar = false;
 
@@ -327,7 +324,7 @@ void DrawBKGCateg(string name, TFile* mcFile, TFile* dataFile, TString sample, d
   return;
 }
 
-void DrawIntType(string name_QE, TFile* mcFile, TFile* dataFile, TString sample, double scale, TString nameToSave){
+void DrawIntTypeTEST(string name_QE, TFile* mcFile, TFile* dataFile, TString sample, double scale, TString nameToSave){
 
   bool primPar = false;
 
@@ -686,7 +683,7 @@ void DrawIntType(string name_QE, TFile* mcFile, TFile* dataFile, TString sample,
   return;
 }
 
-void DrawTargetType(string name_Plastic, TFile* mcFile, TFile* dataFile, TString sample, double scale, TString nameToSave){
+void DrawTargetTypeTEST(string name_Plastic, TFile* mcFile, TFile* dataFile, TString sample, double scale, TString nameToSave){
 
   bool primPar = false;
 
@@ -1066,7 +1063,7 @@ void DrawTargetType(string name_Plastic, TFile* mcFile, TFile* dataFile, TString
   return;
 }
 
-void DrawLeadBlobType(string name_Neut, TFile* mcFile, TFile* dataFile, TString sample, double scale, TString nameToSave){
+void DrawLeadBlobTypeTEST(string name_Neut, TFile* mcFile, TFile* dataFile, TString sample, double scale, TString nameToSave){
 
   bool primPar = false;
 
@@ -1443,207 +1440,4 @@ void DrawLeadBlobType(string name_Neut, TFile* mcFile, TFile* dataFile, TString 
   delete c1;
 
   return;
-}
-
-bool PathExists(string path){
-  struct stat buffer;
-  return (stat (path.c_str(), &buffer) == 0);
-}
-
-int main(int argc, char* argv[]) {
-
-  gStyle->SetOptStat(0);
-
-  #ifndef NCINTEX
-  ROOT::Cintex::Cintex::Enable();
-  #endif
-
-  //Pass an input file name to this script now
-  if (argc != 5) {
-    cout << "Check usage..." << endl;
-    return 2;
-  }
-
-  string MCfileName=string(argv[1]);
-  string DATAfileName=string(argv[2]);
-  string outDir=string(argv[3]);
-  TString label=argv[4];
-
-  if (PathExists(outDir)){
-    cout << "Thank you for choosing a path for output files that exists." << endl;
-  }
-  else{
-    cout << "Output directory doesn't exist. Exiting" << endl;
-    return 3;
-  }
-
-  string rootExt = ".root";
-  string slash = "/";
-  string token;
-  string fileNameStub = MCfileName;
-  size_t pos=0;
-
-  //cout << sigNameStub << endl;
-  while ((pos = fileNameStub.find(slash)) != string::npos){
-    //cout << sigNameStub << endl;
-    token = fileNameStub.substr(0, pos);
-    //cout << token << endl;
-    fileNameStub.erase(0, pos+slash.length());
-  }
-  //cout << sigNameStub << endl;
-  if ((pos=fileNameStub.find(rootExt)) == string::npos){
-    cout << "MC Input need be .root file." << endl;
-    return 4;
-  }
-
-  cout << "Input MC file name parsed to: " << fileNameStub << endl;
-
-  rootExt = ".root";
-  slash = "/";
-  token = "";
-  fileNameStub = DATAfileName;
-  pos=0;
-
-  //cout << sigNameStub << endl;
-  while ((pos = fileNameStub.find(slash)) != string::npos){
-    //cout << sigNameStub << endl;
-    token = fileNameStub.substr(0, pos);
-    //cout << token << endl;
-    fileNameStub.erase(0, pos+slash.length());
-  }
-  //cout << sigNameStub << endl;
-  if ((pos=fileNameStub.find(rootExt)) == string::npos){
-    cout << "DATA Input need be .root file." << endl;
-    return 5;
-  }
-
-  cout << "Input Data file name parsed to: " << fileNameStub << endl;
-
-  //cout << "Setting up MnvPlotter" << endl;
-  //MnvPlotter* plotter = new MnvPlotter(kCCQEAntiNuStyle);
-
-  TFile* mcFile = new TFile(MCfileName.c_str(),"READ");
-  TFile* dataFile = new TFile(DATAfileName.c_str(),"READ");
-
-  double mcPOT = ((TParameter<double>*)mcFile->Get("POTUsed"))->GetVal();
-  double dataPOT = ((TParameter<double>*)dataFile->Get("POTUsed"))->GetVal();
-
-  double scale = dataPOT/mcPOT;
-  cout << "POT scale factor: " << scale << endl;
-
-  TList* keyList = mcFile->GetListOfKeys();
-  if (!keyList){
-    cout << "List of keys failed to get." << endl;
-    return 5;
-  }
-
-  TIter next(keyList);
-  TKey* key;
-  while ( key = (TKey*)next() ){
-    if ((TString)(key->GetClassName()) == "TDirectoryFile")
-    {
-      TDirectoryFile* dirInt = (TDirectoryFile*)mcFile->Get(key->GetName());
-      TList* keyListInt = dirInt->GetListOfKeys();
-      if (!keyListInt){
-	cout << "List of keys failed to get inside directory." << endl;
-	return 5;
-      }
-      
-      TIter nextInt(keyListInt);
-      TKey* keyInt;
-      while ( keyInt = (TKey*)nextInt() ){
-	string nameInt = (string)keyInt->GetName();
-	string name = (string)key->GetName() + "/"+nameInt;
-	pos=0;
-	if ((pos=nameInt.find("TwoD")) != string::npos || (pos=nameInt.find("vtxZ")) != string::npos || (pos=name.find("Inner")) != string::npos) continue;
-	else if((pos = name.find("_sig_IntType_QE")) != string::npos){
-	  string nameToSave = nameInt;
-	  nameToSave.erase(nameToSave.length()-15,nameToSave.length());
-	  DrawIntType(name,mcFile,dataFile,label,scale,(TString)outDir+(TString)nameToSave);
-	  cout << "" << endl;
-	}
-	else if ((pos = name.find("_sig_TargetType_Plastic")) != string::npos){
-	  string nameToSave = nameInt;
-	  nameToSave.erase(nameToSave.length()-23,nameToSave.length());
-	  DrawTargetType(name,mcFile,dataFile,label,scale,(TString)outDir+(TString)nameToSave);
-	  cout << "" << endl;
-	}
-	else if ((pos = name.find("_sig_LeadBlobType_neut")) != string::npos){
-	  string nameToSave = nameInt;
-	  nameToSave.erase(nameToSave.length()-22,nameToSave.length());
-	  DrawLeadBlobType(name,mcFile,dataFile,label,scale,(TString)outDir+(TString)nameToSave);
-	  cout << "" << endl;
-	}
-	else if ((pos = name.find("_selected_signal_reco")) != string::npos){
-	  string nameToSave = nameInt;
-	  nameToSave.erase(nameToSave.length()-21,nameToSave.length());
-	  DrawBKGCateg(name,mcFile,dataFile,label,scale,(TString)outDir+(TString)nameToSave);
-	  cout << "" << endl;
-	}	
-      }
-    }
-
-    pos=0;
-    string name=(string)key->GetName();
-    if((pos=name.find("TwoD")) != string::npos || (pos=name.find("vtxZ")) != string::npos || (pos=name.find("Inner")) != string::npos) continue;
-    else if((pos = name.find("_sig_IntType_QE")) != string::npos){
-      string nameToSave = name;
-      nameToSave.erase(nameToSave.length()-15,nameToSave.length());
-      DrawIntType(name,mcFile,dataFile,label,scale,(TString)outDir+(TString)nameToSave);
-      cout << "" << endl;
-    }
-    else if ((pos = name.find("_sig_TargetType_Plastic")) != string::npos){
-      string nameToSave = name;
-      nameToSave.erase(nameToSave.length()-23,nameToSave.length());
-      DrawTargetType(name,mcFile,dataFile,label,scale,(TString)outDir+(TString)nameToSave);
-      cout << "" << endl;
-    }
-    else if ((pos = name.find("_sig_LeadBlobType_neut")) != string::npos){
-      string nameToSave = name;
-      nameToSave.erase(nameToSave.length()-22,nameToSave.length());
-      DrawLeadBlobType(name,mcFile,dataFile,label,scale,(TString)outDir+(TString)nameToSave);
-      cout << "" << endl;
-    }
-    else if ((pos = name.find("_selected_signal_reco")) != string::npos){
-      pos = 0;
-      //Maybe can remove the following continues...
-      //if ((pos = name.find("EMnBlobs_")) != string::npos) continue;
-      //else if ((pos = name.find("EMBlobE_")) != string::npos) continue;
-      //else if ((pos = name.find("EMBlobNHit_")) != string::npos) continue;
-      //else if ((pos = name.find("EMBlobENHitRatio_")) != string::npos) continue;
-      string nameToSave = name;
-      nameToSave.erase(nameToSave.length()-21,nameToSave.length());
-      DrawBKGCateg(name,mcFile,dataFile,label,scale,(TString)outDir+(TString)nameToSave);
-      DrawBKGCategTEST(name,mcFile,dataFile,label,scale,(TString)outDir+(TString)nameToSave+"_TEST");
-      cout << "" << endl;
-    }
-    /*
-    else if ((pos = name.find("_data")) != string::npos){
-      pos = 0;
-      if ((pos=name.find("SB")) != string::npos) continue;
-      cout << "Plotting error summary for: " << name << endl;
-      TCanvas* c1 = new TCanvas("c1","c1",1200,800);
-      MnvH1D* h_mc_data = (MnvH1D*)mcFile->Get((TString)name);
-      name.erase(name.length()-5,name.length());
-      plotter->DrawErrorSummary(h_mc_data);
-      c1->Print((TString)outDir+(TString)name+"_err_summary.pdf");
-      c1->Print((TString)outDir+(TString)name+"_err_summary.png");
-      cout << "" << endl;
-      delete c1;
-    }
-    */
-  }
-
-  //cout << "Deleting the MnvPlotter." << endl;
-  //delete plotter;
-
-  //delete mcPOT;
-  //delete
-
-  cout << "Closing Files... Does this solve the issue of seg fault." << endl;
-  mcFile->Close();
-  dataFile->Close();
-
-  cout << "HEY YOU DID IT!!!" << endl;
-  return 0;
 }

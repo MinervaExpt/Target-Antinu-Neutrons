@@ -68,6 +68,7 @@ add_subdirectory(fits)
 #add_subdirectory(cuts)
 #add_subdirectory(studies)
 #add_subdirectory(systematics)
+#add_subdirectory(plotTools)
 
 #Build main executables
 add_executable(runEventLoop runEventLoop.cpp)
@@ -83,7 +84,7 @@ target_link_libraries(runXSecLooper ${ROOT_LIBRARIES} MAT GENIEXSecExtract)
 install(TARGETS runXSecLooper DESTINATION bin)
 
 add_executable(signalBKGStack signalBKGStack.cxx)
-target_link_libraries(signalBKGStack ${ROOT_LIBRARIES} MAT MAT-MINERvA)
+target_link_libraries(signalBKGStack ${ROOT_LIBRARIES} MAT MAT-MINERvA)# plotTools)
 install(TARGETS signalBKGStack DESTINATION bin)
 
 add_executable(CombineTgts CombineTgts.cxx)
