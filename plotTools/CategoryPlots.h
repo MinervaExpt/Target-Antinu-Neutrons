@@ -68,7 +68,7 @@ void TESTDraw2DBKGCategLines(string name, TFile* mcFile, TFile* dataFile, TStrin
   TH2* h_Sig = (TH2*)h_Sig_Top->GetCVHistoWithError().Clone();
   h_Sig->Scale(scale);
   h_Sig->SetLineColor(TColor::GetColor("#999933"));
-  h_Sig->SetFillColor(TColor::GetColor("#999933"));
+  //h_Sig->SetFillColor(TColor::GetColor("#999933"));
 
   TH2* mcSum = (TH2*)h_Sig->Clone();
   mcSum->SetLineColor(kRed);
@@ -90,7 +90,7 @@ void TESTDraw2DBKGCategLines(string name, TFile* mcFile, TFile* dataFile, TStrin
   h_1PiC_Bkg->Scale(scale);
   mcSum->Add(h_1PiC_Bkg);
   h_1PiC_Bkg->SetLineColor(TColor::GetColor("#88CCEE"));
-  h_1PiC_Bkg->SetFillColor(TColor::GetColor("#88CCEE"));
+  //  h_1PiC_Bkg->SetFillColor(TColor::GetColor("#88CCEE"));
 
   MnvH2D* h_1Pi0_Bkg_Top = (MnvH2D*)mcFile->Get((TString)name_bkg+"_by_BKG_Label_1neutPi");
   //MnvH2D* h_1Pi0_Bkg = new MnvH1D(h_1Pi0_Bkg_Top->GetBinNormalizedCopy());
@@ -98,7 +98,7 @@ void TESTDraw2DBKGCategLines(string name, TFile* mcFile, TFile* dataFile, TStrin
   h_1Pi0_Bkg->Scale(scale);
   mcSum->Add(h_1Pi0_Bkg);
   h_1Pi0_Bkg->SetLineColor(TColor::GetColor("#117733"));
-  h_1Pi0_Bkg->SetFillColor(TColor::GetColor("#117733"));
+  //h_1Pi0_Bkg->SetFillColor(TColor::GetColor("#117733"));
 
   MnvH2D* h_NPi_Bkg_Top = (MnvH2D*)mcFile->Get((TString)name_bkg+"_by_BKG_Label_NPi");
   //MnvH2D* h_NPi_Bkg = new MnvH1D(h_NPi_Bkg_Top->GetBinNormalizedCopy());
@@ -106,7 +106,7 @@ void TESTDraw2DBKGCategLines(string name, TFile* mcFile, TFile* dataFile, TStrin
   h_NPi_Bkg->Scale(scale);
   mcSum->Add(h_NPi_Bkg);
   h_NPi_Bkg->SetLineColor(TColor::GetColor("#CC6677"));
-  h_NPi_Bkg->SetFillColor(TColor::GetColor("#CC6677"));
+  //h_NPi_Bkg->SetFillColor(TColor::GetColor("#CC6677"));
 
   /*
   MnvH2D* h_USPlastic_Bkg_Top = (MnvH2D*)mcFile->Get((TString)name_bkg+"_background_USPlastic");
@@ -115,7 +115,7 @@ void TESTDraw2DBKGCategLines(string name, TFile* mcFile, TFile* dataFile, TStrin
   h_USPlastic_Bkg->Scale(scale);
   mcSum->Add(h_USPlastic_Bkg);
   h_USPlastic_Bkg->SetLineColor(TColor::GetColor("#A26E1C"));
-  h_USPlastic_Bkg->SetFillColor(TColor::GetColor("#A26E1C"));
+  //h_USPlastic_Bkg->SetFillColor(TColor::GetColor("#A26E1C"));
 
   MnvH2D* h_DSPlastic_Bkg_Top = (MnvH2D*)mcFile->Get((TString)name_bkg+"_background_DSPlastic");
   //MnvH2D* h_DSPlastic_Bkg = new MnvH1D(h_DSPlastic_Bkg_Top->GetBinNormalizedCopy());
@@ -123,7 +123,7 @@ void TESTDraw2DBKGCategLines(string name, TFile* mcFile, TFile* dataFile, TStrin
   h_DSPlastic_Bkg->Scale(scale);
   mcSum->Add(h_DSPlastic_Bkg);
   h_DSPlastic_Bkg->SetLineColor(TColor::GetColor("#C1B185"));
-  h_DSPlastic_Bkg->SetFillColor(TColor::GetColor("#C1B185"));
+  //h_DSPlastic_Bkg->SetFillColor(TColor::GetColor("#C1B185"));
 
   MnvH2D* h_Wrong_Nucleus_Bkg_Top = (MnvH2D*)mcFile->Get((TString)name_bkg+"_background_Wrong_Nucleus");
   //MnvH2D* h_Wrong_Nucleus_Bkg = new MnvH1D(h_Wrong_Nucleus_Bkg_Top->GetBinNormalizedCopy());
@@ -131,7 +131,7 @@ void TESTDraw2DBKGCategLines(string name, TFile* mcFile, TFile* dataFile, TStrin
   h_Wrong_Nucleus_Bkg->Scale(scale);
   mcSum->Add(h_Wrong_Nucleus_Bkg);
   h_Wrong_Nucleus_Bkg->SetLineColor(TColor::GetColor("#909497"));
-  h_Wrong_Nucleus_Bkg->SetFillColor(TColor::GetColor("#909497"));
+  //h_Wrong_Nucleus_Bkg->SetFillColor(TColor::GetColor("#909497"));
   */
 
   MnvH2D* h_Other_Bkg_Top = (MnvH2D*)mcFile->Get((TString)name_bkg+"_by_BKG_Label_Other");
@@ -140,7 +140,7 @@ void TESTDraw2DBKGCategLines(string name, TFile* mcFile, TFile* dataFile, TStrin
   h_Other_Bkg->Scale(scale);
   mcSum->Add(h_Other_Bkg);
   h_Other_Bkg->SetLineColor(TColor::GetColor("#882255"));
-  h_Other_Bkg->SetFillColor(TColor::GetColor("#882255"));
+  //h_Other_Bkg->SetFillColor(TColor::GetColor("#882255"));
 
   MnvH2D* h_data_Top = (MnvH2D*)dataFile->Get((TString)name_bkg+"_data");
   //MnvH2D* h_data = new MnvH1D(h_data_Top->GetBinNormalizedCopy());
@@ -165,6 +165,8 @@ void TESTDraw2DBKGCategLines(string name, TFile* mcFile, TFile* dataFile, TStrin
 			1,1,1,1};
 
   GridCanvas* gc=plotYAxis1D(hVec, "Eh","Eh-err", multipliers);
+
+  gc->Remax();
   gc->Print(nameToSave+"_BKG_stacked.pdf");
   gc->Print(nameToSave+"_BKG_stacked.png");
 
