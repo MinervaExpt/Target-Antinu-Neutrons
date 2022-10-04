@@ -389,7 +389,7 @@ GridCanvas* plotYAxis1D(std::vector<std::pair<TH2*, const char*> > histAndOpts, 
   // Make a canvas of 4x3 plots with pixel size 800x500
   //  grid_x = 4;
   //  grid_y = 4;
-  GridCanvas* gc=new GridCanvas(uniq(), grid_x, grid_y, 800, 500);
+  GridCanvas* gc=new GridCanvas(uniq(), grid_x, grid_y, 1600, 1000);
   gc->SetRightMargin(0.01);
   gc->SetLeftMargin(0.1);
   gc->ResetPads();
