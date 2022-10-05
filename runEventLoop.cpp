@@ -269,7 +269,7 @@ void LoopAndFillEventSelection(
 
 	if (!SBStat.all()) continue;
 
-        for(auto& var: vars) var->selectedMCReco->FillUniverse(universe, var->GetRecoValue(*universe), weight); //"Fake data" for closure
+        for(auto& var: vars) if(var->IsFill()) var->selectedMCReco->FillUniverse(universe, var->GetRecoValue(*universe), weight); //"Fake data" for closure
 
 	for(auto& var: vars2D) var->selectedMCReco->FillUniverse(universe, var->GetRecoValueX(*universe), var->GetRecoValueY(*universe), weight); //"Fake data" for closure
 
@@ -286,13 +286,13 @@ void LoopAndFillEventSelection(
           for(auto& var: vars)
           {
             //Cross section components
-            if (var->IsAnaVar()) var->efficiencyNumerator->FillUniverse(universe, var->GetTrueValue(*universe), weight);
-            if (var->IsAnaVar()) var->migration->FillUniverse(universe, var->GetRecoValue(*universe), var->GetTrueValue(*universe), weight);
-            var->selectedSignalReco->FillUniverse(universe, var->GetRecoValue(*universe), weight); //Efficiency numerator in reco variables.  Useful for warping studies.
+            if (var->IsAnaVar() && var->IsFill()) var->efficiencyNumerator->FillUniverse(universe, var->GetTrueValue(*universe), weight);
+            if (var->IsAnaVar() && var->IsFill()) var->migration->FillUniverse(universe, var->GetRecoValue(*universe), var->GetTrueValue(*universe), weight);
+            if(var->IsFill()) var->selectedSignalReco->FillUniverse(universe, var->GetRecoValue(*universe), weight); //Efficiency numerator in reco variables.  Useful for warping studies.
 
 	    //Various breakdowns of selected signal reco
-	    (*var->m_SigIntTypeHists)[intType].FillUniverse(universe, var->GetRecoValue(*universe), weight);
-	    (*var->m_SigTargetTypeHists)[tgtType].FillUniverse(universe, var->GetRecoValue(*universe), weight);
+	    if(var->IsFill()) (*var->m_SigIntTypeHists)[intType].FillUniverse(universe, var->GetRecoValue(*universe), weight);
+	    if(var->IsFill()) (*var->m_SigTargetTypeHists)[tgtType].FillUniverse(universe, var->GetRecoValue(*universe), weight);
 	    //(*var->m_SigLeadBlobTypeHists)[leadBlobType].FillUniverse(universe, var->GetRecoValue(*universe), weight);
           }
 	  
@@ -355,10 +355,10 @@ void LoopAndFillEventSelection(
           //for(auto& study: studies) study->SelectedSignal(*universe, myevent, weight);
 
           for(auto& var: vars){
-	    (*var->m_backgroundHists)[bkgd_ID].FillUniverse(universe, var->GetRecoValue(*universe), weight);
+	    if(var->IsFill()) (*var->m_backgroundHists)[bkgd_ID].FillUniverse(universe, var->GetRecoValue(*universe), weight);
 	    //Various breakdowns of selected backgrounds
-	    (*var->m_BkgIntTypeHists)[intType].FillUniverse(universe, var->GetRecoValue(*universe), weight);
-	    (*var->m_BkgTargetTypeHists)[tgtType].FillUniverse(universe, var->GetRecoValue(*universe), weight);
+	    if(var->IsFill()) (*var->m_BkgIntTypeHists)[intType].FillUniverse(universe, var->GetRecoValue(*universe), weight);
+	    if(var->IsFill()) (*var->m_BkgTargetTypeHists)[tgtType].FillUniverse(universe, var->GetRecoValue(*universe), weight);
 	    //(*var->m_BkgLeadBlobTypeHists)[leadBlobType].FillUniverse(universe, var->GetRecoValue(*universe), weight);
 	  }
 
@@ -453,7 +453,7 @@ void LoopAndFillData( PlotUtils::ChainWrapper* data,
 
       for(auto& var: vars)
       {
-        var->dataHist->FillUniverse(universe, var->GetRecoValue(*universe), 1);
+        if(var->IsFill()) var->dataHist->FillUniverse(universe, var->GetRecoValue(*universe), 1);
       }
       
       for(auto& var: vars2D){
@@ -516,7 +516,7 @@ void LoopAndFillEffDenom( PlotUtils::ChainWrapper* truth,
         //Fill efficiency denominator now: 
         for(auto var: vars)
         {
-          if (var->IsAnaVar()) var->efficiencyDenominator->FillUniverse(universe, var->GetTrueValue(*universe), weight);
+          if (var->IsAnaVar() && var->IsFill()) var->efficiencyDenominator->FillUniverse(universe, var->GetTrueValue(*universe), weight);
         }
 	
         for(auto var: vars2D)
@@ -828,7 +828,7 @@ int main(const int argc, const char** argv)
     new Variable(true, "pTmu", "p_{T, #mu} [GeV/c]", dansPTBins, &CVUniverse::GetMuonPT, &CVUniverse::GetMuonPTTrue),
     new Variable(false, "pzmu", "p_{||, #mu} [GeV/c]", dansPzBins, &CVUniverse::GetMuonPz, &CVUniverse::GetMuonPzTrue),
     //new Variable((TString)("MyBins"),"pTmu_MYBins", "p_{T, #mu} [GeV/c]", myPTBins, &CVUniverse::GetMuonPT, &CVUniverse::GetMuonPTTrue),
-    new Variable(false, "pTmu_MYBins", "p_{T, #mu} [GeV/c]", myPTBins, &CVUniverse::GetMuonPT, &CVUniverse::GetMuonPTTrue),
+    new Variable(false, false, "pTmu_MYBins", "p_{T, #mu} [GeV/c]", myPTBins, &CVUniverse::GetMuonPT, &CVUniverse::GetMuonPTTrue),
     new Variable(false, "nBlobs", "No.", nBlobsBins, &CVUniverse::GetNNeutBlobs),//Don't need GetDummyTrue perhaps...
     new Variable(false, "recoilE", "Recoil E [GeV]", myRecoilBins, &CVUniverse::GetDANRecoilEnergyGeV),//Don't need GetDummyTrue perhaps...
     new Variable(false, "Q2QE", "Q^{2}_{QE} [GeV^{2}]", myQ2QEBins, &CVUniverse::GetQ2QEPickledGeV),
@@ -902,8 +902,8 @@ int main(const int argc, const char** argv)
     new PreRecoil(vars, error_bands, truth_bands, data_band, splitRecoil, doNeutronCuts, FVregionName, TgtNum),
   };
 
-  for(auto& var: vars) var->InitializeMCHists(error_bands, truth_bands);
-  for(auto& var: vars) var->InitializeDATAHists(data_band);
+  for(auto& var: vars) if(var->IsFill()) var->InitializeMCHists(error_bands, truth_bands);
+  for(auto& var: vars) if(var->IsFill()) var->InitializeDATAHists(data_band);
 
   for(auto& tgt: vars_ByTgt){ 
     tgt->visit([&error_bands, &truth_bands](Variable& var)
@@ -962,7 +962,7 @@ int main(const int argc, const char** argv)
     std::cout << "Actually Setting Directories in the File" << std::endl;
 
     for(auto& study: studies) study->SaveOrDrawMC(*mcOutDir);
-    for(auto& var: vars) var->WriteMC(*mcOutDir);
+    for(auto& var: vars) if(var->IsFill()) var->WriteMC(*mcOutDir);
     for(auto& tgt: vars_ByTgt){ 
       tgt->visit([mcOutDir](Variable& var)
 		 {
@@ -1013,7 +1013,7 @@ int main(const int argc, const char** argv)
     }
 
     for(auto& study: studies) study->SaveOrDrawData(*dataOutDir);
-    for(auto& var: vars) var->WriteData(*dataOutDir);
+    for(auto& var: vars) if(var->IsFill()) var->WriteData(*dataOutDir);
     for(auto& tgt: vars_ByTgt){
       tgt->visit([dataOutDir](Variable& var)
 		 {

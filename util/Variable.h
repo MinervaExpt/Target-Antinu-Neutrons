@@ -17,16 +17,27 @@ class Variable: public PlotUtils::VariableBase<CVUniverse>
     typedef PlotUtils::HistWrapper<CVUniverse> Hist;
     typedef std::function<double(const CVUniverse&)> PointerToCVUniverseFunction;
     bool fAnaVar;
+    bool fFillVar;
     TString fDirName;
   public:
     template <class ...ARGS>
-    Variable(bool isAnalysisVar, ARGS... args): PlotUtils::VariableBase<CVUniverse>(args...), fAnaVar(isAnalysisVar), fDirName("")
+    Variable(bool isAnalysisVar, ARGS... args): PlotUtils::VariableBase<CVUniverse>(args...), fAnaVar(isAnalysisVar), fFillVar(true), fDirName("")
+    {
+    }
+
+    template <class ...ARGS>
+    Variable(bool isAnalysisVar, bool fillVar, ARGS... args): PlotUtils::VariableBase<CVUniverse>(args...), fAnaVar(isAnalysisVar), fFillVar(fillVar), fDirName("")
     {
     }
 
     //This is risky and only safe because right now VariableBase won't have an ambiguous constructor... Think of a way to protect against this if possible...
     template <class ...ARGS>
-    Variable(TString name, bool isAnalysisVar, ARGS... args): PlotUtils::VariableBase<CVUniverse>(args...), fAnaVar(isAnalysisVar), fDirName(name)
+    Variable(TString name, bool isAnalysisVar, ARGS... args): PlotUtils::VariableBase<CVUniverse>(args...), fAnaVar(isAnalysisVar), fFillVar(true), fDirName(name)
+    {
+    }
+
+    template <class ...ARGS>
+    Variable(TString name, bool isAnalysisVar, bool fillVar, ARGS... args): PlotUtils::VariableBase<CVUniverse>(args...), fAnaVar(isAnalysisVar), fFillVar(fillVar), fDirName(name)
     {
     }
 
@@ -268,7 +279,9 @@ class Variable: public PlotUtils::VariableBase<CVUniverse>
     }
 
     void SetDirectoryName(std::string name){fDirName = name;}
+    void SetFillVar(bool fill){fFillVar = fill;}
     bool IsAnaVar(){return fAnaVar;}
+    bool IsFill(){return fFillVar;}
     TString GetDirectoryName(){return fDirName;}
 };
 
