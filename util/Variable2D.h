@@ -10,15 +10,26 @@ class Variable2D: public PlotUtils::Variable2DBase<CVUniverse>
   private:
     typedef PlotUtils::Hist2DWrapper<CVUniverse> Hist;
     bool fAnaVar;
+    bool fFillVar;
     TString fDirName;
   public:
     template <class ...ARGS>
-    Variable2D(bool isAnalysisVar, ARGS... args): PlotUtils::Variable2DBase<CVUniverse>(args...), fAnaVar(isAnalysisVar), fDirName("TwoD")
+    Variable2D(bool isAnalysisVar, ARGS... args): PlotUtils::Variable2DBase<CVUniverse>(args...), fAnaVar(isAnalysisVar), fFillVar(true), fDirName("TwoD")
     {
     }
 
     template <class ...ARGS>
-    Variable2D(TString name, bool isAnalysisVar, ARGS... args): PlotUtils::Variable2DBase<CVUniverse>(args...), fAnaVar(isAnalysisVar), fDirName(name+"/TwoD")
+    Variable2D(bool isAnalysisVar, bool fillVar, ARGS... args): PlotUtils::Variable2DBase<CVUniverse>(args...), fAnaVar(isAnalysisVar), fFillVar(fillVar), fDirName("TwoD")
+    {
+    }
+
+    template <class ...ARGS>
+    Variable2D(TString name, bool isAnalysisVar, ARGS... args): PlotUtils::Variable2DBase<CVUniverse>(args...), fAnaVar(isAnalysisVar), fFillVar(true), fDirName(name+"/TwoD")
+    {
+    }
+
+    template <class ...ARGS>
+    Variable2D(TString name, bool isAnalysisVar, bool fillVar, ARGS... args): PlotUtils::Variable2DBase<CVUniverse>(args...), fAnaVar(isAnalysisVar), fFillVar(fillVar), fDirName(name+"/TwoD")
     {
     }
 
@@ -244,6 +255,10 @@ class Variable2D: public PlotUtils::Variable2DBase<CVUniverse>
     }
 
     void SetDirectoryName(std::string name){fDirName = name;}
+    void SetFillVar(bool fill){fFillVar = fill;}
+    bool IsAnaVar(){return fAnaVar;}
+    bool IsFill(){return fFillVar;}
+    TString GetDirectoryName(){return fDirName;}
 };
 
 #endif //VARIABLE2D_H

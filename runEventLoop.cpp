@@ -271,7 +271,7 @@ void LoopAndFillEventSelection(
 
         for(auto& var: vars) if(var->IsFill()) var->selectedMCReco->FillUniverse(universe, var->GetRecoValue(*universe), weight); //"Fake data" for closure
 
-	for(auto& var: vars2D) var->selectedMCReco->FillUniverse(universe, var->GetRecoValueX(*universe), var->GetRecoValueY(*universe), weight); //"Fake data" for closure
+	for(auto& var: vars2D) if(var->IsFill()) var->selectedMCReco->FillUniverse(universe, var->GetRecoValueX(*universe), var->GetRecoValueY(*universe), weight); //"Fake data" for closure
 
 	//Only fill by tgt for non-interstitial plastic events
 	if (tgtCode != -1){
@@ -299,12 +299,12 @@ void LoopAndFillEventSelection(
           for(auto& var: vars2D)
           {
             //Cross section components
-            var->efficiencyNumerator->FillUniverse(universe, var->GetTrueValueX(*universe), var->GetTrueValueY(*universe), weight);
-            var->selectedSignalReco->FillUniverse(universe, var->GetRecoValueX(*universe), var->GetRecoValueY(*universe), weight);; //Efficiency numerator in reco variables.  Useful for warping studies.
+            if(var->IsFill()) var->efficiencyNumerator->FillUniverse(universe, var->GetTrueValueX(*universe), var->GetTrueValueY(*universe), weight);
+            if(var->IsFill()) var->selectedSignalReco->FillUniverse(universe, var->GetRecoValueX(*universe), var->GetRecoValueY(*universe), weight);; //Efficiency numerator in reco variables.  Useful for warping studies.
 
 	    //Various breakdowns of selected signal reco
-	    (*var->m_SigIntTypeHists)[intType].FillUniverse(universe, var->GetRecoValueX(*universe), var->GetRecoValueY(*universe), weight);;
-	    (*var->m_SigTargetTypeHists)[tgtType].FillUniverse(universe, var->GetRecoValueX(*universe), var->GetRecoValueY(*universe), weight);;
+	    if(var->IsFill()) (*var->m_SigIntTypeHists)[intType].FillUniverse(universe, var->GetRecoValueX(*universe), var->GetRecoValueY(*universe), weight);;
+	    if(var->IsFill()) (*var->m_SigTargetTypeHists)[tgtType].FillUniverse(universe, var->GetRecoValueX(*universe), var->GetRecoValueY(*universe), weight);;
 	    //(*var->m_SigLeadBlobTypeHists)[leadBlobType].FillUniverse(universe, var->GetRecoValueX(*universe), var->GetRecoValueY(*universe), weight);
 
             //var->efficiencyNumerator->FillUniverse(universe, var->GetTrueValueX(*universe), var->GetTrueValueY(*universe), weight);
@@ -363,10 +363,10 @@ void LoopAndFillEventSelection(
 	  }
 
 	  for(auto& var: vars2D){
-	    (*var->m_backgroundHists)[bkgd_ID].FillUniverse(universe, var->GetRecoValueX(*universe), var->GetRecoValueY(*universe), weight);
+	    if(var->IsFill()) (*var->m_backgroundHists)[bkgd_ID].FillUniverse(universe, var->GetRecoValueX(*universe), var->GetRecoValueY(*universe), weight);
 	    //Various breakdowns of selected backgrounds
-	    (*var->m_BkgIntTypeHists)[intType].FillUniverse(universe, var->GetRecoValueX(*universe), var->GetRecoValueY(*universe), weight);
-	    (*var->m_BkgTargetTypeHists)[tgtType].FillUniverse(universe, var->GetRecoValueX(*universe), var->GetRecoValueY(*universe), weight);
+	    if(var->IsFill()) (*var->m_BkgIntTypeHists)[intType].FillUniverse(universe, var->GetRecoValueX(*universe), var->GetRecoValueY(*universe), weight);
+	    if(var->IsFill()) (*var->m_BkgTargetTypeHists)[tgtType].FillUniverse(universe, var->GetRecoValueX(*universe), var->GetRecoValueY(*universe), weight);
 	    //(*var->m_BkgLeadBlobTypeHists)[leadBlobType].FillUniverse(universe, var->GetRecoValueX(*universe), var->GetRecoValueY(*universe), weight);
 	  }
 
@@ -457,7 +457,7 @@ void LoopAndFillData( PlotUtils::ChainWrapper* data,
       }
       
       for(auto& var: vars2D){
-        var->dataHist->FillUniverse(universe, var->GetRecoValueX(*universe), var->GetRecoValueY(*universe), 1);
+        if(var->IsFill()) var->dataHist->FillUniverse(universe, var->GetRecoValueX(*universe), var->GetRecoValueY(*universe), 1);
       }
 
       //Only fill by tgt for non-interstitial plastic events
@@ -521,7 +521,7 @@ void LoopAndFillEffDenom( PlotUtils::ChainWrapper* truth,
 	
         for(auto var: vars2D)
         {
-          var->efficiencyDenominator->FillUniverse(universe, var->GetTrueValueX(*universe), var->GetTrueValueY(*universe), weight);
+          if(var->IsFill()) var->efficiencyDenominator->FillUniverse(universe, var->GetTrueValueX(*universe), var->GetTrueValueY(*universe), weight);
         }
       }
     }
@@ -871,7 +871,7 @@ int main(const int argc, const char** argv)
     //new Variable2D(false, *vars[vars.size()-1],*vars[0]),//pT v. recoilQ2Bin
     };*/
 
-  if (!doNeutronCuts) vars2D.push_back(new Variable2D(true,"pmu2D",*vars[1],*vars[0]));
+  if (!doNeutronCuts) vars2D.push_back(new Variable2D(true, false,"pmu2D",*vars[1],*vars[0]));
 
   std::vector<util::Categorized<Variable2D, int>*> vars2D_ByTgt = {};
   if (!doNeutronCuts && FVregionName.Contains("Target")) vars2D_ByTgt.push_back(new util::Categorized<Variable2D, int>("", "ByTgt", true, "pmu2D", util::TgtCodeList[TgtNum], *vars[1], *vars[0]));
@@ -918,8 +918,8 @@ int main(const int argc, const char** argv)
 	       });
   }
 
-  for(auto& var: vars2D) var->InitializeMCHists(error_bands, truth_bands);
-  for(auto& var: vars2D) var->InitializeDATAHists(data_band);
+  for(auto& var: vars2D) if(var->IsFill()) var->InitializeMCHists(error_bands, truth_bands);
+  for(auto& var: vars2D) if(var->IsFill()) var->InitializeDATAHists(data_band);
 
   for(auto& tgt: vars2D_ByTgt){ 
     tgt->visit([&error_bands, &truth_bands](Variable2D& var)
@@ -970,7 +970,7 @@ int main(const int argc, const char** argv)
 		 });
     }
 
-    for(auto& var: vars2D) var->WriteMC(*mcOutDir);
+    for(auto& var: vars2D) if(var->IsFill()) var->WriteMC(*mcOutDir);
     for(auto& tgt: vars2D_ByTgt){ 
       tgt->visit([mcOutDir](Variable2D& var)
 		 {
@@ -1020,7 +1020,7 @@ int main(const int argc, const char** argv)
 		   var.WriteData(*dataOutDir);
 		 });
     }
-    for(auto& var: vars2D) var->WriteData(*dataOutDir);
+    for(auto& var: vars2D) if(var->IsFill()) var->WriteData(*dataOutDir);
     for(auto& tgt: vars2D_ByTgt){ 
       tgt->visit([dataOutDir](Variable2D& var)
 		 {
