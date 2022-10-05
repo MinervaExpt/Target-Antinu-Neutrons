@@ -275,8 +275,8 @@ void LoopAndFillEventSelection(
 
 	//Only fill by tgt for non-interstitial plastic events
 	if (tgtCode != -1){
-	  for(auto& var: vars_ByTgt) (*var)[tgtCode].selectedMCReco->FillUniverse(universe, (*var)[tgtCode].GetRecoValue(*universe), weight); //"Fake data" for closure
-	  for(auto& var: vars2D_ByTgt) (*var)[tgtCode].selectedMCReco->FillUniverse(universe, (*var)[tgtCode].GetRecoValueX(*universe), (*var)[tgtCode].GetRecoValueY(*universe), weight); //"Fake data" for closure
+	  for(auto& var: vars_ByTgt) if((*var)[tgtCode].IsFill()) (*var)[tgtCode].selectedMCReco->FillUniverse(universe, (*var)[tgtCode].GetRecoValue(*universe), weight); //"Fake data" for closure
+	  for(auto& var: vars2D_ByTgt) if((*var)[tgtCode].IsFill()) (*var)[tgtCode].selectedMCReco->FillUniverse(universe, (*var)[tgtCode].GetRecoValueX(*universe), (*var)[tgtCode].GetRecoValueY(*universe), weight); //"Fake data" for closure
 	}
 
         if(isSignal)
@@ -314,24 +314,24 @@ void LoopAndFillEventSelection(
 	  if (tgtCode != -1){
 	    for(auto& var: vars_ByTgt){
 	      //Cross section components
-	      if ((*var)[tgtCode].IsAnaVar()) (*var)[tgtCode].efficiencyNumerator->FillUniverse(universe, (*var)[tgtCode].GetTrueValue(*universe), weight);
-	      if ((*var)[tgtCode].IsAnaVar()) (*var)[tgtCode].migration->FillUniverse(universe, (*var)[tgtCode].GetRecoValue(*universe), (*var)[tgtCode].GetTrueValue(*universe), weight);
-	      (*var)[tgtCode].selectedSignalReco->FillUniverse(universe, (*var)[tgtCode].GetRecoValue(*universe), weight); //Efficiency numerator in reco variables.  Useful for warping studies.
+	      if ((*var)[tgtCode].IsAnaVar() && (*var)[tgtCode].IsFill()) (*var)[tgtCode].efficiencyNumerator->FillUniverse(universe, (*var)[tgtCode].GetTrueValue(*universe), weight);
+	      if ((*var)[tgtCode].IsAnaVar() && (*var)[tgtCode].IsFill()) (*var)[tgtCode].migration->FillUniverse(universe, (*var)[tgtCode].GetRecoValue(*universe), (*var)[tgtCode].GetTrueValue(*universe), weight);
+	      if ((*var)[tgtCode].IsFill()) (*var)[tgtCode].selectedSignalReco->FillUniverse(universe, (*var)[tgtCode].GetRecoValue(*universe), weight); //Efficiency numerator in reco variables.  Useful for warping studies.
 	      
 	      //Various breakdowns of selected signal reco
-	      (*(*var)[tgtCode].m_SigIntTypeHists)[intType].FillUniverse(universe, (*var)[tgtCode].GetRecoValue(*universe), weight);
-	      (*(*var)[tgtCode].m_SigTargetTypeHists)[tgtType].FillUniverse(universe, (*var)[tgtCode].GetRecoValue(*universe), weight);
+	      if ((*var)[tgtCode].IsFill()) (*(*var)[tgtCode].m_SigIntTypeHists)[intType].FillUniverse(universe, (*var)[tgtCode].GetRecoValue(*universe), weight);
+	      if ((*var)[tgtCode].IsFill()) (*(*var)[tgtCode].m_SigTargetTypeHists)[tgtType].FillUniverse(universe, (*var)[tgtCode].GetRecoValue(*universe), weight);
 	      //(*(*var)[tgtCode].m_SigLeadBlobTypeHists)[leadBlobType].FillUniverse(universe, (*var)[tgtCode].GetRecoValue(*universe), weight);
 	    }
 
 	    for(auto& var: vars2D_ByTgt){
 	      //Cross section components
-	      (*var)[tgtCode].efficiencyNumerator->FillUniverse(universe, (*var)[tgtCode].GetTrueValueX(*universe), (*var)[tgtCode].GetTrueValueY(*universe), weight);
-	      (*var)[tgtCode].selectedSignalReco->FillUniverse(universe, (*var)[tgtCode].GetRecoValueX(*universe), (*var)[tgtCode].GetRecoValueY(*universe), weight);; //Efficiency numerator in reco variables.  Useful for warping studies.
+	      if ((*var)[tgtCode].IsFill()) (*var)[tgtCode].efficiencyNumerator->FillUniverse(universe, (*var)[tgtCode].GetTrueValueX(*universe), (*var)[tgtCode].GetTrueValueY(*universe), weight);
+	      if ((*var)[tgtCode].IsFill()) (*var)[tgtCode].selectedSignalReco->FillUniverse(universe, (*var)[tgtCode].GetRecoValueX(*universe), (*var)[tgtCode].GetRecoValueY(*universe), weight);; //Efficiency numerator in reco variables.  Useful for warping studies.
 	      
 	      //Various breakdowns of selected signal reco
-	      (*(*var)[tgtCode].m_SigIntTypeHists)[intType].FillUniverse(universe, (*var)[tgtCode].GetRecoValueX(*universe), (*var)[tgtCode].GetRecoValueY(*universe), weight);;
-	      (*(*var)[tgtCode].m_SigTargetTypeHists)[tgtType].FillUniverse(universe, (*var)[tgtCode].GetRecoValueX(*universe), (*var)[tgtCode].GetRecoValueY(*universe), weight);;
+	      if ((*var)[tgtCode].IsFill()) (*(*var)[tgtCode].m_SigIntTypeHists)[intType].FillUniverse(universe, (*var)[tgtCode].GetRecoValueX(*universe), (*var)[tgtCode].GetRecoValueY(*universe), weight);;
+	      if((*var)[tgtCode].IsFill()) (*(*var)[tgtCode].m_SigTargetTypeHists)[tgtType].FillUniverse(universe, (*var)[tgtCode].GetRecoValueX(*universe), (*var)[tgtCode].GetRecoValueY(*universe), weight);;
 	      //(*(*var)[tgtCode].m_SigLeadBlobTypeHists)[leadBlobType].FillUniverse(universe, (*var)[tgtCode].GetRecoValueX(*universe), (*var)[tgtCode].GetRecoValueY(*universe), weight);
 	      
 	      //(*var)[tgtCode].efficiencyNumerator->FillUniverse(universe, (*var)[tgtCode].GetTrueValueX(*universe), (*var)[tgtCode].GetTrueValueY(*universe), weight);
@@ -373,18 +373,18 @@ void LoopAndFillEventSelection(
 	  //Only fill by tgt for non-interstitial plastic events
 	  if (tgtCode != -1){
 	    for(auto& var: vars_ByTgt){
-	      (*(*var)[tgtCode].m_backgroundHists)[bkgd_ID].FillUniverse(universe, (*var)[tgtCode].GetRecoValue(*universe), weight);
+	      if ((*var)[tgtCode].IsFill()) (*(*var)[tgtCode].m_backgroundHists)[bkgd_ID].FillUniverse(universe, (*var)[tgtCode].GetRecoValue(*universe), weight);
 	      //Various breakdowns of selected backgrounds
-	      (*(*var)[tgtCode].m_BkgIntTypeHists)[intType].FillUniverse(universe, (*var)[tgtCode].GetRecoValue(*universe), weight);
-	      (*(*var)[tgtCode].m_BkgTargetTypeHists)[tgtType].FillUniverse(universe, (*var)[tgtCode].GetRecoValue(*universe), weight);
+	      if ((*var)[tgtCode].IsFill()) (*(*var)[tgtCode].m_BkgIntTypeHists)[intType].FillUniverse(universe, (*var)[tgtCode].GetRecoValue(*universe), weight);
+	      if ((*var)[tgtCode].IsFill()) (*(*var)[tgtCode].m_BkgTargetTypeHists)[tgtType].FillUniverse(universe, (*var)[tgtCode].GetRecoValue(*universe), weight);
 	      //(*(*var)[tgtCode].m_BkgLeadBlobTypeHists)[leadBlobType].FillUniverse(universe, (*var)[tgtCode].GetRecoValue(*universe), weight);
 	    }
 
 	    for(auto& var: vars2D_ByTgt){
-	      (*(*var)[tgtCode].m_backgroundHists)[bkgd_ID].FillUniverse(universe, (*var)[tgtCode].GetRecoValueX(*universe), (*var)[tgtCode].GetRecoValueY(*universe), weight);
+	      if ((*var)[tgtCode].IsFill()) (*(*var)[tgtCode].m_backgroundHists)[bkgd_ID].FillUniverse(universe, (*var)[tgtCode].GetRecoValueX(*universe), (*var)[tgtCode].GetRecoValueY(*universe), weight);
 	      //Various breakdowns of selected backgrounds
-	      (*(*var)[tgtCode].m_BkgIntTypeHists)[intType].FillUniverse(universe, (*var)[tgtCode].GetRecoValueX(*universe), (*var)[tgtCode].GetRecoValueY(*universe), weight);
-	      (*(*var)[tgtCode].m_BkgTargetTypeHists)[tgtType].FillUniverse(universe, (*var)[tgtCode].GetRecoValueX(*universe), (*var)[tgtCode].GetRecoValueY(*universe), weight);
+	      if ((*var)[tgtCode].IsFill()) (*(*var)[tgtCode].m_BkgIntTypeHists)[intType].FillUniverse(universe, (*var)[tgtCode].GetRecoValueX(*universe), (*var)[tgtCode].GetRecoValueY(*universe), weight);
+	      if ((*var)[tgtCode].IsFill()) (*(*var)[tgtCode].m_BkgTargetTypeHists)[tgtType].FillUniverse(universe, (*var)[tgtCode].GetRecoValueX(*universe), (*var)[tgtCode].GetRecoValueY(*universe), weight);
 	      //(*(*var)[tgtCode].m_BkgLeadBlobTypeHists)[leadBlobType].FillUniverse(universe, (*var)[tgtCode].GetRecoValueX(*universe), (*var)[tgtCode].GetRecoValueY(*universe), weight);
 	    }
 	  }
@@ -463,11 +463,11 @@ void LoopAndFillData( PlotUtils::ChainWrapper* data,
       //Only fill by tgt for non-interstitial plastic events
       if (tgtCode != -1){
 	for(auto& var: vars_ByTgt){
-	  (*var)[tgtCode].dataHist->FillUniverse(universe, (*var)[tgtCode].GetRecoValue(*universe), 1);
+	  if ((*var)[tgtCode].IsFill()) (*var)[tgtCode].dataHist->FillUniverse(universe, (*var)[tgtCode].GetRecoValue(*universe), 1);
 	}
 
 	for(auto& var: vars2D_ByTgt){
-	  (*var)[tgtCode].dataHist->FillUniverse(universe, (*var)[tgtCode].GetRecoValueX(*universe), (*var)[tgtCode].GetRecoValueY(*universe), 1);
+	  if ((*var)[tgtCode].IsFill()) (*var)[tgtCode].dataHist->FillUniverse(universe, (*var)[tgtCode].GetRecoValueX(*universe), (*var)[tgtCode].GetRecoValueY(*universe), 1);
 	}
       }
     }
@@ -828,7 +828,7 @@ int main(const int argc, const char** argv)
     new Variable(true, "pTmu", "p_{T, #mu} [GeV/c]", dansPTBins, &CVUniverse::GetMuonPT, &CVUniverse::GetMuonPTTrue),
     new Variable(false, "pzmu", "p_{||, #mu} [GeV/c]", dansPzBins, &CVUniverse::GetMuonPz, &CVUniverse::GetMuonPzTrue),
     //new Variable((TString)("MyBins"),"pTmu_MYBins", "p_{T, #mu} [GeV/c]", myPTBins, &CVUniverse::GetMuonPT, &CVUniverse::GetMuonPTTrue),
-    new Variable(false, false, "pTmu_MYBins", "p_{T, #mu} [GeV/c]", myPTBins, &CVUniverse::GetMuonPT, &CVUniverse::GetMuonPTTrue),
+    new Variable(false, "pTmu_MYBins", "p_{T, #mu} [GeV/c]", myPTBins, &CVUniverse::GetMuonPT, &CVUniverse::GetMuonPTTrue),
     new Variable(false, "nBlobs", "No.", nBlobsBins, &CVUniverse::GetNNeutBlobs),//Don't need GetDummyTrue perhaps...
     new Variable(false, "recoilE", "Recoil E [GeV]", myRecoilBins, &CVUniverse::GetDANRecoilEnergyGeV),//Don't need GetDummyTrue perhaps...
     new Variable(false, "Q2QE", "Q^{2}_{QE} [GeV^{2}]", myQ2QEBins, &CVUniverse::GetQ2QEPickledGeV),
@@ -858,6 +858,7 @@ int main(const int argc, const char** argv)
   std::vector<util::Categorized<Variable, int>*> vars_ByTgt = {};
   if (FVregionName.Contains("Target")){
     for(auto& var: vars){ 
+      var->SetFillVar(false);
       TString nameCheck = var->GetName();
       if (nameCheck == "vtxZ") continue;
       vars_ByTgt.push_back(new util::Categorized<Variable, int>(var->GetDirectoryName(), "ByTgt", var->IsAnaVar(), var->GetName().c_str(),var->GetAxisLabel().c_str(),util::TgtCodeList[TgtNum],var->GetBinVec(),var->GetRecoFunc(),var->GetTrueFunc()));
@@ -871,10 +872,22 @@ int main(const int argc, const char** argv)
     //new Variable2D(false, *vars[vars.size()-1],*vars[0]),//pT v. recoilQ2Bin
     };*/
 
-  if (!doNeutronCuts) vars2D.push_back(new Variable2D(true, false,"pmu2D",*vars[1],*vars[0]));
+  if (!doNeutronCuts){
+    for (auto& var: vars) var->SetFillVar(false);
+    vars2D.push_back(new Variable2D(true,"pmu2D",*vars[1],*vars[0]));
+  }
 
   std::vector<util::Categorized<Variable2D, int>*> vars2D_ByTgt = {};
-  if (!doNeutronCuts && FVregionName.Contains("Target")) vars2D_ByTgt.push_back(new util::Categorized<Variable2D, int>("", "ByTgt", true, "pmu2D", util::TgtCodeList[TgtNum], *vars[1], *vars[0]));
+  if (!doNeutronCuts && FVregionName.Contains("Target")){
+    for (auto& var: vars2D) var->SetFillVar(false);
+    for (auto& tgt: vars_ByTgt){
+      tgt->visit([](Variable& var)
+		 {
+		   var.SetFillVar(false);
+		 });
+    }
+    vars2D_ByTgt.push_back(new util::Categorized<Variable2D, int>("", "ByTgt", true, "pmu2D", util::TgtCodeList[TgtNum], *vars[1], *vars[0]));
+  }
   
   //Commented out during testing of analysis variable flag
   /*
@@ -908,13 +921,13 @@ int main(const int argc, const char** argv)
   for(auto& tgt: vars_ByTgt){ 
     tgt->visit([&error_bands, &truth_bands](Variable& var)
 	       {
-		 var.InitializeMCHists(error_bands, truth_bands);
+		 if (var.IsFill()) var.InitializeMCHists(error_bands, truth_bands);
 	       });
   }
   for(auto& tgt: vars_ByTgt){ 
     tgt->visit([&data_band](Variable& var)
 	       {
-		 var.InitializeDATAHists(data_band);
+		 if (var.IsFill()) var.InitializeDATAHists(data_band);
 	       });
   }
 
@@ -924,13 +937,13 @@ int main(const int argc, const char** argv)
   for(auto& tgt: vars2D_ByTgt){ 
     tgt->visit([&error_bands, &truth_bands](Variable2D& var)
 	       {
-		 var.InitializeMCHists(error_bands, truth_bands);
+		 if (var.IsFill()) var.InitializeMCHists(error_bands, truth_bands);
 	       });
   }
   for(auto& tgt: vars2D_ByTgt){ 
     tgt->visit([&data_band](Variable2D& var)
 	       {
-		 var.InitializeDATAHists(data_band);
+		 if (var.IsFill()) var.InitializeDATAHists(data_band);
 	       });
   }
 
@@ -966,7 +979,7 @@ int main(const int argc, const char** argv)
     for(auto& tgt: vars_ByTgt){ 
       tgt->visit([mcOutDir](Variable& var)
 		 {
-		   var.WriteMC(*mcOutDir);
+		   if (var.IsFill()) var.WriteMC(*mcOutDir);
 		 });
     }
 
@@ -974,7 +987,7 @@ int main(const int argc, const char** argv)
     for(auto& tgt: vars2D_ByTgt){ 
       tgt->visit([mcOutDir](Variable2D& var)
 		 {
-		   var.WriteMC(*mcOutDir);
+		   if (var.IsFill()) var.WriteMC(*mcOutDir);
 		 });
     }
 
@@ -1017,14 +1030,14 @@ int main(const int argc, const char** argv)
     for(auto& tgt: vars_ByTgt){
       tgt->visit([dataOutDir](Variable& var)
 		 {
-		   var.WriteData(*dataOutDir);
+		   if (var.IsFill()) var.WriteData(*dataOutDir);
 		 });
     }
     for(auto& var: vars2D) if(var->IsFill()) var->WriteData(*dataOutDir);
     for(auto& tgt: vars2D_ByTgt){ 
       tgt->visit([dataOutDir](Variable2D& var)
 		 {
-		   var.WriteData(*dataOutDir);
+		   if (var.IsFill()) var.WriteData(*dataOutDir);
 		 });
     }
 
