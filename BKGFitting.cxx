@@ -486,7 +486,8 @@ int main(int argc, char* argv[]) {
   int fitMuonBins = 0;
   
   //vector<TString> namesToSave = {"pTmu","vtxZ","recoilE"}
-  vector<TString> namesToSave = {"pTmu","recoilE","NPlanes"};
+  //vector<TString> namesToSave = {"pTmu","recoilE","NPlanes"};
+  vector<TString> namesToSave = {};
 
   int lowBin = 1;//Will be truncated later. Lowest allowed value for pT or recoil fits.
   int hiBin = 50;//Will be truncated later. Highest allowed value for pT or recoil fits.
