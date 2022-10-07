@@ -159,11 +159,11 @@ void TESTDraw2DBKGCategLines(string name, TFile* mcFile, TFile* dataFile, TStrin
   //hVec.push_back(make_pair(h_Wrong_Nucleus_Bkg,"hists"));
   //hVec.push_back(make_pair(h_USPlastic_Bkg,"hists"));
   //hVec.push_back(make_pair(h_DSPlastic_Bkg,"hists"));
-  //hVec.push_back(make_pair(h_Other_Bkg,"hists"));
-  //hVec.push_back(make_pair(h_NPi_Bkg,"hists"));
-  //hVec.push_back(make_pair(h_1Pi0_Bkg,"hists"));
-  //hVec.push_back(make_pair(h_1PiC_Bkg,"hists"));
-  //hVec.push_back(make_pair(h_Sig,"hists"));
+  hVec.push_back(make_pair(h_Other_Bkg,"hists"));
+  hVec.push_back(make_pair(h_NPi_Bkg,"hists"));
+  hVec.push_back(make_pair(h_1Pi0_Bkg,"hists"));
+  hVec.push_back(make_pair(h_1PiC_Bkg,"hists"));
+  hVec.push_back(make_pair(h_Sig,"hists"));
   hVec.push_back(make_pair(mcHist,"hists"));
   hVec.push_back(make_pair(mcErr,"E2"));
   hVec.push_back(make_pair(dataHist,""));
@@ -172,7 +172,7 @@ void TESTDraw2DBKGCategLines(string name, TFile* mcFile, TFile* dataFile, TStrin
 			1,1,1,1,
 			1,1,1,1};
 
-  GridCanvas* gc=plotYAxis1D(hVec, "BOO","Spooooky", multipliers);
+  GridCanvas* gc=plotYAxis1D(hVec, "pT","pz", multipliers);
 
   gc->Remax();
   gc->Print(nameToSave+"_BKG_stacked.pdf");

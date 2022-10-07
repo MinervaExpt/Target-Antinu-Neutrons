@@ -48,6 +48,8 @@ using namespace PlotUtils;
 
 int main(){//(TString mcName, TString dataName, TString outDir){
 
+  gStyle->SetOptStat(0);
+
   TString mcName = "runEventLoopMC_SkippedSyst_MnvTuneV1_FVregion_Tracker_noNeut.root";
   TString dataName = "runEventLoopData_SkippedSyst_MnvTuneV1_FVregion_Tracker_noNeut.root";
 
