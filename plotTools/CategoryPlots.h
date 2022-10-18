@@ -1,10 +1,9 @@
-//File: signalBKGStack.cxx
-//Info: This is a script to run a loop over all MC breakdown plots in a single histos file and save nice plots from them. Primarily used for validation against older plots.
+//File: CategoryPlots.h
+//Definitions of useful plotting functions to be used by multiple plotting scripts
 //
-//Usage: signalBKGStack <mc_file> <data_file> <output_directory> <plot_label>
 //Author: David Last dlast@sas.upenn.edu/lastd44@gmail.com
 
-//TODO: FIX SEGFAULT ISSUE AT END OF EXECUTION... UNCLEAR WHY THAT'S HAPPENING AND IT DOESN'T SEEM TO AFFECT ANYTHING... MAYBE NEED TO CLOSE FILES? Cloning maybe tries to add keys to the file and it doesn't close well when that's the case?
+//Don't know what needs including... can go through at some point and test I guess...
 
 //C++ includes
 #include <iostream>
@@ -46,8 +45,8 @@
 #include "PlotUtils/MnvH1D.h"
 #include "PlotUtils/MnvPlotter.h"
 
-//Local includes
-#include "plotTools/CategoryPlots.h"
+//My includes
+#include "plotTools/plot.h"
 
 #ifndef NCINTEX
 #include "Cintex/Cintex.h"
@@ -56,7 +55,178 @@
 using namespace std;
 using namespace PlotUtils;
 
-void DrawBKGCateg(string name, TFile* mcFile, TFile* dataFile, TString sample, double scale, TString nameToSave){
+void TESTDraw2DBKGCategLines(string name, TFile* mcFile, TFile* dataFile, TString sample, double scale, TString nameToSave){
+
+  bool primPar = false;
+
+  TString sampleName = sample;
+
+  bool isTracker = sampleName.Contains("Tracker") ? true : false;
+
+  MnvH2D* h_Sig_Top = (MnvH2D*)mcFile->Get((TString)name);
+  //MnvH2D* h_Sig = new MnvH1D(h_Sig_Top->GetBinNormalizedCopy());
+  TH2* h_Sig = (TH2*)h_Sig_Top->GetCVHistoWithError().Clone();
+  h_Sig->Scale(scale);
+  h_Sig->SetLineColor(TColor::GetColor("#999933"));
+  //h_Sig->SetFillColor(TColor::GetColor("#999933"));
+
+  MnvH2D* mcSum = (MnvH2D*)h_Sig_Top->Clone();
+  //mcSum->Scale(scale);
+  mcSum->SetLineColor(kRed);
+  //mcSum->SetFillColorAlpha(kPink + 1, 0.4);
+  //mcSum->SetLineWidth(3);
+
+  cout << "Handling: " << name << endl;
+  string title = (string)h_Sig->GetTitle();
+  TString Xtitle = h_Sig->GetXaxis()->GetTitle();
+  TString Ytitle = h_Sig->GetYaxis()->GetTitle();
+  string units = Xtitle.Data();
+  units.erase(0,units.find("["));
+
+  string name_bkg = name;
+  name_bkg.erase(name_bkg.length()-21,name_bkg.length());
+
+  MnvH2D* h_1PiC_Bkg_Top = (MnvH2D*)mcFile->Get((TString)name_bkg+"_by_BKG_Label_1chargePi");
+  //MnvH2D* h_1PiC_Bkg = new MnvH1D(h_1PiC_Bkg_Top->GetBinNormalizedCopy());
+  TH2* h_1PiC_Bkg = (TH2*)h_1PiC_Bkg_Top->GetCVHistoWithError().Clone();
+  h_1PiC_Bkg->Scale(scale);
+  mcSum->Add(h_1PiC_Bkg_Top);
+  h_1PiC_Bkg->SetLineColor(TColor::GetColor("#88CCEE"));
+  //  h_1PiC_Bkg->SetFillColor(TColor::GetColor("#88CCEE"));
+
+  MnvH2D* h_1Pi0_Bkg_Top = (MnvH2D*)mcFile->Get((TString)name_bkg+"_by_BKG_Label_1neutPi");
+  //MnvH2D* h_1Pi0_Bkg = new MnvH1D(h_1Pi0_Bkg_Top->GetBinNormalizedCopy());
+  TH2* h_1Pi0_Bkg = (TH2*)h_1Pi0_Bkg_Top->GetCVHistoWithError().Clone();
+  h_1Pi0_Bkg->Scale(scale);
+  mcSum->Add(h_1Pi0_Bkg_Top);
+  h_1Pi0_Bkg->SetLineColor(TColor::GetColor("#117733"));
+  //h_1Pi0_Bkg->SetFillColor(TColor::GetColor("#117733"));
+
+  MnvH2D* h_NPi_Bkg_Top = (MnvH2D*)mcFile->Get((TString)name_bkg+"_by_BKG_Label_NPi");
+  //MnvH2D* h_NPi_Bkg = new MnvH1D(h_NPi_Bkg_Top->GetBinNormalizedCopy());
+  TH2* h_NPi_Bkg = (TH2*)h_NPi_Bkg_Top->GetCVHistoWithError().Clone();
+  h_NPi_Bkg->Scale(scale);
+  mcSum->Add(h_NPi_Bkg_Top);
+  h_NPi_Bkg->SetLineColor(TColor::GetColor("#CC6677"));
+  //h_NPi_Bkg->SetFillColor(TColor::GetColor("#CC6677"));
+
+  /*
+  MnvH2D* h_USPlastic_Bkg_Top = (MnvH2D*)mcFile->Get((TString)name_bkg+"_background_USPlastic");
+  //MnvH2D* h_USPlastic_Bkg = new MnvH1D(h_USPlastic_Bkg_Top->GetBinNormalizedCopy());
+  TH2* h_USPlastic_Bkg = (TH2*)h_USPlastic_Bkg_Top->GetCVHistoWithError().Clone();
+  h_USPlastic_Bkg->Scale(scale);
+  mcSum->Add(h_USPlastic_Bkg);
+  h_USPlastic_Bkg->SetLineColor(TColor::GetColor("#A26E1C"));
+  //h_USPlastic_Bkg->SetFillColor(TColor::GetColor("#A26E1C"));
+
+  MnvH2D* h_DSPlastic_Bkg_Top = (MnvH2D*)mcFile->Get((TString)name_bkg+"_background_DSPlastic");
+  //MnvH2D* h_DSPlastic_Bkg = new MnvH1D(h_DSPlastic_Bkg_Top->GetBinNormalizedCopy());
+  TH2* h_DSPlastic_Bkg = (TH2*)h_DSPlastic_Bkg_Top->GetCVHistoWithError().Clone();
+  h_DSPlastic_Bkg->Scale(scale);
+  mcSum->Add(h_DSPlastic_Bkg);
+  h_DSPlastic_Bkg->SetLineColor(TColor::GetColor("#C1B185"));
+  //h_DSPlastic_Bkg->SetFillColor(TColor::GetColor("#C1B185"));
+
+  MnvH2D* h_Wrong_Nucleus_Bkg_Top = (MnvH2D*)mcFile->Get((TString)name_bkg+"_background_Wrong_Nucleus");
+  //MnvH2D* h_Wrong_Nucleus_Bkg = new MnvH1D(h_Wrong_Nucleus_Bkg_Top->GetBinNormalizedCopy());
+  TH2* h_Wrong_Nucleus_Bkg = (TH2*)h_Wrong_Nucleus_Bkg_Top->GetCVHistoWithError().Clone();
+  h_Wrong_Nucleus_Bkg->Scale(scale);
+  mcSum->Add(h_Wrong_Nucleus_Bkg);
+  h_Wrong_Nucleus_Bkg->SetLineColor(TColor::GetColor("#909497"));
+  //h_Wrong_Nucleus_Bkg->SetFillColor(TColor::GetColor("#909497"));
+  */
+
+  MnvH2D* h_Other_Bkg_Top = (MnvH2D*)mcFile->Get((TString)name_bkg+"_by_BKG_Label_Other");
+  //MnvH2D* h_Other_Bkg = new MnvH1D(h_Other_Bkg_Top->GetBinNormalizedCopy());
+  TH2* h_Other_Bkg = (TH2*)h_Other_Bkg_Top->GetCVHistoWithError().Clone();
+  h_Other_Bkg->Scale(scale);
+  mcSum->Add(h_Other_Bkg_Top);
+  h_Other_Bkg->SetLineColor(TColor::GetColor("#882255"));
+  //h_Other_Bkg->SetFillColor(TColor::GetColor("#882255"));
+
+  mcSum->Scale(scale);
+  TH2* mcHist = (TH2*)mcSum->GetCVHistoWithError().Clone();
+  TH2* mcErr = (TH2*)mcHist->Clone();
+  mcErr->SetFillColorAlpha(kPink + 1, 0.4);
+
+  MnvH2D* h_data_Top = (MnvH2D*)dataFile->Get((TString)name_bkg+"_data");
+  //MnvH2D* h_data = new MnvH1D(h_data_Top->GetBinNormalizedCopy());
+  TH2* dataHist = (TH2*)h_data_Top->GetCVHistoWithError().Clone();
+  dataHist->SetLineColor(kBlack);
+  //dataHist->SetLineWidth(3);
+
+  vector<pair<TH2*, const char*>> hVec;
+  //hVec.push_back(make_pair(h_Wrong_Nucleus_Bkg,"hists"));
+  //hVec.push_back(make_pair(h_USPlastic_Bkg,"hists"));
+  //hVec.push_back(make_pair(h_DSPlastic_Bkg,"hists"));
+  hVec.push_back(make_pair(h_Other_Bkg,"hists"));
+  hVec.push_back(make_pair(h_NPi_Bkg,"hists"));
+  hVec.push_back(make_pair(h_1Pi0_Bkg,"hists"));
+  hVec.push_back(make_pair(h_1PiC_Bkg,"hists"));
+  hVec.push_back(make_pair(h_Sig,"hists"));
+  hVec.push_back(make_pair(mcHist,"hists"));
+  hVec.push_back(make_pair(mcErr,"E2"));
+  hVec.push_back(make_pair(dataHist,""));
+
+  double multipliers[]={1,1,1,1,
+			1,1,1,1,
+			1,1,1,1};
+
+  GridCanvas* gc=plotYAxis1D(hVec, "pT","pz", multipliers);
+
+  gc->Remax();
+  gc->Print(nameToSave+"_BKG_stacked.pdf");
+  gc->Print(nameToSave+"_BKG_stacked.png");
+
+  /*
+  THStack* h = new THStack();
+  h->Add((TH2D*)h_Wrong_Nucleus_Bkg->GetCVHistoWithError().Clone());
+  h->Add((TH2D*)h_USPlastic_Bkg->GetCVHistoWithError().Clone());
+  h->Add((TH2D*)h_DSPlastic_Bkg->GetCVHistoWithError().Clone());
+  h->Add((TH2D*)h_Other_Bkg->GetCVHistoWithError().Clone());
+  h->Add((TH2D*)h_NPi_Bkg->GetCVHistoWithError().Clone());
+  h->Add((TH2D*)h_1Pi0_Bkg->GetCVHistoWithError().Clone());
+  h->Add((TH2D*)h_1PiC_Bkg->GetCVHistoWithError().Clone());
+  h->Add((TH2D*)h_Sig->GetCVHistoWithError().Clone());
+
+  //TLegend* leg = new TLegend(1.0-0.6,1.0-0.5,1.0-0.9,1.0-0.9);
+  TLegend* leg = new TLegend(0.1,0.5,0.4,0.9);
+
+  leg->AddEntry(dataHist,"DATA");
+  leg->AddEntry(h_Sig,"Signal");
+  leg->AddEntry(h_1PiC_Bkg,"single #pi^{#pm}");
+  leg->AddEntry(h_1Pi0_Bkg,"single #pi^{0}");
+  leg->AddEntry(h_NPi_Bkg,"N#pi");
+  leg->AddEntry(h_Other_Bkg,"Other");
+  if (!isTracker) leg->AddEntry(h_DSPlastic_Bkg,"DS Plastic");
+  if (!isTracker) leg->AddEntry(h_USPlastic_Bkg,"US Plastic");
+  if (!isTracker) leg->AddEntry(h_Wrong_Nucleus_Bkg,"Wrong Nucleus");
+
+  leg->Draw();
+
+  TH2D* mcRatio = new TH2D(mcSum->GetTotalError(false, true, false));
+  */
+  
+  delete mcSum;
+  delete mcHist;
+  delete mcErr;
+  delete dataHist;
+  //delete straightLine;
+  //delete h_data;
+  delete h_Sig;
+  delete h_1PiC_Bkg;
+  delete h_1Pi0_Bkg;
+  delete h_NPi_Bkg;
+  //delete h_USPlastic_Bkg;
+  //delete h_DSPlastic_Bkg;
+  //delete h_Wrong_Nucleus_Bkg;
+  delete h_Other_Bkg;
+  delete gc;
+
+  return;
+}
+
+void DrawBKGCategTEST(string name, TFile* mcFile, TFile* dataFile, TString sample, double scale, TString nameToSave){
 
   bool primPar = false;
 
@@ -327,7 +497,7 @@ void DrawBKGCateg(string name, TFile* mcFile, TFile* dataFile, TString sample, d
   return;
 }
 
-void DrawIntType(string name_QE, TFile* mcFile, TFile* dataFile, TString sample, double scale, TString nameToSave){
+void DrawIntTypeTEST(string name_QE, TFile* mcFile, TFile* dataFile, TString sample, double scale, TString nameToSave){
 
   bool primPar = false;
 
@@ -686,7 +856,7 @@ void DrawIntType(string name_QE, TFile* mcFile, TFile* dataFile, TString sample,
   return;
 }
 
-void DrawTargetType(string name_Plastic, TFile* mcFile, TFile* dataFile, TString sample, double scale, TString nameToSave){
+void DrawTargetTypeTEST(string name_Plastic, TFile* mcFile, TFile* dataFile, TString sample, double scale, TString nameToSave){
 
   bool primPar = false;
 
@@ -1066,7 +1236,7 @@ void DrawTargetType(string name_Plastic, TFile* mcFile, TFile* dataFile, TString
   return;
 }
 
-void DrawLeadBlobType(string name_Neut, TFile* mcFile, TFile* dataFile, TString sample, double scale, TString nameToSave){
+void DrawLeadBlobTypeTEST(string name_Neut, TFile* mcFile, TFile* dataFile, TString sample, double scale, TString nameToSave){
 
   bool primPar = false;
 
@@ -1443,207 +1613,4 @@ void DrawLeadBlobType(string name_Neut, TFile* mcFile, TFile* dataFile, TString 
   delete c1;
 
   return;
-}
-
-bool PathExists(string path){
-  struct stat buffer;
-  return (stat (path.c_str(), &buffer) == 0);
-}
-
-int main(int argc, char* argv[]) {
-
-  gStyle->SetOptStat(0);
-
-  #ifndef NCINTEX
-  ROOT::Cintex::Cintex::Enable();
-  #endif
-
-  //Pass an input file name to this script now
-  if (argc != 5) {
-    cout << "Check usage..." << endl;
-    return 2;
-  }
-
-  string MCfileName=string(argv[1]);
-  string DATAfileName=string(argv[2]);
-  string outDir=string(argv[3]);
-  TString label=argv[4];
-
-  if (PathExists(outDir)){
-    cout << "Thank you for choosing a path for output files that exists." << endl;
-  }
-  else{
-    cout << "Output directory doesn't exist. Exiting" << endl;
-    return 3;
-  }
-
-  string rootExt = ".root";
-  string slash = "/";
-  string token;
-  string fileNameStub = MCfileName;
-  size_t pos=0;
-
-  //cout << sigNameStub << endl;
-  while ((pos = fileNameStub.find(slash)) != string::npos){
-    //cout << sigNameStub << endl;
-    token = fileNameStub.substr(0, pos);
-    //cout << token << endl;
-    fileNameStub.erase(0, pos+slash.length());
-  }
-  //cout << sigNameStub << endl;
-  if ((pos=fileNameStub.find(rootExt)) == string::npos){
-    cout << "MC Input need be .root file." << endl;
-    return 4;
-  }
-
-  cout << "Input MC file name parsed to: " << fileNameStub << endl;
-
-  rootExt = ".root";
-  slash = "/";
-  token = "";
-  fileNameStub = DATAfileName;
-  pos=0;
-
-  //cout << sigNameStub << endl;
-  while ((pos = fileNameStub.find(slash)) != string::npos){
-    //cout << sigNameStub << endl;
-    token = fileNameStub.substr(0, pos);
-    //cout << token << endl;
-    fileNameStub.erase(0, pos+slash.length());
-  }
-  //cout << sigNameStub << endl;
-  if ((pos=fileNameStub.find(rootExt)) == string::npos){
-    cout << "DATA Input need be .root file." << endl;
-    return 5;
-  }
-
-  cout << "Input Data file name parsed to: " << fileNameStub << endl;
-
-  //cout << "Setting up MnvPlotter" << endl;
-  //MnvPlotter* plotter = new MnvPlotter(kCCQEAntiNuStyle);
-
-  TFile* mcFile = new TFile(MCfileName.c_str(),"READ");
-  TFile* dataFile = new TFile(DATAfileName.c_str(),"READ");
-
-  double mcPOT = ((TParameter<double>*)mcFile->Get("POTUsed"))->GetVal();
-  double dataPOT = ((TParameter<double>*)dataFile->Get("POTUsed"))->GetVal();
-
-  double scale = dataPOT/mcPOT;
-  cout << "POT scale factor: " << scale << endl;
-
-  TList* keyList = mcFile->GetListOfKeys();
-  if (!keyList){
-    cout << "List of keys failed to get." << endl;
-    return 5;
-  }
-
-  TIter next(keyList);
-  TKey* key;
-  while ( key = (TKey*)next() ){
-    if ((TString)(key->GetClassName()) == "TDirectoryFile")
-    {
-      TDirectoryFile* dirInt = (TDirectoryFile*)mcFile->Get(key->GetName());
-      TList* keyListInt = dirInt->GetListOfKeys();
-      if (!keyListInt){
-	cout << "List of keys failed to get inside directory." << endl;
-	return 5;
-      }
-      
-      TIter nextInt(keyListInt);
-      TKey* keyInt;
-      while ( keyInt = (TKey*)nextInt() ){
-	string nameInt = (string)keyInt->GetName();
-	string name = (string)key->GetName() + "/"+nameInt;
-	pos=0;
-	if ((pos=nameInt.find("TwoD")) != string::npos || (pos=nameInt.find("vtxZ")) != string::npos || (pos=name.find("Inner")) != string::npos) continue;
-	else if((pos = name.find("_sig_IntType_QE")) != string::npos){
-	  string nameToSave = nameInt;
-	  nameToSave.erase(nameToSave.length()-15,nameToSave.length());
-	  DrawIntType(name,mcFile,dataFile,label,scale,(TString)outDir+(TString)nameToSave);
-	  cout << "" << endl;
-	}
-	else if ((pos = name.find("_sig_TargetType_Plastic")) != string::npos){
-	  string nameToSave = nameInt;
-	  nameToSave.erase(nameToSave.length()-23,nameToSave.length());
-	  DrawTargetType(name,mcFile,dataFile,label,scale,(TString)outDir+(TString)nameToSave);
-	  cout << "" << endl;
-	}
-	else if ((pos = name.find("_sig_LeadBlobType_neut")) != string::npos){
-	  string nameToSave = nameInt;
-	  nameToSave.erase(nameToSave.length()-22,nameToSave.length());
-	  DrawLeadBlobType(name,mcFile,dataFile,label,scale,(TString)outDir+(TString)nameToSave);
-	  cout << "" << endl;
-	}
-	else if ((pos = name.find("_selected_signal_reco")) != string::npos){
-	  string nameToSave = nameInt;
-	  nameToSave.erase(nameToSave.length()-21,nameToSave.length());
-	  DrawBKGCateg(name,mcFile,dataFile,label,scale,(TString)outDir+(TString)nameToSave);
-	  cout << "" << endl;
-	}	
-      }
-    }
-
-    pos=0;
-    string name=(string)key->GetName();
-    if((pos=name.find("TwoD")) != string::npos || (pos=name.find("vtxZ")) != string::npos || (pos=name.find("Inner")) != string::npos) continue;
-    else if((pos = name.find("_sig_IntType_QE")) != string::npos){
-      string nameToSave = name;
-      nameToSave.erase(nameToSave.length()-15,nameToSave.length());
-      DrawIntType(name,mcFile,dataFile,label,scale,(TString)outDir+(TString)nameToSave);
-      cout << "" << endl;
-    }
-    else if ((pos = name.find("_sig_TargetType_Plastic")) != string::npos){
-      string nameToSave = name;
-      nameToSave.erase(nameToSave.length()-23,nameToSave.length());
-      DrawTargetType(name,mcFile,dataFile,label,scale,(TString)outDir+(TString)nameToSave);
-      cout << "" << endl;
-    }
-    else if ((pos = name.find("_sig_LeadBlobType_neut")) != string::npos){
-      string nameToSave = name;
-      nameToSave.erase(nameToSave.length()-22,nameToSave.length());
-      DrawLeadBlobType(name,mcFile,dataFile,label,scale,(TString)outDir+(TString)nameToSave);
-      cout << "" << endl;
-    }
-    else if ((pos = name.find("_selected_signal_reco")) != string::npos){
-      pos = 0;
-      //Maybe can remove the following continues...
-      //if ((pos = name.find("EMnBlobs_")) != string::npos) continue;
-      //else if ((pos = name.find("EMBlobE_")) != string::npos) continue;
-      //else if ((pos = name.find("EMBlobNHit_")) != string::npos) continue;
-      //else if ((pos = name.find("EMBlobENHitRatio_")) != string::npos) continue;
-      string nameToSave = name;
-      nameToSave.erase(nameToSave.length()-21,nameToSave.length());
-      DrawBKGCateg(name,mcFile,dataFile,label,scale,(TString)outDir+(TString)nameToSave);
-      DrawBKGCategTEST(name,mcFile,dataFile,label,scale,(TString)outDir+(TString)nameToSave+"_TEST");
-      cout << "" << endl;
-    }
-    /*
-    else if ((pos = name.find("_data")) != string::npos){
-      pos = 0;
-      if ((pos=name.find("SB")) != string::npos) continue;
-      cout << "Plotting error summary for: " << name << endl;
-      TCanvas* c1 = new TCanvas("c1","c1",1200,800);
-      MnvH1D* h_mc_data = (MnvH1D*)mcFile->Get((TString)name);
-      name.erase(name.length()-5,name.length());
-      plotter->DrawErrorSummary(h_mc_data);
-      c1->Print((TString)outDir+(TString)name+"_err_summary.pdf");
-      c1->Print((TString)outDir+(TString)name+"_err_summary.png");
-      cout << "" << endl;
-      delete c1;
-    }
-    */
-  }
-
-  //cout << "Deleting the MnvPlotter." << endl;
-  //delete plotter;
-
-  //delete mcPOT;
-  //delete
-
-  cout << "Closing Files... Does this solve the issue of seg fault." << endl;
-  mcFile->Close();
-  dataFile->Close();
-
-  cout << "HEY YOU DID IT!!!" << endl;
-  return 0;
 }

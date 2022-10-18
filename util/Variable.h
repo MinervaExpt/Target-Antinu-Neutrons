@@ -17,16 +17,28 @@ class Variable: public PlotUtils::VariableBase<CVUniverse>
     typedef PlotUtils::HistWrapper<CVUniverse> Hist;
     typedef std::function<double(const CVUniverse&)> PointerToCVUniverseFunction;
     bool fAnaVar;
+    bool fFillVar;
+    bool fAllBreakdowns;
     TString fDirName;
   public:
     template <class ...ARGS>
-    Variable(bool isAnalysisVar, ARGS... args): PlotUtils::VariableBase<CVUniverse>(args...), fAnaVar(isAnalysisVar), fDirName("")
+    Variable(bool isAnalysisVar, ARGS... args): PlotUtils::VariableBase<CVUniverse>(args...), fAnaVar(isAnalysisVar), fFillVar(true), fDirName(""), fAllBreakdowns(false)
+    {
+    }
+
+    template <class ...ARGS>
+    Variable(bool isAnalysisVar, bool fillVar, ARGS... args): PlotUtils::VariableBase<CVUniverse>(args...), fAnaVar(isAnalysisVar), fFillVar(fillVar), fDirName(""), fAllBreakdowns(false)
     {
     }
 
     //This is risky and only safe because right now VariableBase won't have an ambiguous constructor... Think of a way to protect against this if possible...
     template <class ...ARGS>
-    Variable(TString name, bool isAnalysisVar, ARGS... args): PlotUtils::VariableBase<CVUniverse>(args...), fAnaVar(isAnalysisVar), fDirName(name)
+    Variable(TString name, bool isAnalysisVar, ARGS... args): PlotUtils::VariableBase<CVUniverse>(args...), fAnaVar(isAnalysisVar), fFillVar(true), fDirName(name), fAllBreakdowns(false)
+    {
+    }
+
+    template <class ...ARGS>
+    Variable(TString name, bool isAnalysisVar, bool fillVar, ARGS... args): PlotUtils::VariableBase<CVUniverse>(args...), fAnaVar(isAnalysisVar), fFillVar(fillVar), fDirName(name), fAllBreakdowns(false)
     {
     }
 
@@ -81,35 +93,37 @@ class Variable: public PlotUtils::VariableBase<CVUniverse>
 							   (GetAxisLabel()).c_str(), BKGLabels,
 							   GetBinVec(), mc_error_bands);
 
-      //Hists for the aforementioned various breakdowns.
-      m_SigIntTypeHists = new util::Categorized<Hist, int>((GetName() + "_sig_IntType").c_str(),
-							   (GetAxisLabel()).c_str(), SigIntTypeLabels,
-							   GetBinVec(), mc_error_bands);
-
-      m_SigTargetTypeHists = new util::Categorized<Hist, int>((GetName() + "_sig_TargetType").c_str(),
-							   (GetAxisLabel()).c_str(), TargetTypeLabels,
-							   GetBinVec(), mc_error_bands);
-
-      /*
-      m_SigLeadBlobTypeHists = new util::Categorized<Hist, int>((GetName() + "_sig_LeadBlobType").c_str(),
-							   (GetAxisLabel()).c_str(), LeadBlobTypeLabels,
-							   GetBinVec(), mc_error_bands);
-      */
-
       m_BkgIntTypeHists = new util::Categorized<Hist, int>((GetName() + "_bkg_IntType").c_str(),
 							   (GetAxisLabel()).c_str(), BkgIntTypeLabels,
 							   GetBinVec(), mc_error_bands);
 
-      m_BkgTargetTypeHists = new util::Categorized<Hist, int>((GetName() + "_bkg_TargetType").c_str(),
-							   (GetAxisLabel()).c_str(), TargetTypeLabels,
-							   GetBinVec(), mc_error_bands);
+      //Hists for the aforementioned various breakdowns.
+      if (fAllBreakdowns){
+	m_SigIntTypeHists = new util::Categorized<Hist, int>((GetName() + "_sig_IntType").c_str(),
+							     (GetAxisLabel()).c_str(), SigIntTypeLabels,
+							     GetBinVec(), mc_error_bands);
+	
+	m_SigTargetTypeHists = new util::Categorized<Hist, int>((GetName() + "_sig_TargetType").c_str(),
+								(GetAxisLabel()).c_str(), TargetTypeLabels,
+								GetBinVec(), mc_error_bands);
 
-      /*
-      m_BkgLeadBlobTypeHists = new util::Categorized<Hist, int>((GetName() + "_bkg_LeadBlobType").c_str(),
-							   (GetAxisLabel()).c_str(), LeadBlobTypeLabels,
-							   GetBinVec(), mc_error_bands);
-      */
-
+	/*
+	  m_SigLeadBlobTypeHists = new util::Categorized<Hist, int>((GetName() + "_sig_LeadBlobType").c_str(),
+	  (GetAxisLabel()).c_str(), LeadBlobTypeLabels,
+	  GetBinVec(), mc_error_bands);
+	*/
+	
+	m_BkgTargetTypeHists = new util::Categorized<Hist, int>((GetName() + "_bkg_TargetType").c_str(),
+								(GetAxisLabel()).c_str(), TargetTypeLabels,
+								GetBinVec(), mc_error_bands);
+	
+	/*
+	  m_BkgLeadBlobTypeHists = new util::Categorized<Hist, int>((GetName() + "_bkg_LeadBlobType").c_str(),
+	  (GetAxisLabel()).c_str(), LeadBlobTypeLabels,
+	  GetBinVec(), mc_error_bands);
+	*/
+      }
+      
       if (fAnaVar) efficiencyNumerator = new Hist((GetName() + "_efficiency_numerator").c_str(), (GetName()+";"+GetAxisLabel()).c_str(), GetBinVec(), mc_error_bands);
       if (fAnaVar) efficiencyDenominator = new Hist((GetName() + "_efficiency_denominator").c_str(), (GetName()+";"+GetAxisLabel()).c_str(), GetBinVec(), truth_error_bands);
       selectedSignalReco = new Hist((GetName() + "_selected_signal_reco").c_str(), (GetName()+";"+GetAxisLabel()).c_str(), GetBinVec(), mc_error_bands);
@@ -174,45 +188,46 @@ class Variable: public PlotUtils::VariableBase<CVUniverse>
                                       categ.hist->SetDirectory(dir);
                                       //categ.hist->Write(); //TODO: Or let the TFile destructor do this the "normal" way?                                                                                           
                                     });
-
-      m_SigIntTypeHists->visit([dir](Hist& categ)
-                                    {
-                                      categ.hist->SetDirectory(dir);
-                                      //categ.hist->Write(); //TODO: Or let the TFile destructor do this the "normal" way?                                                                                           
-                                    });
-
-      m_SigTargetTypeHists->visit([dir](Hist& categ)
-                                    {
-                                      categ.hist->SetDirectory(dir);
-                                      //categ.hist->Write(); //TODO: Or let the TFile destructor do this the "normal" way?                                                                                           
-                                    });
-
-      /*
-      m_SigLeadBlobTypeHists->visit([dir](Hist& categ)
-                                    {
-                                      categ.hist->SetDirectory(dir);
-                                      //categ.hist->Write(); //TODO: Or let the TFile destructor do this the "normal" way?                                                                                           
-                                    });
-      */
-
       m_BkgIntTypeHists->visit([dir](Hist& categ)
                                     {
                                       categ.hist->SetDirectory(dir);
                                       //categ.hist->Write(); //TODO: Or let the TFile destructor do this the "normal" way?                                                                                           
                                     });
 
-      m_BkgTargetTypeHists->visit([dir](Hist& categ)
+      if(fAllBreakdowns){
+	m_SigIntTypeHists->visit([dir](Hist& categ)
+				 {
+				   categ.hist->SetDirectory(dir);
+				   //categ.hist->Write(); //TODO: Or let the TFile destructor do this the "normal" way?                                                                                           
+				 });
+	
+	m_SigTargetTypeHists->visit([dir](Hist& categ)
                                     {
                                       categ.hist->SetDirectory(dir);
                                       //categ.hist->Write(); //TODO: Or let the TFile destructor do this the "normal" way?                                                                                           
                                     });
-      /*
-      m_BkgLeadBlobTypeHists->visit([dir](Hist& categ)
+	
+	/*
+	  m_SigLeadBlobTypeHists->visit([dir](Hist& categ)
+	  {
+	  categ.hist->SetDirectory(dir);
+	  //categ.hist->Write(); //TODO: Or let the TFile destructor do this the "normal" way?                                                                                           
+	  });
+	*/
+	
+	m_BkgTargetTypeHists->visit([dir](Hist& categ)
                                     {
                                       categ.hist->SetDirectory(dir);
                                       //categ.hist->Write(); //TODO: Or let the TFile destructor do this the "normal" way?                                                                                           
                                     });
-      */
+	/*
+	  m_BkgLeadBlobTypeHists->visit([dir](Hist& categ)
+	  {
+	  categ.hist->SetDirectory(dir);
+	  //categ.hist->Write(); //TODO: Or let the TFile destructor do this the "normal" way?                                                                                           
+	  });
+	*/
+      }
 
       if(efficiencyNumerator && fAnaVar)
       {
@@ -252,12 +267,16 @@ class Variable: public PlotUtils::VariableBase<CVUniverse>
     void SyncCVHistos()
     {
       m_backgroundHists->visit([](Hist& categ) { categ.SyncCVHistos(); });
-      m_SigIntTypeHists->visit([](Hist& categ) { categ.SyncCVHistos(); });
-      m_SigTargetTypeHists->visit([](Hist& categ) { categ.SyncCVHistos(); });
-      //m_SigLeadBlobTypeHists->visit([](Hist& categ) { categ.SyncCVHistos(); });
       m_BkgIntTypeHists->visit([](Hist& categ) { categ.SyncCVHistos(); });
-      m_BkgTargetTypeHists->visit([](Hist& categ) { categ.SyncCVHistos(); });
-      //m_BkgLeadBlobTypeHists->visit([](Hist& categ) { categ.SyncCVHistos(); });
+
+      if (fAllBreakdowns){
+	m_SigIntTypeHists->visit([](Hist& categ) { categ.SyncCVHistos(); });
+	m_SigTargetTypeHists->visit([](Hist& categ) { categ.SyncCVHistos(); });
+	//m_SigLeadBlobTypeHists->visit([](Hist& categ) { categ.SyncCVHistos(); });
+
+	m_BkgTargetTypeHists->visit([](Hist& categ) { categ.SyncCVHistos(); });
+	//m_BkgLeadBlobTypeHists->visit([](Hist& categ) { categ.SyncCVHistos(); });
+      }
 
       if(dataHist) dataHist->SyncCVHistos();
       if(efficiencyNumerator && fAnaVar) efficiencyNumerator->SyncCVHistos();
@@ -268,7 +287,10 @@ class Variable: public PlotUtils::VariableBase<CVUniverse>
     }
 
     void SetDirectoryName(std::string name){fDirName = name;}
+    void SetFillVar(bool fill){fFillVar = fill;}
     bool IsAnaVar(){return fAnaVar;}
+    bool IsFill(){return fFillVar;}
+    bool IsBroken(){return fAllBreakdowns;}
     TString GetDirectoryName(){return fDirName;}
 };
 

@@ -269,14 +269,14 @@ void LoopAndFillEventSelection(
 
 	if (!SBStat.all()) continue;
 
-        for(auto& var: vars) var->selectedMCReco->FillUniverse(universe, var->GetRecoValue(*universe), weight); //"Fake data" for closure
+        for(auto& var: vars) if(var->IsFill()) var->selectedMCReco->FillUniverse(universe, var->GetRecoValue(*universe), weight); //"Fake data" for closure
 
-	for(auto& var: vars2D) var->selectedMCReco->FillUniverse(universe, var->GetRecoValueX(*universe), var->GetRecoValueY(*universe), weight); //"Fake data" for closure
+	for(auto& var: vars2D) if(var->IsFill()) var->selectedMCReco->FillUniverse(universe, var->GetRecoValueX(*universe), var->GetRecoValueY(*universe), weight); //"Fake data" for closure
 
 	//Only fill by tgt for non-interstitial plastic events
 	if (tgtCode != -1){
-	  for(auto& var: vars_ByTgt) (*var)[tgtCode].selectedMCReco->FillUniverse(universe, (*var)[tgtCode].GetRecoValue(*universe), weight); //"Fake data" for closure
-	  for(auto& var: vars2D_ByTgt) (*var)[tgtCode].selectedMCReco->FillUniverse(universe, (*var)[tgtCode].GetRecoValueX(*universe), (*var)[tgtCode].GetRecoValueY(*universe), weight); //"Fake data" for closure
+	  for(auto& var: vars_ByTgt) if((*var)[tgtCode].IsFill()) (*var)[tgtCode].selectedMCReco->FillUniverse(universe, (*var)[tgtCode].GetRecoValue(*universe), weight); //"Fake data" for closure
+	  for(auto& var: vars2D_ByTgt) if((*var)[tgtCode].IsFill()) (*var)[tgtCode].selectedMCReco->FillUniverse(universe, (*var)[tgtCode].GetRecoValueX(*universe), (*var)[tgtCode].GetRecoValueY(*universe), weight); //"Fake data" for closure
 	}
 
         if(isSignal)
@@ -286,55 +286,67 @@ void LoopAndFillEventSelection(
           for(auto& var: vars)
           {
             //Cross section components
-            if (var->IsAnaVar()) var->efficiencyNumerator->FillUniverse(universe, var->GetTrueValue(*universe), weight);
-            if (var->IsAnaVar()) var->migration->FillUniverse(universe, var->GetRecoValue(*universe), var->GetTrueValue(*universe), weight);
-            var->selectedSignalReco->FillUniverse(universe, var->GetRecoValue(*universe), weight); //Efficiency numerator in reco variables.  Useful for warping studies.
+	    if (var->IsFill()){
+	      if (var->IsAnaVar()) var->efficiencyNumerator->FillUniverse(universe, var->GetTrueValue(*universe), weight);
+	      if (var->IsAnaVar()) var->migration->FillUniverse(universe, var->GetRecoValue(*universe), var->GetTrueValue(*universe), weight);
+	      var->selectedSignalReco->FillUniverse(universe, var->GetRecoValue(*universe), weight); //Efficiency numerator in reco variables.  Useful for warping studies.
 
-	    //Various breakdowns of selected signal reco
-	    (*var->m_SigIntTypeHists)[intType].FillUniverse(universe, var->GetRecoValue(*universe), weight);
-	    (*var->m_SigTargetTypeHists)[tgtType].FillUniverse(universe, var->GetRecoValue(*universe), weight);
-	    //(*var->m_SigLeadBlobTypeHists)[leadBlobType].FillUniverse(universe, var->GetRecoValue(*universe), weight);
+	      if (var->IsBroken()){
+		//Various breakdowns of selected signal reco
+		(*var->m_SigIntTypeHists)[intType].FillUniverse(universe, var->GetRecoValue(*universe), weight);
+		(*var->m_SigTargetTypeHists)[tgtType].FillUniverse(universe, var->GetRecoValue(*universe), weight);
+		//(*var->m_SigLeadBlobTypeHists)[leadBlobType].FillUniverse(universe, var->GetRecoValue(*universe), weight);
+	      }
+	    }
           }
 	  
           for(auto& var: vars2D)
           {
-            //Cross section components
-            var->efficiencyNumerator->FillUniverse(universe, var->GetTrueValueX(*universe), var->GetTrueValueY(*universe), weight);
-            var->selectedSignalReco->FillUniverse(universe, var->GetRecoValueX(*universe), var->GetRecoValueY(*universe), weight);; //Efficiency numerator in reco variables.  Useful for warping studies.
+	    if (var->IsFill()){
+	      //Cross section components
+	      var->efficiencyNumerator->FillUniverse(universe, var->GetTrueValueX(*universe), var->GetTrueValueY(*universe), weight);
+	      var->selectedSignalReco->FillUniverse(universe, var->GetRecoValueX(*universe), var->GetRecoValueY(*universe), weight);; //Efficiency numerator in reco variables.  Useful for warping studies.
 
-	    //Various breakdowns of selected signal reco
-	    (*var->m_SigIntTypeHists)[intType].FillUniverse(universe, var->GetRecoValueX(*universe), var->GetRecoValueY(*universe), weight);;
-	    (*var->m_SigTargetTypeHists)[tgtType].FillUniverse(universe, var->GetRecoValueX(*universe), var->GetRecoValueY(*universe), weight);;
-	    //(*var->m_SigLeadBlobTypeHists)[leadBlobType].FillUniverse(universe, var->GetRecoValueX(*universe), var->GetRecoValueY(*universe), weight);
-
-            //var->efficiencyNumerator->FillUniverse(universe, var->GetTrueValueX(*universe), var->GetTrueValueY(*universe), weight);
-          }
+	      //Various breakdowns of selected signal reco
+	      (*var->m_SigIntTypeHists)[intType].FillUniverse(universe, var->GetRecoValueX(*universe), var->GetRecoValueY(*universe), weight);;
+	      (*var->m_SigTargetTypeHists)[tgtType].FillUniverse(universe, var->GetRecoValueX(*universe), var->GetRecoValueY(*universe), weight);;
+	      //(*var->m_SigLeadBlobTypeHists)[leadBlobType].FillUniverse(universe, var->GetRecoValueX(*universe), var->GetRecoValueY(*universe), weight);
+	      
+	      //var->efficiencyNumerator->FillUniverse(universe, var->GetTrueValueX(*universe), var->GetTrueValueY(*universe), weight);
+	    }
+	  }
 
 	  //Only fill by tgt for non-interstitial plastic events
 	  if (tgtCode != -1){
 	    for(auto& var: vars_ByTgt){
-	      //Cross section components
-	      if ((*var)[tgtCode].IsAnaVar()) (*var)[tgtCode].efficiencyNumerator->FillUniverse(universe, (*var)[tgtCode].GetTrueValue(*universe), weight);
-	      if ((*var)[tgtCode].IsAnaVar()) (*var)[tgtCode].migration->FillUniverse(universe, (*var)[tgtCode].GetRecoValue(*universe), (*var)[tgtCode].GetTrueValue(*universe), weight);
-	      (*var)[tgtCode].selectedSignalReco->FillUniverse(universe, (*var)[tgtCode].GetRecoValue(*universe), weight); //Efficiency numerator in reco variables.  Useful for warping studies.
-	      
-	      //Various breakdowns of selected signal reco
-	      (*(*var)[tgtCode].m_SigIntTypeHists)[intType].FillUniverse(universe, (*var)[tgtCode].GetRecoValue(*universe), weight);
-	      (*(*var)[tgtCode].m_SigTargetTypeHists)[tgtType].FillUniverse(universe, (*var)[tgtCode].GetRecoValue(*universe), weight);
-	      //(*(*var)[tgtCode].m_SigLeadBlobTypeHists)[leadBlobType].FillUniverse(universe, (*var)[tgtCode].GetRecoValue(*universe), weight);
-	    }
+	      if ((*var)[tgtCode].IsFill()){
+		//Cross section components
+		if ((*var)[tgtCode].IsAnaVar()) (*var)[tgtCode].efficiencyNumerator->FillUniverse(universe, (*var)[tgtCode].GetTrueValue(*universe), weight);
+		if ((*var)[tgtCode].IsAnaVar()) (*var)[tgtCode].migration->FillUniverse(universe, (*var)[tgtCode].GetRecoValue(*universe), (*var)[tgtCode].GetTrueValue(*universe), weight);
+		(*var)[tgtCode].selectedSignalReco->FillUniverse(universe, (*var)[tgtCode].GetRecoValue(*universe), weight); //Efficiency numerator in reco variables.  Useful for warping studies.
 
+		if ((*var)[tgtCode].IsBroken()){
+		  //Various breakdowns of selected signal reco
+		  (*(*var)[tgtCode].m_SigIntTypeHists)[intType].FillUniverse(universe, (*var)[tgtCode].GetRecoValue(*universe), weight);
+		  (*(*var)[tgtCode].m_SigTargetTypeHists)[tgtType].FillUniverse(universe, (*var)[tgtCode].GetRecoValue(*universe), weight);
+		  //(*(*var)[tgtCode].m_SigLeadBlobTypeHists)[leadBlobType].FillUniverse(universe, (*var)[tgtCode].GetRecoValue(*universe), weight);
+		}
+	      }
+	    }
+	    
 	    for(auto& var: vars2D_ByTgt){
-	      //Cross section components
-	      (*var)[tgtCode].efficiencyNumerator->FillUniverse(universe, (*var)[tgtCode].GetTrueValueX(*universe), (*var)[tgtCode].GetTrueValueY(*universe), weight);
-	      (*var)[tgtCode].selectedSignalReco->FillUniverse(universe, (*var)[tgtCode].GetRecoValueX(*universe), (*var)[tgtCode].GetRecoValueY(*universe), weight);; //Efficiency numerator in reco variables.  Useful for warping studies.
+	      if ((*var)[tgtCode].IsFill()){
+		//Cross section components
+		(*var)[tgtCode].efficiencyNumerator->FillUniverse(universe, (*var)[tgtCode].GetTrueValueX(*universe), (*var)[tgtCode].GetTrueValueY(*universe), weight);
+		(*var)[tgtCode].selectedSignalReco->FillUniverse(universe, (*var)[tgtCode].GetRecoValueX(*universe), (*var)[tgtCode].GetRecoValueY(*universe), weight);; //Efficiency numerator in reco variables.  Useful for warping studies.
 	      
-	      //Various breakdowns of selected signal reco
-	      (*(*var)[tgtCode].m_SigIntTypeHists)[intType].FillUniverse(universe, (*var)[tgtCode].GetRecoValueX(*universe), (*var)[tgtCode].GetRecoValueY(*universe), weight);;
-	      (*(*var)[tgtCode].m_SigTargetTypeHists)[tgtType].FillUniverse(universe, (*var)[tgtCode].GetRecoValueX(*universe), (*var)[tgtCode].GetRecoValueY(*universe), weight);;
-	      //(*(*var)[tgtCode].m_SigLeadBlobTypeHists)[leadBlobType].FillUniverse(universe, (*var)[tgtCode].GetRecoValueX(*universe), (*var)[tgtCode].GetRecoValueY(*universe), weight);
+		//Various breakdowns of selected signal reco
+		(*(*var)[tgtCode].m_SigIntTypeHists)[intType].FillUniverse(universe, (*var)[tgtCode].GetRecoValueX(*universe), (*var)[tgtCode].GetRecoValueY(*universe), weight);;
+		(*(*var)[tgtCode].m_SigTargetTypeHists)[tgtType].FillUniverse(universe, (*var)[tgtCode].GetRecoValueX(*universe), (*var)[tgtCode].GetRecoValueY(*universe), weight);;
+		//(*(*var)[tgtCode].m_SigLeadBlobTypeHists)[leadBlobType].FillUniverse(universe, (*var)[tgtCode].GetRecoValueX(*universe), (*var)[tgtCode].GetRecoValueY(*universe), weight);
 	      
-	      //(*var)[tgtCode].efficiencyNumerator->FillUniverse(universe, (*var)[tgtCode].GetTrueValueX(*universe), (*var)[tgtCode].GetTrueValueY(*universe), weight);
+		//(*var)[tgtCode].efficiencyNumerator->FillUniverse(universe, (*var)[tgtCode].GetTrueValueX(*universe), (*var)[tgtCode].GetTrueValueY(*universe), weight);
+	      }
 	    }
 	  }
         }
@@ -355,37 +367,49 @@ void LoopAndFillEventSelection(
           //for(auto& study: studies) study->SelectedSignal(*universe, myevent, weight);
 
           for(auto& var: vars){
-	    (*var->m_backgroundHists)[bkgd_ID].FillUniverse(universe, var->GetRecoValue(*universe), weight);
-	    //Various breakdowns of selected backgrounds
-	    (*var->m_BkgIntTypeHists)[intType].FillUniverse(universe, var->GetRecoValue(*universe), weight);
-	    (*var->m_BkgTargetTypeHists)[tgtType].FillUniverse(universe, var->GetRecoValue(*universe), weight);
-	    //(*var->m_BkgLeadBlobTypeHists)[leadBlobType].FillUniverse(universe, var->GetRecoValue(*universe), weight);
+	    if (var->IsFill()){
+	      (*var->m_backgroundHists)[bkgd_ID].FillUniverse(universe, var->GetRecoValue(*universe), weight);
+	      (*var->m_BkgIntTypeHists)[intType].FillUniverse(universe, var->GetRecoValue(*universe), weight);
+	      if (var->IsBroken()){
+		//Various breakdowns of selected backgrounds
+		(*var->m_BkgTargetTypeHists)[tgtType].FillUniverse(universe, var->GetRecoValue(*universe), weight);
+		//(*var->m_BkgLeadBlobTypeHists)[leadBlobType].FillUniverse(universe, var->GetRecoValue(*universe), weight);
+	      }
+	    }
 	  }
 
 	  for(auto& var: vars2D){
-	    (*var->m_backgroundHists)[bkgd_ID].FillUniverse(universe, var->GetRecoValueX(*universe), var->GetRecoValueY(*universe), weight);
-	    //Various breakdowns of selected backgrounds
-	    (*var->m_BkgIntTypeHists)[intType].FillUniverse(universe, var->GetRecoValueX(*universe), var->GetRecoValueY(*universe), weight);
-	    (*var->m_BkgTargetTypeHists)[tgtType].FillUniverse(universe, var->GetRecoValueX(*universe), var->GetRecoValueY(*universe), weight);
-	    //(*var->m_BkgLeadBlobTypeHists)[leadBlobType].FillUniverse(universe, var->GetRecoValueX(*universe), var->GetRecoValueY(*universe), weight);
+	    if(var->IsFill()){
+	      (*var->m_backgroundHists)[bkgd_ID].FillUniverse(universe, var->GetRecoValueX(*universe), var->GetRecoValueY(*universe), weight);
+	      //Various breakdowns of selected backgrounds
+	      (*var->m_BkgIntTypeHists)[intType].FillUniverse(universe, var->GetRecoValueX(*universe), var->GetRecoValueY(*universe), weight);
+	      (*var->m_BkgTargetTypeHists)[tgtType].FillUniverse(universe, var->GetRecoValueX(*universe), var->GetRecoValueY(*universe), weight);
+	      //(*var->m_BkgLeadBlobTypeHists)[leadBlobType].FillUniverse(universe, var->GetRecoValueX(*universe), var->GetRecoValueY(*universe), weight);
+	    }
 	  }
 
 	  //Only fill by tgt for non-interstitial plastic events
 	  if (tgtCode != -1){
 	    for(auto& var: vars_ByTgt){
-	      (*(*var)[tgtCode].m_backgroundHists)[bkgd_ID].FillUniverse(universe, (*var)[tgtCode].GetRecoValue(*universe), weight);
-	      //Various breakdowns of selected backgrounds
-	      (*(*var)[tgtCode].m_BkgIntTypeHists)[intType].FillUniverse(universe, (*var)[tgtCode].GetRecoValue(*universe), weight);
-	      (*(*var)[tgtCode].m_BkgTargetTypeHists)[tgtType].FillUniverse(universe, (*var)[tgtCode].GetRecoValue(*universe), weight);
-	      //(*(*var)[tgtCode].m_BkgLeadBlobTypeHists)[leadBlobType].FillUniverse(universe, (*var)[tgtCode].GetRecoValue(*universe), weight);
+	      if ((*var)[tgtCode].IsFill()){
+		(*(*var)[tgtCode].m_backgroundHists)[bkgd_ID].FillUniverse(universe, (*var)[tgtCode].GetRecoValue(*universe), weight);
+		//Various breakdowns of selected backgrounds
+		(*(*var)[tgtCode].m_BkgIntTypeHists)[intType].FillUniverse(universe, (*var)[tgtCode].GetRecoValue(*universe), weight);
+		if ((*var)[tgtCode].IsBroken()){
+		  (*(*var)[tgtCode].m_BkgTargetTypeHists)[tgtType].FillUniverse(universe, (*var)[tgtCode].GetRecoValue(*universe), weight);
+		  //(*(*var)[tgtCode].m_BkgLeadBlobTypeHists)[leadBlobType].FillUniverse(universe, (*var)[tgtCode].GetRecoValue(*universe), weight);
+		}
+	      }
 	    }
 
 	    for(auto& var: vars2D_ByTgt){
-	      (*(*var)[tgtCode].m_backgroundHists)[bkgd_ID].FillUniverse(universe, (*var)[tgtCode].GetRecoValueX(*universe), (*var)[tgtCode].GetRecoValueY(*universe), weight);
-	      //Various breakdowns of selected backgrounds
-	      (*(*var)[tgtCode].m_BkgIntTypeHists)[intType].FillUniverse(universe, (*var)[tgtCode].GetRecoValueX(*universe), (*var)[tgtCode].GetRecoValueY(*universe), weight);
-	      (*(*var)[tgtCode].m_BkgTargetTypeHists)[tgtType].FillUniverse(universe, (*var)[tgtCode].GetRecoValueX(*universe), (*var)[tgtCode].GetRecoValueY(*universe), weight);
-	      //(*(*var)[tgtCode].m_BkgLeadBlobTypeHists)[leadBlobType].FillUniverse(universe, (*var)[tgtCode].GetRecoValueX(*universe), (*var)[tgtCode].GetRecoValueY(*universe), weight);
+	      if ((*var)[tgtCode].IsFill()){ 
+		(*(*var)[tgtCode].m_backgroundHists)[bkgd_ID].FillUniverse(universe, (*var)[tgtCode].GetRecoValueX(*universe), (*var)[tgtCode].GetRecoValueY(*universe), weight);
+		//Various breakdowns of selected backgrounds
+		(*(*var)[tgtCode].m_BkgIntTypeHists)[intType].FillUniverse(universe, (*var)[tgtCode].GetRecoValueX(*universe), (*var)[tgtCode].GetRecoValueY(*universe), weight);
+		(*(*var)[tgtCode].m_BkgTargetTypeHists)[tgtType].FillUniverse(universe, (*var)[tgtCode].GetRecoValueX(*universe), (*var)[tgtCode].GetRecoValueY(*universe), weight);
+		//(*(*var)[tgtCode].m_BkgLeadBlobTypeHists)[leadBlobType].FillUniverse(universe, (*var)[tgtCode].GetRecoValueX(*universe), (*var)[tgtCode].GetRecoValueY(*universe), weight);
+	      }
 	    }
 	  }
         }
@@ -453,21 +477,21 @@ void LoopAndFillData( PlotUtils::ChainWrapper* data,
 
       for(auto& var: vars)
       {
-        var->dataHist->FillUniverse(universe, var->GetRecoValue(*universe), 1);
+        if(var->IsFill()) var->dataHist->FillUniverse(universe, var->GetRecoValue(*universe), 1);
       }
       
       for(auto& var: vars2D){
-        var->dataHist->FillUniverse(universe, var->GetRecoValueX(*universe), var->GetRecoValueY(*universe), 1);
+        if(var->IsFill()) var->dataHist->FillUniverse(universe, var->GetRecoValueX(*universe), var->GetRecoValueY(*universe), 1);
       }
 
       //Only fill by tgt for non-interstitial plastic events
       if (tgtCode != -1){
 	for(auto& var: vars_ByTgt){
-	  (*var)[tgtCode].dataHist->FillUniverse(universe, (*var)[tgtCode].GetRecoValue(*universe), 1);
+	  if ((*var)[tgtCode].IsFill()) (*var)[tgtCode].dataHist->FillUniverse(universe, (*var)[tgtCode].GetRecoValue(*universe), 1);
 	}
 
 	for(auto& var: vars2D_ByTgt){
-	  (*var)[tgtCode].dataHist->FillUniverse(universe, (*var)[tgtCode].GetRecoValueX(*universe), (*var)[tgtCode].GetRecoValueY(*universe), 1);
+	  if ((*var)[tgtCode].IsFill()) (*var)[tgtCode].dataHist->FillUniverse(universe, (*var)[tgtCode].GetRecoValueX(*universe), (*var)[tgtCode].GetRecoValueY(*universe), 1);
 	}
       }
     }
@@ -516,12 +540,12 @@ void LoopAndFillEffDenom( PlotUtils::ChainWrapper* truth,
         //Fill efficiency denominator now: 
         for(auto var: vars)
         {
-          if (var->IsAnaVar()) var->efficiencyDenominator->FillUniverse(universe, var->GetTrueValue(*universe), weight);
+          if (var->IsAnaVar() && var->IsFill()) var->efficiencyDenominator->FillUniverse(universe, var->GetTrueValue(*universe), weight);
         }
 	
         for(auto var: vars2D)
         {
-          var->efficiencyDenominator->FillUniverse(universe, var->GetTrueValueX(*universe), var->GetTrueValueY(*universe), weight);
+          if(var->IsFill()) var->efficiencyDenominator->FillUniverse(universe, var->GetTrueValueX(*universe), var->GetTrueValueY(*universe), weight);
         }
       }
     }
@@ -594,7 +618,7 @@ int main(const int argc, const char** argv)
   TH1::AddDirectory(false);
 
   //Validate input.
-  const int nArgsMandatory = 6;
+  const int nArgsMandatory = 7;
   const int nArgsOptional = 2;
   const int nArgsTotal = nArgsMandatory + nArgsOptional;
   if(argc < nArgsMandatory + 1 || argc > nArgsTotal + 1) //argc is the size of argv.  I check for number of arguments + 1 because
@@ -624,6 +648,8 @@ int main(const int argc, const char** argv)
   }
   
   const TString FVregionName = (TString)FVregionNameTmp;
+
+  const bool doVtx = (atoi(argv[7]) != 0);
 
   TString nameExt = ".root";
 
@@ -858,6 +884,8 @@ int main(const int argc, const char** argv)
   std::vector<util::Categorized<Variable, int>*> vars_ByTgt = {};
   if (FVregionName.Contains("Target")){
     for(auto& var: vars){ 
+      var->SetFillVar(false);
+      if (!doNeutronCuts) continue;
       TString nameCheck = var->GetName();
       if (nameCheck == "vtxZ") continue;
       vars_ByTgt.push_back(new util::Categorized<Variable, int>(var->GetDirectoryName(), "ByTgt", var->IsAnaVar(), var->GetName().c_str(),var->GetAxisLabel().c_str(),util::TgtCodeList[TgtNum],var->GetBinVec(),var->GetRecoFunc(),var->GetTrueFunc()));
@@ -870,11 +898,19 @@ int main(const int argc, const char** argv)
     //new Variable2D(false, *vars[5],*vars[4]),//recoil v. Q2
     //new Variable2D(false, *vars[vars.size()-1],*vars[0]),//pT v. recoilQ2Bin
     };*/
-
-  if (!doNeutronCuts) vars2D.push_back(new Variable2D(true,"pmu2D",*vars[1],*vars[0]));
-
   std::vector<util::Categorized<Variable2D, int>*> vars2D_ByTgt = {};
-  if (!doNeutronCuts && FVregionName.Contains("Target")) vars2D_ByTgt.push_back(new util::Categorized<Variable2D, int>("", "ByTgt", true, "pmu2D", util::TgtCodeList[TgtNum], *vars[1], *vars[0]));
+
+  if (!doNeutronCuts){
+    if (FVregionName.Contains("Target")){
+      if (!doVtx){
+	vars2D_ByTgt.push_back(new util::Categorized<Variable2D, int>("", "ByTgt", true, "pmu2D", util::TgtCodeList[TgtNum], *vars[1], *vars[0]));
+      }
+    }
+    else{
+      for (auto& var: vars) var->SetFillVar(false);
+      vars2D.push_back(new Variable2D(true,"pmu2D",*vars[1],*vars[0]));
+    }
+  }
   
   //Commented out during testing of analysis variable flag
   /*
@@ -899,38 +935,38 @@ int main(const int argc, const char** argv)
     //new MichelAndNBlobSB(vars, error_bands, truth_bands, data_band),
     //new NeutronVariables(maxZ, minZ, error_bands, truth_bands, data_band),
     //new RecoilSB(vars, error_bands, truth_bands, data_band, splitRecoil),
-    new PreRecoil(vars, error_bands, truth_bands, data_band, splitRecoil, doNeutronCuts, FVregionName, TgtNum),
+    new PreRecoil(vars, error_bands, truth_bands, data_band, splitRecoil, doNeutronCuts, FVregionName, TgtNum, doVtx),
   };
 
-  for(auto& var: vars) var->InitializeMCHists(error_bands, truth_bands);
-  for(auto& var: vars) var->InitializeDATAHists(data_band);
+  for(auto& var: vars) if(var->IsFill()) var->InitializeMCHists(error_bands, truth_bands);
+  for(auto& var: vars) if(var->IsFill()) var->InitializeDATAHists(data_band);
 
   for(auto& tgt: vars_ByTgt){ 
     tgt->visit([&error_bands, &truth_bands](Variable& var)
 	       {
-		 var.InitializeMCHists(error_bands, truth_bands);
+		 if (var.IsFill()) var.InitializeMCHists(error_bands, truth_bands);
 	       });
   }
   for(auto& tgt: vars_ByTgt){ 
     tgt->visit([&data_band](Variable& var)
 	       {
-		 var.InitializeDATAHists(data_band);
+		 if (var.IsFill()) var.InitializeDATAHists(data_band);
 	       });
   }
 
-  for(auto& var: vars2D) var->InitializeMCHists(error_bands, truth_bands);
-  for(auto& var: vars2D) var->InitializeDATAHists(data_band);
+  for(auto& var: vars2D) if(var->IsFill()) var->InitializeMCHists(error_bands, truth_bands);
+  for(auto& var: vars2D) if(var->IsFill()) var->InitializeDATAHists(data_band);
 
   for(auto& tgt: vars2D_ByTgt){ 
     tgt->visit([&error_bands, &truth_bands](Variable2D& var)
 	       {
-		 var.InitializeMCHists(error_bands, truth_bands);
+		 if (var.IsFill()) var.InitializeMCHists(error_bands, truth_bands);
 	       });
   }
   for(auto& tgt: vars2D_ByTgt){ 
     tgt->visit([&data_band](Variable2D& var)
 	       {
-		 var.InitializeDATAHists(data_band);
+		 if (var.IsFill()) var.InitializeDATAHists(data_band);
 	       });
   }
 
@@ -962,19 +998,19 @@ int main(const int argc, const char** argv)
     std::cout << "Actually Setting Directories in the File" << std::endl;
 
     for(auto& study: studies) study->SaveOrDrawMC(*mcOutDir);
-    for(auto& var: vars) var->WriteMC(*mcOutDir);
+    for(auto& var: vars) if(var->IsFill()) var->WriteMC(*mcOutDir);
     for(auto& tgt: vars_ByTgt){ 
       tgt->visit([mcOutDir](Variable& var)
 		 {
-		   var.WriteMC(*mcOutDir);
+		   if (var.IsFill()) var.WriteMC(*mcOutDir);
 		 });
     }
 
-    for(auto& var: vars2D) var->WriteMC(*mcOutDir);
+    for(auto& var: vars2D) if(var->IsFill()) var->WriteMC(*mcOutDir);
     for(auto& tgt: vars2D_ByTgt){ 
       tgt->visit([mcOutDir](Variable2D& var)
 		 {
-		   var.WriteMC(*mcOutDir);
+		   if (var.IsFill()) var.WriteMC(*mcOutDir);
 		 });
     }
 
@@ -1013,18 +1049,18 @@ int main(const int argc, const char** argv)
     }
 
     for(auto& study: studies) study->SaveOrDrawData(*dataOutDir);
-    for(auto& var: vars) var->WriteData(*dataOutDir);
+    for(auto& var: vars) if(var->IsFill()) var->WriteData(*dataOutDir);
     for(auto& tgt: vars_ByTgt){
       tgt->visit([dataOutDir](Variable& var)
 		 {
-		   var.WriteData(*dataOutDir);
+		   if (var.IsFill()) var.WriteData(*dataOutDir);
 		 });
     }
-    for(auto& var: vars2D) var->WriteData(*dataOutDir);
+    for(auto& var: vars2D) if(var->IsFill()) var->WriteData(*dataOutDir);
     for(auto& tgt: vars2D_ByTgt){ 
       tgt->visit([dataOutDir](Variable2D& var)
 		 {
-		   var.WriteData(*dataOutDir);
+		   if (var.IsFill()) var.WriteData(*dataOutDir);
 		 });
     }
 

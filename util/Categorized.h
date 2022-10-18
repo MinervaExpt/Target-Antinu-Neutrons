@@ -85,6 +85,12 @@ namespace util
 					    {26, "Fe"},
 					    {82, "Pb"}};
 
+  std::map<int, std::string> TgtTypeList2 = {{1, "Plastic"},
+					    {6, "C"},
+					    {8, "Water"},
+					    {26, "Fe"},
+					    {82, "Pb"}};
+
   std::map<int,int> DSTgtMap = {{0,5582},
 				{54,4482},
 				{46,6666},
