@@ -332,23 +332,30 @@ class CVUniverse : public PlotUtils::MinervaUniverse {
     int bin = -1;
     if (pZ < 1.5 || pZ > 15.0 || pT < 0.0 || pT > 2.5) return bin;
     if (pZ <= 5.0){
-      if (pT <= 0.2) bin = 0;
+      //if (pT <= 0.2) bin = 0;
+      if (pT <= 0.25) bin = 0;
       else if (pT <= 0.4) bin = 1;
-      else if (pT <= 0.65) bin = 2;
-      else if (pT <= 0.82) bin = 3;
+      //else if (pT <= 0.65) bin = 2;
+      else if (pT <= 0.7) bin = 2;
+      //else if (pT <= 0.82) bin = 3;
+      else if (pT <= 0.85) bin = 3;
       else if (pT <= 1.0) bin = 4;
       else bin = 5;
     }
     else if (pZ <= 8.0){
-      if (pT <= 0.2) bin = 6;
+      //if (pT <= 0.2) bin = 6;
+      if (pT <= 0.25) bin = 6;
       else if (pT <= 0.4) bin = 7;
-      else if (pT <= 0.65) bin = 8;
-      else if (pT <= 0.82) bin = 9;
+      //else if (pT <= 0.65) bin = 8;
+      else if (pT <= 0.7) bin = 8;
+      //else if (pT <= 0.82) bin = 9;
+      else if (pT <= 0.85) bin = 9;
       else if (pT <= 1.0) bin = 10;
       else bin = 11;
     }
     else{
-      if (pT <= 0.5) bin = 12;
+      //if (pT <= 0.5) bin = 12;
+      if (pT <= 0.55) bin = 12;
       else bin = 13;
     }
     return bin;
