@@ -118,7 +118,8 @@ void LoopAndFillEventSelection(
     std::vector<util::Categorized<Variable2D, int>*> vars2D_ByTgt,
     std::vector<Study*> studies,
     PlotUtils::Cutter<CVUniverse, NeutronEvent>& michelcuts,
-    PlotUtils::Model<CVUniverse, NeutronEvent>& model)
+    PlotUtils::Model<CVUniverse, NeutronEvent>& model,
+    bool doNeutron = true)
 {
   assert(!error_bands["cv"].empty() && "\"cv\" error band is empty!  Can't set Model weight.");
   auto& cvUniv = error_bands["cv"].front();
@@ -130,7 +131,8 @@ void LoopAndFillEventSelection(
     if(i%1000==0) std::cout << i << " / " << nEntries << "\r" << std::endl;
 
     cvUniv->SetEntry(i);
-    NeutronEvent cvEvent(cvUniv->GetLeadNeutCandOnly());
+    //NeutronEvent cvEvent(cvUniv->GetLeadNeutCandOnly());
+    NeutronEvent cvEvent = doNeutron ? NeutronEvent(cvUniv->GetLeadNeutCandOnly()) : NeutronEvent();
     model.SetEntry(*cvUniv, cvEvent);
     const double cvWeight = model.GetWeight(*cvUniv, cvEvent);
     //For testing.
@@ -148,7 +150,8 @@ void LoopAndFillEventSelection(
         universe->SetEntry(i);
         
         // This is where you would Access/create a Michel
-        NeutronEvent myevent(universe->GetLeadNeutCandOnly()); // make sure your event is inside the error band loop. 
+        //NeutronEvent myevent(universe->GetLeadNeutCandOnly()); // make sure your event is inside the error band loop. 
+	NeutronEvent myevent = doNeutron ? NeutronEvent(universe->GetLeadNeutCandOnly()) : NeutronEvent();
 	myevent.SetIsMC();
 
 	myevent.SetEMBlobInfo(universe->GetEMNBlobsTotalEnergyTotalNHits());
@@ -426,7 +429,8 @@ void LoopAndFillData( PlotUtils::ChainWrapper* data,
                                 std::vector<Variable2D*> vars2D,
 		                std::vector<util::Categorized<Variable2D, int>*> vars2D_ByTgt,
                                 std::vector<Study*> studies,
-				PlotUtils::Cutter<CVUniverse, NeutronEvent>& michelcuts)
+		                PlotUtils::Cutter<CVUniverse, NeutronEvent>& michelcuts,
+		                bool doNeutron = true)
 
 {
   std::cout << "Starting data loop...\n";
@@ -435,7 +439,7 @@ void LoopAndFillData( PlotUtils::ChainWrapper* data,
     for (auto universe : data_band) {
       universe->SetEntry(i);
       if(i%1000==0) std::cout << i << " / " << nEntries << "\r" << std::endl;
-      NeutronEvent myevent(universe->GetLeadNeutCandOnly());
+      NeutronEvent myevent = doNeutron ? NeutronEvent(universe->GetLeadNeutCandOnly()) : NeutronEvent();
 
       myevent.SetEMBlobInfo(universe->GetEMNBlobsTotalEnergyTotalNHits());
       std::bitset<64> SBStat = michelcuts.isDataSelected(*universe, myevent);
@@ -974,7 +978,8 @@ int main(const int argc, const char** argv)
   try
   {
     CVUniverse::SetTruth(false);
-    LoopAndFillEventSelection(options.m_mc, error_bands, vars, vars_ByTgt, vars2D, vars2D_ByTgt, studies, mycuts, model);
+    LoopAndFillEventSelection(options.m_mc, error_bands, vars, vars_ByTgt, vars2D, vars2D_ByTgt, studies, mycuts, model, doNeutronCuts);
+    //LoopAndFillEventSelection(options.m_mc, error_bands, vars, vars_ByTgt, vars2D, vars2D_ByTgt, studies, mycuts, model);
     CVUniverse::SetTruth(true);
     LoopAndFillEffDenom(options.m_truth, truth_bands, vars, vars2D, mycuts, model);
     options.PrintMacroConfiguration(argv[0]);
@@ -982,7 +987,8 @@ int main(const int argc, const char** argv)
     mycuts.resetStats();
 
     CVUniverse::SetTruth(false);
-    LoopAndFillData(options.m_data, data_band, vars, vars_ByTgt, vars2D, vars2D_ByTgt, studies, mycuts);
+    LoopAndFillData(options.m_data, data_band, vars, vars_ByTgt, vars2D, vars2D_ByTgt, studies, mycuts, doNeutronCuts);
+    //LoopAndFillData(options.m_data, data_band, vars, vars_ByTgt, vars2D, vars2D_ByTgt, studies, mycuts);
     std::cout << "Data cut summary:\n" << mycuts << "\n";
 
     std::cout << "Writing MC Output File." << std::endl;
