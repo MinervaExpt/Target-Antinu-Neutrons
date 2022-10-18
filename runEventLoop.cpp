@@ -901,8 +901,10 @@ int main(const int argc, const char** argv)
   std::vector<util::Categorized<Variable2D, int>*> vars2D_ByTgt = {};
 
   if (!doNeutronCuts){
-    if (FVregionName.Contains("Target") && !doVtx){
-      vars2D_ByTgt.push_back(new util::Categorized<Variable2D, int>("", "ByTgt", true, "pmu2D", util::TgtCodeList[TgtNum], *vars[1], *vars[0]));
+    if (FVregionName.Contains("Target")){
+      if (!doVtx){
+	vars2D_ByTgt.push_back(new util::Categorized<Variable2D, int>("", "ByTgt", true, "pmu2D", util::TgtCodeList[TgtNum], *vars[1], *vars[0]));
+      }
     }
     else{
       for (auto& var: vars) var->SetFillVar(false);
