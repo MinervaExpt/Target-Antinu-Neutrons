@@ -64,13 +64,13 @@ void TESTDraw2DBKGCategLines(string name, TFile* mcFile, TFile* dataFile, TStrin
   bool isTracker = sampleName.Contains("Tracker") ? true : false;
 
   MnvH2D* h_Sig_Top = (MnvH2D*)mcFile->Get((TString)name);
-  //MnvH2D* h_Sig = new MnvH1D(h_Sig_Top->GetBinNormalizedCopy());
-  TH2* h_Sig = (TH2*)h_Sig_Top->GetCVHistoWithError().Clone();
+  MnvH2D* h_Sig_Norm = new MnvH2D(h_Sig_Top->GetBinNormalizedCopy());
+  TH2* h_Sig = (TH2*)h_Sig_Norm->GetCVHistoWithError().Clone();
   h_Sig->Scale(scale);
   h_Sig->SetLineColor(TColor::GetColor("#999933"));
   //h_Sig->SetFillColor(TColor::GetColor("#999933"));
 
-  MnvH2D* mcSum = (MnvH2D*)h_Sig_Top->Clone();
+  MnvH2D* mcSum = (MnvH2D*)h_Sig_Norm->Clone();
   //mcSum->Scale(scale);
   mcSum->SetLineColor(kRed);
   //mcSum->SetFillColorAlpha(kPink + 1, 0.4);
@@ -86,61 +86,59 @@ void TESTDraw2DBKGCategLines(string name, TFile* mcFile, TFile* dataFile, TStrin
   string name_bkg = name;
   name_bkg.erase(name_bkg.length()-21,name_bkg.length());
 
-  MnvH2D* h_1PiC_Bkg_Top = (MnvH2D*)mcFile->Get((TString)name_bkg+"_by_BKG_Label_1chargePi");
-  //MnvH2D* h_1PiC_Bkg = new MnvH1D(h_1PiC_Bkg_Top->GetBinNormalizedCopy());
-  TH2* h_1PiC_Bkg = (TH2*)h_1PiC_Bkg_Top->GetCVHistoWithError().Clone();
+  MnvH2D* h_1PiC_Bkg_Top = (MnvH2D*)mcFile->Get((TString)name_bkg+"_background_1chargePi");
+  MnvH2D* h_1PiC_Bkg_Norm = new MnvH2D(h_1PiC_Bkg_Top->GetBinNormalizedCopy());
+  TH2* h_1PiC_Bkg = (TH2*)h_1PiC_Bkg_Norm->GetCVHistoWithError().Clone();
   h_1PiC_Bkg->Scale(scale);
-  mcSum->Add(h_1PiC_Bkg_Top);
+  mcSum->Add(h_1PiC_Bkg_Norm);
   h_1PiC_Bkg->SetLineColor(TColor::GetColor("#88CCEE"));
   //  h_1PiC_Bkg->SetFillColor(TColor::GetColor("#88CCEE"));
 
-  MnvH2D* h_1Pi0_Bkg_Top = (MnvH2D*)mcFile->Get((TString)name_bkg+"_by_BKG_Label_1neutPi");
-  //MnvH2D* h_1Pi0_Bkg = new MnvH1D(h_1Pi0_Bkg_Top->GetBinNormalizedCopy());
-  TH2* h_1Pi0_Bkg = (TH2*)h_1Pi0_Bkg_Top->GetCVHistoWithError().Clone();
+  MnvH2D* h_1Pi0_Bkg_Top = (MnvH2D*)mcFile->Get((TString)name_bkg+"_background_1neutPi");
+  MnvH2D* h_1Pi0_Bkg_Norm = new MnvH2D(h_1Pi0_Bkg_Top->GetBinNormalizedCopy());
+  TH2* h_1Pi0_Bkg = (TH2*)h_1Pi0_Bkg_Norm->GetCVHistoWithError().Clone();
   h_1Pi0_Bkg->Scale(scale);
-  mcSum->Add(h_1Pi0_Bkg_Top);
+  mcSum->Add(h_1Pi0_Bkg_Norm);
   h_1Pi0_Bkg->SetLineColor(TColor::GetColor("#117733"));
   //h_1Pi0_Bkg->SetFillColor(TColor::GetColor("#117733"));
 
-  MnvH2D* h_NPi_Bkg_Top = (MnvH2D*)mcFile->Get((TString)name_bkg+"_by_BKG_Label_NPi");
-  //MnvH2D* h_NPi_Bkg = new MnvH1D(h_NPi_Bkg_Top->GetBinNormalizedCopy());
-  TH2* h_NPi_Bkg = (TH2*)h_NPi_Bkg_Top->GetCVHistoWithError().Clone();
+  MnvH2D* h_NPi_Bkg_Top = (MnvH2D*)mcFile->Get((TString)name_bkg+"_background_NPi");
+  MnvH2D* h_NPi_Bkg_Norm = new MnvH2D(h_NPi_Bkg_Top->GetBinNormalizedCopy());
+  TH2* h_NPi_Bkg = (TH2*)h_NPi_Bkg_Norm->GetCVHistoWithError().Clone();
   h_NPi_Bkg->Scale(scale);
-  mcSum->Add(h_NPi_Bkg_Top);
+  mcSum->Add(h_NPi_Bkg_Norm);
   h_NPi_Bkg->SetLineColor(TColor::GetColor("#CC6677"));
   //h_NPi_Bkg->SetFillColor(TColor::GetColor("#CC6677"));
 
-  /*
   MnvH2D* h_USPlastic_Bkg_Top = (MnvH2D*)mcFile->Get((TString)name_bkg+"_background_USPlastic");
-  //MnvH2D* h_USPlastic_Bkg = new MnvH1D(h_USPlastic_Bkg_Top->GetBinNormalizedCopy());
-  TH2* h_USPlastic_Bkg = (TH2*)h_USPlastic_Bkg_Top->GetCVHistoWithError().Clone();
+  MnvH2D* h_USPlastic_Bkg_Norm = new MnvH2D(h_USPlastic_Bkg_Top->GetBinNormalizedCopy());
+  TH2* h_USPlastic_Bkg = (TH2*)h_USPlastic_Bkg_Norm->GetCVHistoWithError().Clone();
   h_USPlastic_Bkg->Scale(scale);
-  mcSum->Add(h_USPlastic_Bkg);
+  mcSum->Add(h_USPlastic_Bkg_Norm);
   h_USPlastic_Bkg->SetLineColor(TColor::GetColor("#A26E1C"));
   //h_USPlastic_Bkg->SetFillColor(TColor::GetColor("#A26E1C"));
 
   MnvH2D* h_DSPlastic_Bkg_Top = (MnvH2D*)mcFile->Get((TString)name_bkg+"_background_DSPlastic");
-  //MnvH2D* h_DSPlastic_Bkg = new MnvH1D(h_DSPlastic_Bkg_Top->GetBinNormalizedCopy());
-  TH2* h_DSPlastic_Bkg = (TH2*)h_DSPlastic_Bkg_Top->GetCVHistoWithError().Clone();
+  MnvH2D* h_DSPlastic_Bkg_Norm = new MnvH2D(h_DSPlastic_Bkg_Top->GetBinNormalizedCopy());
+  TH2* h_DSPlastic_Bkg = (TH2*)h_DSPlastic_Bkg_Norm->GetCVHistoWithError().Clone();
   h_DSPlastic_Bkg->Scale(scale);
-  mcSum->Add(h_DSPlastic_Bkg);
+  mcSum->Add(h_DSPlastic_Bkg_Norm);
   h_DSPlastic_Bkg->SetLineColor(TColor::GetColor("#C1B185"));
   //h_DSPlastic_Bkg->SetFillColor(TColor::GetColor("#C1B185"));
 
   MnvH2D* h_Wrong_Nucleus_Bkg_Top = (MnvH2D*)mcFile->Get((TString)name_bkg+"_background_Wrong_Nucleus");
-  //MnvH2D* h_Wrong_Nucleus_Bkg = new MnvH1D(h_Wrong_Nucleus_Bkg_Top->GetBinNormalizedCopy());
-  TH2* h_Wrong_Nucleus_Bkg = (TH2*)h_Wrong_Nucleus_Bkg_Top->GetCVHistoWithError().Clone();
+  MnvH2D* h_Wrong_Nucleus_Bkg_Norm = new MnvH2D(h_Wrong_Nucleus_Bkg_Top->GetBinNormalizedCopy());
+  TH2* h_Wrong_Nucleus_Bkg = (TH2*)h_Wrong_Nucleus_Bkg_Norm->GetCVHistoWithError().Clone();
   h_Wrong_Nucleus_Bkg->Scale(scale);
-  mcSum->Add(h_Wrong_Nucleus_Bkg);
+  mcSum->Add(h_Wrong_Nucleus_Bkg_Norm);
   h_Wrong_Nucleus_Bkg->SetLineColor(TColor::GetColor("#909497"));
   //h_Wrong_Nucleus_Bkg->SetFillColor(TColor::GetColor("#909497"));
-  */
 
-  MnvH2D* h_Other_Bkg_Top = (MnvH2D*)mcFile->Get((TString)name_bkg+"_by_BKG_Label_Other");
-  //MnvH2D* h_Other_Bkg = new MnvH1D(h_Other_Bkg_Top->GetBinNormalizedCopy());
-  TH2* h_Other_Bkg = (TH2*)h_Other_Bkg_Top->GetCVHistoWithError().Clone();
+  MnvH2D* h_Other_Bkg_Top = (MnvH2D*)mcFile->Get((TString)name_bkg+"_background_Other");
+  MnvH2D* h_Other_Bkg_Norm = new MnvH2D(h_Other_Bkg_Top->GetBinNormalizedCopy());
+  TH2* h_Other_Bkg = (TH2*)h_Other_Bkg_Norm->GetCVHistoWithError().Clone();
   h_Other_Bkg->Scale(scale);
-  mcSum->Add(h_Other_Bkg_Top);
+  mcSum->Add(h_Other_Bkg_Norm);
   h_Other_Bkg->SetLineColor(TColor::GetColor("#882255"));
   //h_Other_Bkg->SetFillColor(TColor::GetColor("#882255"));
 
@@ -150,8 +148,8 @@ void TESTDraw2DBKGCategLines(string name, TFile* mcFile, TFile* dataFile, TStrin
   mcErr->SetFillColorAlpha(kPink + 1, 0.4);
 
   MnvH2D* h_data_Top = (MnvH2D*)dataFile->Get((TString)name_bkg+"_data");
-  //MnvH2D* h_data = new MnvH1D(h_data_Top->GetBinNormalizedCopy());
-  TH2* dataHist = (TH2*)h_data_Top->GetCVHistoWithError().Clone();
+  MnvH2D* h_data_Norm = new MnvH2D(h_data_Top->GetBinNormalizedCopy());
+  TH2* dataHist = (TH2*)h_data_Norm->GetCVHistoWithError().Clone();
   dataHist->SetLineColor(kBlack);
   //dataHist->SetLineWidth(3);
 
