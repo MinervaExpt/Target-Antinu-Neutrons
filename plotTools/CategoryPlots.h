@@ -133,6 +133,7 @@ void TESTDraw2DBKGCategLines(string name, TFile* mcFile, TFile* dataFile, TStrin
   mcSum->Add(h_Wrong_Nucleus_Bkg_Norm);
   h_Wrong_Nucleus_Bkg->SetLineColor(TColor::GetColor("#909497"));
   //h_Wrong_Nucleus_Bkg->SetFillColor(TColor::GetColor("#909497"));
+  h_Wrong_Nucleus_Bkg->SetTitle("");
 
   MnvH2D* h_Other_Bkg_Top = (MnvH2D*)mcFile->Get((TString)name_bkg+"_background_Other");
   MnvH2D* h_Other_Bkg_Norm = new MnvH2D(h_Other_Bkg_Top->GetBinNormalizedCopy());
@@ -156,9 +157,9 @@ void TESTDraw2DBKGCategLines(string name, TFile* mcFile, TFile* dataFile, TStrin
   //dataHist->SetLineWidth(3);
 
   vector<pair<TH2*, const char*>> hVec;
-  //hVec.push_back(make_pair(h_Wrong_Nucleus_Bkg,"hists"));
-  //hVec.push_back(make_pair(h_USPlastic_Bkg,"hists"));
-  //hVec.push_back(make_pair(h_DSPlastic_Bkg,"hists"));
+  hVec.push_back(make_pair(h_Wrong_Nucleus_Bkg,"hists"));
+  hVec.push_back(make_pair(h_USPlastic_Bkg,"hists"));
+  hVec.push_back(make_pair(h_DSPlastic_Bkg,"hists"));
   hVec.push_back(make_pair(h_Other_Bkg,"hists"));
   hVec.push_back(make_pair(h_NPi_Bkg,"hists"));
   hVec.push_back(make_pair(h_1Pi0_Bkg,"hists"));
@@ -187,11 +188,191 @@ void TESTDraw2DBKGCategLines(string name, TFile* mcFile, TFile* dataFile, TStrin
   h->Add((TH2D*)h_1PiC_Bkg->GetCVHistoWithError().Clone());
   h->Add((TH2D*)h_Sig->GetCVHistoWithError().Clone());
 
-  /*
   //TLegend* leg = new TLegend(1.0-0.6,1.0-0.5,1.0-0.9,1.0-0.9);
 
   TH2D* mcRatio = new TH2D(mcSum->GetTotalError(false, true, false));
   */
+
+  TLegend* leg = new TLegend(0.6,0.075,0.85,0.275);
+
+  leg->SetBorderSize(0);
+
+  leg->AddEntry(dataHist,"DATA");
+  leg->AddEntry(h_Sig,"Signal");
+  leg->AddEntry(h_1PiC_Bkg,"single #pi^{#pm}");
+  leg->AddEntry(h_1Pi0_Bkg,"single #pi^{0}");
+  leg->AddEntry(h_NPi_Bkg,"N#pi");
+  leg->AddEntry(h_Other_Bkg,"Other");
+  if (!isTracker) leg->AddEntry(h_DSPlastic_Bkg,"DS Plastic");
+  if (!isTracker) leg->AddEntry(h_USPlastic_Bkg,"US Plastic");
+  if (!isTracker) leg->AddEntry(h_Wrong_Nucleus_Bkg,"Wrong Nucleus");
+
+  leg->Draw();
+
+  gc->Print(nameToSave+"_BKG_stacked.pdf");
+  gc->Print(nameToSave+"_BKG_stacked.png");
+  
+  delete mcSum;
+  delete mcHist;
+  delete mcErr;
+  delete dataHist;
+  //delete straightLine;
+  delete h_Sig;
+  delete h_1PiC_Bkg;
+  delete h_1Pi0_Bkg;
+  delete h_NPi_Bkg;
+  delete h_USPlastic_Bkg;
+  delete h_DSPlastic_Bkg;
+  delete h_Wrong_Nucleus_Bkg;
+  delete h_Other_Bkg;
+  delete h_Sig_Norm;
+  delete h_1PiC_Bkg_Norm;
+  delete h_1Pi0_Bkg_Norm;
+  delete h_NPi_Bkg_Norm;
+  delete h_USPlastic_Bkg_Norm;
+  delete h_DSPlastic_Bkg_Norm;
+  delete h_Wrong_Nucleus_Bkg_Norm;
+  delete h_Other_Bkg_Norm;
+  delete h_data_Norm;
+  delete gc;
+
+  return;
+}
+
+void TESTDraw2DBKGCategStack(string name, TFile* mcFile, TFile* dataFile, TString sample, double scale, TString nameToSave){
+
+  bool primPar = false;
+
+  TString sampleName = sample;
+
+  bool isTracker = sampleName.Contains("Tracker") ? true : false;
+
+  MnvH2D* h_Sig_Top = (MnvH2D*)mcFile->Get((TString)name);
+  MnvH2D* h_Sig_Norm = new MnvH2D(h_Sig_Top->GetBinNormalizedCopy());
+  TH2* h_Sig = (TH2*)h_Sig_Norm->GetCVHistoWithError().Clone();
+  h_Sig->Scale(scale);
+  h_Sig->SetLineColor(TColor::GetColor("#999933"));
+  h_Sig->SetFillColor(TColor::GetColor("#999933"));
+
+  MnvH2D* mcSum = (MnvH2D*)h_Sig_Norm->Clone();
+  //mcSum->Scale(scale);
+  mcSum->SetLineColor(kRed);
+  //mcSum->SetFillColorAlpha(kPink + 1, 0.4);
+  //mcSum->SetLineWidth(3);
+
+  cout << "Handling: " << name << endl;
+  string title = (string)h_Sig->GetTitle();
+  TString Xtitle = h_Sig->GetXaxis()->GetTitle();
+  TString Ytitle = h_Sig->GetYaxis()->GetTitle();
+  string units = Xtitle.Data();
+  units.erase(0,units.find("["));
+
+  string name_bkg = name;
+  name_bkg.erase(name_bkg.length()-21,name_bkg.length());
+
+  MnvH2D* h_1PiC_Bkg_Top = (MnvH2D*)mcFile->Get((TString)name_bkg+"_background_1chargePi");
+  MnvH2D* h_1PiC_Bkg_Norm = new MnvH2D(h_1PiC_Bkg_Top->GetBinNormalizedCopy());
+  TH2* h_1PiC_Bkg = (TH2*)h_1PiC_Bkg_Norm->GetCVHistoWithError().Clone();
+  h_1PiC_Bkg->Scale(scale);
+  mcSum->Add(h_1PiC_Bkg_Norm);
+  h_1PiC_Bkg->SetLineColor(TColor::GetColor("#88CCEE"));
+  h_1PiC_Bkg->SetFillColor(TColor::GetColor("#88CCEE"));
+
+  MnvH2D* h_1Pi0_Bkg_Top = (MnvH2D*)mcFile->Get((TString)name_bkg+"_background_1neutPi");
+  MnvH2D* h_1Pi0_Bkg_Norm = new MnvH2D(h_1Pi0_Bkg_Top->GetBinNormalizedCopy());
+  TH2* h_1Pi0_Bkg = (TH2*)h_1Pi0_Bkg_Norm->GetCVHistoWithError().Clone();
+  h_1Pi0_Bkg->Scale(scale);
+  mcSum->Add(h_1Pi0_Bkg_Norm);
+  h_1Pi0_Bkg->SetLineColor(TColor::GetColor("#117733"));
+  h_1Pi0_Bkg->SetFillColor(TColor::GetColor("#117733"));
+
+  MnvH2D* h_NPi_Bkg_Top = (MnvH2D*)mcFile->Get((TString)name_bkg+"_background_NPi");
+  MnvH2D* h_NPi_Bkg_Norm = new MnvH2D(h_NPi_Bkg_Top->GetBinNormalizedCopy());
+  TH2* h_NPi_Bkg = (TH2*)h_NPi_Bkg_Norm->GetCVHistoWithError().Clone();
+  h_NPi_Bkg->Scale(scale);
+  mcSum->Add(h_NPi_Bkg_Norm);
+  h_NPi_Bkg->SetLineColor(TColor::GetColor("#CC6677"));
+  h_NPi_Bkg->SetFillColor(TColor::GetColor("#CC6677"));
+
+  MnvH2D* h_USPlastic_Bkg_Top = (MnvH2D*)mcFile->Get((TString)name_bkg+"_background_USPlastic");
+  MnvH2D* h_USPlastic_Bkg_Norm = new MnvH2D(h_USPlastic_Bkg_Top->GetBinNormalizedCopy());
+  TH2* h_USPlastic_Bkg = (TH2*)h_USPlastic_Bkg_Norm->GetCVHistoWithError().Clone();
+  h_USPlastic_Bkg->Scale(scale);
+  mcSum->Add(h_USPlastic_Bkg_Norm);
+  h_USPlastic_Bkg->SetLineColor(TColor::GetColor("#A26E1C"));
+  h_USPlastic_Bkg->SetFillColor(TColor::GetColor("#A26E1C"));
+
+  MnvH2D* h_DSPlastic_Bkg_Top = (MnvH2D*)mcFile->Get((TString)name_bkg+"_background_DSPlastic");
+  MnvH2D* h_DSPlastic_Bkg_Norm = new MnvH2D(h_DSPlastic_Bkg_Top->GetBinNormalizedCopy());
+  TH2* h_DSPlastic_Bkg = (TH2*)h_DSPlastic_Bkg_Norm->GetCVHistoWithError().Clone();
+  h_DSPlastic_Bkg->Scale(scale);
+  mcSum->Add(h_DSPlastic_Bkg_Norm);
+  h_DSPlastic_Bkg->SetLineColor(TColor::GetColor("#C1B185"));
+  h_DSPlastic_Bkg->SetFillColor(TColor::GetColor("#C1B185"));
+
+  MnvH2D* h_Wrong_Nucleus_Bkg_Top = (MnvH2D*)mcFile->Get((TString)name_bkg+"_background_Wrong_Nucleus");
+  MnvH2D* h_Wrong_Nucleus_Bkg_Norm = new MnvH2D(h_Wrong_Nucleus_Bkg_Top->GetBinNormalizedCopy());
+  TH2* h_Wrong_Nucleus_Bkg = (TH2*)h_Wrong_Nucleus_Bkg_Norm->GetCVHistoWithError().Clone();
+  h_Wrong_Nucleus_Bkg->Scale(scale);
+  mcSum->Add(h_Wrong_Nucleus_Bkg_Norm);
+  h_Wrong_Nucleus_Bkg->SetLineColor(TColor::GetColor("#909497"));
+  h_Wrong_Nucleus_Bkg->SetFillColor(TColor::GetColor("#909497"));
+  h_Wrong_Nucleus_Bkg->SetTitle("");
+
+  MnvH2D* h_Other_Bkg_Top = (MnvH2D*)mcFile->Get((TString)name_bkg+"_background_Other");
+  MnvH2D* h_Other_Bkg_Norm = new MnvH2D(h_Other_Bkg_Top->GetBinNormalizedCopy());
+  TH2* h_Other_Bkg = (TH2*)h_Other_Bkg_Norm->GetCVHistoWithError().Clone();
+  h_Other_Bkg->Scale(scale);
+  mcSum->Add(h_Other_Bkg_Norm);
+  h_Other_Bkg->SetLineColor(TColor::GetColor("#882255"));
+  h_Other_Bkg->SetFillColor(TColor::GetColor("#882255"));
+  h_Other_Bkg->SetTitle("");
+  //h_Other_Bkg->SetYTitle("TEST");
+
+  mcSum->Scale(scale);
+  TH2* mcHist = (TH2*)mcSum->GetCVHistoWithError().Clone();
+  TH2* mcErr = (TH2*)mcHist->Clone();
+  mcErr->SetFillColorAlpha(kPink + 1, 0.4);
+
+  MnvH2D* h_data_Top = (MnvH2D*)dataFile->Get((TString)name_bkg+"_data");
+  MnvH2D* h_data_Norm = new MnvH2D(h_data_Top->GetBinNormalizedCopy());
+  TH2* dataHist = (TH2*)h_data_Norm->GetCVHistoWithError().Clone();
+  dataHist->SetLineColor(kBlack);
+  //dataHist->SetLineWidth(3);
+
+  /*
+  THStack* h = new THStack();
+  h->Add(h_Wrong_Nucleus_Bkg);
+  h->Add(h_USPlastic_Bkg);
+  h->Add(h_DSPlastic_Bkg);
+  h->Add(h_Other_Bkg);
+  h->Add(h_NPi_Bkg);
+  h->Add(h_1Pi0_Bkg);
+  h->Add(h_1PiC_Bkg);
+  h->Add(h_Sig);
+  */
+
+  vector<TH2*> tmpVec;
+  tmpVec.push_back(h_Wrong_Nucleus_Bkg);
+  tmpVec.push_back(h_USPlastic_Bkg);
+  tmpVec.push_back(h_DSPlastic_Bkg);
+  tmpVec.push_back(h_Other_Bkg);
+  tmpVec.push_back(h_NPi_Bkg);
+  tmpVec.push_back(h_1Pi0_Bkg);
+  tmpVec.push_back(h_1PiC_Bkg);
+  tmpVec.push_back(h_Sig);
+  vector<pair<TH2*, const char*>> hVec = BuildMyStack(tmpVec);
+  //hVec.push_back(make_pair(mcHist,"hists"));
+  //hVec.push_back(make_pair(mcErr,"E2"));
+  hVec.push_back(make_pair(dataHist,""));
+
+  double multipliers[]={1,1,1,1,
+			1,1,1,1,
+			1,1,1,1};
+
+  GridCanvas* gc=plotYAxis1D(hVec, "Muon Transverse Momentum [GeV/c]","Events/(GeV^{2}/c^{2})", "p_{//}", multipliers);
+
+  gc->Remax();
 
   TLegend* leg = new TLegend(0.6,0.075,0.85,0.275);
 

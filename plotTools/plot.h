@@ -33,6 +33,32 @@ TString uniq()
 }
 
 
+std::vector<std::pair<TH2*, const char*>> BuildMyStack(std::vector<TH2*> inVec){
+  std::vector<std::pair<TH2*, const char*>> out = {};
+  TH2* h = (TH2*)inVec.at(0)->Clone(uniq());
+  h->SetLineStyle(inVec.at(0)->GetLineStyle());
+  h->SetLineWidth(inVec.at(0)->GetLineWidth());
+  h->SetMarkerStyle(inVec.at(0)->GetMarkerStyle());
+  h->SetMarkerSize(inVec.at(0)->GetMarkerSize());
+  h->SetLineColor(inVec.at(0)->GetLineColor());
+  h->SetFillColor(inVec.at(0)->GetFillColor());
+
+  out.push_back(make_pair((TH2*)h->Clone(uniq()),"hist"));
+  for (unsigned int i=1;i<inVec.size();i++){
+    h->Add(inVec.at(i));
+    h->SetLineStyle(inVec.at(i)->GetLineStyle());
+    h->SetLineWidth(inVec.at(i)->GetLineWidth());
+    h->SetMarkerStyle(inVec.at(i)->GetMarkerStyle());
+    h->SetMarkerSize(inVec.at(i)->GetMarkerSize());
+    h->SetLineColor(inVec.at(i)->GetLineColor());
+    h->SetFillColor(inVec.at(i)->GetFillColor());
+    out.push_back(make_pair((TH2*)h->Clone(uniq()),"hist"));
+  }
+  delete h;
+  std::reverse(out.begin(),out.end());
+  return out;
+}
+
 //======================================================================
 
 // Convert a histogram to a graph so we can draw it without ROOT
