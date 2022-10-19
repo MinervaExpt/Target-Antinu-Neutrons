@@ -66,7 +66,7 @@ int main(){//(TString mcName, TString dataName, TString outDir){
   string name = "TwoD/TwoD_pmu2D_selected_signal_reco";
   TString nameToSave = outDir+"test_pmu2D_yaxis_projections";
 
-  TESTDraw2DBKGCategLines(name, mcFile, dataFile, "", scale, nameToSave);
+  TESTDraw2DBKGCategLines(name, mcFile, dataFile, "Tracker", scale, nameToSave);
 
   return 0;
 }

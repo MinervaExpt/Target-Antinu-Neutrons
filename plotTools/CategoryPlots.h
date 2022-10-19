@@ -141,6 +141,8 @@ void TESTDraw2DBKGCategLines(string name, TFile* mcFile, TFile* dataFile, TStrin
   mcSum->Add(h_Other_Bkg_Norm);
   h_Other_Bkg->SetLineColor(TColor::GetColor("#882255"));
   //h_Other_Bkg->SetFillColor(TColor::GetColor("#882255"));
+  h_Other_Bkg->SetTitle("");
+  h_Other_Bkg->SetYTitle("TEST");
 
   mcSum->Scale(scale);
   TH2* mcHist = (TH2*)mcSum->GetCVHistoWithError().Clone();
@@ -170,11 +172,9 @@ void TESTDraw2DBKGCategLines(string name, TFile* mcFile, TFile* dataFile, TStrin
 			1,1,1,1,
 			1,1,1,1};
 
-  GridCanvas* gc=plotYAxis1D(hVec, "pT","pz", multipliers);
+  GridCanvas* gc=plotYAxis1D(hVec, "Muon Transverse Momentum [GeV/c]","Events/(GeV^{2}/c^{2})", "p_{//}", multipliers);
 
   gc->Remax();
-  gc->Print(nameToSave+"_BKG_stacked.pdf");
-  gc->Print(nameToSave+"_BKG_stacked.png");
 
   /*
   THStack* h = new THStack();
@@ -187,8 +187,15 @@ void TESTDraw2DBKGCategLines(string name, TFile* mcFile, TFile* dataFile, TStrin
   h->Add((TH2D*)h_1PiC_Bkg->GetCVHistoWithError().Clone());
   h->Add((TH2D*)h_Sig->GetCVHistoWithError().Clone());
 
+  /*
   //TLegend* leg = new TLegend(1.0-0.6,1.0-0.5,1.0-0.9,1.0-0.9);
-  TLegend* leg = new TLegend(0.1,0.5,0.4,0.9);
+
+  TH2D* mcRatio = new TH2D(mcSum->GetTotalError(false, true, false));
+  */
+
+  TLegend* leg = new TLegend(0.6,0.075,0.85,0.275);
+
+  leg->SetBorderSize(0);
 
   leg->AddEntry(dataHist,"DATA");
   leg->AddEntry(h_Sig,"Signal");
@@ -202,23 +209,31 @@ void TESTDraw2DBKGCategLines(string name, TFile* mcFile, TFile* dataFile, TStrin
 
   leg->Draw();
 
-  TH2D* mcRatio = new TH2D(mcSum->GetTotalError(false, true, false));
-  */
+  gc->Print(nameToSave+"_BKG_stacked.pdf");
+  gc->Print(nameToSave+"_BKG_stacked.png");
   
   delete mcSum;
   delete mcHist;
   delete mcErr;
   delete dataHist;
   //delete straightLine;
-  //delete h_data;
   delete h_Sig;
   delete h_1PiC_Bkg;
   delete h_1Pi0_Bkg;
   delete h_NPi_Bkg;
-  //delete h_USPlastic_Bkg;
-  //delete h_DSPlastic_Bkg;
-  //delete h_Wrong_Nucleus_Bkg;
+  delete h_USPlastic_Bkg;
+  delete h_DSPlastic_Bkg;
+  delete h_Wrong_Nucleus_Bkg;
   delete h_Other_Bkg;
+  delete h_Sig_Norm;
+  delete h_1PiC_Bkg_Norm;
+  delete h_1Pi0_Bkg_Norm;
+  delete h_NPi_Bkg_Norm;
+  delete h_USPlastic_Bkg_Norm;
+  delete h_DSPlastic_Bkg_Norm;
+  delete h_Wrong_Nucleus_Bkg_Norm;
+  delete h_Other_Bkg_Norm;
+  delete h_data_Norm;
   delete gc;
 
   return;

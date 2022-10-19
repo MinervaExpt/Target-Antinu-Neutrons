@@ -373,7 +373,7 @@ GridCanvas* plotpT1D(std::vector<std::pair<TH2*, const char*> > histAndOpts,
 
 
 //======================================================================
-GridCanvas* plotYAxis1D(std::vector<std::pair<TH2*, const char*> > histAndOpts, string xaxistitle, string celltitle,
+GridCanvas* plotYAxis1D(std::vector<std::pair<TH2*, const char*> > histAndOpts, string xaxistitle, string yaxistitle, string celltitle,
 			double* multipliers=NULL)
 {
   
@@ -456,8 +456,11 @@ GridCanvas* plotYAxis1D(std::vector<std::pair<TH2*, const char*> > histAndOpts, 
   }
 
   gc->SetXTitle(xaxistitle.c_str());
-  //  gc->SetYTitle("d^{2}#sigma/dp_{T}dp_{||} (x10^{-39} cm^{2}/GeV^{2}/c^{2}/C^{12})");
-  gc->SetTitleSize(20.0);
+  gc->SetYTitle(yaxistitle.c_str());
+  //gc->GetXTitle()->SetTextSize(100.0);
+  //gc->GetYTitle()->SetTextSize(100.0);
+  //gc->SetYTitle("d^{2}#sigma/dp_{T}dp_{||} (x10^{-39} cm^{2}/GeV^{2}/c^{2}/C^{12})");
+  gc->SetTitleSize(40.0);
   // These two lines are the magic incantation to synchronize everything, put all the pads in the right place, etc
   gc->ResetPads();
   gc->Draw();
