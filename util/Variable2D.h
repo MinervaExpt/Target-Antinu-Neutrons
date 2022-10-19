@@ -39,9 +39,19 @@ class Variable2D: public PlotUtils::Variable2DBase<CVUniverse>
                            std::map<std::string, std::vector<CVUniverse*>>& truth_error_bands)
     {
 
+
+      std::map<int, std::string> BKGLabels = {{1, "1chargePi"},
+					      {2, "1neutPi"},
+					      {3, "NPi"},
+					      {62, "USPlastic"},
+					      {63, "DSPlastic"},
+					      {44, "Wrong Nucleus"}};  
+      
+      /*
       std::map<int, std::string> BKGLabels = {{1, "1chargePi"},
                                               {2, "1neutPi"},
                                               {3, "NPi"}};
+      */
 
       //Various breakdowns for signal and background. TODO: Get the mapping correct                                                                                                                                
       std::map<int, std::string> IntTypeLabels = {{1, "QE"},
@@ -66,7 +76,7 @@ class Variable2D: public PlotUtils::Variable2DBase<CVUniverse>
                                                        {9, "mu"},
                                                        {1, "None"}};
       
-      m_backgroundHists = new util::Categorized<Hist, int>(("TwoD_"+GetName() + "_by_BKG_Label").c_str(),
+      m_backgroundHists = new util::Categorized<Hist, int>(("TwoD_"+GetName() + "_background").c_str(),
 							   ("TwoD_" + GetName()).c_str(), BKGLabels,
 							   GetBinVecX(), GetBinVecY(), mc_error_bands);
 
