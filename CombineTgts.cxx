@@ -214,12 +214,12 @@ int main(int argc, char* argv[]) {
 	TString classNameInt = (TString)keyInt->GetClassName();
 	TString nameObjInt = (TString)keyInt->GetName();
 	cout << "AT Object: " << nameObjInt << endl;
-	if (!classNameInt.Contains("PlotUtils::MnvH1")) continue;
+	if (!classNameInt.Contains("PlotUtils::MnvH")) continue;
 	cout << "Getting: " << nameObjInt << endl;
 	cout << "" << endl;
 	vector<TString> nameObjIntPieces = BreakName(firstName+matName,nameObjInt);
 	TString matNameObjInt = MashNames(material,nameObjIntPieces);
-	
+
 	if (nameObj.Contains("US_ByType")){
 	  MnvH1D* h1D = nullptr;
 	  bool first = true;
@@ -240,7 +240,7 @@ int main(int argc, char* argv[]) {
 	  delete h1D;
 	}
 	
-	if (nameObj.Contains("DS_ByType")){
+	else if (nameObj.Contains("DS_ByType")){
 	  MnvH1D* h1D = nullptr;
 	  bool first = true;
 	  for (auto tgt:DStgtsByMat[material]){
@@ -255,6 +255,32 @@ int main(int argc, char* argv[]) {
 	      h1D->Add((MnvH1D*)(files[tgt]->Get(dirBase+tgt+matName+"/"+nameObj+"/"+newNameObjInt)));
 	    }
 	  }
+	  newOutDir->cd();
+	  h1D->Write();
+	  delete h1D;
+	}
+
+	else if (classNameInt.Contains("2")){
+	  MnvH2D* h2D = (MnvH2D*)(files[firstName]->Get(dirBase+firstName+matName+"/"+nameObj+"/"+nameObjInt))->Clone(matNameObjInt);
+	  for(auto file : files){
+	    if (file.first == firstName) continue;
+	    TString newNameObjInt = MashNames(file.first+matName,nameObjIntPieces);
+	    h2D->Add((MnvH2D*)(file.second->Get(dirBase+file.first+matName+"/"+nameObj+"/"+newNameObjInt)));
+	  }
+
+	  newOutDir->cd();
+	  h2D->Write();
+	  delete h2D;
+	}
+
+	else{
+	  MnvH1D* h1D = (MnvH1D*)(files[firstName]->Get(dirBase+firstName+matName+"/"+nameObj+"/"+nameObjInt))->Clone(matNameObjInt);
+	  for(auto file : files){
+	    if (file.first == firstName) continue;
+	    TString newNameObjInt = MashNames(file.first+matName,nameObjIntPieces);
+	    h1D->Add((MnvH1D*)(file.second->Get(dirBase+file.first+matName+"/"+nameObj+"/"+newNameObjInt)));
+	  }
+
 	  newOutDir->cd();
 	  h1D->Write();
 	  delete h1D;
