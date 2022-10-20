@@ -95,6 +95,10 @@ add_executable(CombineTgts CombineTgts.cxx)
 target_link_libraries(CombineTgts ${ROOT_LIBRARIES} MAT MAT-MINERvA)
 install(TARGETS CombineTgts DESTINATION bin)
 
+add_executable(CombineFits2D CombineFits2D.cxx)
+target_link_libraries(CombineFits2D ${ROOT_LIBRARIES} MAT MAT-MINERvA)
+install(TARGETS CombineFits2D DESTINATION bin)
+
 add_executable(PlotNPlanesByTgt PlotNPlanesByTgt.cxx)
 target_link_libraries(PlotNPlanesByTgt ${ROOT_LIBRARIES} MAT MAT-MINERvA)
 install(TARGETS PlotNPlanesByTgt DESTINATION bin)
@@ -110,6 +114,10 @@ install(TARGETS twoPlotComparison DESTINATION bin)
 add_executable(BKGFitting BKGFitting.cxx)
 target_link_libraries(BKGFitting ${ROOT_LIBRARIES} fits MAT MAT-MINERvA)
 install(TARGETS BKGFitting DESTINATION bin)
+
+add_executable(BKGFitting2D BKGFitting2D.cxx)
+target_link_libraries(BKGFitting2D ${ROOT_LIBRARIES} fits MAT MAT-MINERvA)
+install(TARGETS BKGFitting2D DESTINATION bin)
 
 add_executable(BKGFittingTFrac BKGFittingTFrac.cxx)
 target_link_libraries(BKGFittingTFrac ${ROOT_LIBRARIES} MAT MAT-MINERvA)
