@@ -330,9 +330,7 @@ void TESTDraw2DBKGCategStack(string name, TFile* mcFile, TFile* dataFile, TStrin
   //h_Other_Bkg->SetYTitle("TEST");
 
   mcSum->Scale(scale);
-  TH2* mcHist = (TH2*)mcSum->GetCVHistoWithError().Clone();
-  TH2* mcErr = (TH2*)mcHist->Clone();
-  mcErr->SetFillColorAlpha(kPink + 1, 0.4);
+  TH2D* mcHist = (TH2D*)mcSum->GetCVHistoWithStatError().Clone();
 
   MnvH2D* h_data_Top = (MnvH2D*)dataFile->Get((TString)name_bkg+"_data");
   MnvH2D* h_data_Norm = new MnvH2D(h_data_Top->GetBinNormalizedCopy());
@@ -392,12 +390,52 @@ void TESTDraw2DBKGCategStack(string name, TFile* mcFile, TFile* dataFile, TStrin
 
   gc->Print(nameToSave+"_BKG_stacked.pdf");
   gc->Print(nameToSave+"_BKG_stacked.png");
-  
+
+  TH2D* ratio = (TH2D*)dataHist->Clone();
+  ratio->Divide(mcHist);
+  TH2* rat = (TH2*)ratio->Clone();
+
+  TH2D* mcRatio = new TH2D(mcSum->GetTotalError(false, true, false));
+  for (int iBinX=1; iBinX <= mcRatio->GetNbinsX(); ++iBinX){
+    for (int iBinY=1; iBinY <= mcRatio->GetNbinsY(); ++iBinY){
+      int iBin = mcRatio->GetBin(iBinX,iBinY);
+      mcRatio->SetBinError(iBin, max(mcRatio->GetBinContent(iBin),1.0e-9));
+      mcRatio->SetBinContent(iBin, 1);
+      //cout << mcRatio->GetBinContent(iBin) << endl;
+      //cout << mcRatio->GetBinError(iBin) << endl;
+    }
+  }
+
+  mcRatio->SetTitle("");
+  mcRatio->SetLineColor(kRed);
+  mcRatio->SetLineWidth(3);
+
+  TH2* straightLine = (TH2*)mcRatio->Clone();
+
+  mcRatio->SetFillColorAlpha(kPink + 1, 0.4);
+
+  TH2* mcRat = (TH2*)mcRatio->Clone();
+
+  vector<pair<TH2*, const char*>> hVec2;
+  hVec2.push_back(make_pair(straightLine,"hists"));
+  hVec2.push_back(make_pair(mcRat,"E2"));
+  hVec2.push_back(make_pair(rat,""));
+
+  GridCanvas* gc2=plotYAxis1D(hVec2, "Muon Transverse Momentum [GeV/c]","Data/MC", "p_{//}", multipliers);
+  gc2->Remax();
+
+  gc2->Print(nameToSave+"_BKG_stacked_ratio.pdf");
+  gc2->Print(nameToSave+"_BKG_stacked_ratio.png");
+
   delete mcSum;
   delete mcHist;
-  delete mcErr;
+  //delete mcErr;
   delete dataHist;
-  //delete straightLine;
+  delete ratio;
+  delete rat;
+  delete mcRatio;
+  delete mcRat;
+  delete straightLine;
   delete h_Sig;
   delete h_1PiC_Bkg;
   delete h_1Pi0_Bkg;
@@ -415,7 +453,7 @@ void TESTDraw2DBKGCategStack(string name, TFile* mcFile, TFile* dataFile, TStrin
   delete h_Wrong_Nucleus_Bkg_Norm;
   delete h_Other_Bkg_Norm;
   delete h_data_Norm;
-  delete gc;
+  delete gc2;
 
   return;
 }
