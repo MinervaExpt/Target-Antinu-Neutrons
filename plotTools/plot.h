@@ -32,7 +32,6 @@ TString uniq()
   return TString::Format("uniq%d", i++);
 }
 
-
 std::vector<std::pair<TH2*, const char*>> BuildMyStack(std::vector<TH2*> inVec){
   std::vector<std::pair<TH2*, const char*>> out = {};
   TH2* h = (TH2*)inVec.at(0)->Clone(uniq());

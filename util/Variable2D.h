@@ -39,7 +39,6 @@ class Variable2D: public PlotUtils::Variable2DBase<CVUniverse>
                            std::map<std::string, std::vector<CVUniverse*>>& truth_error_bands)
     {
 
-
       std::map<int, std::string> BKGLabels = {{1, "1chargePi"},
 					      {2, "1neutPi"},
 					      {3, "NPi"},

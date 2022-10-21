@@ -228,6 +228,13 @@ int main(int argc, char* argv[]) {
 	}
       }
 
+      for (auto bin: binsLost){
+	hOut->SetBinContent(bin,1.0);
+	hOut->SetBinError(bin,0.0);
+      }
+
+      hOut->AddMissingErrorBandsAndFillWithCV(*refHisto);
+
       const auto errorBandNames = hOut->GetErrorBandNames();
       for (const auto&  bandName: errorBandNames){
 	const auto univs = hOut->GetVertErrorBand(bandName)->GetHists();
@@ -240,7 +247,6 @@ int main(int argc, char* argv[]) {
 	}
       }
 
-      hOut->AddMissingErrorBandsAndFillWithCV(*refHisto);
       outFile->cd();
       hOut->Write();
       delete hOut;
