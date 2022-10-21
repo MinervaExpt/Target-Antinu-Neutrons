@@ -107,6 +107,10 @@ add_executable(FitNPlanes FitNPlanes.cxx)
 target_link_libraries(FitNPlanes ${ROOT_LIBRARIES} fits MAT MAT-MINERvA)
 install(TARGETS FitNPlanes DESTINATION bin)
 
+add_executable(FitNPlanes2D FitNPlanes2D.cxx)
+target_link_libraries(FitNPlanes2D ${ROOT_LIBRARIES} fits MAT MAT-MINERvA)
+install(TARGETS FitNPlanes2D DESTINATION bin)
+
 add_executable(twoPlotComparison twoPlotComparison.cxx)
 target_link_libraries(twoPlotComparison ${ROOT_LIBRARIES} MAT MAT-MINERvA)
 install(TARGETS twoPlotComparison DESTINATION bin)
