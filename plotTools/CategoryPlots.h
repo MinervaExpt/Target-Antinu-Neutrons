@@ -535,7 +535,6 @@ void Draw2DBKGCategStackWithBKGScale(string name, TFile* mcFile, TFile* dataFile
 
   MnvH2D* h_USPlastic_Bkg_Top = (MnvH2D*)mcFile->Get((TString)name_bkg+"_background_USPlastic");
   MnvH2D* h_USPlastic_Bkg_Norm = new MnvH2D(h_USPlastic_Bkg_Top->GetBinNormalizedCopy());
-  h_USPlastic_Bkg_Norm->Multiply(h_USPlastic_Bkg_Norm,scaler);
   TH2* h_USPlastic_Bkg = (TH2*)h_USPlastic_Bkg_Norm->GetCVHistoWithError().Clone();
   h_USPlastic_Bkg->Scale(scale);
   mcSum->Add(h_USPlastic_Bkg_Norm);
@@ -544,7 +543,6 @@ void Draw2DBKGCategStackWithBKGScale(string name, TFile* mcFile, TFile* dataFile
 
   MnvH2D* h_DSPlastic_Bkg_Top = (MnvH2D*)mcFile->Get((TString)name_bkg+"_background_DSPlastic");
   MnvH2D* h_DSPlastic_Bkg_Norm = new MnvH2D(h_DSPlastic_Bkg_Top->GetBinNormalizedCopy());
-  h_DSPlastic_Bkg_Norm->Multiply(h_DSPlastic_Bkg_Norm,scaler);
   TH2* h_DSPlastic_Bkg = (TH2*)h_DSPlastic_Bkg_Norm->GetCVHistoWithError().Clone();
   h_DSPlastic_Bkg->Scale(scale);
   mcSum->Add(h_DSPlastic_Bkg_Norm);
@@ -553,7 +551,6 @@ void Draw2DBKGCategStackWithBKGScale(string name, TFile* mcFile, TFile* dataFile
 
   MnvH2D* h_Wrong_Nucleus_Bkg_Top = (MnvH2D*)mcFile->Get((TString)name_bkg+"_background_Wrong_Nucleus");
   MnvH2D* h_Wrong_Nucleus_Bkg_Norm = new MnvH2D(h_Wrong_Nucleus_Bkg_Top->GetBinNormalizedCopy());
-  h_Wrong_Nucleus_Bkg_Norm->Multiply(h_Wrong_Nucleus_Bkg_Norm,scaler);
   TH2* h_Wrong_Nucleus_Bkg = (TH2*)h_Wrong_Nucleus_Bkg_Norm->GetCVHistoWithError().Clone();
   h_Wrong_Nucleus_Bkg->Scale(scale);
   mcSum->Add(h_Wrong_Nucleus_Bkg_Norm);
