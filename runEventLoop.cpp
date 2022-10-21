@@ -165,7 +165,7 @@ void LoopAndFillEventSelection(
         const double weight = model.GetWeight(*universe, myevent); //Only calculate the per-universe weight for events that will actually use it.
         //const double weight = 1.0; //Dummy weight for testing/validation pre-weight
         const bool isFSSignal = michelcuts.isSignal(*universe, weight);
-	const bool isTgts = vars_ByTgt.size() > 0 ? true : false; 
+	const bool isTgts = (vars_ByTgt.size() > 0 || vars2D_ByTgt.size()) ? true : false; 
 	bool tmpIsSignal = isFSSignal;
 	int intType = universe->GetInteractionType();
 	int tgtZ = universe->GetTargetZ();
