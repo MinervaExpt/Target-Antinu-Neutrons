@@ -192,12 +192,13 @@ void LoopAndFillEventSelection(
 
 	int tgtID = util::GetRecoTargetZ(vtx_x,vtx_y,vtx_z);
 	int tgtCode = util::GetRecoTargetCode(vtx_x,vtx_y,vtx_z,muonMom);
-	int trueTgtID = util::GetRecoTargetZ(mc_vtx_x,mc_vtx_y,mc_vtx_z);
+	//int trueTgtID = util::GetTightTargetZ(mc_vtx_x,mc_vtx_y,mc_vtx_z);//Get Target By Z for the true vtx. Tight constraints to not include US or DS plastic.
+	int trueTgtCode = util::GetTrueTgtCode(tgtZ, mc_vtx_x, mc_vtx_y, mc_vtx_z);
 
 	int tgtType = tgtZ;
-	if (tgtZ==6 && trueTgtID !=3) tgtType = 1; //Carbon not in target 3 is in plastic... Maybe need to require trueTgtCode to be carbon... but that can wait on the assumption there's no carbon outside of the carbon target.
-	if (tgtZ==1 && trueTgtID ==6) tgtType = 8; //hydrogen in target 6 (water target) is water
-	if (tgtZ==8 && trueTgtID !=6) tgtType = -1; //oxygen not in the water target is ill-defined
+	if (tgtZ==6 && trueTgtCode != 3306) tgtType = 1; //Carbon not in target 3 is in plastic... Maybe need to require trueTgtCode to be carbon... but that can wait on the assumption there's no carbon outside of the carbon target.
+	if (tgtZ==1 && trueTgtCode == 6666) tgtType = 8; //hydrogen in target 6 (water target) is water
+	if (tgtZ==8 && trueTgtCode != 6666) tgtType = -1; //oxygen not in the water target is ill-defined
 
 	if (tgtType==1 && tgtID > 0 && tgtID < 7){
 	  if (mc_vtx_z < vtx_z){
@@ -211,7 +212,7 @@ void LoopAndFillEventSelection(
 	}
 
 	if (tgtID > 0 && tgtID < 7){
-	  tmpIsSignal = tmpIsSignal ? util::CorrectTargetMaterial(tgtCode,tgtType) : tmpIsSignal; //Only call it signal if the true material for that section is correct.
+	  tmpIsSignal = tmpIsSignal ? util::CorrectTargetMaterial(tgtCode,trueTgtCode) : tmpIsSignal; //Only call it signal if the true material for that section is correct.
 	}
 
 	const bool isSignal = tmpIsSignal;
@@ -506,8 +507,9 @@ void LoopAndFillData( PlotUtils::ChainWrapper* data,
 void LoopAndFillEffDenom( PlotUtils::ChainWrapper* truth,
     				std::map<std::string, std::vector<CVUniverse*> > truth_bands,
 			        std::vector<Variable*> vars,
-			      //std::vector<Variable*> vars_ByTgt,
+			        std::vector<util::Categorized<Variable, int>*> vars_ByTgt,
                                 std::vector<Variable2D*> vars2D,
+			        std::vector<util::Categorized<Variable2D, int>*> vars2D_ByTgt,
     				PlotUtils::Cutter<CVUniverse, NeutronEvent>& michelcuts,
                                 PlotUtils::Model<CVUniverse, NeutronEvent>& model)
 {
@@ -541,16 +543,36 @@ void LoopAndFillEffDenom( PlotUtils::ChainWrapper* truth,
         if (!michelcuts.isEfficiencyDenom(*universe, cvWeight)) continue; //Weight is ignored for isEfficiencyDenom() in all but the CV universe 
         const double weight = model.GetWeight(*universe, myevent); //Only calculate the weight for events that will use it
 
+	std::vector<double> mc_vtx = universe->GetTrueVtx();
+	double mc_vtx_x = mc_vtx.at(0);
+	double mc_vtx_y = mc_vtx.at(1);
+	double mc_vtx_z = mc_vtx.at(2);
+
+	int tgtZ = universe->GetTargetZ();
+
+	int trueTgtCode = util::GetTrueTgtCode(tgtZ, mc_vtx_x, mc_vtx_y, mc_vtx_z);
+
         //Fill efficiency denominator now: 
         for(auto var: vars)
         {
           if (var->IsAnaVar() && var->IsFill()) var->efficiencyDenominator->FillUniverse(universe, var->GetTrueValue(*universe), weight);
         }
 	
+	//I think I just need to check the true target material here... I'm not certain about that, but I think that's right... Need to sort out the right way to check that as well...
+	for (auto var: vars_ByTgt){
+	  if ((*var)[trueTgtCode].IsAnaVar() && (*var)[trueTgtCode].IsFill()) (*var)[trueTgtCode].efficiencyDenominator->FillUniverse(universe, (*var)[trueTgtCode].GetTrueValue(*universe), weight);
+	}
+	
         for(auto var: vars2D)
         {
           if(var->IsFill()) var->efficiencyDenominator->FillUniverse(universe, var->GetTrueValueX(*universe), var->GetTrueValueY(*universe), weight);
         }
+
+	//I think I just need to check the true target material here... I'm not certain about that, but I think that's right...
+	for (auto var: vars2D_ByTgt){
+          if((*var)[trueTgtCode].IsFill()) (*var)[trueTgtCode].efficiencyDenominator->FillUniverse(universe, (*var)[trueTgtCode].GetTrueValueX(*universe), (*var)[trueTgtCode].GetTrueValueY(*universe), weight);
+	}
+
       }
     }
   }
@@ -983,7 +1005,7 @@ int main(const int argc, const char** argv)
     LoopAndFillEventSelection(options.m_mc, error_bands, vars, vars_ByTgt, vars2D, vars2D_ByTgt, studies, mycuts, model, doNeutronCuts);
     //LoopAndFillEventSelection(options.m_mc, error_bands, vars, vars_ByTgt, vars2D, vars2D_ByTgt, studies, mycuts, model);
     CVUniverse::SetTruth(true);
-    LoopAndFillEffDenom(options.m_truth, truth_bands, vars, vars2D, mycuts, model);
+    LoopAndFillEffDenom(options.m_truth, truth_bands, vars, vars_ByTgt, vars2D, vars2D_ByTgt, mycuts, model);
     options.PrintMacroConfiguration(argv[0]);
     std::cout << "MC cut summary:\n" << mycuts << "\n";
     mycuts.resetStats();
