@@ -41,6 +41,7 @@ std::vector<std::pair<TH2*, const char*>> BuildMyStack(std::vector<TH2*> inVec){
   h->SetMarkerSize(inVec.at(0)->GetMarkerSize());
   h->SetLineColor(inVec.at(0)->GetLineColor());
   h->SetFillColor(inVec.at(0)->GetFillColor());
+  h->SetFillStyle(inVec.at(0)->GetFillStyle());
 
   out.push_back(make_pair((TH2*)h->Clone(uniq()),"hist"));
   for (unsigned int i=1;i<inVec.size();i++){
@@ -51,6 +52,7 @@ std::vector<std::pair<TH2*, const char*>> BuildMyStack(std::vector<TH2*> inVec){
     h->SetMarkerSize(inVec.at(i)->GetMarkerSize());
     h->SetLineColor(inVec.at(i)->GetLineColor());
     h->SetFillColor(inVec.at(i)->GetFillColor());
+    h->SetFillStyle(inVec.at(i)->GetFillStyle());
     out.push_back(make_pair((TH2*)h->Clone(uniq()),"hist"));
   }
   delete h;
@@ -875,7 +877,7 @@ GridCanvas* plotpz1D(std::vector<std::pair<TH2*, const char*> > histAndOpts,
 
 
 //======================================================================
-GridCanvas* plotXAxis1D(std::vector<std::pair<TH2*, const char*> > histAndOpts, string xaxistitle, string celltitle,
+GridCanvas* plotXAxis1D(std::vector<std::pair<TH2*, const char*> > histAndOpts, string xaxistitle, string yaxistitle, string celltitle,
                      double* multipliers=NULL)
 {
 
@@ -890,7 +892,7 @@ GridCanvas* plotXAxis1D(std::vector<std::pair<TH2*, const char*> > histAndOpts, 
   if(grid_x*grid_y-nbins_pt==grid_x) grid_y-=1;//6*
   cout << "Plotting plotXAxis1D with a grid of " << nbins_pz << "\t" << nbins_pt << "\t" << grid_x << "\t" << grid_y << endl;
   // Make a canvas of 4x3 plots with pixel size 800x500
-  GridCanvas* gc=new GridCanvas(uniq(), grid_x, grid_y, 800, 500);
+  GridCanvas* gc=new GridCanvas(uniq(), grid_x, grid_y, 1600, 1000);
   gc->SetRightMargin(0.01);
   gc->SetLeftMargin(0.1);
   gc->ResetPads();
@@ -959,10 +961,10 @@ GridCanvas* plotXAxis1D(std::vector<std::pair<TH2*, const char*> > histAndOpts, 
     }
   }
 
-
   gc->SetXTitle(xaxistitle.c_str());
+  gc->SetYTitle(yaxistitle.c_str());
     //  gc->SetYTitle("d^{2}#sigma/dp_{T}dp_{||} (x10^{-39} cm^{2}/GeV^{2}/c^{2}/C^{12})");
-  gc->SetTitleSize(20.0);
+  gc->SetTitleSize(40.0);
   // These two lines are the magic incantation to synchronize everything, put all the pads in the right place, etc
   gc->ResetPads();
   gc->Draw();

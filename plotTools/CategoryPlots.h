@@ -385,9 +385,17 @@ void Draw2DBKGCategStack(string name, TFile* mcFile, TFile* dataFile, TString sa
 			1,1,1,1,
 			1,1,1,1};
 
-  GridCanvas* gc=plotYAxis1D(hVec, "Muon Transverse Momentum [GeV/c]","Events/(GeV^{2}/c^{2})", "p_{//}", multipliers);
+  double multipliersStack[]={10,3,1.5,1,
+			     1,1,1,1,
+			     1.5,3,8,15};
 
-  gc->Remax();
+  GridCanvas* gcY=plotYAxis1D(hVec, "Muon Transverse Momentum [GeV/c]","Events/(GeV^{2}/c^{2})", "p_{//}", multipliersStack);
+
+  gcY->Remax();
+
+  GridCanvas* gcX=plotXAxis1D(hVec, "Muon Longitudinal Momentum [GeV/c]","Events/(GeV^{2}/c^{2})", "p_{T}", multipliersStack);
+
+  gcX->Remax();
 
   TLegend* leg = new TLegend(0.6,0.075,0.85,0.275);
 
@@ -403,10 +411,19 @@ void Draw2DBKGCategStack(string name, TFile* mcFile, TFile* dataFile, TString sa
   if (!isTracker) leg->AddEntry(h_USPlastic_Bkg,"US Plastic");
   if (!isTracker) leg->AddEntry(h_Wrong_Nucleus_Bkg,"Wrong Nucleus");
 
+  gcY->cd();
+
   leg->Draw();
 
-  gc->Print(nameToSave+"_BKG_stacked.pdf");
-  gc->Print(nameToSave+"_BKG_stacked.png");
+  gcY->Print(nameToSave+"_pT_as_x_BKG_stacked.pdf");
+  gcY->Print(nameToSave+"_pT_as_x_BKG_stacked.png");
+
+  gcX->cd();
+
+  leg->Draw();
+
+  gcX->Print(nameToSave+"_pz_as_x_BKG_stacked.pdf");
+  gcX->Print(nameToSave+"_pz_as_x_BKG_stacked.png");
 
   TH2D* ratio = (TH2D*)dataHist->Clone();
   ratio->Divide(mcHist);
@@ -438,11 +455,17 @@ void Draw2DBKGCategStack(string name, TFile* mcFile, TFile* dataFile, TString sa
   hVec2.push_back(make_pair(mcRat,"E2"));
   hVec2.push_back(make_pair(rat,""));
 
-  GridCanvas* gc2=plotYAxis1D(hVec2, "Muon Transverse Momentum [GeV/c]","Data/MC", "p_{//}", multipliers);
-  gc2->Remax();
+  GridCanvas* gcY2=plotYAxis1D(hVec2, "Muon Transverse Momentum [GeV/c]","Data/MC", "p_{//}", multipliers);
+  gcY2->Remax();
 
-  gc2->Print(nameToSave+"_BKG_stacked_ratio.pdf");
-  gc2->Print(nameToSave+"_BKG_stacked_ratio.png");
+  gcY2->Print(nameToSave+"_pT_as_x_BKG_stacked_ratio.pdf");
+  gcY2->Print(nameToSave+"_pT_as_x_BKG_stacked_ratio.png");
+
+  GridCanvas* gcX2=plotXAxis1D(hVec2, "Muon Longitudinal Momentum [GeV/c]","Data/MC", "p_{T}", multipliers);
+  gcX2->Remax();
+
+  gcX2->Print(nameToSave+"_pz_as_x_BKG_stacked_ratio.pdf");
+  gcX2->Print(nameToSave+"_pz_as_x_BKG_stacked_ratio.png");
 
   delete mcSum;
   delete mcHist;
@@ -470,7 +493,360 @@ void Draw2DBKGCategStack(string name, TFile* mcFile, TFile* dataFile, TString sa
   delete h_Wrong_Nucleus_Bkg_Norm;
   delete h_Other_Bkg_Norm;
   delete h_data_Norm;
-  delete gc2;
+  delete gcY;
+  delete gcX;
+  delete gcY2;
+  delete gcX2;
+
+  return;
+}
+
+void Draw2DIntTypeStack(string name, TFile* mcFile, TFile* dataFile, TString sample, double scale, TString nameToSave){
+
+  bool primPar = false;
+
+  TString sampleName = sample;
+
+  bool isTracker = sampleName.Contains("Tracker") ? true : false;
+
+  MnvH2D* h_QE_Sig_Top = (MnvH2D*)mcFile->Get((TString)name);
+  MnvH2D* h_QE_Sig_Norm = new MnvH2D(h_QE_Sig_Top->GetBinNormalizedCopy());
+  TH2* h_QE_Sig = (TH2*)h_QE_Sig_Norm->GetCVHistoWithError().Clone();
+  h_QE_Sig->Scale(scale);
+  h_QE_Sig->SetLineColor(TColor::GetColor("#88CCEE"));
+  h_QE_Sig->SetFillColor(TColor::GetColor("#88CCEE"));
+
+  MnvH2D* mcSum = (MnvH2D*)h_QE_Sig_Norm->Clone();
+  //mcSum->Scale(scale);
+  mcSum->SetLineColor(kRed);
+  //mcSum->SetFillColorAlpha(kPink + 1, 0.4);
+  //mcSum->SetLineWidth(3);
+
+  cout << "Handling: " << name << endl;
+  string title = (string)h_QE_Sig->GetTitle();
+  TString Xtitle = h_QE_Sig->GetXaxis()->GetTitle();
+  TString Ytitle = h_QE_Sig->GetYaxis()->GetTitle();
+  string units = Xtitle.Data();
+  units.erase(0,units.find("["));
+
+  cout << "Got Titles" << endl;
+
+  string name_sig = name;
+  name_sig.erase(name_sig.length()-3,name_sig.length());
+  string name_bkg = name_sig;
+  name_bkg.erase(name_bkg.length()-12,name_bkg.length());
+
+  cout << "Getting sig hists" << endl;
+
+  MnvH2D* h_RES_Sig_Top = (MnvH2D*)mcFile->Get((TString)name_sig+"_RES");
+  MnvH2D* h_RES_Sig_Norm = new MnvH2D(h_RES_Sig_Top->GetBinNormalizedCopy());
+  TH2* h_RES_Sig = (TH2*)h_RES_Sig_Norm->GetCVHistoWithError().Clone();
+  h_RES_Sig->Scale(scale);
+  mcSum->Add(h_RES_Sig_Norm);
+  h_RES_Sig->SetLineColor(TColor::GetColor("#117733"));
+  h_RES_Sig->SetFillColor(TColor::GetColor("#117733"));
+
+  MnvH2D* h_DIS_Sig_Top = (MnvH2D*)mcFile->Get((TString)name_sig+"_DIS");
+  MnvH2D* h_DIS_Sig_Norm = new MnvH2D(h_DIS_Sig_Top->GetBinNormalizedCopy());
+  TH2* h_DIS_Sig = (TH2*)h_DIS_Sig_Norm->GetCVHistoWithError().Clone();
+  h_DIS_Sig->Scale(scale);
+  mcSum->Add(h_DIS_Sig_Norm);
+  h_DIS_Sig->SetLineColor(TColor::GetColor("#CC6677"));
+  h_DIS_Sig->SetFillColor(TColor::GetColor("#CC6677"));
+
+  MnvH2D* h_2p2h_Sig_Top = (MnvH2D*)mcFile->Get((TString)name_sig+"_2p2h");
+  MnvH2D* h_2p2h_Sig_Norm = new MnvH2D(h_2p2h_Sig_Top->GetBinNormalizedCopy());
+  TH2* h_2p2h_Sig = (TH2*)h_2p2h_Sig_Norm->GetCVHistoWithError().Clone();
+  h_2p2h_Sig->Scale(scale);
+  mcSum->Add(h_2p2h_Sig_Norm);
+  h_2p2h_Sig->SetLineColor(TColor::GetColor("#44AA99"));
+  h_2p2h_Sig->SetFillColor(TColor::GetColor("#44AA99"));
+
+  MnvH2D* h_Other_Sig_Top = (MnvH2D*)mcFile->Get((TString)name_sig+"_Other");
+  MnvH2D* h_Other_Sig_Norm = new MnvH2D(h_Other_Sig_Top->GetBinNormalizedCopy());
+  TH2* h_Other_Sig = (TH2*)h_Other_Sig_Norm->GetCVHistoWithError().Clone();
+  h_Other_Sig->Scale(scale);
+  mcSum->Add(h_Other_Sig_Norm);
+  h_Other_Sig->SetLineColor(TColor::GetColor("#117733"));
+  h_Other_Sig->SetFillColor(TColor::GetColor("#117733"));
+
+  cout << "Getting bkg hists" << endl;
+
+  MnvH2D* h_QE_Bkg_Top = (MnvH2D*)mcFile->Get((TString)name_bkg+"_bkg_IntType_QE");
+  MnvH2D* h_QE_Bkg_Norm = new MnvH2D(h_QE_Bkg_Top->GetBinNormalizedCopy());
+  TH2* h_QE_Bkg = (TH2*)h_QE_Bkg_Norm->GetCVHistoWithError().Clone();
+  h_QE_Bkg->Scale(scale);
+  mcSum->Add(h_QE_Bkg_Norm);
+  h_QE_Bkg->SetLineColor(TColor::GetColor("#88CCEE"));
+  h_QE_Bkg->SetFillColor(TColor::GetColor("#88CCEE"));
+  h_QE_Bkg->SetFillStyle(3003);
+
+  MnvH2D* h_RES_Bkg_Top = (MnvH2D*)mcFile->Get((TString)name_bkg+"_bkg_IntType_RES");
+  MnvH2D* h_RES_Bkg_Norm = new MnvH2D(h_RES_Bkg_Top->GetBinNormalizedCopy());
+  TH2* h_RES_Bkg = (TH2*)h_RES_Bkg_Norm->GetCVHistoWithError().Clone();
+  h_RES_Bkg->Scale(scale);
+  mcSum->Add(h_RES_Bkg_Norm);
+  h_RES_Bkg->SetLineColor(TColor::GetColor("#117733"));
+  h_RES_Bkg->SetFillColor(TColor::GetColor("#117733"));
+  h_RES_Bkg->SetFillStyle(3003);
+
+  MnvH2D* h_DIS_Bkg_Top = (MnvH2D*)mcFile->Get((TString)name_bkg+"_bkg_IntType_DIS");
+  MnvH2D* h_DIS_Bkg_Norm = new MnvH2D(h_DIS_Bkg_Top->GetBinNormalizedCopy());
+  TH2* h_DIS_Bkg = (TH2*)h_DIS_Bkg_Norm->GetCVHistoWithError().Clone();
+  h_DIS_Bkg->Scale(scale);
+  mcSum->Add(h_DIS_Bkg_Norm);
+  h_DIS_Bkg->SetLineColor(TColor::GetColor("#CC6677"));
+  h_DIS_Bkg->SetFillColor(TColor::GetColor("#CC6677"));
+  h_DIS_Bkg->SetFillStyle(3003);
+
+  MnvH2D* h_2p2h_Bkg_Top = (MnvH2D*)mcFile->Get((TString)name_bkg+"_bkg_IntType_2p2h");
+  MnvH2D* h_2p2h_Bkg_Norm = new MnvH2D(h_2p2h_Bkg_Top->GetBinNormalizedCopy());
+  TH2* h_2p2h_Bkg = (TH2*)h_2p2h_Bkg_Norm->GetCVHistoWithError().Clone();
+  h_2p2h_Bkg->Scale(scale);
+  mcSum->Add(h_2p2h_Bkg_Norm);
+  h_2p2h_Bkg->SetLineColor(TColor::GetColor("#44AA99"));
+  h_2p2h_Bkg->SetFillColor(TColor::GetColor("#44AA99"));
+  h_2p2h_Bkg->SetFillStyle(3003);
+
+  cout << "Getting bkg hists" << endl;
+
+  MnvH2D* h_USPlastic_Bkg_Top = (MnvH2D*)mcFile->Get((TString)name_bkg+"_background_USPlastic");
+  MnvH2D* h_USPlastic_Bkg_Norm = new MnvH2D(h_USPlastic_Bkg_Top->GetBinNormalizedCopy());
+  TH2* h_USPlastic_Bkg = (TH2*)h_USPlastic_Bkg_Norm->GetCVHistoWithError().Clone();
+  h_USPlastic_Bkg->Scale(scale);
+  mcSum->Add(h_USPlastic_Bkg_Norm);
+  h_USPlastic_Bkg->SetLineColor(TColor::GetColor("#A26E1C"));
+  h_USPlastic_Bkg->SetFillColor(TColor::GetColor("#A26E1C"));
+  h_USPlastic_Bkg->SetFillStyle(3003);
+
+  MnvH2D* h_DSPlastic_Bkg_Top = (MnvH2D*)mcFile->Get((TString)name_bkg+"_background_DSPlastic");
+  MnvH2D* h_DSPlastic_Bkg_Norm = new MnvH2D(h_DSPlastic_Bkg_Top->GetBinNormalizedCopy());
+  TH2* h_DSPlastic_Bkg = (TH2*)h_DSPlastic_Bkg_Norm->GetCVHistoWithError().Clone();
+  h_DSPlastic_Bkg->Scale(scale);
+  mcSum->Add(h_DSPlastic_Bkg_Norm);
+  h_DSPlastic_Bkg->SetLineColor(TColor::GetColor("#C1B185"));
+  h_DSPlastic_Bkg->SetFillColor(TColor::GetColor("#C1B185"));
+  h_DSPlastic_Bkg->SetFillStyle(3003);
+
+  MnvH2D* h_Wrong_Nucleus_Bkg_Top = (MnvH2D*)mcFile->Get((TString)name_bkg+"_background_Wrong_Nucleus");
+  MnvH2D* h_Wrong_Nucleus_Bkg_Norm = new MnvH2D(h_Wrong_Nucleus_Bkg_Top->GetBinNormalizedCopy());
+  TH2* h_Wrong_Nucleus_Bkg = (TH2*)h_Wrong_Nucleus_Bkg_Norm->GetCVHistoWithError().Clone();
+  h_Wrong_Nucleus_Bkg->Scale(scale);
+  mcSum->Add(h_Wrong_Nucleus_Bkg_Norm);
+  h_Wrong_Nucleus_Bkg->SetLineColor(TColor::GetColor("#909497"));
+  h_Wrong_Nucleus_Bkg->SetFillColor(TColor::GetColor("#909497"));
+  h_Wrong_Nucleus_Bkg->SetTitle("");
+  h_Wrong_Nucleus_Bkg->SetFillStyle(3003);
+
+  cout << "Getting bkg hists" << endl;
+
+  MnvH2D* h_Other_Bkg_Top = (MnvH2D*)mcFile->Get((TString)name_bkg+"_bkg_IntType_Other");
+  MnvH2D* h_Other_Bkg_Norm = new MnvH2D(h_Other_Bkg_Top->GetBinNormalizedCopy());
+  h_Other_Bkg_Norm->Add(h_Wrong_Nucleus_Bkg_Norm,-1.0);
+  h_Other_Bkg_Norm->Add(h_USPlastic_Bkg_Norm,-1.0);
+  h_Other_Bkg_Norm->Add(h_DSPlastic_Bkg_Norm,-1.0);
+  TH2* h_Other_Bkg = (TH2*)h_Other_Bkg_Norm->GetCVHistoWithError().Clone();
+  h_Other_Bkg->Scale(scale);
+  mcSum->Add(h_Other_Bkg_Norm);
+  h_Other_Bkg->SetLineColor(TColor::GetColor("#882255"));
+  h_Other_Bkg->SetFillColor(TColor::GetColor("#882255"));
+  h_Other_Bkg->SetFillStyle(3003);
+  h_Other_Bkg->SetTitle("");
+  //h_Other_Bkg->SetYTitle("TEST");
+
+  cout << "Getting bkg hists" << endl;
+
+  mcSum->Scale(scale);
+  TH2D* mcHist = (TH2D*)mcSum->GetCVHistoWithStatError().Clone();
+
+  cout << "Getting data hists" << endl;
+
+  MnvH2D* h_data_Top = (MnvH2D*)dataFile->Get((TString)name_bkg+"_data");
+  MnvH2D* h_data_Norm = new MnvH2D(h_data_Top->GetBinNormalizedCopy());
+  TH2* dataHist = (TH2*)h_data_Norm->GetCVHistoWithError().Clone();
+  dataHist->SetLineColor(kBlack);
+  //dataHist->SetLineWidth(3);
+
+  /*
+  THStack* h = new THStack();
+  h->Add(h_Wrong_Nucleus_Bkg);
+  h->Add(h_USPlastic_Bkg);
+  h->Add(h_DSPlastic_Bkg);
+  h->Add(h_Other_Bkg);
+  h->Add(h_NPi_Bkg);
+  h->Add(h_1Pi0_Bkg);
+  h->Add(h_1PiC_Bkg);
+  h->Add(h_Sig);
+  */
+
+  cout << "PLOT TIME" << endl;
+
+  vector<TH2*> tmpVec;
+  tmpVec.push_back(h_Wrong_Nucleus_Bkg);
+  tmpVec.push_back(h_USPlastic_Bkg);
+  tmpVec.push_back(h_DSPlastic_Bkg);
+  tmpVec.push_back(h_Other_Bkg);
+  tmpVec.push_back(h_2p2h_Bkg);
+  tmpVec.push_back(h_DIS_Bkg);
+  tmpVec.push_back(h_RES_Bkg);
+  tmpVec.push_back(h_QE_Bkg);
+  tmpVec.push_back(h_Other_Sig);
+  tmpVec.push_back(h_2p2h_Sig);
+  tmpVec.push_back(h_DIS_Sig);
+  tmpVec.push_back(h_RES_Sig);
+  tmpVec.push_back(h_QE_Sig);
+  vector<pair<TH2*, const char*>> hVec = BuildMyStack(tmpVec);
+  //hVec.push_back(make_pair(mcHist,"hists"));
+  //hVec.push_back(make_pair(mcErr,"E2"));
+  hVec.push_back(make_pair(dataHist,""));
+
+  double multipliers[]={1,1,1,1,
+			1,1,1,1,
+			1,1,1,1};
+
+  GridCanvas* gcY=plotYAxis1D(hVec, "Muon Transverse Momentum [GeV/c]","Events/(GeV^{2}/c^{2})", "p_{//}", multipliers);
+
+  gcY->Remax();
+
+  GridCanvas* gcX=plotXAxis1D(hVec, "Muon Longitudinal Momentum [GeV/c]","Events/(GeV^{2}/c^{2})", "p_{T}", multipliers);
+
+  gcX->Remax();
+
+  TH1D* hTmp = new TH1D();
+  hTmp->SetFillColor(kWhite);
+  hTmp->SetLineColor(kWhite);
+
+  TLegend* leg = new TLegend(0.6,0.075,0.85,0.275);
+
+  leg->SetBorderSize(0);
+
+  leg->SetNColumns(2);
+
+  leg->AddEntry(dataHist,"DATA");
+  leg->AddEntry((TObject*)0,"","");
+
+  leg->AddEntry(h_QE_Sig,"Sig. + QE");
+  leg->AddEntry(h_QE_Bkg,"Bkg. + QE");
+
+  leg->AddEntry(h_RES_Sig,"Sig. + RES");
+  leg->AddEntry(h_RES_Bkg,"Bkg. + RES");
+
+  leg->AddEntry(h_DIS_Sig,"Sig. + DIS");
+  leg->AddEntry(h_DIS_Bkg,"Bkg. + DIS");
+
+  leg->AddEntry(h_2p2h_Sig,"Sig. + 2p2h");
+  leg->AddEntry(h_2p2h_Bkg,"Bkg. + 2p2h");
+
+  leg->AddEntry(h_Other_Sig,"Sig. + Other");
+  leg->AddEntry(h_Other_Bkg,"Bkg. + Other");
+
+  if (!isTracker){
+    leg->AddEntry(hTmp,"","f");
+    leg->AddEntry(h_DSPlastic_Bkg,"DS Plastic");
+
+    leg->AddEntry(hTmp,"","f");
+    leg->AddEntry(h_USPlastic_Bkg,"US Plastic");
+
+    leg->AddEntry(hTmp,"","f");
+    leg->AddEntry(h_Wrong_Nucleus_Bkg,"Wrong Nucleus");
+  }
+
+  gcY->cd();
+
+  leg->Draw();
+
+  gcY->Print(nameToSave+"_pT_as_x_IntType_stacked.pdf");
+  gcY->Print(nameToSave+"_pT_as_x_IntType_stacked.png");
+
+  gcX->cd();
+
+  leg->Draw();
+
+  gcX->Print(nameToSave+"_pz_as_x_IntType_stacked.pdf");
+  gcX->Print(nameToSave+"_pz_as_x_IntType_stacked.png");
+
+  TH2D* ratio = (TH2D*)dataHist->Clone();
+  ratio->Divide(mcHist);
+  TH2* rat = (TH2*)ratio->Clone();
+
+  TH2D* mcRatio = new TH2D(mcSum->GetTotalError(false, true, false));
+  for (int iBinX=1; iBinX <= mcRatio->GetNbinsX(); ++iBinX){
+    for (int iBinY=1; iBinY <= mcRatio->GetNbinsY(); ++iBinY){
+      int iBin = mcRatio->GetBin(iBinX,iBinY);
+      mcRatio->SetBinError(iBin, max(mcRatio->GetBinContent(iBin),1.0e-9));
+      mcRatio->SetBinContent(iBin, 1);
+      //cout << mcRatio->GetBinContent(iBin) << endl;
+      //cout << mcRatio->GetBinError(iBin) << endl;
+    }
+  }
+
+  mcRatio->SetTitle("");
+  mcRatio->SetLineColor(kRed);
+  mcRatio->SetLineWidth(3);
+
+  TH2* straightLine = (TH2*)mcRatio->Clone();
+
+  mcRatio->SetFillColorAlpha(kPink + 1, 0.4);
+
+  TH2* mcRat = (TH2*)mcRatio->Clone();
+
+  vector<pair<TH2*, const char*>> hVec2;
+  hVec2.push_back(make_pair(straightLine,"hists"));
+  hVec2.push_back(make_pair(mcRat,"E2"));
+  hVec2.push_back(make_pair(rat,""));
+
+  GridCanvas* gcY2=plotYAxis1D(hVec2, "Muon Transverse Momentum [GeV/c]","Data/MC", "p_{//}", multipliers);
+  gcY2->Remax();
+
+  gcY2->Print(nameToSave+"_pT_as_x_IntType_stacked_ratio.pdf");
+  gcY2->Print(nameToSave+"_pT_as_x_IntType_stacked_ratio.png");
+
+  GridCanvas* gcX2=plotXAxis1D(hVec2, "Muon Longitudinal Momentum [GeV/c]","Data/MC", "p_{T}", multipliers);
+  gcX2->Remax();
+
+  gcX2->Print(nameToSave+"_pz_as_x_IntType_stacked_ratio.pdf");
+  gcX2->Print(nameToSave+"_pz_as_x_IntType_stacked_ratio.png");
+
+  delete mcSum;
+  delete mcHist;
+  //delete mcErr;
+  delete dataHist;
+  delete ratio;
+  delete rat;
+  delete mcRatio;
+  delete mcRat;
+  delete straightLine;
+  delete h_QE_Sig;
+  delete h_RES_Sig;
+  delete h_DIS_Sig;
+  delete h_2p2h_Sig;
+  delete h_Other_Sig;
+  delete h_QE_Bkg;
+  delete h_RES_Bkg;
+  delete h_DIS_Bkg;
+  delete h_2p2h_Bkg;
+  delete h_USPlastic_Bkg;
+  delete h_DSPlastic_Bkg;
+  delete h_Wrong_Nucleus_Bkg;
+  delete h_Other_Bkg;
+  delete h_QE_Sig_Norm;
+  delete h_RES_Sig_Norm;
+  delete h_DIS_Sig_Norm;
+  delete h_2p2h_Sig_Norm;
+  delete h_Other_Sig_Norm;
+  delete h_QE_Bkg_Norm;
+  delete h_RES_Bkg_Norm;
+  delete h_DIS_Bkg_Norm;
+  delete h_2p2h_Bkg_Norm;
+  delete h_USPlastic_Bkg_Norm;
+  delete h_DSPlastic_Bkg_Norm;
+  delete h_Wrong_Nucleus_Bkg_Norm;
+  delete h_Other_Bkg_Norm;
+  delete h_data_Norm;
+  delete gcY;
+  delete gcX;
+  delete gcY2;
+  delete gcX2;
 
   return;
 }
@@ -608,9 +984,17 @@ void Draw2DBKGCategStackWithBKGScale(string name, TFile* mcFile, TFile* dataFile
 			1,1,1,1,
 			1,1,1,1};
 
-  GridCanvas* gc=plotYAxis1D(hVec, "Muon Transverse Momentum [GeV/c]","Events/(GeV^{2}/c^{2})", "p_{//}", multipliers);
+  double multipliersStack[]={10,3,1.5,1,
+			     1,1,1,1,
+			     1.5,3,8,15};
 
-  gc->Remax();
+  GridCanvas* gcY=plotYAxis1D(hVec, "Muon Transverse Momentum [GeV/c]","Events/(GeV^{2}/c^{2})", "p_{//}", multipliersStack);
+
+  gcY->Remax();
+
+  GridCanvas* gcX=plotXAxis1D(hVec, "Muon Longitudinal Momentum [GeV/c]","Events/(GeV^{2}/c^{2})", "p_{T}", multipliersStack);
+
+  gcX->Remax();
 
   TLegend* leg = new TLegend(0.6,0.075,0.85,0.275);
 
@@ -626,10 +1010,19 @@ void Draw2DBKGCategStackWithBKGScale(string name, TFile* mcFile, TFile* dataFile
   if (!isTracker) leg->AddEntry(h_USPlastic_Bkg,"US Plastic");
   if (!isTracker) leg->AddEntry(h_Wrong_Nucleus_Bkg,"Wrong Nucleus");
 
+  gcY->cd();
+
   leg->Draw();
 
-  gc->Print(nameToSave+"_BKG_stacked.pdf");
-  gc->Print(nameToSave+"_BKG_stacked.png");
+  gcY->Print(nameToSave+"_pT_as_x_BKG_stacked.pdf");
+  gcY->Print(nameToSave+"_pT_as_x_BKG_stacked.png");
+
+  gcX->cd();
+
+  leg->Draw();
+
+  gcX->Print(nameToSave+"_pz_as_x_BKG_stacked.pdf");
+  gcX->Print(nameToSave+"_pz_as_x_BKG_stacked.png");
 
   TH2D* ratio = (TH2D*)dataHist->Clone();
   ratio->Divide(mcHist);
@@ -661,11 +1054,17 @@ void Draw2DBKGCategStackWithBKGScale(string name, TFile* mcFile, TFile* dataFile
   hVec2.push_back(make_pair(mcRat,"E2"));
   hVec2.push_back(make_pair(rat,""));
 
-  GridCanvas* gc2=plotYAxis1D(hVec2, "Muon Transverse Momentum [GeV/c]","Data/MC", "p_{//}", multipliers);
-  gc2->Remax();
+  GridCanvas* gcY2=plotYAxis1D(hVec2, "Muon Transverse Momentum [GeV/c]","Data/MC", "p_{//}", multipliers);
+  gcY2->Remax();
 
-  gc2->Print(nameToSave+"_BKG_stacked_ratio.pdf");
-  gc2->Print(nameToSave+"_BKG_stacked_ratio.png");
+  gcY2->Print(nameToSave+"_pT_as_x_BKG_stacked_ratio.pdf");
+  gcY2->Print(nameToSave+"_pT_as_x_BKG_stacked_ratio.png");
+
+  GridCanvas* gcX2=plotXAxis1D(hVec2, "Muon Transverse Momentum [GeV/c]","Data/MC", "p_{//}", multipliers);
+  gcX2->Remax();
+
+  gcX2->Print(nameToSave+"_pz_as_x_BKG_stacked_ratio.pdf");
+  gcX2->Print(nameToSave+"_pz_as_x_BKG_stacked_ratio.png");
 
   delete mcSum;
   delete mcHist;
@@ -693,7 +1092,10 @@ void Draw2DBKGCategStackWithBKGScale(string name, TFile* mcFile, TFile* dataFile
   delete h_Wrong_Nucleus_Bkg_Norm;
   delete h_Other_Bkg_Norm;
   delete h_data_Norm;
-  delete gc2;
+  delete gcY;
+  delete gcX;
+  delete gcY2;
+  delete gcX2;
 
   return;
 }
