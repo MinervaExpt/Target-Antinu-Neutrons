@@ -402,7 +402,7 @@ class CVUniverse : public PlotUtils::MinervaUniverse {
   virtual std::vector<double> GetNeutCandEs() const{ return GetVec<double>((GetAnaToolName()+"_BlobTotalE").c_str()); }
 
   //returns a NeutCands object of just the lead candidate in the interest of verifying that this doesn't affect cuts based around the event object. Further restructuring will likely just get the single neut cand into the event an allow for filling of one or the other. I could also more intelligently make the NeutCands obejct generally, but it's what it is for now. This is a short term solution to check that the code can be better optimized to not take so long by not filling more than one blob per event.
-  virtual double GetLeadNeutAngle() const{
+  virtual double GetLeadNeutAngleToMuon() const{
     int nBlobs = GetNNeutBlobs();
 
     if (nBlobs > 0){
@@ -417,6 +417,28 @@ class CVUniverse : public PlotUtils::MinervaUniverse {
       TVector3 leadNeutFP = startPos - EvtVtx;
       if (muonMom.Mag() > 0 && leadNeutFP.Mag() > 0) return leadNeutFP.Angle(muonMom);
       return -100;
+    }
+    return -999;
+  }
+
+  virtual double GetLeadNeutReactionAngle() const{
+    int nBlobs = GetNNeutBlobs();
+
+    if (nBlobs > 0){
+      std::vector<double> Es = GetNeutCandEs();
+      int leadNeutEIndex = std::max_element(Es.begin(),Es.end()) - Es.begin();
+      return GetVecElem((GetAnaToolName()+"_BlobReactionAngle").c_str(),leadNeutEIndex);
+    }
+    return -999;
+  }
+
+  virtual double GetLeadNeutCoplanarityAngle() const{
+    int nBlobs = GetNNeutBlobs();
+
+    if (nBlobs > 0){
+      std::vector<double> Es = GetNeutCandEs();
+      int leadNeutEIndex = std::max_element(Es.begin(),Es.end()) - Es.begin();
+      return GetVecElem((GetAnaToolName()+"_BlobCoplanarityAngle").c_str(),leadNeutEIndex);
     }
     return -999;
   }

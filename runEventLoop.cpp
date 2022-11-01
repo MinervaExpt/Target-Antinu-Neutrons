@@ -778,7 +778,9 @@ int main(const int argc, const char** argv)
   std::map< std::string, std::vector<CVUniverse*> > truth_bands;
   if(doSystematics) truth_bands = GetStandardSystematics(options.m_truth, false);
   truth_bands["cv"] = {new CVUniverse(options.m_truth)};
-  
+
+  double radianCorr = TMath::Pi()/180.;
+
   //Same as Amit's seemingly. Bin normalized these are smoother.
   std::vector<double> dansPTBins = {0, 0.075, 0.15, 0.25, 0.325, 0.4, 0.475, 0.55, 0.7, 0.85, 1, 1.25, 1.5, 2.5, 4.5},
                       myPTBins = {0, 0.075, 0.15, 0.25, 0.325, 0.4, 0.475, 0.55, 0.625, 0.7, 0.775, 0.85, 0.925, 1, 1.125, 1.25, 1.5, 2.5, 4.5},
@@ -786,6 +788,7 @@ int main(const int argc, const char** argv)
                       dansPzBins = {1.5, 2, 2.5, 3, 3.5, 4, 4.5, 5, 6, 7, 8, 9, 10, 15, 20, 40, 60},
                       robsEmuBins = {0,1,2,3,4,5,7,9,12,15,18,22,36,50,75,100,120},
 		      tejinPmuBins = {1.5, 2, 2.5, 3, 3.5, 4, 4.5, 5, 5.5, 6, 7, 8, 9, 10, 15, 20}, //include 0, can probably handle with plotting...
+		      reactionBins = {-180*radianCorr,-125*radianCorr,-80*radianCorr,-55*radianCorr,-40*radianCorr,-30*radianCorr,-20*radianCorr,-10*radianCorr,0,10*radianCorr,20*radianCorr,30*radianCorr,40*radianCorr,55*radianCorr,80*radianCorr,125*radianCorr,180*radianCorr},
 		      robsRecoilBins,
 		      nBlobsBins,
 		      n5Bins,
@@ -817,10 +820,8 @@ int main(const int argc, const char** argv)
 
   const double nBinsNeutAngle = 180./15.;
   for(int whichBin = 0; whichBin <= nBinsNeutAngle+1;++whichBin){
-    myNeutAngleBins.push_back((double)(whichBin)*(15.)*(TMath::Pi()/180.));
+    myNeutAngleBins.push_back((double)(whichBin)*(15.)*radianCorr);
   }
-
-
 
   const double myVtxZBinWidth = 1.;
   //const double myVtxZBase = 5800.; //Tracker for plot testing
@@ -833,7 +834,9 @@ int main(const int argc, const char** argv)
 
   std::vector<Variable*> vars = {
     new Variable(true, "pTmu", "p_{T, #mu} [GeV/c]", dansPTBins, &CVUniverse::GetMuonPT, &CVUniverse::GetMuonPTTrue),
-    new Variable(false, "neutAngle", "[radian]", myNeutAngleBins, &CVUniverse::GetLeadNeutAngle),
+    new Variable(false, "neutAngleToMuon", "[radian]", myNeutAngleBins, &CVUniverse::GetLeadNeutAngleToMuon),
+    new Variable(false, "neutReactionAngle", "#delta#theta_{r}[radian]", reactionBins, &CVUniverse::GetLeadNeutReactionAngle),
+    new Variable(false, "neutCoplanarityAngle", "#delta#theta_{p}[radian]", reactionBins, &CVUniverse::GetLeadNeutCoplanarityAngle),
     //new Variable((TString)("MyBins"),"pTmu_MYBins", "p_{T, #mu} [GeV/c]", myPTBins, &CVUniverse::GetMuonPT, &CVUniverse::GetMuonPTTrue),
     new Variable(false, "pTmu_MYBins", "p_{T, #mu} [GeV/c]", myPTBins, &CVUniverse::GetMuonPT, &CVUniverse::GetMuonPTTrue),
     new Variable(false, "nBlobs", "No.", nBlobsBins, &CVUniverse::GetNNeutBlobs),//Don't need GetDummyTrue perhaps...
