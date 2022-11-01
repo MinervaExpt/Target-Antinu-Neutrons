@@ -469,7 +469,7 @@ class CVUniverse : public PlotUtils::MinervaUniverse {
     if (nBlobs > 0){
       std::vector<double> Es = GetNeutCandEs();
       int leadNeutEIndex = std::max_element(Es.begin(),Es.end()) - Es.begin();
-      return GetVecElem((GetAnaToolName()+"_BlobReactionAngle").c_str(),leadNeutEIndex);
+      return GetVecElem((GetAnaToolName()+"_BlobReactionPlaneAngle").c_str(),leadNeutEIndex);
     }
     return -999;
   }
