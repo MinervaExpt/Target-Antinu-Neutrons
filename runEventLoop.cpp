@@ -835,6 +835,7 @@ int main(const int argc, const char** argv)
   std::vector<Variable*> vars = {
     new Variable(true, "pTmu", "p_{T, #mu} [GeV/c]", dansPTBins, &CVUniverse::GetMuonPT, &CVUniverse::GetMuonPTTrue),
     new Variable(false, "neutAngleToMuon", "[radian]", myNeutAngleBins, &CVUniverse::GetLeadNeutAngleToMuon),
+    new Variable(false, "neutAngle", "[radian]", myNeutAngleBins, &CVUniverse::GetLeadNeutAngleToBeam),
     new Variable(false, "neutReactionAngle", "#delta#theta_{r}[radian]", reactionBins, &CVUniverse::GetLeadNeutReactionAngle),
     new Variable(false, "neutCoplanarityAngle", "#delta#theta_{p}[radian]", reactionBins, &CVUniverse::GetLeadNeutCoplanarityAngle),
     //new Variable((TString)("MyBins"),"pTmu_MYBins", "p_{T, #mu} [GeV/c]", myPTBins, &CVUniverse::GetMuonPT, &CVUniverse::GetMuonPTTrue),

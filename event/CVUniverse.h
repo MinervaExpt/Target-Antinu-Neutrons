@@ -421,6 +421,25 @@ class CVUniverse : public PlotUtils::MinervaUniverse {
     return -999;
   }
 
+  virtual double GetLeadNeutAngleToBeam() const{
+    int nBlobs = GetNNeutBlobs();
+
+    if (nBlobs > 0){
+      std::vector<double> vtx = GetVtx();
+      TVector3 EvtVtx;
+      EvtVtx.SetXYZ(vtx.at(0),vtx.at(1),vtx.at(2));
+      std::vector<double> Es = GetNeutCandEs();
+      int leadNeutEIndex = std::max_element(Es.begin(),Es.end()) - Es.begin();
+      TVector3 startPos;
+      startPos.SetXYZ(GetVecElem((GetAnaToolName()+"_BlobBegX").c_str(),leadNeutEIndex),GetVecElem((GetAnaToolName()+"_BlobBegY").c_str(),leadNeutEIndex),GetVecElem((GetAnaToolName()+"_BlobBegZ").c_str(),leadNeutEIndex));
+      TVector3 leadNeutFP = startPos - EvtVtx;
+      leadNeutFP.RotateX(MinervaUnits::numi_beam_angle_rad);
+      if (leadNeutFP.Mag() > 0) return leadNeutFP.Theta();
+      return -100;
+    }
+    return -999;
+  }
+
   virtual double GetLeadNeutReactionAngle() const{
     int nBlobs = GetNNeutBlobs();
 
