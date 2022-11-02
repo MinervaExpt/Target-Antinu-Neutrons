@@ -486,7 +486,7 @@ int main(int argc, char* argv[]) {
   string MCfileName = string(argv[1]);
   string DATAfileName = string(argv[2]);
   string outDir = string(argv[3]);
-  string outFileTag = argv[4];
+  string outFileTag = string(argv[4]);
   TString varName= argv[5];
   bool doSyst = (bool)(atoi(argv[6]));
   bool Tgts = (bool)(atoi(argv[7]));
