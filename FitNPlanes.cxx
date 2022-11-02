@@ -103,20 +103,20 @@ void DrawFromMnvH1Ds(MnvH1D* h_data, map<TString, MnvH1D*> hFit, map<TString, Mn
   
   //cout << "Getting signal hist." << endl;
 
-  if (sigFit) h_sig = hFit["Inner"+whichPlastic];
-  else h_sig = hUnfit["Inner"+whichPlastic];
+  if (sigFit) h_sig = hFit[whichPlastic];
+  else h_sig = hUnfit[whichPlastic];
 
   mcSum = h_sig->Clone();
 
   //cout << "Summing hists." << endl;
 
   for (auto hist:hFit){
-    if (hist.first != "Inner"+whichPlastic) mcSum->Add(hist.second);
+    if (hist.first != whichPlastic) mcSum->Add(hist.second);
   }
 
   int iHist = 0;
   for (auto hist:hUnfit){
-    if (hist.first != "Inner"+whichPlastic){
+    if (hist.first != whichPlastic){
       mcSum->Add(hist.second);
       if (iHist!=0)unfitSum->Add(hist.second);
       else unfitSum = hist.second->Clone();
@@ -130,7 +130,7 @@ void DrawFromMnvH1Ds(MnvH1D* h_data, map<TString, MnvH1D*> hFit, map<TString, Mn
 
   iHist = 0;
   for (auto hist:hUnfit){
-    if (hist.first != "Inner"+whichPlastic){
+    if (hist.first != whichPlastic){
       hist.second->SetLineColor(TColor::GetColor(colors[iHist%3]));
       hist.second->SetFillColor(TColor::GetColor(colors[iHist%3]));
       iHist++;
@@ -142,7 +142,7 @@ void DrawFromMnvH1Ds(MnvH1D* h_data, map<TString, MnvH1D*> hFit, map<TString, Mn
   THStack* h = new THStack();
   //if(!allFit) h->Add((TH1D*)unfitSum->GetCVHistoWithError().Clone());
   for (auto hist:hUnfit){
-    if(hist.first != "Inner"+whichPlastic) h->Add((TH1D*)hist.second->GetCVHistoWithError().Clone());
+    if(hist.first != whichPlastic) h->Add((TH1D*)hist.second->GetCVHistoWithError().Clone());
   }
   h->Add((TH1D*)h_sig->GetCVHistoWithError().Clone());
 
@@ -178,7 +178,7 @@ void DrawFromMnvH1Ds(MnvH1D* h_data, map<TString, MnvH1D*> hFit, map<TString, Mn
   leg->AddEntry(dataHist,"DATA");
   leg->AddEntry(h_sig,whichPlastic);
   for (auto hist = hUnfit.rbegin(); hist != hUnfit.rend(); ++hist){
-    if (hist->first != "Inner"+whichPlastic) leg->AddEntry(hist->second,hist->first);
+    if (hist->first != whichPlastic) leg->AddEntry(hist->second,hist->first);
   }
   //if (!allFit) leg->AddEntry(unfitSum,"Not fit BKGs");
 
@@ -601,7 +601,7 @@ int main(int argc, char* argv[]) {
 
   map<TString, MnvH1D*> fitHists, unfitHists;
 
-  fitHists["Inner"+whichPlastic] = (MnvH1D*)h_Plastic->Clone();
+  fitHists[whichPlastic] = (MnvH1D*)h_Plastic->Clone();
   unfitHists[material] = (MnvH1D*)h_Mat_Bkg->Clone();
   //"if" the above line constrained by tgtNum != 6...
   //else unfitHists["Water"] = (MnvH1D*)h_Mat_Bkg->Clone();
@@ -611,7 +611,7 @@ int main(int argc, char* argv[]) {
   map<TString,map<TString,MnvH1D*>> result = FitScaleFactorsAndDraw(h_data, fitHists, unfitHists, "NPlanes", outDir, "_fit"+whichPlastic, lowBin, hiBin, doSyst, true, varsToSave, whichPlastic);
 
   map<TString,MnvH1D*> scaledHists = {};
-  scaledHists["Inner"+whichPlastic]=(MnvH1D*)h_Plastic->Clone();
+  scaledHists[whichPlastic]=(MnvH1D*)h_Plastic->Clone();
 
   for(auto hists:scaledHists){
     hists.second->Multiply(hists.second,result["NPlanes"][hists.first]);
