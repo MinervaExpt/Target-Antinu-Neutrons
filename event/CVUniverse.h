@@ -281,6 +281,82 @@ class CVUniverse : public PlotUtils::MinervaUniverse {
     return maxMom;
   }
 
+  virtual double GetMaxFSNeutronAngleToMuon() const {
+    TVector3 trueNeutMom = GetMaxFSNeutronMom().Vect();
+    trueNeutMom.RotateX(MinervaUnits::numi_beam_angle_rad);
+    if (trueNeutMom.Mag() <= 0) return -999;
+    TVector3 muonMom;
+    muonMom.SetMagThetaPhi(GetPlepTrue(),GetThetalepTrue(),GetPhilepTrue());
+    if (muonMom.Mag() > 0) return trueNeutMom.Angle(muonMom);
+    return -100;
+  }
+
+  virtual double GetMaxFSNeutronAngleToBeam() const {
+    TVector3 trueNeutMom = GetMaxFSNeutronMom().Vect();
+    trueNeutMom.RotateX(MinervaUnits::numi_beam_angle_rad);
+    if (trueNeutMom.Mag() > 0) return trueNeutMom.Theta();
+    return -999;
+  }
+
+  virtual double GetMaxFSNeutronDeltaPhiT() const {
+    TVector3 trueNeutMom = GetMaxFSNeutronMom().Vect();
+    trueNeutMom.RotateX(MinervaUnits::numi_beam_angle_rad);
+    if (trueNeutMom.Mag() <= 0) return -999;
+    TVector3 muonMom;
+    muonMom.SetMagThetaPhi(GetPlepTrue(),GetThetalepTrue(),GetPhilepTrue());
+    muonMom.SetZ(0.0);
+    trueNeutMom.SetZ(0.0);
+    if (muonMom.Mag() > 0) return trueNeutMom.Angle(-muonMom);
+    return -100;
+  }
+
+  //Analog to NeutronBlobUtils::computeNeutronFromHydrogen in CVS of MINERvA framework
+  virtual TVector3 GetTrueExpectedNeutronFromHydrogen() const {
+    TVector3 muonMom;
+    muonMom.SetMagThetaPhi(GetPlepTrue(),GetThetalepTrue(),GetPhilepTrue());
+    double muonE = GetElepTrue();
+    
+    double Mp = MinervaUnits::M_p;
+    double Mn = MinervaUnits::M_n;
+
+    double x = muonMom.Px();
+    double y = muonMom.Py();
+    double z = muonMom.Pz();
+    double E = muonE;
+
+    double nbpx = -x;
+    double nbpy = -y;
+    double nbpz = (E*E+Mp*Mp-Mn*Mn-x*x-y*y+z*z+2*(Mp*z-E*Mp-E*z))/2/(E-Mp-z);
+    TVector3 expectedMom(nbpx,nbpy,nbpz);
+    return expectedMom;
+  }
+
+  virtual double GetMaxFSNeutronReactionAngle() const {
+    TVector3 trueNeutMom = GetMaxFSNeutronMom().Vect();
+    trueNeutMom.RotateX(MinervaUnits::numi_beam_angle_rad);
+    TVector3 expectedMom = GetTrueExpectedNeutronFromHydrogen();
+    TVector3 trueZ(0.0,0.0,1.0);
+    TVector3 zAx = expectedMom.Unit();
+    TVector3 yAx = zAx.Cross(trueZ).Unit();
+    TVector3 xAx = yAx.Cross(zAx).Unit();
+    double dx = trueNeutMom.Dot(xAx);
+    double dz = trueNeutMom.Dot(zAx);
+    return TMath::ATan2(dx,dz);
+  }
+
+  virtual double GetMaxFSNeutronCoplanarityAngle() const {
+    TVector3 trueNeutMom = GetMaxFSNeutronMom().Vect();
+    trueNeutMom.RotateX(MinervaUnits::numi_beam_angle_rad);
+    TVector3 expectedMom = GetTrueExpectedNeutronFromHydrogen();
+    TVector3 trueZ(0.0,0.0,1.0);
+    TVector3 zAx = expectedMom.Unit();
+    TVector3 yAx = zAx.Cross(trueZ).Unit();
+    //TVector3 xAx = yAx.Cross(zAx).Unit();
+    double dy = trueNeutMom.Dot(yAx);
+    double dz = trueNeutMom.Dot(zAx);
+    return TMath::ATan2(dy,dz);
+  }
+
   virtual int GetNImprovedMichel() const { return GetInt("improved_michel_vertex_type_sz"); }
 
   virtual int GetNuHelicity() const { return GetInt((GetAnaToolName()+"_nuHelicity").c_str()); }

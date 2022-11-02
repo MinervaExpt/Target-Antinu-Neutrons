@@ -834,11 +834,11 @@ int main(const int argc, const char** argv)
 
   std::vector<Variable*> vars = {
     new Variable(true, "pTmu", "p_{T, #mu} [GeV/c]", dansPTBins, &CVUniverse::GetMuonPT, &CVUniverse::GetMuonPTTrue),
-    new Variable(false, "neutAngleToMuon", "Neutron Angle To Muon[radian]", myNeutAngleBins, &CVUniverse::GetLeadNeutAngleToMuon),
-    new Variable(false, "neutAngle", "#theta_{n}[radian]", myNeutAngleBins, &CVUniverse::GetLeadNeutAngleToBeam),
-    new Variable(false, "neutDeltaPhiT", "#delta#phi_{T}[radian]", myNeutAngleBins, &CVUniverse::GetLeadNeutReactionAngle),
-    new Variable(false, "neutReactionAngle", "#delta#theta_{r}[radian]", reactionBins, &CVUniverse::GetLeadNeutReactionAngle),
-    new Variable(false, "neutCoplanarityAngle", "#delta#theta_{p}[radian]", reactionBins, &CVUniverse::GetLeadNeutCoplanarityAngle),
+    new Variable(true, "neutAngleToMuon", "Neutron Angle To Muon[radian]", myNeutAngleBins, &CVUniverse::GetLeadNeutAngleToMuon, &CVUniverse::GetMaxFSNeutronAngleToMuon),
+    new Variable(true, "neutAngle", "#theta_{n}[radian]", myNeutAngleBins, &CVUniverse::GetLeadNeutAngleToBeam, &CVUniverse::GetMaxFSNeutronAngleToBeam),
+    new Variable(true, "neutDeltaPhiT", "#delta#phi_{T}[radian]", myNeutAngleBins, &CVUniverse::GetLeadNeutDeltaPhiT, &CVUniverse::GetMaxFSNeutronDeltaPhiT),
+    new Variable(true, "neutReactionAngle", "#delta#theta_{r}[radian]", reactionBins, &CVUniverse::GetLeadNeutReactionAngle, &CVUniverse::GetMaxFSNeutronReactionAngle),
+    new Variable(true, "neutCoplanarityAngle", "#delta#theta_{p}[radian]", reactionBins, &CVUniverse::GetLeadNeutCoplanarityAngle, &CVUniverse::GetMaxFSNeutronCoplanarityAngle),
     //new Variable((TString)("MyBins"),"pTmu_MYBins", "p_{T, #mu} [GeV/c]", myPTBins, &CVUniverse::GetMuonPT, &CVUniverse::GetMuonPTTrue),
     new Variable(false, "pTmu_MYBins", "p_{T, #mu} [GeV/c]", myPTBins, &CVUniverse::GetMuonPT, &CVUniverse::GetMuonPTTrue),
     new Variable(false, "nBlobs", "No.", nBlobsBins, &CVUniverse::GetNNeutBlobs),//Don't need GetDummyTrue perhaps...
