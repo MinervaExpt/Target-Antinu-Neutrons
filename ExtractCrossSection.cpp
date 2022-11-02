@@ -3,7 +3,7 @@
 //       Subtracts backgrounds, performs unfolding, applies efficiency x acceptance correction, and 
 //       divides by flux and number of nucleons.  Writes a .root file with the cross section histogram.
 //
-//Usage: ExtractCrossSection <unfolding iterations> <data.root> <mc.root>
+//Usage: ExtractCrossSection <unfolding iterations> <data.root> <mc.root> <stop at efficiency correction> <varName>
 //
 //Author: Andrew Olivier aolivier@ur.rochester.edu
 
@@ -140,10 +140,10 @@ int main(const int argc, const char** argv)
 
   TH1::AddDirectory(kFALSE); //Needed so that MnvH1D gets to clean up its own MnvLatErrorBands (which are TH1Ds).
 
-  if(argc != 4)
+  if(argc != 6)
   {
-    std::cerr << "Expected 3 arguments, but I got " << argc-1 << ".\n"
-              << "USAGE: ExtractCrossSection <unfolding iterations> <data.root> <mc.root>\n";
+    std::cerr << "Expected 4 arguments, but I got " << argc-1 << ".\n"
+              << "USAGE: ExtractCrossSection <unfolding iterations> <data.root> <mc.root> <stop at eff. corr.> <varName> \n";
     return 1;
   }
 
@@ -162,6 +162,9 @@ int main(const int argc, const char** argv)
     return 3;
   }
 
+  bool stopAtEffCorr = (bool)atoi(argv[4]);
+  std::string varName = std::string(argv[5]);
+
   std::vector<std::string> crossSectionPrefixes;
   for(auto key: *dataFile->GetListOfKeys())
   {
@@ -173,28 +176,19 @@ int main(const int argc, const char** argv)
   const double mcPOT = util::GetIngredient<TParameter<double>>(*mcFile, "POTUsed")->GetVal(),
                dataPOT = util::GetIngredient<TParameter<double>>(*dataFile, "POTUsed")->GetVal();
 
+  crossSectionPrefixes.clear();
+  crossSectionPrefixes.push_back(varName);
+
   for(const auto& prefix: crossSectionPrefixes)
   {
     try
     {
-      auto flux = util::GetIngredient<PlotUtils::MnvH1D>(*mcFile, "reweightedflux_integrated", prefix);
       auto folded = util::GetIngredient<PlotUtils::MnvH1D>(*dataFile, "data", prefix);
       Plot(*folded, "data", prefix);
       auto migration = util::GetIngredient<PlotUtils::MnvH2D>(*mcFile, "migration", prefix);
       auto effNum = util::GetIngredient<PlotUtils::MnvH1D>(*mcFile, "efficiency_numerator", prefix);
       auto effDenom = util::GetIngredient<PlotUtils::MnvH1D>(*mcFile, "efficiency_denominator", prefix);
       auto simEventRate = effDenom->Clone(); //Make a copy for later
-
-      const auto fiducialFound = std::find_if(mcFile->GetListOfKeys()->begin(), mcFile->GetListOfKeys()->end(),
-                                              [&prefix](const auto key)
-                                              {
-                                                const std::string keyName = key->GetName();
-                                                const size_t fiducialEnd = keyName.find("_fiducial_nucleons");
-                                                return (fiducialEnd != std::string::npos) && (prefix.find(keyName.substr(0, fiducialEnd)) != std::string::npos);
-                                              });
-      if(fiducialFound == mcFile->GetListOfKeys()->end()) throw std::runtime_error("Failed to find a number of nucleons that matches prefix " + prefix);
-
-      auto nNucleons = util::GetIngredient<TParameter<double>>(*mcFile, (*fiducialFound)->GetName()); //Dan: Use the same truth fiducial volume for all extractions.  The acceptance correction corrects data back to this fiducial even if the reco fiducial cut is different.
 
       //Look for backgrounds with <prefix>_<analysis>_Background_<name>
       std::vector<PlotUtils::MnvH1D*> backgrounds;
@@ -252,17 +246,32 @@ int main(const int argc, const char** argv)
       unfolded->Divide(unfolded, effNum);
       Plot(*unfolded, "efficiencyCorrected", prefix);
 
-      auto crossSection = normalize(unfolded, flux, nNucleons->GetVal(), dataPOT);
-      Plot(*crossSection, "crossSection", prefix);
-      crossSection->Clone()->Write("crossSection");
+      unfolded->Clone()->Write("efficiencyCorrected");
 
-      //Write a "simulated cross section" to compare to the data I just extracted.
-      //If this analysis passed its closure test, this should be the same cross section as
-      //what GENIEXSecExtract would produce.
-      normalize(simEventRate, flux, nNucleons->GetVal(), mcPOT);
+      if (!stopAtEffCorr){
+	auto flux = util::GetIngredient<PlotUtils::MnvH1D>(*mcFile, "reweightedflux_integrated", prefix);
+	const auto fiducialFound = std::find_if(mcFile->GetListOfKeys()->begin(), mcFile->GetListOfKeys()->end(),
+						[&prefix](const auto key)
+						{
+						  const std::string keyName = key->GetName();
+						  const size_t fiducialEnd = keyName.find("_fiducial_nucleons");
+						  return (fiducialEnd != std::string::npos) && (prefix.find(keyName.substr(0, fiducialEnd)) != std::string::npos);
+						});
+	if(fiducialFound == mcFile->GetListOfKeys()->end()) throw std::runtime_error("Failed to find a number of nucleons that matches prefix " + prefix);
+
+	auto nNucleons = util::GetIngredient<TParameter<double>>(*mcFile, (*fiducialFound)->GetName()); //Dan: Use the same truth fiducial volume for all extractions.  The acceptance correction corrects data back to this fiducial even if the reco fiducial cut is different.
+	auto crossSection = normalize(unfolded, flux, nNucleons->GetVal(), dataPOT);
+	Plot(*crossSection, "crossSection", prefix);
+	crossSection->Clone()->Write("crossSection");
       
-      Plot(*simEventRate, "simulatedCrossSection", prefix);
-      simEventRate->Write("simulatedCrossSection");
+	//Write a "simulated cross section" to compare to the data I just extracted.
+	//If this analysis passed its closure test, this should be the same cross section as
+	//what GENIEXSecExtract would produce.
+	normalize(simEventRate, flux, nNucleons->GetVal(), mcPOT);
+      
+	Plot(*simEventRate, "simulatedCrossSection", prefix);
+	simEventRate->Write("simulatedCrossSection");
+      }
     }
     catch(const std::runtime_error& e)
     {
