@@ -455,7 +455,7 @@ int main(int argc, char* argv[]) {
   #endif
 
   //Pass an input file name to this script now
-  if (argc < 6 || argc > 8) {
+  if (argc != 7){
     cout << "Check usage..." << endl;
     return 2;
   }
@@ -468,11 +468,23 @@ int main(int argc, char* argv[]) {
   TString material = argv[4];
   TString mat = "_"+material;
   bool doSyst = (bool)(atoi(argv[5]));
+  TString USDS = argv[6];
   
-  int lowBin = -3;//This is US default
-  int hiBin = -6;//This is US default
-  if (argc > 6) lowBin = max(atoi(argv[6]),1);//Forced to be 1+
-  if (argc > 7) hiBin = min(50, atoi(argv[7]));//Forced to be 50-
+  int lowBin = 0;//This is US default
+  int hiBin = -1;//This is US default
+
+  if (USDS == "US"){
+    lowBin = 5;
+    hiBin = 8;
+  }
+  else if (USDS == "DS"){
+    lowBin = 2;
+    hiBin = 5;
+  }
+  else{
+    cout << "Argument for upstream v. downstream must be US or DS exactly." << endl;
+    return 626;//Cause inter"Stitch"ial plastic...
+  }
 
   string rootExt = ".root";
   string slash = "/";
