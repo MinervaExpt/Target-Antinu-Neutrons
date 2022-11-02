@@ -652,6 +652,15 @@ int main(int argc, char* argv[]) {
     MnvH1D* otherHist = (MnvH1D*)(mcFile->Get(grabName+"_background_Other"))->Clone();
     otherHist->Scale(POTscale);
 
+    MnvH1D* wrongNuclHist = (MnvH1D*)(mcFile->Get(grabName+"_background_Wrong_Nucleus"))->Clone();
+    wrongNuclHist->Scale(POTscale);
+
+    MnvH1D* USHist = (MnvH1D*)(mcFile->Get(grabName+"_background_USPlastic"))->Clone();
+    USHist->Scale(POTscale);
+
+    MnvH1D* DSHist = (MnvH1D*)(mcFile->Get(grabName+"_background_DSPlastic"))->Clone();
+    DSHist->Scale(POTscale);
+
     MnvH1D* bkgNNeutPiHist = neutPiHist->Clone();
     bkgNNeutPiHist->Add(NPiHist);
 
@@ -679,40 +688,56 @@ int main(int argc, char* argv[]) {
     bkgTotHist->Add(RESHist);
 
     map<TString, MnvH1D*> fitHists1A, unfitHists1A;
+    /*
     map<TString, MnvH1D*> fitHists2A, unfitHists2A;
     map<TString, MnvH1D*> fitHists3A, unfitHists3A;
     map<TString, MnvH1D*> fitHists4A, unfitHists4A;
     map<TString, MnvH1D*> fitHists5A, unfitHists5A;
     map<TString, MnvH1D*> fitHists6A, unfitHists6A;
+    */
 
     map<TString, MnvH1D*> fitHists1B, unfitHists1B;
+    /*
     map<TString, MnvH1D*> fitHists2B, unfitHists2B;
     map<TString, MnvH1D*> fitHists3B, unfitHists3B;
     map<TString, MnvH1D*> fitHists4B, unfitHists4B;
     map<TString, MnvH1D*> fitHists5B, unfitHists5B;
     map<TString, MnvH1D*> fitHists6B, unfitHists6B;
+    */
 
     map<TString, vector<TString>> nameKeys1A, nameKeys1B;
+    /*
     map<TString, vector<TString>> nameKeys2A, nameKeys2B;
     map<TString, vector<TString>> nameKeys3A, nameKeys3B;
     map<TString, vector<TString>> nameKeys4A, nameKeys4B;
     map<TString, vector<TString>> nameKeys5A, nameKeys5B;
     map<TString, vector<TString>> nameKeys6A, nameKeys6B;
+    */
 
     fitHists1A["BKG"]=(MnvH1D*)bkgTotHist->Clone();
     fitHists1A["Signal"]=(MnvH1D*)sigHist->Clone();
+    unfitHists1A["USPlastic"]=(MnvH1D*)USHist->Clone();
+    unfitHists1A["DSPlastic"]=(MnvH1D*)DSHist->Clone();
+    unfitHists1A["WrongNucleus"]=(MnvH1D*)wrongNuclHist->Clone();
     nameKeys1A["BKG"]={"bkg","background"};
     nameKeys1A["Signal"]={"sig","signal"};
 
     fitHists1B["BKG"]=(MnvH1D*)bkgTotHist->Clone();
     unfitHists1B["Signal"]=(MnvH1D*)sigHist->Clone();
+    unfitHists1B["USPlastic"]=(MnvH1D*)USHist->Clone();
+    unfitHists1B["DSPlastic"]=(MnvH1D*)DSHist->Clone();
+    unfitHists1B["WrongNucleus"]=(MnvH1D*)wrongNuclHist->Clone();
     nameKeys1B["BKG"]=nameKeys1A["BKG"];
 
+    /*
     fitHists2A["single #pi^{#pm}"]=(MnvH1D*)chargePiHist->Clone();
     fitHists2A["single #pi^{0}"]=(MnvH1D*)neutPiHist->Clone();
     fitHists2A["N#pi"]=(MnvH1D*)NPiHist->Clone();
     fitHists2A["Signal"]=(MnvH1D*)sigHist->Clone();
     unfitHists2A["Other"]=(MnvH1D*)otherHist->Clone();
+    unfitHists2A["USPlastic"]=(MnvH1D*)USHist->Clone();
+    unfitHists2A["DSPlastic"]=(MnvH1D*)DSHist->Clone();
+    unfitHists2A["WrongNucleus"]=(MnvH1D*)wrongNuclHist->Clone();
     nameKeys2A["single #pi^{#pm}"]={"background_1chargePi"};
     nameKeys2A["single #pi^{0}"]={"background_1neutPi"};
     nameKeys2A["N#pi"]={"background_NPi"};
@@ -723,6 +748,9 @@ int main(int argc, char* argv[]) {
     fitHists2B["N#pi"]=(MnvH1D*)NPiHist->Clone();
     unfitHists2B["Signal"]=(MnvH1D*)sigHist->Clone();
     unfitHists2B["Other"]=(MnvH1D*)otherHist->Clone();
+    unfitHists2B["USPlastic"]=(MnvH1D*)USHist->Clone();
+    unfitHists2B["DSPlastic"]=(MnvH1D*)DSHist->Clone();
+    unfitHists2B["WrongNucleus"]=(MnvH1D*)wrongNuclHist->Clone();
     nameKeys2B["single #pi^{#pm}"]=nameKeys2A["single #pi^{#pm}"];
     nameKeys2B["single #pi^{0}"]=nameKeys2A["single #pi^{0}"];
     nameKeys2B["N#pi"]=nameKeys2A["N#pi"];
@@ -731,6 +759,9 @@ int main(int argc, char* argv[]) {
     fitHists3A["N#pi"]=(MnvH1D*)NPiHist->Clone();
     fitHists3A["Signal"]=(MnvH1D*)sigHist->Clone();
     unfitHists3A["Other"]=(MnvH1D*)otherHist->Clone();
+    unfitHists3A["USPlastic"]=(MnvH1D*)USHist->Clone();
+    unfitHists3A["DSPlastic"]=(MnvH1D*)DSHist->Clone();
+    unfitHists3A["WrongNucleus"]=(MnvH1D*)wrongNuclHist->Clone();
     nameKeys3A["Signal"]=nameKeys1A["Signal"];
     nameKeys3A["single #pi"]={"background_1chargePi","1neutPi"};
     nameKeys3A["N#pi"]={"background_NPi"};
@@ -739,6 +770,9 @@ int main(int argc, char* argv[]) {
     fitHists3B["N#pi"]=(MnvH1D*)NPiHist->Clone();
     unfitHists3B["Signal"]=(MnvH1D*)sigHist->Clone();
     unfitHists3B["Other"]=(MnvH1D*)otherHist->Clone();
+    unfitHists3B["USPlastic"]=(MnvH1D*)USHist->Clone();
+    unfitHists3B["DSPlastic"]=(MnvH1D*)DSHist->Clone();
+    unfitHists3B["WrongNucleus"]=(MnvH1D*)wrongNuclHist->Clone();
     nameKeys3B["single #pi"]=nameKeys3A["single #pi"];
     nameKeys3B["N#pi"]=nameKeys3A["N#pi"];
 
@@ -746,6 +780,9 @@ int main(int argc, char* argv[]) {
     fitHists4A["N#pi & single #pi^{0}"]=(MnvH1D*)bkgNNeutPiHist->Clone();
     fitHists4A["Signal"]=(MnvH1D*)sigHist->Clone();
     unfitHists4A["Other"]=(MnvH1D*)otherHist->Clone();
+    unfitHists4A["USPlastic"]=(MnvH1D*)USHist->Clone();
+    unfitHists4A["DSPlastic"]=(MnvH1D*)DSHist->Clone();
+    unfitHists4A["WrongNucleus"]=(MnvH1D*)wrongNuclHist->Clone();
     nameKeys4A["Signal"]=nameKeys1A["Signal"];
     nameKeys4A["single #pi^{#pm}"]={"background_1chargePi"};
     nameKeys4A["N#pi & single #pi^{0}"]={"background_NPi","1neutPi"};
@@ -754,12 +791,18 @@ int main(int argc, char* argv[]) {
     fitHists4B["N#pi & single #pi^{0}"]=(MnvH1D*)bkgNNeutPiHist->Clone();
     unfitHists4B["Signal"]=(MnvH1D*)sigHist->Clone();
     unfitHists4B["Other"]=(MnvH1D*)otherHist->Clone();
+    unfitHists4B["USPlastic"]=(MnvH1D*)USHist->Clone();
+    unfitHists4B["DSPlastic"]=(MnvH1D*)DSHist->Clone();
+    unfitHists4B["WrongNucleus"]=(MnvH1D*)wrongNuclHist->Clone();
     nameKeys4B["single #pi^{#pm}"]=nameKeys4A["single #pi^{#pm}"];
     nameKeys4B["N#pi & single #pi^{0}"]=nameKeys4A["N#pi & single #pi^{0}"];
 
     fitHists5A["RES"]=(MnvH1D*)RESHist->Clone();
     fitHists5A["nonRES"]=(MnvH1D*)bkgNonRESHist->Clone();
     fitHists5A["Signal"]=(MnvH1D*)sigHist->Clone();
+    unfitHists5A["USPlastic"]=(MnvH1D*)USHist->Clone();
+    unfitHists5A["DSPlastic"]=(MnvH1D*)DSHist->Clone();
+    unfitHists5A["WrongNucleus"]=(MnvH1D*)wrongNuclHist->Clone();
     nameKeys5A["Signal"]=nameKeys1A["Signal"];
     nameKeys5A["RES"]={"bkg_IntType_RES"};
     nameKeys5A["nonRES"]={"IntType_DIS","2p2h","Other","Wrong_Nucleus","USPlastic","DSPlastic"};
@@ -767,6 +810,9 @@ int main(int argc, char* argv[]) {
     fitHists5B["RES"]=(MnvH1D*)RESHist->Clone();
     fitHists5B["nonRES"]=(MnvH1D*)bkgNonRESHist->Clone();
     unfitHists5B["Signal"]=(MnvH1D*)sigHist->Clone();
+    unfitHists5B["USPlastic"]=(MnvH1D*)USHist->Clone();
+    unfitHists5B["DSPlastic"]=(MnvH1D*)DSHist->Clone();
+    unfitHists5B["WrongNucleus"]=(MnvH1D*)wrongNuclHist->Clone();
     nameKeys5B["RES"]=nameKeys5A["RES"];
     nameKeys5B["nonRES"]=nameKeys5A["nonRES"];
 
@@ -776,6 +822,9 @@ int main(int argc, char* argv[]) {
     unfitHists6A["QE"]=(MnvH1D*)QEHist->Clone();
     unfitHists6A["2p2h"]=(MnvH1D*)MECHist->Clone();
     unfitHists6A["Other"]=(MnvH1D*)OtherIntTypeHist->Clone();
+    unfitHists6A["USPlastic"]=(MnvH1D*)USHist->Clone();
+    unfitHists6A["DSPlastic"]=(MnvH1D*)DSHist->Clone();
+    unfitHists6A["WrongNucleus"]=(MnvH1D*)wrongNuclHist->Clone();
     nameKeys6A["Signal"]=nameKeys1A["Signal"];
     nameKeys6A["RES"]={"bkg_IntType_RES"};
     nameKeys6A["DIS"]={"bkg_IntType_DIS"};
@@ -786,8 +835,12 @@ int main(int argc, char* argv[]) {
     unfitHists6B["QE"]=(MnvH1D*)QEHist->Clone();
     unfitHists6B["2p2h"]=(MnvH1D*)MECHist->Clone();
     unfitHists6B["Other"]=(MnvH1D*)OtherIntTypeHist->Clone();
+    unfitHists6B["USPlastic"]=(MnvH1D*)USHist->Clone();
+    unfitHists6B["DSPlastic"]=(MnvH1D*)DSHist->Clone();
+    unfitHists6B["WrongNucleus"]=(MnvH1D*)wrongNuclHist->Clone();
     nameKeys6B["RES"]=nameKeys6A["RES"];
     nameKeys6B["DIS"]=nameKeys6A["DIS"];
+    */
 
     cout << "Fitting 1A" << endl;
     map<TString,map<TString,MnvH1D*>> result = FitScaleFactorsAndDraw(dataHist, fitHists1A, unfitHists1A, name, outDir, "_fit1A", lowBin, hiBin, doSyst, true, varsToSave, nameKeys1A);
@@ -827,7 +880,7 @@ int main(int argc, char* argv[]) {
       for (auto var:hist.second) delete var.second;
     }
     result.clear();
-
+    /*
     cout << "Fitting 2A" << endl;
     result = FitScaleFactorsAndDraw(dataHist, fitHists2A, unfitHists2A, name, outDir, "_fit2A", lowBin, hiBin, doSyst, true, varsToSave, nameKeys2A);
     map<TString,MnvH1D*> scaledHists2A = {};
@@ -1034,6 +1087,7 @@ int main(int argc, char* argv[]) {
       for (auto var:hist.second) delete var.second;
     }
     result.clear();
+    */
 
     delete dataHist;
     delete sigHist;
@@ -1041,6 +1095,9 @@ int main(int argc, char* argv[]) {
     delete neutPiHist;
     delete NPiHist;
     delete otherHist;
+    delete USHist;
+    delete DSHist;
+    delete wrongNuclHist;
     delete bkgNNeutPiHist;
     delete bkg1PiHist;
     delete QEHist;
@@ -1054,6 +1111,7 @@ int main(int argc, char* argv[]) {
     for (auto hist:unfitHists1A) delete hist.second;
     for (auto hist:fitHists1B) delete hist.second;
     for (auto hist:unfitHists1B) delete hist.second;
+    /*
     for (auto hist:fitHists2A) delete hist.second;
     for (auto hist:unfitHists2A) delete hist.second;
     for (auto hist:fitHists2B) delete hist.second;
@@ -1074,8 +1132,10 @@ int main(int argc, char* argv[]) {
     for (auto hist:unfitHists6A) delete hist.second;
     for (auto hist:fitHists6B) delete hist.second;
     for (auto hist:unfitHists6B) delete hist.second;
+    */
     for (auto hist:scaledHists1A) delete hist.second;
     for (auto hist:scaledHists1B) delete hist.second;
+    /*
     for (auto hist:scaledHists2A) delete hist.second;
     for (auto hist:scaledHists2B) delete hist.second;
     for (auto hist:scaledHists3A) delete hist.second;
@@ -1086,6 +1146,7 @@ int main(int argc, char* argv[]) {
     for (auto hist:scaledHists5B) delete hist.second;
     for (auto hist:scaledHists6A) delete hist.second;
     for (auto hist:scaledHists6B) delete hist.second;
+    */
     for (auto hist:varsToSave) delete hist.second;
     varsToSave.clear();
   }
