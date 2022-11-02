@@ -1,7 +1,7 @@
 //File: BKGFitting.cxx
 //Info: This script is intended to fit recoil/pTmu plots using TMinuit primarily for the neutron selected sample.
 //
-//Usage: BKGFitting <mc_file> <data_file> <outdir> <recoilE/pTmu/vtxZ> <doSyst (only 0 means no)> <Tgts> optional: <mainTagName> <lowFitBinNum> <hiFitBinNum> <do fits in bins of muon momentum (only 0 means no)> TODO: Save the information beyond just printing it out
+//Usage: BKGFitting <mc_file> <data_file> <outdir> <outFileTag> <recoilE/pTmu/vtxZ> <doSyst (only 0 means no)> <Tgts> optional: <mainTagName> <lowFitBinNum> <hiFitBinNum> <do fits in bins of muon momentum (only 0 means no)> TODO: Save the information beyond just printing it out
 //Author: David Last dlast@sas.upenn.edu/lastd44@gmail.com
 
 //TODO: Same SegFault Business From My Plotting Code... I'm assuming I just need to delete things carefully that I'm not yet.
@@ -282,14 +282,14 @@ map<TString,map<TString,MnvH1D*>> FitScaleFactorsAndDraw(MnvH1D* dataHist, map<T
   for (auto hists:fitHistsAndNames){
     TString dumpTag = "";//tag which lets you know which histos to scale later.
     for (auto tag:tagsToSave[hists.first]){
-      dumpTag = dumpTag+tag;
+      dumpTag = dumpTag+"_t_"+tag;
     }
     fitHists.push_back((TH1D*)hists.second->GetCVHistoWithStatError().Clone());
     for (auto var:varsToSave){
       if (var.first == varName) continue;
-      scaleHists[var.first][hists.first] = new MnvH1D(var.first+"_fit_"+name+dumpTag+"_"+hists.first,"",var.second->GetNbinsX(),var.second->GetXaxis()->GetXbins()->GetArray());
+      scaleHists[var.first][hists.first] = new MnvH1D(var.first+"_fit_"+name+dumpTag,"",var.second->GetNbinsX(),var.second->GetXaxis()->GetXbins()->GetArray());
     }
-    scaleHists[varName][hists.first]= new MnvH1D(varName+"_fit_"+name+dumpTag+"_"+hists.first,"",hists.second->GetNbinsX(),hists.second->GetXaxis()->GetXbins()->GetArray());
+    scaleHists[varName][hists.first]= new MnvH1D(varName+"_fit_"+name+dumpTag,"",hists.second->GetNbinsX(),hists.second->GetXaxis()->GetXbins()->GetArray());
   }
 
   for (auto hists:unfitHistsAndNames){
@@ -332,14 +332,20 @@ map<TString,map<TString,MnvH1D*>> FitScaleFactorsAndDraw(MnvH1D* dataHist, map<T
   map<TString, double> scaleByName;
   nextPar=0;
   for (auto hist:fitHistsAndNames){
+    cout << "HI" << endl;
     scaleByName[hist.first]=scaleResults[nextPar];
     for (auto var:scaleHists){
+      cout << "HI 2" << endl;
       for (int iBin=0; iBin <= var.second[hist.first]->GetNbinsX()+1; ++iBin){
+	cout << "HI 3" << endl;
 	var.second[hist.first]->SetBinContent(iBin,scaleResults[nextPar]);
 	var.second[hist.first]->SetBinError(iBin,scaleErrors[nextPar]);
       }
+      cout << "HI 4" << endl;
+      cout << hist.first << endl;
       var.second[hist.first]->AddMissingErrorBandsAndFillWithCV(*hist.second);
     }
+    cout << "HI 5" << endl;
     ++nextPar;
   }
 
@@ -472,7 +478,7 @@ int main(int argc, char* argv[]) {
   #endif
 
   //Pass an input file name to this script now
-  if (argc < 7 || argc > 11) {
+  if (argc < 8 || argc > 12) {
     cout << "Check usage..." << endl;
     return 2;
   }
@@ -480,21 +486,22 @@ int main(int argc, char* argv[]) {
   string MCfileName = string(argv[1]);
   string DATAfileName = string(argv[2]);
   string outDir = string(argv[3]);
-  TString varName= argv[4];
-  bool doSyst = (bool)(atoi(argv[5]));
-  bool Tgts = (bool)(atoi(argv[6]));
+  string outFileTag = argv[4];
+  TString varName= argv[5];
+  bool doSyst = (bool)(atoi(argv[6]));
+  bool Tgts = (bool)(atoi(argv[7]));
   int fitMuonBins = 0;
   
-  //vector<TString> namesToSave = {"pTmu","vtxZ","recoilE"}
+  vector<TString> namesToSave = {"pTmu","recoilE"};
   //vector<TString> namesToSave = {"pTmu","recoilE","NPlanes"};
-  vector<TString> namesToSave = {};
+  //vector<TString> namesToSave = {};
 
   int lowBin = 1;//Will be truncated later. Lowest allowed value for pT or recoil fits.
   int hiBin = 50;//Will be truncated later. Highest allowed value for pT or recoil fits.
   TString mainTag = "";
-  if (argc > 8) lowBin = max(atoi(argv[8]),1);//Not allowed lower than 1
-  if (argc > 9) hiBin = min(50, atoi(argv[9]));//Not allowed higher than 50
-  if (argc > 10) fitMuonBins = atoi(argv[10]);
+  if (argc > 9) lowBin = max(atoi(argv[9]),1);//Not allowed lower than 1
+  if (argc > 10) hiBin = min(50, atoi(argv[10]));//Not allowed higher than 50
+  if (argc > 11) fitMuonBins = atoi(argv[11]);
 
   string rootExt = ".root";
   string slash = "/";
@@ -555,21 +562,21 @@ int main(int argc, char* argv[]) {
     mainTag = "_RecoilSB";
   }
   else if (varName == "recoilE"){
-    if (argc < 8) lowBin = 26;
+    if (argc < 9) lowBin = 26;
     mainTag = "_PreRecoilCut";
   }
   else {
     cout << "Not a valid variable name to fit." << endl;
     return 111;
   }
-  if (argc > 7) mainTag = argv[7];
+  if (argc > 8) mainTag = argv[8];
 
   //NEED TO CODE IN SOMETHING THAT HANDLES THE VERTEX PLOTS IN THE TARGETS.
 
   //cout << "Setting up MnvPlotter" << endl;
   //MnvPlotter* plotter = new MnvPlotter(kCCQEAntiNuStyle);
 
-  TFile* outFile = new TFile("fitResults.root","RECREATE");
+  TFile* outFile = new TFile((outDir+"fitResults_"+outFileTag+".root").c_str(),"RECREATE");
   TFile* mcFile = new TFile(MCfileName.c_str(),"READ");
   TFile* dataFile = new TFile(DATAfileName.c_str(),"READ");
 
@@ -694,8 +701,8 @@ int main(int argc, char* argv[]) {
 
     fitHists1A["BKG"]=(MnvH1D*)bkgTotHist->Clone();
     fitHists1A["Signal"]=(MnvH1D*)sigHist->Clone();
-    nameKeys1A["BKG"]={"_bkg","_background"};
-    nameKeys1A["Signal"]={"_sig","_signal"};
+    nameKeys1A["BKG"]={"bkg","background"};
+    nameKeys1A["Signal"]={"sig","signal"};
 
     fitHists1B["BKG"]=(MnvH1D*)bkgTotHist->Clone();
     unfitHists1B["Signal"]=(MnvH1D*)sigHist->Clone();
@@ -706,9 +713,9 @@ int main(int argc, char* argv[]) {
     fitHists2A["N#pi"]=(MnvH1D*)NPiHist->Clone();
     fitHists2A["Signal"]=(MnvH1D*)sigHist->Clone();
     unfitHists2A["Other"]=(MnvH1D*)otherHist->Clone();
-    nameKeys2A["single #pi^{#pm}"]={"_background_1chargePi"};
-    nameKeys2A["single #pi^{0}"]={"_background_1neutPi"};
-    nameKeys2A["N#pi"]={"_background_NPi"};
+    nameKeys2A["single #pi^{#pm}"]={"background_1chargePi"};
+    nameKeys2A["single #pi^{0}"]={"background_1neutPi"};
+    nameKeys2A["N#pi"]={"background_NPi"};
     nameKeys2A["Signal"]=nameKeys1A["Signal"];
 
     fitHists2B["single #pi^{#pm}"]=(MnvH1D*)chargePiHist->Clone();
@@ -725,8 +732,8 @@ int main(int argc, char* argv[]) {
     fitHists3A["Signal"]=(MnvH1D*)sigHist->Clone();
     unfitHists3A["Other"]=(MnvH1D*)otherHist->Clone();
     nameKeys3A["Signal"]=nameKeys1A["Signal"];
-    nameKeys3A["single #pi"]={"_background_1chargePi","_background_1neutPi"};
-    nameKeys3A["N#pi"]={"_background_NPi"};
+    nameKeys3A["single #pi"]={"background_1chargePi","1neutPi"};
+    nameKeys3A["N#pi"]={"background_NPi"};
 
     fitHists3B["single #pi"]=(MnvH1D*)bkg1PiHist->Clone();
     fitHists3B["N#pi"]=(MnvH1D*)NPiHist->Clone();
@@ -740,8 +747,8 @@ int main(int argc, char* argv[]) {
     fitHists4A["Signal"]=(MnvH1D*)sigHist->Clone();
     unfitHists4A["Other"]=(MnvH1D*)otherHist->Clone();
     nameKeys4A["Signal"]=nameKeys1A["Signal"];
-    nameKeys4A["single #pi^{#pm}"]={"_background_1chargePi"};
-    nameKeys4A["N#pi & single #pi^{0}"]={"_background_NPi","_background_1neutPi"};
+    nameKeys4A["single #pi^{#pm}"]={"background_1chargePi"};
+    nameKeys4A["N#pi & single #pi^{0}"]={"background_NPi","1neutPi"};
 
     fitHists4B["single #pi^{#pm}"]=(MnvH1D*)chargePiHist->Clone();
     fitHists4B["N#pi & single #pi^{0}"]=(MnvH1D*)bkgNNeutPiHist->Clone();
@@ -751,17 +758,17 @@ int main(int argc, char* argv[]) {
     nameKeys4B["N#pi & single #pi^{0}"]=nameKeys4A["N#pi & single #pi^{0}"];
 
     fitHists5A["RES"]=(MnvH1D*)RESHist->Clone();
-    fitHists5A["non-RES"]=(MnvH1D*)bkgNonRESHist->Clone();
+    fitHists5A["nonRES"]=(MnvH1D*)bkgNonRESHist->Clone();
     fitHists5A["Signal"]=(MnvH1D*)sigHist->Clone();
     nameKeys5A["Signal"]=nameKeys1A["Signal"];
-    nameKeys5A["RES"]={"_bkg_IntType_RES"};
-    nameKeys5A["non-RES"]={"_bkg_IntType_DIS","_bkg_IntType_2p2h","_bkg_IntType_Other","_bkg_IntType_Wrong_Nucleus","_bkg_IntType_USPlastic","_bkg_IntType_DSPlastic"};
+    nameKeys5A["RES"]={"bkg_IntType_RES"};
+    nameKeys5A["nonRES"]={"IntType_DIS","2p2h","Other","Wrong_Nucleus","USPlastic","DSPlastic"};
 
     fitHists5B["RES"]=(MnvH1D*)RESHist->Clone();
-    fitHists5B["non-RES"]=(MnvH1D*)bkgNonRESHist->Clone();
+    fitHists5B["nonRES"]=(MnvH1D*)bkgNonRESHist->Clone();
     unfitHists5B["Signal"]=(MnvH1D*)sigHist->Clone();
     nameKeys5B["RES"]=nameKeys5A["RES"];
-    nameKeys5B["non-RES"]=nameKeys5A["non-RES"];
+    nameKeys5B["nonRES"]=nameKeys5A["nonRES"];
 
     fitHists6A["RES"]=(MnvH1D*)RESHist->Clone();
     fitHists6A["DIS"]=(MnvH1D*)DISHist->Clone();
@@ -770,8 +777,8 @@ int main(int argc, char* argv[]) {
     unfitHists6A["2p2h"]=(MnvH1D*)MECHist->Clone();
     unfitHists6A["Other"]=(MnvH1D*)OtherIntTypeHist->Clone();
     nameKeys6A["Signal"]=nameKeys1A["Signal"];
-    nameKeys6A["RES"]={"_bkg_IntType_RES"};
-    nameKeys6A["DIS"]={"_bkg_IntType_DIS"};
+    nameKeys6A["RES"]={"bkg_IntType_RES"};
+    nameKeys6A["DIS"]={"bkg_IntType_DIS"};
 
     fitHists6B["RES"]=(MnvH1D*)RESHist->Clone();
     fitHists6B["DIS"]=(MnvH1D*)DISHist->Clone();
@@ -950,7 +957,7 @@ int main(int argc, char* argv[]) {
     result = FitScaleFactorsAndDraw(dataHist, fitHists5A, unfitHists5A, name, outDir, "_fit5A", lowBin, hiBin, doSyst, true, varsToSave, nameKeys5A);
     map<TString,MnvH1D*> scaledHists5A = {};
     scaledHists5A["RES"]=(MnvH1D*)RESHist->Clone();
-    scaledHists5A["non-RES"]=(MnvH1D*)bkgNonRESHist->Clone();
+    scaledHists5A["nonRES"]=(MnvH1D*)bkgNonRESHist->Clone();
     scaledHists5A["Signal"]=(MnvH1D*)sigHist->Clone();
     for(auto hists:scaledHists5A){
       hists.second->Multiply(hists.second,result[name][hists.first]);
@@ -971,7 +978,7 @@ int main(int argc, char* argv[]) {
     result = FitScaleFactorsAndDraw(dataHist, fitHists5B, unfitHists5B, name, outDir, "_fit5B", lowBin, hiBin, doSyst, false, varsToSave, nameKeys5B);
     map<TString,MnvH1D*> scaledHists5B = {};
     scaledHists5B["RES"]=(MnvH1D*)RESHist->Clone();
-    scaledHists5B["non-RES"]=(MnvH1D*)bkgNonRESHist->Clone();
+    scaledHists5B["nonRES"]=(MnvH1D*)bkgNonRESHist->Clone();
     for(auto hists:scaledHists5B){
       hists.second->Multiply(hists.second,result[name][hists.first]);
       for (auto var:result)var.second[hists.first]->SetDirectory(outFile);
