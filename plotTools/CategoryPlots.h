@@ -1371,6 +1371,185 @@ void DrawBKGCategTEST(string name, TFile* mcFile, TFile* dataFile, TString sampl
   return;
 }
 
+void DrawBKGSubtracted(string name, TFile* mcFile, TFile* dataFile, TString sample, double scale, TString nameToSave){
+
+  bool primPar = false;
+
+  TString sampleName = sample;
+
+  bool isTracker = sampleName.Contains("Tracker") ? true : false;
+
+  MnvH1D* h_Sig_Top = (MnvH1D*)mcFile->Get((TString)name);
+  MnvH1D* h_Sig = new MnvH1D(h_Sig_Top->GetBinNormalizedCopy());
+  h_Sig->Scale(scale);
+
+  TH1D* sigHist = (TH1D*)h_Sig->GetCVHistoWithError().Clone();
+  sigHist->SetLineColor(kRed);
+  TH1D* errHist = (TH1D*)sigHist->Clone();
+  errHist->SetFillColorAlpha(kPink + 1, 0.4);
+
+  cout << "Handling: " << name << endl;
+  string title = (string)h_Sig->GetTitle();
+  TString Xtitle = h_Sig->GetXaxis()->GetTitle();
+  TString Ytitle = h_Sig->GetYaxis()->GetTitle();
+  string units = Xtitle.Data();
+  units.erase(0,units.find("["));
+
+  string name_bkg = name;
+  name_bkg.erase(name_bkg.length()-21,name_bkg.length());
+
+  MnvH1D* h_1PiC_Bkg_Top = (MnvH1D*)mcFile->Get((TString)name_bkg+"_background_1chargePi");
+  MnvH1D* h_1PiC_Bkg = new MnvH1D(h_1PiC_Bkg_Top->GetBinNormalizedCopy());
+  h_1PiC_Bkg->Scale(scale);
+
+  MnvH1D* h_1Pi0_Bkg_Top = (MnvH1D*)mcFile->Get((TString)name_bkg+"_background_1neutPi");
+  MnvH1D* h_1Pi0_Bkg = new MnvH1D(h_1Pi0_Bkg_Top->GetBinNormalizedCopy());
+  h_1Pi0_Bkg->Scale(scale);
+
+  MnvH1D* h_NPi_Bkg_Top = (MnvH1D*)mcFile->Get((TString)name_bkg+"_background_NPi");
+  MnvH1D* h_NPi_Bkg = new MnvH1D(h_NPi_Bkg_Top->GetBinNormalizedCopy());
+  h_NPi_Bkg->Scale(scale);
+
+  MnvH1D* h_USPlastic_Bkg_Top = (MnvH1D*)mcFile->Get((TString)name_bkg+"_background_USPlastic");
+  MnvH1D* h_USPlastic_Bkg = new MnvH1D(h_USPlastic_Bkg_Top->GetBinNormalizedCopy());
+  h_USPlastic_Bkg->Scale(scale);
+
+  MnvH1D* h_DSPlastic_Bkg_Top = (MnvH1D*)mcFile->Get((TString)name_bkg+"_background_DSPlastic");
+  MnvH1D* h_DSPlastic_Bkg = new MnvH1D(h_DSPlastic_Bkg_Top->GetBinNormalizedCopy());
+  h_DSPlastic_Bkg->Scale(scale);
+
+  MnvH1D* h_Wrong_Nucleus_Bkg_Top = (MnvH1D*)mcFile->Get((TString)name_bkg+"_background_Wrong_Nucleus");
+  MnvH1D* h_Wrong_Nucleus_Bkg = new MnvH1D(h_Wrong_Nucleus_Bkg_Top->GetBinNormalizedCopy());
+  h_Wrong_Nucleus_Bkg->Scale(scale);
+
+  MnvH1D* h_Other_Bkg_Top = (MnvH1D*)mcFile->Get((TString)name_bkg+"_background_Other");
+  MnvH1D* h_Other_Bkg = new MnvH1D(h_Other_Bkg_Top->GetBinNormalizedCopy());
+  h_Other_Bkg->Scale(scale);
+
+  MnvH1D* h_data_Top = (MnvH1D*)dataFile->Get((TString)name_bkg+"_data");
+  MnvH1D* h_data = new MnvH1D(h_data_Top->GetBinNormalizedCopy());
+  h_data->AddMissingErrorBandsAndFillWithCV(*h_Sig);
+  h_data->Add(h_Wrong_Nucleus_Bkg,-1.0);
+  h_data->Add(h_USPlastic_Bkg,-1.0);
+  h_data->Add(h_DSPlastic_Bkg,-1.0);
+  h_data->Add(h_Other_Bkg,-1.0);
+  h_data->Add(h_NPi_Bkg,-1.0);
+  h_data->Add(h_1Pi0_Bkg,-1.0);
+  h_data->Add(h_1PiC_Bkg,-1.0);
+  TH1D* dataHist = (TH1D*)h_data->GetCVHistoWithError().Clone();
+  dataHist->SetLineColor(kBlack);
+  dataHist->SetLineWidth(3);
+
+  TCanvas* c1 = new TCanvas("c1","c1",1200,800);
+  TPad* top = new TPad("Overlay","Overlay",0,0.078+0.2,1,1);
+  TPad* bottom = new TPad("Ratio","Ratio",0,0,1,0.078+0.2);
+  top->Draw();
+  bottom->Draw();
+  top->cd();
+
+  double bottomArea = bottom->GetWNDC()*bottom->GetHNDC();
+  double topArea = top->GetWNDC()*top->GetHNDC();
+
+  double areaScale = topArea/bottomArea;
+
+  cout << "areaScale: " << areaScale << endl;
+
+  size_t pos = 0;
+  if ((pos=name.find("pTmu_")) != string::npos){
+    cout << "Fixing Axis?" << endl;
+    sigHist->GetXaxis()->SetRangeUser(0,2.5);
+  }
+  sigHist->SetMaximum((dataHist->GetMaximum())*1.25);
+
+  sigHist->Draw("hists");
+  errHist->Draw("E2 SAME");
+  c1->Update();
+
+  dataHist->Draw("same");
+  c1->Update();
+
+  //TLegend* leg = new TLegend(1.0-0.6,1.0-0.5,1.0-0.9,1.0-0.9);
+  TLegend* leg = new TLegend(0.7,0.9,0.7,0.9);
+
+  leg->AddEntry(dataHist,"DATA");
+  leg->AddEntry(sigHist,"Signal MC");
+
+  leg->Draw();
+  c1->Update();
+
+  bottom->cd();
+  bottom->SetTopMargin(0.05);
+  bottom->SetBottomMargin(0.3);
+
+  MnvH1D* ratio = (MnvH1D*)h_data->Clone();
+  ratio->Divide(ratio,h_Sig);
+
+  TH1D* mcRatio = new TH1D(h_Sig->GetTotalError(false, true, false));
+  for (int iBin=1; iBin <= mcRatio->GetXaxis()->GetNbins(); ++iBin){
+    mcRatio->SetBinError(iBin, max(mcRatio->GetBinContent(iBin),1.0e-9));
+    mcRatio->SetBinContent(iBin, 1);
+  }
+
+  ratio->SetLineColor(kBlack);
+  ratio->SetLineWidth(3);
+  ratio->SetTitle("");
+  //ratio->SetTitleSize(0);
+  ratio->GetYaxis()->SetTitle("Data / MC");
+  ratio->GetYaxis()->SetTitleSize(0.05*areaScale);
+  ratio->GetYaxis()->SetTitleOffset(0.75/areaScale);
+  ratio->GetYaxis()->SetLabelSize(ratio->GetYaxis()->GetLabelSize()*areaScale);
+
+  ratio->GetXaxis()->SetLabelSize(ratio->GetXaxis()->GetLabelSize()*areaScale);
+  ratio->GetXaxis()->SetTitleSize(0.04*areaScale);
+  ratio->SetMinimum(0.5);
+  ratio->SetMaximum(1.5);
+
+  pos=0;
+  if ((pos=name.find("pTmu_")) != string::npos){
+    cout << "Fixing Axis?" << endl;
+    ratio->GetXaxis()->SetRangeUser(0,2.5);
+  }
+  ratio->Draw();
+
+  mcRatio->SetLineColor(kRed);
+  mcRatio->SetLineWidth(3);
+  mcRatio->SetFillColorAlpha(kPink + 1, 0.4);
+  mcRatio->Draw("E2 SAME");
+
+  TH1D* straightLine = (TH1D*)mcRatio->Clone();
+  straightLine->SetFillStyle(0);
+  straightLine->Draw("HIST SAME");
+
+  ratio->Draw("SAME");
+
+  c1->Update();
+
+  c1->Print(nameToSave+"_BKG_subtracted.pdf");
+  c1->Print(nameToSave+"_BKG_subtracted.png");
+  top->SetLogy();
+  c1->Update();
+  c1->Print(nameToSave+"_BKG_subtracted_log.pdf");
+  c1->Print(nameToSave+"_BKG_subtracted_log.png");         
+  
+  delete dataHist;
+  delete errHist;
+  delete sigHist;
+  delete ratio;
+  delete straightLine;
+  delete h_data;
+  delete h_Sig;
+  delete h_1PiC_Bkg;
+  delete h_1Pi0_Bkg;
+  delete h_NPi_Bkg;
+  delete h_USPlastic_Bkg;
+  delete h_DSPlastic_Bkg;
+  delete h_Wrong_Nucleus_Bkg;
+  delete h_Other_Bkg;
+  delete c1;
+
+  return;
+}
+
 void DrawIntTypeTEST(string name_QE, TFile* mcFile, TFile* dataFile, TString sample, double scale, TString nameToSave){
 
   bool primPar = false;

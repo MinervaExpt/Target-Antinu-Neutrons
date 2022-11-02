@@ -1615,6 +1615,7 @@ int main(int argc, char* argv[]) {
       nameToSave.erase(nameToSave.length()-21,nameToSave.length());
       DrawBKGCateg(name,mcFile,dataFile,label,scale,(TString)outDir+(TString)nameToSave);
       DrawBKGCategTEST(name,mcFile,dataFile,label,scale,(TString)outDir+(TString)nameToSave+"_TEST");
+      DrawBKGSubtracted(name,mcFile,dataFile,label,scale,(TString)outDir+(TString)nameToSave);
       cout << "" << endl;
     }
     /*

@@ -183,6 +183,12 @@ int main(int argc, char* argv[]) {
     }
   }
 
+  outFile->cd();
+  cout << "Getting POT" << endl;
+  TParameter<double>* POT = (TParameter<double>*)(inFile->Get("POTUsed"))->Clone("POTUSED");
+  cout << "Writing POT" << endl;
+  POT->Write();
+
   cout << "Closing outFile" << endl;
   outFile->Close();
 
