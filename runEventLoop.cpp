@@ -829,7 +829,7 @@ int main(const int argc, const char** argv)
   }
   error_bands["cv"] = {new CVUniverse(options.m_mc)};
   std::map< std::string, std::vector<CVUniverse*> > truth_bands;
-  if(doSystematics) truth_bands = GetStandardSystematics(options.m_truth, false);
+  if(doSystematics) truth_bands = GetStandardSystematics(options.m_truth);
   truth_bands["cv"] = {new CVUniverse(options.m_truth)};
 
   double radianCorr = TMath::Pi()/180.;
