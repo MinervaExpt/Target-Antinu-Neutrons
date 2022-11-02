@@ -95,6 +95,10 @@ add_executable(CombineTgts CombineTgts.cxx)
 target_link_libraries(CombineTgts ${ROOT_LIBRARIES} MAT MAT-MINERvA)
 install(TARGETS CombineTgts DESTINATION bin)
 
+add_executable(ScaleHistos ScaleHistos.cxx)
+target_link_libraries(ScaleHistos ${ROOT_LIBRARIES} MAT MAT-MINERvA)
+install(TARGETS ScaleHistos DESTINATION bin)
+
 add_executable(CombineFits2D CombineFits2D.cxx)
 target_link_libraries(CombineFits2D ${ROOT_LIBRARIES} MAT MAT-MINERvA)
 install(TARGETS CombineFits2D DESTINATION bin)
