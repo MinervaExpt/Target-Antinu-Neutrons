@@ -52,7 +52,8 @@
 using namespace std;
 using namespace PlotUtils;
 
-vector<TString> TgtTypes = {"C","Fe","Pb","Water","USPlastic","DSPlastic","Other"};
+//vector<TString> TgtTypes = {"C","Fe","Pb","Water","USPlastic","DSPlastic","Other"};
+vector<TString> TgtTypes = {"C","Fe","Pb","Water","Other"};//,"USPlastic","DSPlastic","Other"};
 
 map<int, TString> colors = {{0,"#117733"},{1,"#CC6677"},{2,"#88CCEE"}};
 
@@ -87,7 +88,7 @@ void printCorrMatrix(const ROOT::Math::Minimizer& minim, const int nPars)
   }
 }
 
-void DrawFromMnvH1Ds(MnvH1D* h_data, map<TString, MnvH1D*> hFit, map<TString, MnvH1D*> hUnfit, bool sigFit, TString nameToSave){
+void DrawFromMnvH1Ds(MnvH1D* h_data, map<TString, MnvH1D*> hFit, map<TString, MnvH1D*> hUnfit, bool sigFit, TString nameToSave, TString whichPlastic){
 
   if (hFit.size()==0){
     cout << "This script should not be used to plot histograms not involved with fitting at this time." << endl;
@@ -102,20 +103,20 @@ void DrawFromMnvH1Ds(MnvH1D* h_data, map<TString, MnvH1D*> hFit, map<TString, Mn
   
   //cout << "Getting signal hist." << endl;
 
-  if (sigFit) h_sig = hFit["Plastic"];
-  else h_sig = hUnfit["Plastic"];
+  if (sigFit) h_sig = hFit[whichPlastic];
+  else h_sig = hUnfit[whichPlastic];
 
   mcSum = h_sig->Clone();
 
   //cout << "Summing hists." << endl;
 
   for (auto hist:hFit){
-    if (hist.first != "Plastic") mcSum->Add(hist.second);
+    if (hist.first != whichPlastic) mcSum->Add(hist.second);
   }
 
   int iHist = 0;
   for (auto hist:hUnfit){
-    if (hist.first != "Plastic"){
+    if (hist.first != whichPlastic){
       mcSum->Add(hist.second);
       if (iHist!=0)unfitSum->Add(hist.second);
       else unfitSum = hist.second->Clone();
@@ -129,7 +130,7 @@ void DrawFromMnvH1Ds(MnvH1D* h_data, map<TString, MnvH1D*> hFit, map<TString, Mn
 
   iHist = 0;
   for (auto hist:hUnfit){
-    if (hist.first != "Plastic"){
+    if (hist.first != whichPlastic){
       hist.second->SetLineColor(TColor::GetColor(colors[iHist%3]));
       hist.second->SetFillColor(TColor::GetColor(colors[iHist%3]));
       iHist++;
@@ -141,7 +142,7 @@ void DrawFromMnvH1Ds(MnvH1D* h_data, map<TString, MnvH1D*> hFit, map<TString, Mn
   THStack* h = new THStack();
   //if(!allFit) h->Add((TH1D*)unfitSum->GetCVHistoWithError().Clone());
   for (auto hist:hUnfit){
-    if(hist.first != "Plastic") h->Add((TH1D*)hist.second->GetCVHistoWithError().Clone());
+    if(hist.first != whichPlastic) h->Add((TH1D*)hist.second->GetCVHistoWithError().Clone());
   }
   h->Add((TH1D*)h_sig->GetCVHistoWithError().Clone());
 
@@ -175,9 +176,9 @@ void DrawFromMnvH1Ds(MnvH1D* h_data, map<TString, MnvH1D*> hFit, map<TString, Mn
   TLegend* leg = new TLegend(0.7,0.7,0.9,0.9);
  
   leg->AddEntry(dataHist,"DATA");
-  leg->AddEntry(h_sig,"Plastic");
+  leg->AddEntry(h_sig,whichPlastic);
   for (auto hist = hUnfit.rbegin(); hist != hUnfit.rend(); ++hist){
-    if (hist->first != "Plastic") leg->AddEntry(hist->second,hist->first);
+    if (hist->first != whichPlastic) leg->AddEntry(hist->second,hist->first);
   }
   //if (!allFit) leg->AddEntry(unfitSum,"Not fit BKGs");
 
@@ -245,7 +246,7 @@ void DrawFromMnvH1Ds(MnvH1D* h_data, map<TString, MnvH1D*> hFit, map<TString, Mn
   return;
 }
 
-map<TString,map<TString,MnvH1D*>> FitScaleFactorsAndDraw(MnvH1D* dataHist, map<TString, MnvH1D*> fitHistsAndNames, map<TString, MnvH1D*> unfitHistsAndNames, TString varName, TString outDir, TString fitName, int lowBin, int hiBin, bool doSyst, bool sigFit, map<TString,MnvH1D*> varsToSave){
+map<TString,map<TString,MnvH1D*>> FitScaleFactorsAndDraw(MnvH1D* dataHist, map<TString, MnvH1D*> fitHistsAndNames, map<TString, MnvH1D*> unfitHistsAndNames, TString varName, TString outDir, TString fitName, int lowBin, int hiBin, bool doSyst, bool sigFit, map<TString,MnvH1D*> varsToSave, TString whichPlastic){
   map<TString,map<TString,MnvH1D*>> scaleHists = {};
 
   TString nameTag = fitName+"_low_"+(TString)(to_string(lowBin))+"_hi_"+(TString)(to_string(hiBin));
@@ -258,7 +259,7 @@ map<TString,map<TString,MnvH1D*>> FitScaleFactorsAndDraw(MnvH1D* dataHist, map<T
   }
 
   if (!PathExists((string)(outDir+varName+fitName+"_preFit.pdf"))){
-    DrawFromMnvH1Ds(dataHist,fitHistsAndNames,unfitHistsAndNames,sigFit,outDir+varName+fitName+"_preFit");
+    DrawFromMnvH1Ds(dataHist,fitHistsAndNames,unfitHistsAndNames,sigFit,outDir+varName+fitName+"_preFit", whichPlastic);
   }
 
   cout << "Getting Data" << endl;
@@ -433,7 +434,7 @@ map<TString,map<TString,MnvH1D*>> FitScaleFactorsAndDraw(MnvH1D* dataHist, map<T
     delete c1;
   }
 
-  DrawFromMnvH1Ds(dataHist,fitHistsAndNames,unfitHistsAndNames,sigFit,outDir+name+"_postFit");
+  DrawFromMnvH1Ds(dataHist,fitHistsAndNames,unfitHistsAndNames,sigFit,outDir+name+"_postFit",whichPlastic);
   
   cout << "Drawing of CV scale completed." << endl;
 
@@ -455,7 +456,7 @@ int main(int argc, char* argv[]) {
   #endif
 
   //Pass an input file name to this script now
-  if (argc != 7){
+  if (argc != 8){
     cout << "Check usage..." << endl;
     return 2;
   }
@@ -463,12 +464,13 @@ int main(int argc, char* argv[]) {
   string MCfileName = string(argv[1]);
   string DATAfileName = string(argv[2]);
   string outDir = string(argv[3]);
+  string outFileTag = string(argv[4]);
   //int tgtNum = atoi(argv[4]);
   //TString tgtName = (tgtNum != 6) ? "Tgt"+to_string(tgtNum) : "WaterTgt";
-  TString material = argv[4];
+  TString material = argv[5];
   TString mat = "_"+material;
-  bool doSyst = (bool)(atoi(argv[5]));
-  TString USDS = argv[6];
+  bool doSyst = (bool)(atoi(argv[6]));
+  TString USDS = argv[7];
   
   int lowBin = 0;//This is US default
   int hiBin = -1;//This is US default
@@ -534,7 +536,10 @@ int main(int argc, char* argv[]) {
     return 5;
   }
 
+  vector<TString> namesToSave = {"pTmu","recoilE"};
+
   cout << "Input Data file name parsed to: " << fileNameStub << endl;
+  TFile* outFile = new TFile((outDir+"fitNPlanes"+(string)(USDS)+"Results_"+outFileTag+".root").c_str(),"RECREATE");
   TFile* mcFile = new TFile(MCfileName.c_str(),"READ");
   TFile* dataFile = new TFile(DATAfileName.c_str(),"READ");
 
@@ -542,23 +547,22 @@ int main(int argc, char* argv[]) {
   TParameter<double>* dataPOT = (TParameter<double>*)dataFile->Get("POTUsed");
 
   double scale = dataPOT->GetVal()/mcPOT->GetVal();
-
-  MnvH1D* h_sig = (MnvH1D*)(mcFile->Get("US_ByType_Plastic/vtxZ_ByTgt_"+material+"_PreRecoilCut_Plastic_selected_signal_reco"))->Clone();
+  MnvH1D* h_sig = (MnvH1D*)(mcFile->Get(USDS+"_ByType_Plastic/vtxZ_ByTgt_"+material+"_PreRecoilCut_Plastic_selected_signal_reco"))->Clone();
   h_sig->Scale(scale);
 
-  MnvH1D* h_1PiC_Bkg = (MnvH1D*)(mcFile->Get("US_ByType_Plastic/vtxZ_ByTgt_"+material+"_PreRecoilCut_Plastic_background_1chargePi"))->Clone();
+  MnvH1D* h_1PiC_Bkg = (MnvH1D*)(mcFile->Get(USDS+"_ByType_Plastic/vtxZ_ByTgt_"+material+"_PreRecoilCut_Plastic_background_1chargePi"))->Clone();
   h_1PiC_Bkg->Scale(scale);
 
-  MnvH1D* h_1Pi0_Bkg = (MnvH1D*)(mcFile->Get("US_ByType_Plastic/vtxZ_ByTgt_"+material+"_PreRecoilCut_Plastic_background_1neutPi"))->Clone();
+  MnvH1D* h_1Pi0_Bkg = (MnvH1D*)(mcFile->Get(USDS+"_ByType_Plastic/vtxZ_ByTgt_"+material+"_PreRecoilCut_Plastic_background_1neutPi"))->Clone();
   h_1Pi0_Bkg->Scale(scale);
 
-  MnvH1D* h_NPi_Bkg = (MnvH1D*)(mcFile->Get("US_ByType_Plastic/vtxZ_ByTgt_"+material+"_PreRecoilCut_Plastic_background_NPi"))->Clone();
+  MnvH1D* h_NPi_Bkg = (MnvH1D*)(mcFile->Get(USDS+"_ByType_Plastic/vtxZ_ByTgt_"+material+"_PreRecoilCut_Plastic_background_NPi"))->Clone();
   h_NPi_Bkg->Scale(scale);
 
-  MnvH1D* h_Other_Bkg = (MnvH1D*)(mcFile->Get("US_ByType_Plastic/vtxZ_ByTgt_"+material+"_PreRecoilCut_Plastic_background_Other"))->Clone();
-  h_Other_Bkg->Add((MnvH1D*)(mcFile->Get("US_ByType_Plastic/vtxZ_ByTgt_"+material+"_PreRecoilCut_Plastic_background_Wrong_Nucleus")));
-  h_Other_Bkg->Add((MnvH1D*)(mcFile->Get("US_ByType_Plastic/vtxZ_ByTgt_"+material+"_PreRecoilCut_Plastic_background_DSPlastic")));
-  h_Other_Bkg->Add((MnvH1D*)(mcFile->Get("US_ByType_Plastic/vtxZ_ByTgt_"+material+"_PreRecoilCut_Plastic_background_USPlastic")));
+  MnvH1D* h_Other_Bkg = (MnvH1D*)(mcFile->Get(USDS+"_ByType_Plastic/vtxZ_ByTgt_"+material+"_PreRecoilCut_Plastic_background_Other"))->Clone();
+  h_Other_Bkg->Add((MnvH1D*)(mcFile->Get(USDS+"_ByType_Plastic/vtxZ_ByTgt_"+material+"_PreRecoilCut_Plastic_background_Wrong_Nucleus")));
+  h_Other_Bkg->Add((MnvH1D*)(mcFile->Get(USDS+"_ByType_Plastic/vtxZ_ByTgt_"+material+"_PreRecoilCut_Plastic_background_DSPlastic")));
+  h_Other_Bkg->Add((MnvH1D*)(mcFile->Get(USDS+"_ByType_Plastic/vtxZ_ByTgt_"+material+"_PreRecoilCut_Plastic_background_USPlastic")));
   cout << "Other" << endl;
   h_Other_Bkg->Scale(scale);
 
@@ -568,7 +572,7 @@ int main(int argc, char* argv[]) {
   h_Plastic->Add(h_NPi_Bkg);
   h_Plastic->Add(h_Other_Bkg);
 
-  MnvH1D* h_Mat_Bkg = (MnvH1D*)(mcFile->Get("US_ByType"+mat+"/vtxZ_ByTgt_"+material+"_PreRecoilCut"+mat+"_data"))->Clone();
+  MnvH1D* h_Mat_Bkg = (MnvH1D*)(mcFile->Get(USDS+"_ByType"+mat+"/vtxZ_ByTgt_"+material+"_PreRecoilCut"+mat+"_data"))->Clone();
   cout << "Mat" << endl;
   h_Mat_Bkg->Scale(scale);
 
@@ -577,32 +581,45 @@ int main(int argc, char* argv[]) {
   //LOOP HERE For All Materials, skip the one we're interested in.
   for (auto typeName : TgtTypes){
     if (typeName == material) continue;
-    h_All_Bkg->Add((MnvH1D*)(mcFile->Get("US_ByType_"+typeName+"/vtxZ_ByTgt_"+material+"_PreRecoilCut_"+typeName+"_data")));
+    h_All_Bkg->Add((MnvH1D*)(mcFile->Get(USDS+"_ByType_"+typeName+"/vtxZ_ByTgt_"+material+"_PreRecoilCut_"+typeName+"_data")));
   }
   h_All_Bkg->Scale(scale);
 
-  MnvH1D* h_data = (MnvH1D*)(dataFile->Get("US_ByType_Other/vtxZ_ByTgt_"+material+"_PreRecoilCut_Other_data"))->Clone();
+  MnvH1D* h_data = (MnvH1D*)(dataFile->Get(USDS+"_ByType_Other/vtxZ_ByTgt_"+material+"_PreRecoilCut_Other_data"))->Clone();
+
+  TString whichPlastic = "";
+  if (USDS == "US") whichPlastic = "USPlastic";
+  else if (USDS == "DS") whichPlastic = "DSPlastic";
 
   map<TString,MnvH1D*> varsToSave = {};
+  for (auto nameSave:namesToSave){
+    if (nameSave == "NPlanes") continue;
+    TString getName = nameSave+"_Inner"+whichPlastic+"_PreRecoilCut"+mat+"_selected_signal_reco";
+    cout << getName << endl;
+    varsToSave[nameSave] = (MnvH1D*)(mcFile->Get(getName))->Clone();
+  }
 
   map<TString, MnvH1D*> fitHists, unfitHists;
 
-  fitHists["Plastic"] = (MnvH1D*)h_Plastic->Clone();
+  fitHists[whichPlastic] = (MnvH1D*)h_Plastic->Clone();
   unfitHists[material] = (MnvH1D*)h_Mat_Bkg->Clone();
   //"if" the above line constrained by tgtNum != 6...
   //else unfitHists["Water"] = (MnvH1D*)h_Mat_Bkg->Clone();
   unfitHists["Other Materials"] = (MnvH1D*)h_All_Bkg->Clone();
   
   cout << "Fitting Vtx" << endl;
-  map<TString,map<TString,MnvH1D*>> result = FitScaleFactorsAndDraw(h_data, fitHists, unfitHists, "NPlanes", outDir, "NPlanes_fit", lowBin, hiBin, doSyst, true, varsToSave);
+  map<TString,map<TString,MnvH1D*>> result = FitScaleFactorsAndDraw(h_data, fitHists, unfitHists, "NPlanes", outDir, "NPlanes_fit", lowBin, hiBin, doSyst, true, varsToSave, whichPlastic);
 
   map<TString,MnvH1D*> scaledHists = {};
-  scaledHists["Plastic"]=(MnvH1D*)h_Plastic->Clone();
+  scaledHists[whichPlastic]=(MnvH1D*)h_Plastic->Clone();
 
   for(auto hists:scaledHists){
     hists.second->Multiply(hists.second,result["NPlanes"][hists.first]);
+    for (auto var:result)var.second[hists.first]->SetDirectory(outFile);
   }
-  DrawFromMnvH1Ds(h_data,scaledHists,unfitHists,true,outDir+"TEST_NEW_NPlanes_postFit");
+  DrawFromMnvH1Ds(h_data,scaledHists,unfitHists,true,outDir+"TEST_NEW_NPlanes_postFit",whichPlastic);
+
+  outFile->Write();
   
   for (auto hist:result){
     for (auto var:hist.second) delete var.second;
@@ -626,6 +643,7 @@ int main(int argc, char* argv[]) {
   cout << "Closing Files... Does this solve the issue of seg fault." << endl;
   mcFile->Close();
   dataFile->Close();
+  outFile->Close();
 
   cout << "HEY YOU DID IT!!!" << endl;
   return 0;
