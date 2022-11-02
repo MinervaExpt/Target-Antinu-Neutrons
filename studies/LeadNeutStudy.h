@@ -72,7 +72,7 @@ class LeadNeutStudy: public Study
 	  fMatchesLead->selectedSignalReco->FillUniverse(&univ, matchValue, weight);
 	  (*fMatchesLead->m_SigIntTypeHists)[intType].FillUniverse(&univ, matchValue, weight);
 	  (*fMatchesLead->m_SigTargetTypeHists)[tgtType].FillUniverse(&univ, matchValue, weight);
-	  (*fMatchesLead->m_SigLeadBlobTypeHists)[leadBlobType].FillUniverse(&univ, matchValue, weight);
+	  //(*fMatchesLead->m_SigLeadBlobTypeHists)[leadBlobType].FillUniverse(&univ, matchValue, weight);
 	}
 	
 	else {
@@ -84,7 +84,7 @@ class LeadNeutStudy: public Study
 	  (*fMatchesLead->m_backgroundHists)[bkgd_ID].FillUniverse(&univ, matchValue, weight);
 	  (*fMatchesLead->m_BkgIntTypeHists)[intType].FillUniverse(&univ, matchValue, weight);
 	  (*fMatchesLead->m_BkgTargetTypeHists)[tgtType].FillUniverse(&univ, matchValue, weight);
-	  (*fMatchesLead->m_BkgLeadBlobTypeHists)[leadBlobType].FillUniverse(&univ, matchValue, weight);
+	  //(*fMatchesLead->m_BkgLeadBlobTypeHists)[leadBlobType].FillUniverse(&univ, matchValue, weight);
 	}
       }
       

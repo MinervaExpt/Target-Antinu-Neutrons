@@ -87,11 +87,10 @@ class Variable2D: public PlotUtils::Variable2DBase<CVUniverse>
 							      ("TwoD_"+GetName()).c_str(), TargetTypeLabels,
 							      GetBinVecX(), GetBinVecY(), mc_error_bands);
       
-      /*
+
       m_SigLeadBlobTypeHists = new util::Categorized<Hist, int>(("TwoD_"+GetName() + "_sig_LeadBlobType").c_str(),
 								("TwoD_"+GetName()).c_str(), LeadBlobTypeLabels,
 								GetBinVecX(), GetBinVecY(), mc_error_bands);
-      */
 
       m_BkgIntTypeHists = new util::Categorized<Hist, int>(("TwoD_"+GetName() + "_bkg_IntType").c_str(),
                                                            ("TwoD_"+GetName()).c_str(), IntTypeLabels,
@@ -101,11 +100,9 @@ class Variable2D: public PlotUtils::Variable2DBase<CVUniverse>
 							      ("TwoD_"+GetName()).c_str(), TargetTypeLabels,
 							      GetBinVecX(), GetBinVecY(), mc_error_bands);
 
-      /*
       m_BkgLeadBlobTypeHists = new util::Categorized<Hist, int>(("TwoD_"+GetName() + "_bkg_LeadBlobType").c_str(),
 								("TwoD_"+GetName()).c_str(), LeadBlobTypeLabels,
 								GetBinVecX(), GetBinVecY(), mc_error_bands);
-      */
 
       efficiencyNumerator = new Hist(("TwoD_" + GetName() + "_efficiency_numerator").c_str(), ("TwoD_"+GetName()).c_str(), GetBinVecX(), GetBinVecY(), mc_error_bands);
       efficiencyDenominator = new Hist(("TwoD_" + GetName() + "_efficiency_denominator").c_str(), ("TwoD_" + GetName()).c_str(), GetBinVecX(), GetBinVecY(), truth_error_bands);
@@ -117,10 +114,10 @@ class Variable2D: public PlotUtils::Variable2DBase<CVUniverse>
     util::Categorized<Hist, int>* m_backgroundHists;
     util::Categorized<Hist, int>* m_SigIntTypeHists;
     util::Categorized<Hist, int>* m_SigTargetTypeHists;
-    //util::Categorized<Hist, int>* m_SigLeadBlobTypeHists;
+    util::Categorized<Hist, int>* m_SigLeadBlobTypeHists;
     util::Categorized<Hist, int>* m_BkgIntTypeHists;
     util::Categorized<Hist, int>* m_BkgTargetTypeHists;
-    //util::Categorized<Hist, int>* m_BkgLeadBlobTypeHists;
+    util::Categorized<Hist, int>* m_BkgLeadBlobTypeHists;
 
     Hist* dataHist;  
     Hist* efficiencyNumerator;
@@ -183,13 +180,13 @@ class Variable2D: public PlotUtils::Variable2DBase<CVUniverse>
 				    //categ.hist->Write(); //TODO: Or let the TFile destructor do this the "normal" way?
 				  });
 
-      /*
+
       m_SigLeadBlobTypeHists->visit([dir](Hist& categ)
                                     {
                                       categ.hist->SetDirectory(dir);
                                       //categ.hist->Write(); //TODO: Or let the TFile destructor do this the "normal" way?
 				    });
-      */
+      
 
       m_BkgIntTypeHists->visit([dir](Hist& categ)
 			       {
@@ -203,13 +200,11 @@ class Variable2D: public PlotUtils::Variable2DBase<CVUniverse>
 				    //categ.hist->Write(); //TODO: Or let the TFile destructor do this the "normal" way?                                                                                           
 				  });
 
-      /*
       m_BkgLeadBlobTypeHists->visit([dir](Hist& categ)
                                     {
                                       categ.hist->SetDirectory(dir);
                                       //categ.hist->Write(); //TODO: Or let the TFile destructor do this the "normal" way?
 				    });
-      */
 
       /*
       if (dataHist->hist) {
@@ -251,10 +246,10 @@ class Variable2D: public PlotUtils::Variable2DBase<CVUniverse>
       m_backgroundHists->visit([](Hist& categ) { categ.SyncCVHistos(); });
       m_SigIntTypeHists->visit([](Hist& categ) { categ.SyncCVHistos(); });
       m_SigTargetTypeHists->visit([](Hist& categ) { categ.SyncCVHistos(); });
-      //m_SigLeadBlobTypeHists->visit([](Hist& categ) { categ.SyncCVHistos(); });
+      m_SigLeadBlobTypeHists->visit([](Hist& categ) { categ.SyncCVHistos(); });
       m_BkgIntTypeHists->visit([](Hist& categ) { categ.SyncCVHistos(); });
       m_BkgTargetTypeHists->visit([](Hist& categ) { categ.SyncCVHistos(); });
-      //m_BkgLeadBlobTypeHists->visit([](Hist& categ) { categ.SyncCVHistos(); });
+      m_BkgLeadBlobTypeHists->visit([](Hist& categ) { categ.SyncCVHistos(); });
 
       if(dataHist) dataHist->SyncCVHistos();
       if(efficiencyNumerator) efficiencyNumerator->SyncCVHistos();
