@@ -117,9 +117,11 @@ void LoopAndFillEventSelection(
     std::vector<Variable*> vars,
     std::vector<util::Categorized<Variable, int>*> vars_ByTgt,
     std::vector<Variable2D*> vars2D,
+    std::vector<util::Categorized<Variable2D, int>*> vars2D_ByTgt,
     std::vector<Study*> studies,
     PlotUtils::Cutter<CVUniverse, NeutronEvent>& michelcuts,
-    PlotUtils::Model<CVUniverse, NeutronEvent>& model)
+    PlotUtils::Model<CVUniverse, NeutronEvent>& model,
+    bool doNeutron = true)
 {
   assert(!error_bands["cv"].empty() && "\"cv\" error band is empty!  Can't set Model weight.");
   auto& cvUniv = error_bands["cv"].front();
@@ -131,7 +133,8 @@ void LoopAndFillEventSelection(
     if(i%1000==0) std::cout << i << " / " << nEntries << "\r" << std::endl;
 
     cvUniv->SetEntry(i);
-    NeutronEvent cvEvent(cvUniv->GetLeadNeutCandOnly());
+    //NeutronEvent cvEvent(cvUniv->GetLeadNeutCandOnly());
+    NeutronEvent cvEvent = doNeutron ? NeutronEvent(cvUniv->GetLeadNeutCandOnly()) : NeutronEvent();
     model.SetEntry(*cvUniv, cvEvent);
     const double cvWeight = model.GetWeight(*cvUniv, cvEvent);
     //For testing.
@@ -149,7 +152,8 @@ void LoopAndFillEventSelection(
         universe->SetEntry(i);
         
         // This is where you would Access/create a Michel
-        NeutronEvent myevent(universe->GetLeadNeutCandOnly()); // make sure your event is inside the error band loop. 
+        //NeutronEvent myevent(universe->GetLeadNeutCandOnly()); // make sure your event is inside the error band loop. 
+	NeutronEvent myevent = doNeutron ? NeutronEvent(universe->GetLeadNeutCandOnly()) : NeutronEvent();
 	myevent.SetIsMC();
 
 	myevent.SetEMBlobInfo(universe->GetEMNBlobsTotalEnergyTotalNHits());
@@ -163,7 +167,7 @@ void LoopAndFillEventSelection(
         const double weight = model.GetWeight(*universe, myevent); //Only calculate the per-universe weight for events that will actually use it.
         //const double weight = 1.0; //Dummy weight for testing/validation pre-weight
         const bool isFSSignal = michelcuts.isSignal(*universe, weight);
-	const bool isTgts = vars_ByTgt.size() > 0 ? true : false; 
+	const bool isTgts = (vars_ByTgt.size() > 0 || vars2D_ByTgt.size()) ? true : false; 
 	bool tmpIsSignal = isFSSignal;
 	int intType = universe->GetInteractionType();
 	int tgtZ = universe->GetTargetZ();
@@ -190,12 +194,13 @@ void LoopAndFillEventSelection(
 
 	int tgtID = util::GetRecoTargetZ(vtx_x,vtx_y,vtx_z);
 	int tgtCode = util::GetRecoTargetCode(vtx_x,vtx_y,vtx_z,muonMom);
-	int trueTgtID = util::GetRecoTargetZ(mc_vtx_x,mc_vtx_y,mc_vtx_z);
+	//int trueTgtID = util::GetTightTargetZ(mc_vtx_x,mc_vtx_y,mc_vtx_z);//Get Target By Z for the true vtx. Tight constraints to not include US or DS plastic.
+	int trueTgtCode = util::GetTrueTgtCode(tgtZ, mc_vtx_x, mc_vtx_y, mc_vtx_z);
 
 	int tgtType = tgtZ;
-	if (tgtZ==6 && trueTgtID !=3) tgtType = 1; //Carbon not in target 3 is in plastic... Maybe need to require trueTgtCode to be carbon... but that can wait on the assumption there's no carbon outside of the carbon target.
-	if (tgtZ==1 && trueTgtID ==6) tgtType = 8; //hydrogen in target 6 (water target) is water
-	if (tgtZ==8 && trueTgtID !=6) tgtType = -1; //oxygen not in the water target is ill-defined
+	if (tgtZ==6 && trueTgtCode != 3306) tgtType = 1; //Carbon not in target 3 is in plastic... Maybe need to require trueTgtCode to be carbon... but that can wait on the assumption there's no carbon outside of the carbon target.
+	if (tgtZ==1 && trueTgtCode == 6666) tgtType = 8; //hydrogen in target 6 (water target) is water
+	if (tgtZ==8 && trueTgtCode != 6666) tgtType = -1; //oxygen not in the water target is ill-defined
 
 	if (tgtType==1 && tgtID > 0 && tgtID < 7){
 	  if (mc_vtx_z < vtx_z){
@@ -209,7 +214,7 @@ void LoopAndFillEventSelection(
 	}
 
 	if (tgtID > 0 && tgtID < 7){
-	  tmpIsSignal = tmpIsSignal ? util::CorrectTargetMaterial(tgtCode,tgtType) : tmpIsSignal; //Only call it signal if the true material for that section is correct.
+	  tmpIsSignal = tmpIsSignal ? util::CorrectTargetMaterial(tgtCode,trueTgtCode) : tmpIsSignal; //Only call it signal if the true material for that section is correct.
 	}
 
 	const bool isSignal = tmpIsSignal;
@@ -269,39 +274,15 @@ void LoopAndFillEventSelection(
 
 	if (!SBStat.all()) continue;
 
-	TVector3 dumpVtx(vtx_x,vtx_y,vtx_z);
-        TVector3 leadBlobBeg = myevent.GetLeadingNeutCand().GetBegPos();
-        TVector3 leadBlobEnd = myevent.GetLeadingNeutCand().GetEndPos();
-        TVector3 leadBlobFP = myevent.GetLeadingNeutCand().GetFlightPath();
-	TVector3 leadBlobEndDist = leadBlobEnd-dumpVtx;
-        TVector3 momMuon(muonMom[0],muonMom[1],muonMom[2]);
-        double leadBlobAngle = leadBlobFP.Angle(momMuon);
-	//std::cout << "Vtx Pos.: " << vtx_x << ", " << vtx_y << ", " << vtx_z << std::endl;
-	//std::cout << "Lead Blob Beg: " << leadBlobBeg.X() << ", " << leadBlobBeg.Y() << ", " << leadBlobBeg.Z() << std::endl;
-	//std::cout << "Lead Blob End: " << leadBlobEnd.X() << ", " << leadBlobEnd.Y() << ", " << leadBlobEnd.Z() << std::endl;
-	//std::cout << "Beg End Z Diff" << leadBlobEnd.Z() - leadBlobBeg.Z() << std::endl;	
-	//std::cout << "Lead Blob FP: " << leadBlobFP.X() << ", " << leadBlobFP.Y() << ", " << leadBlobFP.Z() << std::endl;
-	//std::cout << "FP Mag." << leadBlobFP.Mag() << std::endl;
-	//std::cout << "End-Vtx Mag." << leadBlobEndDist.Mag() << std::endl;
-	//std::cout << "Flight Path Mag Diff: " << leadBlobEndDist.Mag()-leadBlobFP.Mag() << std::endl;
-	//std::cout << "Muon Momentum Saved: " << momMuon.X() << ", " << momMuon.Y() << ", " << momMuon.Z() << std::endl;
-	//std::cout << "Muon Momentum Grabbed: " << universe->GetMuon4V().X() << ", " << universe->GetMuon4V().Y() << ", " << universe->GetMuon4V().Z() << std::endl;
-	//std::cout << "Muon Momentum Diff: " << momMuon.X() - universe->GetMuon4V().X() << ", " << momMuon.Y() - universe->GetMuon4V().Y() << ", " << momMuon.Z() - universe->GetMuon4V().Z() << std::endl;
-	//std::cout << "Angle from calculated: " << leadBlobAngle << std::endl;
-	//std::cout << "Angle from universe: " << universe->GetLeadNeutAngle() << std::endl;
-	//std::cout << "Angle diff: " << leadBlobAngle-universe->GetLeadNeutAngle() << std::endl;
-	//std::cout << "Angle dist to pi/2: " << leadBlobAngle-TMath::Pi()/2.0 << std::endl;
-	//std::cout << "Lead Blob Type: " << leadBlobType << std::endl;
-	//std::cout << "" << std::endl;
+        for(auto& var: vars) if(var->IsFill()) var->selectedMCReco->FillUniverse(universe, var->GetRecoValue(*universe), weight); //"Fake data" for closure
 
-        for(auto& var: vars) var->selectedMCReco->FillUniverse(universe, var->GetRecoValue(*universe), weight); //"Fake data" for closure
+	for(auto& var: vars2D) if(var->IsFill()) var->selectedMCReco->FillUniverse(universe, var->GetRecoValueX(*universe), var->GetRecoValueY(*universe), weight); //"Fake data" for closure
 
 	//Only fill by tgt for non-interstitial plastic events
 	if (tgtCode != -1){
-	  for(auto& var: vars_ByTgt) (*var)[tgtCode].selectedMCReco->FillUniverse(universe, (*var)[tgtCode].GetRecoValue(*universe), weight); //"Fake data" for closure
+	  for(auto& var: vars_ByTgt) if((*var)[tgtCode].IsFill()) (*var)[tgtCode].selectedMCReco->FillUniverse(universe, (*var)[tgtCode].GetRecoValue(*universe), weight); //"Fake data" for closure
+	  for(auto& var: vars2D_ByTgt) if((*var)[tgtCode].IsFill()) (*var)[tgtCode].selectedMCReco->FillUniverse(universe, (*var)[tgtCode].GetRecoValueX(*universe), (*var)[tgtCode].GetRecoValueY(*universe), weight); //"Fake data" for closure
 	}
-
-	for(auto& var: vars2D) var->selectedMCReco->FillUniverse(universe, var->GetRecoValueX(*universe), var->GetRecoValueY(*universe), weight); //"Fake data" for closure
 
         if(isSignal)
         {
@@ -310,44 +291,68 @@ void LoopAndFillEventSelection(
           for(auto& var: vars)
           {
             //Cross section components
-            if (var->IsAnaVar()) var->efficiencyNumerator->FillUniverse(universe, var->GetTrueValue(*universe), weight);
-            if (var->IsAnaVar()) var->migration->FillUniverse(universe, var->GetRecoValue(*universe), var->GetTrueValue(*universe), weight);
-            var->selectedSignalReco->FillUniverse(universe, var->GetRecoValue(*universe), weight); //Efficiency numerator in reco variables.  Useful for warping studies.
+	    if (var->IsFill()){
+	      if (var->IsAnaVar()) var->efficiencyNumerator->FillUniverse(universe, var->GetTrueValue(*universe), weight);
+	      if (var->IsAnaVar()) var->migration->FillUniverse(universe, var->GetRecoValue(*universe), var->GetTrueValue(*universe), weight);
+	      var->selectedSignalReco->FillUniverse(universe, var->GetRecoValue(*universe), weight); //Efficiency numerator in reco variables.  Useful for warping studies.
 
-	    //Various breakdowns of selected signal reco
-	    (*var->m_SigIntTypeHists)[intType].FillUniverse(universe, var->GetRecoValue(*universe), weight);
-	    (*var->m_SigTargetTypeHists)[tgtType].FillUniverse(universe, var->GetRecoValue(*universe), weight);
-	    (*var->m_SigLeadBlobTypeHists)[leadBlobType].FillUniverse(universe, var->GetRecoValue(*universe), weight);
+	      if (var->IsBroken()){
+		//Various breakdowns of selected signal reco
+		(*var->m_SigIntTypeHists)[intType].FillUniverse(universe, var->GetRecoValue(*universe), weight);
+		(*var->m_SigTargetTypeHists)[tgtType].FillUniverse(universe, var->GetRecoValue(*universe), weight);
+		//(*var->m_SigLeadBlobTypeHists)[leadBlobType].FillUniverse(universe, var->GetRecoValue(*universe), weight);
+	      }
+	    }
           }
+	  
+          for(auto& var: vars2D)
+          {
+	    if (var->IsFill()){
+	      //Cross section components
+	      var->efficiencyNumerator->FillUniverse(universe, var->GetTrueValueX(*universe), var->GetTrueValueY(*universe), weight);
+	      var->selectedSignalReco->FillUniverse(universe, var->GetRecoValueX(*universe), var->GetRecoValueY(*universe), weight);; //Efficiency numerator in reco variables.  Useful for warping studies.
+
+	      //Various breakdowns of selected signal reco
+	      (*var->m_SigIntTypeHists)[intType].FillUniverse(universe, var->GetRecoValueX(*universe), var->GetRecoValueY(*universe), weight);;
+	      (*var->m_SigTargetTypeHists)[tgtType].FillUniverse(universe, var->GetRecoValueX(*universe), var->GetRecoValueY(*universe), weight);;
+	      //(*var->m_SigLeadBlobTypeHists)[leadBlobType].FillUniverse(universe, var->GetRecoValueX(*universe), var->GetRecoValueY(*universe), weight);
+	      
+	      //var->efficiencyNumerator->FillUniverse(universe, var->GetTrueValueX(*universe), var->GetTrueValueY(*universe), weight);
+	    }
+	  }
 
 	  //Only fill by tgt for non-interstitial plastic events
 	  if (tgtCode != -1){
 	    for(auto& var: vars_ByTgt){
-	      //Cross section components
-	      if ((*var)[tgtCode].IsAnaVar()) (*var)[tgtCode].efficiencyNumerator->FillUniverse(universe, (*var)[tgtCode].GetTrueValue(*universe), weight);
-	      if ((*var)[tgtCode].IsAnaVar()) (*var)[tgtCode].migration->FillUniverse(universe, (*var)[tgtCode].GetRecoValue(*universe), (*var)[tgtCode].GetTrueValue(*universe), weight);
-	      (*var)[tgtCode].selectedSignalReco->FillUniverse(universe, (*var)[tgtCode].GetRecoValue(*universe), weight); //Efficiency numerator in reco variables.  Useful for warping studies.
+	      if ((*var)[tgtCode].IsFill()){
+		//Cross section components
+		if ((*var)[tgtCode].IsAnaVar()) (*var)[tgtCode].efficiencyNumerator->FillUniverse(universe, (*var)[tgtCode].GetTrueValue(*universe), weight);
+		if ((*var)[tgtCode].IsAnaVar()) (*var)[tgtCode].migration->FillUniverse(universe, (*var)[tgtCode].GetRecoValue(*universe), (*var)[tgtCode].GetTrueValue(*universe), weight);
+		(*var)[tgtCode].selectedSignalReco->FillUniverse(universe, (*var)[tgtCode].GetRecoValue(*universe), weight); //Efficiency numerator in reco variables.  Useful for warping studies.
+
+		if ((*var)[tgtCode].IsBroken()){
+		  //Various breakdowns of selected signal reco
+		  (*(*var)[tgtCode].m_SigIntTypeHists)[intType].FillUniverse(universe, (*var)[tgtCode].GetRecoValue(*universe), weight);
+		  (*(*var)[tgtCode].m_SigTargetTypeHists)[tgtType].FillUniverse(universe, (*var)[tgtCode].GetRecoValue(*universe), weight);
+		  //(*(*var)[tgtCode].m_SigLeadBlobTypeHists)[leadBlobType].FillUniverse(universe, (*var)[tgtCode].GetRecoValue(*universe), weight);
+		}
+	      }
+	    }
+	    
+	    for(auto& var: vars2D_ByTgt){
+	      if ((*var)[tgtCode].IsFill()){
+		//Cross section components
+		(*var)[tgtCode].efficiencyNumerator->FillUniverse(universe, (*var)[tgtCode].GetTrueValueX(*universe), (*var)[tgtCode].GetTrueValueY(*universe), weight);
+		(*var)[tgtCode].selectedSignalReco->FillUniverse(universe, (*var)[tgtCode].GetRecoValueX(*universe), (*var)[tgtCode].GetRecoValueY(*universe), weight);; //Efficiency numerator in reco variables.  Useful for warping studies.
+		//Various breakdowns of selected signal reco
+		(*(*var)[tgtCode].m_SigIntTypeHists)[intType].FillUniverse(universe, (*var)[tgtCode].GetRecoValueX(*universe), (*var)[tgtCode].GetRecoValueY(*universe), weight);;
+		(*(*var)[tgtCode].m_SigTargetTypeHists)[tgtType].FillUniverse(universe, (*var)[tgtCode].GetRecoValueX(*universe), (*var)[tgtCode].GetRecoValueY(*universe), weight);;
+		//(*(*var)[tgtCode].m_SigLeadBlobTypeHists)[leadBlobType].FillUniverse(universe, (*var)[tgtCode].GetRecoValueX(*universe), (*var)[tgtCode].GetRecoValueY(*universe), weight);
 	      
-	      //Various breakdowns of selected signal reco
-	      (*(*var)[tgtCode].m_SigIntTypeHists)[intType].FillUniverse(universe, (*var)[tgtCode].GetRecoValue(*universe), weight);
-	      (*(*var)[tgtCode].m_SigTargetTypeHists)[tgtType].FillUniverse(universe, (*var)[tgtCode].GetRecoValue(*universe), weight);
-	      (*(*var)[tgtCode].m_SigLeadBlobTypeHists)[leadBlobType].FillUniverse(universe, (*var)[tgtCode].GetRecoValue(*universe), weight);
+		//(*var)[tgtCode].efficiencyNumerator->FillUniverse(universe, (*var)[tgtCode].GetTrueValueX(*universe), (*var)[tgtCode].GetTrueValueY(*universe), weight);
+	      }
 	    }
 	  }
-	  
-          for(auto& var: vars2D)
-          {
-            //Cross section components
-            var->efficiencyNumerator->FillUniverse(universe, var->GetTrueValueX(*universe), var->GetTrueValueY(*universe), weight);
-            var->selectedSignalReco->FillUniverse(universe, var->GetRecoValueX(*universe), var->GetRecoValueY(*universe), weight);; //Efficiency numerator in reco variables.  Useful for warping studies.
-
-	    //Various breakdowns of selected signal reco
-	    (*var->m_SigIntTypeHists)[intType].FillUniverse(universe, var->GetRecoValueX(*universe), var->GetRecoValueY(*universe), weight);;
-	    (*var->m_SigTargetTypeHists)[tgtType].FillUniverse(universe, var->GetRecoValueX(*universe), var->GetRecoValueY(*universe), weight);;
-	    (*var->m_SigLeadBlobTypeHists)[leadBlobType].FillUniverse(universe, var->GetRecoValueX(*universe), var->GetRecoValueY(*universe), weight);
-
-            //var->efficiencyNumerator->FillUniverse(universe, var->GetTrueValueX(*universe), var->GetTrueValueY(*universe), weight);
-          }
         }
 
         else
@@ -366,30 +371,50 @@ void LoopAndFillEventSelection(
           //for(auto& study: studies) study->SelectedSignal(*universe, myevent, weight);
 
           for(auto& var: vars){
-	    (*var->m_backgroundHists)[bkgd_ID].FillUniverse(universe, var->GetRecoValue(*universe), weight);
-	    //Various breakdowns of selected backgrounds
-	    (*var->m_BkgIntTypeHists)[intType].FillUniverse(universe, var->GetRecoValue(*universe), weight);
-	    (*var->m_BkgTargetTypeHists)[tgtType].FillUniverse(universe, var->GetRecoValue(*universe), weight);
-	    (*var->m_BkgLeadBlobTypeHists)[leadBlobType].FillUniverse(universe, var->GetRecoValue(*universe), weight);
-	  }
-
-	//Only fill by tgt for non-interstitial plastic events
-	  if (tgtCode != -1){
-	    for(auto& var: vars_ByTgt){
-	      (*(*var)[tgtCode].m_backgroundHists)[bkgd_ID].FillUniverse(universe, (*var)[tgtCode].GetRecoValue(*universe), weight);
-	      //Various breakdowns of selected backgrounds
-	      (*(*var)[tgtCode].m_BkgIntTypeHists)[intType].FillUniverse(universe, (*var)[tgtCode].GetRecoValue(*universe), weight);
-	      (*(*var)[tgtCode].m_BkgTargetTypeHists)[tgtType].FillUniverse(universe, (*var)[tgtCode].GetRecoValue(*universe), weight);
-	      (*(*var)[tgtCode].m_BkgLeadBlobTypeHists)[leadBlobType].FillUniverse(universe, (*var)[tgtCode].GetRecoValue(*universe), weight);
+	    if (var->IsFill()){
+	      (*var->m_backgroundHists)[bkgd_ID].FillUniverse(universe, var->GetRecoValue(*universe), weight);
+	      (*var->m_BkgIntTypeHists)[intType].FillUniverse(universe, var->GetRecoValue(*universe), weight);
+	      if (var->IsBroken()){
+		//Various breakdowns of selected backgrounds
+		(*var->m_BkgTargetTypeHists)[tgtType].FillUniverse(universe, var->GetRecoValue(*universe), weight);
+		//(*var->m_BkgLeadBlobTypeHists)[leadBlobType].FillUniverse(universe, var->GetRecoValue(*universe), weight);
+	      }
 	    }
 	  }
-	  
+
 	  for(auto& var: vars2D){
-	    (*var->m_backgroundHists)[bkgd_ID].FillUniverse(universe, var->GetRecoValueX(*universe), var->GetRecoValueY(*universe), weight);
-	    //Various breakdowns of selected backgrounds
-	    (*var->m_BkgIntTypeHists)[intType].FillUniverse(universe, var->GetRecoValueX(*universe), var->GetRecoValueY(*universe), weight);
-	    (*var->m_BkgTargetTypeHists)[tgtType].FillUniverse(universe, var->GetRecoValueX(*universe), var->GetRecoValueY(*universe), weight);
-	    (*var->m_BkgLeadBlobTypeHists)[leadBlobType].FillUniverse(universe, var->GetRecoValueX(*universe), var->GetRecoValueY(*universe), weight);
+	    if(var->IsFill()){
+	      (*var->m_backgroundHists)[bkgd_ID].FillUniverse(universe, var->GetRecoValueX(*universe), var->GetRecoValueY(*universe), weight);
+	      //Various breakdowns of selected backgrounds
+	      (*var->m_BkgIntTypeHists)[intType].FillUniverse(universe, var->GetRecoValueX(*universe), var->GetRecoValueY(*universe), weight);
+	      (*var->m_BkgTargetTypeHists)[tgtType].FillUniverse(universe, var->GetRecoValueX(*universe), var->GetRecoValueY(*universe), weight);
+	      //(*var->m_BkgLeadBlobTypeHists)[leadBlobType].FillUniverse(universe, var->GetRecoValueX(*universe), var->GetRecoValueY(*universe), weight);
+	    }
+	  }
+
+	  //Only fill by tgt for non-interstitial plastic events
+	  if (tgtCode != -1){
+	    for(auto& var: vars_ByTgt){
+	      if ((*var)[tgtCode].IsFill()){
+		(*(*var)[tgtCode].m_backgroundHists)[bkgd_ID].FillUniverse(universe, (*var)[tgtCode].GetRecoValue(*universe), weight);
+		//Various breakdowns of selected backgrounds
+		(*(*var)[tgtCode].m_BkgIntTypeHists)[intType].FillUniverse(universe, (*var)[tgtCode].GetRecoValue(*universe), weight);
+		if ((*var)[tgtCode].IsBroken()){
+		  (*(*var)[tgtCode].m_BkgTargetTypeHists)[tgtType].FillUniverse(universe, (*var)[tgtCode].GetRecoValue(*universe), weight);
+		  //(*(*var)[tgtCode].m_BkgLeadBlobTypeHists)[leadBlobType].FillUniverse(universe, (*var)[tgtCode].GetRecoValue(*universe), weight);
+		}
+	      }
+	    }
+
+	    for(auto& var: vars2D_ByTgt){
+	      if ((*var)[tgtCode].IsFill()){ 
+		(*(*var)[tgtCode].m_backgroundHists)[bkgd_ID].FillUniverse(universe, (*var)[tgtCode].GetRecoValueX(*universe), (*var)[tgtCode].GetRecoValueY(*universe), weight);
+		//Various breakdowns of selected backgrounds
+		(*(*var)[tgtCode].m_BkgIntTypeHists)[intType].FillUniverse(universe, (*var)[tgtCode].GetRecoValueX(*universe), (*var)[tgtCode].GetRecoValueY(*universe), weight);
+		(*(*var)[tgtCode].m_BkgTargetTypeHists)[tgtType].FillUniverse(universe, (*var)[tgtCode].GetRecoValueX(*universe), (*var)[tgtCode].GetRecoValueY(*universe), weight);
+		//(*(*var)[tgtCode].m_BkgLeadBlobTypeHists)[leadBlobType].FillUniverse(universe, (*var)[tgtCode].GetRecoValueX(*universe), (*var)[tgtCode].GetRecoValueY(*universe), weight);
+	      }
+	    }
 	  }
         }
       } // End band's universe loop
@@ -403,8 +428,10 @@ void LoopAndFillData( PlotUtils::ChainWrapper* data,
 				std::vector<Variable*> vars,
 		                std::vector<util::Categorized<Variable, int>*> vars_ByTgt,
                                 std::vector<Variable2D*> vars2D,
+		                std::vector<util::Categorized<Variable2D, int>*> vars2D_ByTgt,
                                 std::vector<Study*> studies,
-				PlotUtils::Cutter<CVUniverse, NeutronEvent>& michelcuts)
+		                PlotUtils::Cutter<CVUniverse, NeutronEvent>& michelcuts,
+		                bool doNeutron = true)
 
 {
   std::cout << "Starting data loop...\n";
@@ -413,7 +440,7 @@ void LoopAndFillData( PlotUtils::ChainWrapper* data,
     for (auto universe : data_band) {
       universe->SetEntry(i);
       if(i%1000==0) std::cout << i << " / " << nEntries << "\r" << std::endl;
-      NeutronEvent myevent(universe->GetLeadNeutCandOnly());
+      NeutronEvent myevent = doNeutron ? NeutronEvent(universe->GetLeadNeutCandOnly()) : NeutronEvent();
 
       myevent.SetEMBlobInfo(universe->GetEMNBlobsTotalEnergyTotalNHits());
       std::bitset<64> SBStat = michelcuts.isDataSelected(*universe, myevent);
@@ -455,19 +482,22 @@ void LoopAndFillData( PlotUtils::ChainWrapper* data,
 
       for(auto& var: vars)
       {
-        var->dataHist->FillUniverse(universe, var->GetRecoValue(*universe), 1);
+        if(var->IsFill()) var->dataHist->FillUniverse(universe, var->GetRecoValue(*universe), 1);
       }
       
+      for(auto& var: vars2D){
+        if(var->IsFill()) var->dataHist->FillUniverse(universe, var->GetRecoValueX(*universe), var->GetRecoValueY(*universe), 1);
+      }
+
       //Only fill by tgt for non-interstitial plastic events
       if (tgtCode != -1){
 	for(auto& var: vars_ByTgt){
-	  (*var)[tgtCode].dataHist->FillUniverse(universe, (*var)[tgtCode].GetRecoValue(*universe), 1);
+	  if ((*var)[tgtCode].IsFill()) (*var)[tgtCode].dataHist->FillUniverse(universe, (*var)[tgtCode].GetRecoValue(*universe), 1);
 	}
-      }
 
-      for(auto& var: vars2D)
-      {
-        var->dataHist->FillUniverse(universe, var->GetRecoValueX(*universe), var->GetRecoValueY(*universe), 1);
+	for(auto& var: vars2D_ByTgt){
+	  if ((*var)[tgtCode].IsFill()) (*var)[tgtCode].dataHist->FillUniverse(universe, (*var)[tgtCode].GetRecoValueX(*universe), (*var)[tgtCode].GetRecoValueY(*universe), 1);
+	}
       }
     }
   }
@@ -477,8 +507,9 @@ void LoopAndFillData( PlotUtils::ChainWrapper* data,
 void LoopAndFillEffDenom( PlotUtils::ChainWrapper* truth,
     				std::map<std::string, std::vector<CVUniverse*> > truth_bands,
 			        std::vector<Variable*> vars,
-			      //std::vector<Variable*> vars_ByTgt,
+			        std::vector<util::Categorized<Variable, int>*> vars_ByTgt,
                                 std::vector<Variable2D*> vars2D,
+			        std::vector<util::Categorized<Variable2D, int>*> vars2D_ByTgt,
     				PlotUtils::Cutter<CVUniverse, NeutronEvent>& michelcuts,
                                 PlotUtils::Model<CVUniverse, NeutronEvent>& model)
 {
@@ -512,16 +543,36 @@ void LoopAndFillEffDenom( PlotUtils::ChainWrapper* truth,
         if (!michelcuts.isEfficiencyDenom(*universe, cvWeight)) continue; //Weight is ignored for isEfficiencyDenom() in all but the CV universe 
         const double weight = model.GetWeight(*universe, myevent); //Only calculate the weight for events that will use it
 
+	std::vector<double> mc_vtx = universe->GetTrueVtx();
+	double mc_vtx_x = mc_vtx.at(0);
+	double mc_vtx_y = mc_vtx.at(1);
+	double mc_vtx_z = mc_vtx.at(2);
+
+	int tgtZ = universe->GetTargetZ();
+
+	int trueTgtCode = util::GetTrueTgtCode(tgtZ, mc_vtx_x, mc_vtx_y, mc_vtx_z);
+
         //Fill efficiency denominator now: 
         for(auto var: vars)
         {
-          if (var->IsAnaVar()) var->efficiencyDenominator->FillUniverse(universe, var->GetTrueValue(*universe), weight);
+          if (var->IsAnaVar() && var->IsFill()) var->efficiencyDenominator->FillUniverse(universe, var->GetTrueValue(*universe), weight);
         }
+	
+	//I think I just need to check the true target material here... I'm not certain about that, but I think that's right... Need to sort out the right way to check that as well...
+	for (auto var: vars_ByTgt){
+	  if ((*var)[trueTgtCode].IsAnaVar() && (*var)[trueTgtCode].IsFill()) (*var)[trueTgtCode].efficiencyDenominator->FillUniverse(universe, (*var)[trueTgtCode].GetTrueValue(*universe), weight);
+	}
 	
         for(auto var: vars2D)
         {
-          var->efficiencyDenominator->FillUniverse(universe, var->GetTrueValueX(*universe), var->GetTrueValueY(*universe), weight);
+          if(var->IsFill()) var->efficiencyDenominator->FillUniverse(universe, var->GetTrueValueX(*universe), var->GetTrueValueY(*universe), weight);
         }
+
+	//I think I just need to check the true target material here... I'm not certain about that, but I think that's right...
+	for (auto var: vars2D_ByTgt){
+          if((*var)[trueTgtCode].IsFill()) (*var)[trueTgtCode].efficiencyDenominator->FillUniverse(universe, (*var)[trueTgtCode].GetTrueValueX(*universe), (*var)[trueTgtCode].GetTrueValueY(*universe), weight);
+	}
+
       }
     }
   }
@@ -593,7 +644,7 @@ int main(const int argc, const char** argv)
   TH1::AddDirectory(false);
 
   //Validate input.
-  const int nArgsMandatory = 6;
+  const int nArgsMandatory = 7;
   const int nArgsOptional = 2;
   const int nArgsTotal = nArgsMandatory + nArgsOptional;
   if(argc < nArgsMandatory + 1 || argc > nArgsTotal + 1) //argc is the size of argv.  I check for number of arguments + 1 because
@@ -623,6 +674,8 @@ int main(const int argc, const char** argv)
   }
   
   const TString FVregionName = (TString)FVregionNameTmp;
+
+  const bool doVtx = (atoi(argv[7]) != 0);
 
   TString nameExt = ".root";
 
@@ -782,10 +835,12 @@ int main(const int argc, const char** argv)
   double radianCorr = TMath::Pi()/180.;
 
   //Same as Amit's seemingly. Bin normalized these are smoother.
-  std::vector<double> dansPTBins = {0, 0.075, 0.15, 0.25, 0.325, 0.4, 0.475, 0.55, 0.7, 0.85, 1, 1.25, 1.5, 2.5, 4.5},
+  std::vector<double> dansPTBins = {0, 0.075, 0.15, 0.25, 0.325, 0.4, 0.475, 0.55, 0.7, 0.85, 1, 1.25, 1.5, 2.5},
+                      //dansPTBins = {0, 0.075, 0.15, 0.25, 0.325, 0.4, 0.475, 0.55, 0.7, 0.85, 1, 1.25, 1.5, 2.5, 4.5},
                       myPTBins = {0, 0.075, 0.15, 0.25, 0.325, 0.4, 0.475, 0.55, 0.625, 0.7, 0.775, 0.85, 0.925, 1, 1.125, 1.25, 1.5, 2.5, 4.5},
 		      myQ2QEBins = {0,0.00625,0.0125,0.025,0.0375,0.05,0.1,0.15,0.2,0.3,0.4,0.6,0.8,1.0,1.2,2.0},
-                      dansPzBins = {1.5, 2, 2.5, 3, 3.5, 4, 4.5, 5, 6, 7, 8, 9, 10, 15, 20, 40, 60},
+		      //dansPzBins = {1.5, 2, 2.5, 3, 3.5, 4, 4.5, 5, 6, 7, 8, 9, 10, 15, 20, 40, 60},
+		      dansPzBins = {1.5, 2, 2.5, 3, 3.5, 4, 4.5, 5, 6, 7, 8, 9, 10, 15},
                       robsEmuBins = {0,1,2,3,4,5,7,9,12,15,18,22,36,50,75,100,120},
 		      tejinPmuBins = {1.5, 2, 2.5, 3, 3.5, 4, 4.5, 5, 5.5, 6, 7, 8, 9, 10, 15, 20}, //include 0, can probably handle with plotting...
 		      reactionBins = {-180*radianCorr,-125*radianCorr,-80*radianCorr,-55*radianCorr,-40*radianCorr,-30*radianCorr,-20*radianCorr,-10*radianCorr,0,10*radianCorr,20*radianCorr,30*radianCorr,40*radianCorr,55*radianCorr,80*radianCorr,125*radianCorr,180*radianCorr},
@@ -834,6 +889,7 @@ int main(const int argc, const char** argv)
 
   std::vector<Variable*> vars = {
     new Variable(true, "pTmu", "p_{T, #mu} [GeV/c]", dansPTBins, &CVUniverse::GetMuonPT, &CVUniverse::GetMuonPTTrue),
+    new Variable(false, "pzmu", "p_{||, #mu} [GeV/c]", dansPzBins, &CVUniverse::GetMuonPz, &CVUniverse::GetMuonPzTrue),
     new Variable(true, "neutAngleToMuon", "Neutron Angle To Muon[radian]", myNeutAngleBins, &CVUniverse::GetLeadNeutAngleToMuon, &CVUniverse::GetMaxFSNeutronAngleToMuon),
     new Variable(true, "neutAngle", "#theta_{n}[radian]", myNeutAngleBins, &CVUniverse::GetLeadNeutAngleToBeam, &CVUniverse::GetMaxFSNeutronAngleToBeam),
     new Variable(true, "neutDeltaPhiT", "#delta#phi_{T}[radian]", myNeutAngleBins, &CVUniverse::GetLeadNeutDeltaPhiT, &CVUniverse::GetMaxFSNeutronDeltaPhiT),
@@ -870,23 +926,39 @@ int main(const int argc, const char** argv)
   std::vector<util::Categorized<Variable, int>*> vars_ByTgt = {};
   if (FVregionName.Contains("Target")){
     for(auto& var: vars){ 
+      var->SetFillVar(false);
+      if (!doNeutronCuts) continue;
       TString nameCheck = var->GetName();
       if (nameCheck == "vtxZ") continue;
       vars_ByTgt.push_back(new util::Categorized<Variable, int>(var->GetDirectoryName(), "ByTgt", var->IsAnaVar(), var->GetName().c_str(),var->GetAxisLabel().c_str(),util::TgtCodeList[TgtNum],var->GetBinVec(),var->GetRecoFunc(),var->GetTrueFunc()));
     }
   }
 
-  std::vector<Variable2D*> vars2D = {
-    //new Variable2D(*vars[4],*vars[3]),//recoil v. Q2
-    //new Variable2D(*vars[vars.size()-1],*vars[0]),//pT v. recoilQ2Bin
-  };
+  std::vector<Variable2D*> vars2D = {};
+  /*
+    new Variable2D(true,"pmu2D",*vars[1],*vars[0]),//pT v. p"z"
+    //new Variable2D(false, *vars[5],*vars[4]),//recoil v. Q2
+    //new Variable2D(false, *vars[vars.size()-1],*vars[0]),//pT v. recoilQ2Bin
+    };*/
+  std::vector<util::Categorized<Variable2D, int>*> vars2D_ByTgt = {};
 
+  if (!doNeutronCuts){
+    if (FVregionName.Contains("Target")){
+      if (!doVtx){
+	vars2D_ByTgt.push_back(new util::Categorized<Variable2D, int>("", "ByTgt", true, "pmu2D", util::TgtCodeList[TgtNum], *vars[1], *vars[0]));
+      }
+    }
+    else{
+      for (auto& var: vars) var->SetFillVar(false);
+      vars2D.push_back(new Variable2D(true,"pmu2D",*vars[1],*vars[0]));
+    }
+  }
+  
   //Commented out during testing of analysis variable flag
   /*
   if(doCCQENuValidation)
   {
-    std::cerr << "Detected that tree name is CCQENu.  Making validation histograms.\n";
-    vars.push_back(new Variable("pzmu", "p_{||, #mu} [GeV/c]", dansPzBins, &CVUniverse::GetMuonPz, &CVUniverse::GetMuonPzTrue));
+  std::cerr << "Detected that tree name is CCQENu.  Making validation histograms.\n";
     vars.push_back(new Variable("Emu", "E_{#mu} [GeV]", robsEmuBins, &CVUniverse::GetEmuGeV, &CVUniverse::GetElepTrueGeV));
     vars.push_back(new Variable("Erecoil", "E_{recoil}", robsRecoilBins, &CVUniverse::GetRecoilE, &CVUniverse::Getq0True)); //TODO: q0 is not the same as recoil energy without a spline correction
     vars2D.push_back(new Variable2D(*vars[1], *vars[0]));
@@ -905,42 +977,57 @@ int main(const int argc, const char** argv)
     //new MichelAndNBlobSB(vars, error_bands, truth_bands, data_band),
     //new NeutronVariables(maxZ, minZ, error_bands, truth_bands, data_band),
     //new RecoilSB(vars, error_bands, truth_bands, data_band, splitRecoil),
-    new PreRecoil(vars, error_bands, truth_bands, data_band, splitRecoil, FVregionName, TgtNum),
-    new LeadNeutStudy(error_bands, truth_bands, data_band),
+    //new LeadNeutStudy(error_bands, truth_bands, data_band),
+    new PreRecoil(vars, error_bands, truth_bands, data_band, splitRecoil, doNeutronCuts, FVregionName, TgtNum, doVtx),
   };
 
-  for(auto& var: vars) var->InitializeMCHists(error_bands, truth_bands);
-  for(auto& var: vars) var->InitializeDATAHists(data_band);
+  for(auto& var: vars) if(var->IsFill()) var->InitializeMCHists(error_bands, truth_bands);
+  for(auto& var: vars) if(var->IsFill()) var->InitializeDATAHists(data_band);
 
   for(auto& tgt: vars_ByTgt){ 
     tgt->visit([&error_bands, &truth_bands](Variable& var)
 	       {
-		 var.InitializeMCHists(error_bands, truth_bands);
+		 if (var.IsFill()) var.InitializeMCHists(error_bands, truth_bands);
 	       });
   }
   for(auto& tgt: vars_ByTgt){ 
     tgt->visit([&data_band](Variable& var)
 	       {
-		 var.InitializeDATAHists(data_band);
+		 if (var.IsFill()) var.InitializeDATAHists(data_band);
 	       });
   }
 
-  for(auto& var: vars2D) var->InitializeMCHists(error_bands, truth_bands);
-  for(auto& var: vars2D) var->InitializeDATAHists(data_band);
+  for(auto& var: vars2D) if(var->IsFill()) var->InitializeMCHists(error_bands, truth_bands);
+  for(auto& var: vars2D) if(var->IsFill()) var->InitializeDATAHists(data_band);
+
+  for(auto& tgt: vars2D_ByTgt){ 
+    tgt->visit([&error_bands, &truth_bands](Variable2D& var)
+	       {
+		 if (var.IsFill()) var.InitializeMCHists(error_bands, truth_bands);
+	       });
+  }
+  for(auto& tgt: vars2D_ByTgt){ 
+    tgt->visit([&data_band](Variable2D& var)
+	       {
+		 if (var.IsFill()) var.InitializeDATAHists(data_band);
+	       });
+  }
 
   // Loop entries and fill
   try
   {
     CVUniverse::SetTruth(false);
-    LoopAndFillEventSelection(options.m_mc, error_bands, vars, vars_ByTgt, vars2D, studies, mycuts, model);
+    LoopAndFillEventSelection(options.m_mc, error_bands, vars, vars_ByTgt, vars2D, vars2D_ByTgt, studies, mycuts, model, doNeutronCuts);
+    //LoopAndFillEventSelection(options.m_mc, error_bands, vars, vars_ByTgt, vars2D, vars2D_ByTgt, studies, mycuts, model);
     CVUniverse::SetTruth(true);
-    LoopAndFillEffDenom(options.m_truth, truth_bands, vars, vars2D, mycuts, model);
+    LoopAndFillEffDenom(options.m_truth, truth_bands, vars, vars_ByTgt, vars2D, vars2D_ByTgt, mycuts, model);
     options.PrintMacroConfiguration(argv[0]);
     std::cout << "MC cut summary:\n" << mycuts << "\n";
     mycuts.resetStats();
 
     CVUniverse::SetTruth(false);
-    LoopAndFillData(options.m_data, data_band, vars, vars_ByTgt, vars2D, studies, mycuts);
+    LoopAndFillData(options.m_data, data_band, vars, vars_ByTgt, vars2D, vars2D_ByTgt, studies, mycuts, doNeutronCuts);
+    //LoopAndFillData(options.m_data, data_band, vars, vars_ByTgt, vars2D, vars2D_ByTgt, studies, mycuts);
     std::cout << "Data cut summary:\n" << mycuts << "\n";
 
     std::cout << "Writing MC Output File." << std::endl;
@@ -956,15 +1043,21 @@ int main(const int argc, const char** argv)
     std::cout << "Actually Setting Directories in the File" << std::endl;
 
     for(auto& study: studies) study->SaveOrDrawMC(*mcOutDir);
-    for(auto& var: vars) var->WriteMC(*mcOutDir);
+    for(auto& var: vars) if(var->IsFill()) var->WriteMC(*mcOutDir);
     for(auto& tgt: vars_ByTgt){ 
       tgt->visit([mcOutDir](Variable& var)
 		 {
-		   var.WriteMC(*mcOutDir);
+		   if (var.IsFill()) var.WriteMC(*mcOutDir);
 		 });
     }
 
-    for(auto& var: vars2D) var->Write(*mcOutDir);
+    for(auto& var: vars2D) if(var->IsFill()) var->WriteMC(*mcOutDir);
+    for(auto& tgt: vars2D_ByTgt){ 
+      tgt->visit([mcOutDir](Variable2D& var)
+		 {
+		   if (var.IsFill()) var.WriteMC(*mcOutDir);
+		 });
+    }
 
     std::cout << "Writing" << std::endl;
 
@@ -1001,11 +1094,18 @@ int main(const int argc, const char** argv)
     }
 
     for(auto& study: studies) study->SaveOrDrawData(*dataOutDir);
-    for(auto& var: vars) var->WriteData(*dataOutDir);
+    for(auto& var: vars) if(var->IsFill()) var->WriteData(*dataOutDir);
     for(auto& tgt: vars_ByTgt){
       tgt->visit([dataOutDir](Variable& var)
 		 {
-		   var.WriteData(*dataOutDir);
+		   if (var.IsFill()) var.WriteData(*dataOutDir);
+		 });
+    }
+    for(auto& var: vars2D) if(var->IsFill()) var->WriteData(*dataOutDir);
+    for(auto& tgt: vars2D_ByTgt){ 
+      tgt->visit([dataOutDir](Variable2D& var)
+		 {
+		   if (var.IsFill()) var.WriteData(*dataOutDir);
 		 });
     }
 

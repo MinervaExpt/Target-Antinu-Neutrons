@@ -68,6 +68,7 @@ add_subdirectory(fits)
 #add_subdirectory(cuts)
 #add_subdirectory(studies)
 #add_subdirectory(systematics)
+#add_subdirectory(plotTools)
 
 #Build main executables
 add_executable(runEventLoop runEventLoop.cpp)
@@ -83,12 +84,20 @@ target_link_libraries(runXSecLooper ${ROOT_LIBRARIES} MAT GENIEXSecExtract)
 install(TARGETS runXSecLooper DESTINATION bin)
 
 add_executable(signalBKGStack signalBKGStack.cxx)
-target_link_libraries(signalBKGStack ${ROOT_LIBRARIES} MAT MAT-MINERvA)
+target_link_libraries(signalBKGStack ${ROOT_LIBRARIES} MAT MAT-MINERvA)# plotTools)
 install(TARGETS signalBKGStack DESTINATION bin)
+
+add_executable(Test2DPlots Test2DPlots.cxx)
+target_link_libraries(Test2DPlots ${ROOT_LIBRARIES} MAT MAT-MINERvA)# plotTools)
+install(TARGETS Test2DPlots DESTINATION bin)
 
 add_executable(CombineTgts CombineTgts.cxx)
 target_link_libraries(CombineTgts ${ROOT_LIBRARIES} MAT MAT-MINERvA)
 install(TARGETS CombineTgts DESTINATION bin)
+
+add_executable(CombineFits2D CombineFits2D.cxx)
+target_link_libraries(CombineFits2D ${ROOT_LIBRARIES} MAT MAT-MINERvA)
+install(TARGETS CombineFits2D DESTINATION bin)
 
 add_executable(PlotNPlanesByTgt PlotNPlanesByTgt.cxx)
 target_link_libraries(PlotNPlanesByTgt ${ROOT_LIBRARIES} MAT MAT-MINERvA)
@@ -98,6 +107,10 @@ add_executable(FitNPlanes FitNPlanes.cxx)
 target_link_libraries(FitNPlanes ${ROOT_LIBRARIES} fits MAT MAT-MINERvA)
 install(TARGETS FitNPlanes DESTINATION bin)
 
+add_executable(FitNPlanes2D FitNPlanes2D.cxx)
+target_link_libraries(FitNPlanes2D ${ROOT_LIBRARIES} fits MAT MAT-MINERvA)
+install(TARGETS FitNPlanes2D DESTINATION bin)
+
 add_executable(twoPlotComparison twoPlotComparison.cxx)
 target_link_libraries(twoPlotComparison ${ROOT_LIBRARIES} MAT MAT-MINERvA)
 install(TARGETS twoPlotComparison DESTINATION bin)
@@ -105,6 +118,10 @@ install(TARGETS twoPlotComparison DESTINATION bin)
 add_executable(BKGFitting BKGFitting.cxx)
 target_link_libraries(BKGFitting ${ROOT_LIBRARIES} fits MAT MAT-MINERvA)
 install(TARGETS BKGFitting DESTINATION bin)
+
+add_executable(BKGFitting2D BKGFitting2D.cxx)
+target_link_libraries(BKGFitting2D ${ROOT_LIBRARIES} fits MAT MAT-MINERvA)
+install(TARGETS BKGFitting2D DESTINATION bin)
 
 add_executable(BKGFittingTFrac BKGFittingTFrac.cxx)
 target_link_libraries(BKGFittingTFrac ${ROOT_LIBRARIES} MAT MAT-MINERvA)

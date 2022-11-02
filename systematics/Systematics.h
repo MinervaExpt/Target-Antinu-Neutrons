@@ -14,6 +14,7 @@
 #include "PlotUtils/MnvTuneSystematics.h"
 #include "PlotUtils/MuonResolutionSystematics.h"
 #include "PlotUtils/AngleSystematics.h"
+#include "PlotUtils/ResponseSystematics.h"
 
 typedef std::map<std::string, std::vector<CVUniverse*>> UniverseMap;
 
@@ -92,8 +93,8 @@ UniverseMap GetStandardSystematics(PlotUtils::ChainWrapper* chain, bool doMona =
 
   // Hadron inelastics cross sections
   //TODO: There's some special recoil function I need to write for the response systematics to work correctly
-  /*UniverseMap bands_response = PlotUtils::GetResponseSystematicsMap<CVUniverse>(chain);
-  error_bands.insert(bands_response.begin(), bands_response.end());*/
+  UniverseMap bands_response = PlotUtils::GetResponseSystematicsMap<CVUniverse>(chain);
+  error_bands.insert(bands_response.begin(), bands_response.end());
 
   return error_bands;
 }

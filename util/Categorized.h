@@ -85,6 +85,12 @@ namespace util
 					    {26, "Fe"},
 					    {82, "Pb"}};
 
+  std::map<int, std::string> TgtTypeList2 = {{1, "Plastic"},
+					    {6, "C"},
+					    {8, "Water"},
+					    {26, "Fe"},
+					    {82, "Pb"}};
+
   std::map<int,int> DSTgtMap = {{0,5582},
 				{54,4482},
 				{46,6666},
@@ -191,6 +197,22 @@ namespace util
         }
 
 	auto histOther = (dirName != "") ? new HIST(dirName+"/"+tag+"_Other", isAnalysisVariable, (baseName + "_Other").c_str(), ("Other;" + axes).c_str(), args...) : new HIST(tag+"_Other", isAnalysisVariable, (baseName + "_Other").c_str(), ("Other;" + axes).c_str(), args...);
+	fOther = histOther;
+      }
+
+      //tag is useful for separating the possible overlapping of different Categorizations of the same thing. This exact function also has an extra argument dirName to help navigate the directory saving of variables which currently has its own risks...
+      //THIS IS ONLY USEFUL FOR MY VARIABLE CATEGORIZATION RIGHT NOW. DOESN'T WORK AS WELL FOR HISTS...
+      template <class ...HISTARGS>
+      Categorized(const TString dirName, const TString tag, const bool isAnalysisVariable, const std::string& baseName,
+                  const std::map<CATEGORY, std::string> categories, HISTARGS... args)
+      {
+        for(const auto& category: categories)
+        {
+          auto hist = (dirName != "") ? new HIST(dirName+"/"+tag+"_"+(TString)category.second, isAnalysisVariable, SafeROOTName(baseName + "_" + category.second).c_str(), args...) : new HIST(tag+"_"+(TString)category.second, isAnalysisVariable, SafeROOTName(baseName + "_" + category.second).c_str(), args...);
+          fCatToHist[category.first] = hist;
+        }
+
+	auto histOther = (dirName != "") ? new HIST(dirName+"/"+tag+"_Other", isAnalysisVariable, (baseName + "_Other").c_str(), args...) : new HIST(tag+"_Other", isAnalysisVariable, (baseName + "_Other").c_str(), args...);
 	fOther = histOther;
       }
       #endif //__CINT__

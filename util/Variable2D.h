@@ -9,10 +9,27 @@ class Variable2D: public PlotUtils::Variable2DBase<CVUniverse>
 {
   private:
     typedef PlotUtils::Hist2DWrapper<CVUniverse> Hist;
-    std::string fDirName;
+    bool fAnaVar;
+    bool fFillVar;
+    TString fDirName;
   public:
     template <class ...ARGS>
-    Variable2D(ARGS... args): PlotUtils::Variable2DBase<CVUniverse>(args...), fDirName("TwoD")
+    Variable2D(bool isAnalysisVar, ARGS... args): PlotUtils::Variable2DBase<CVUniverse>(args...), fAnaVar(isAnalysisVar), fFillVar(true), fDirName("TwoD")
+    {
+    }
+
+    template <class ...ARGS>
+    Variable2D(bool isAnalysisVar, bool fillVar, ARGS... args): PlotUtils::Variable2DBase<CVUniverse>(args...), fAnaVar(isAnalysisVar), fFillVar(fillVar), fDirName("TwoD")
+    {
+    }
+
+    template <class ...ARGS>
+    Variable2D(TString name, bool isAnalysisVar, ARGS... args): PlotUtils::Variable2DBase<CVUniverse>(args...), fAnaVar(isAnalysisVar), fFillVar(true), fDirName(name+"/TwoD")
+    {
+    }
+
+    template <class ...ARGS>
+    Variable2D(TString name, bool isAnalysisVar, bool fillVar, ARGS... args): PlotUtils::Variable2DBase<CVUniverse>(args...), fAnaVar(isAnalysisVar), fFillVar(fillVar), fDirName(name+"/TwoD")
     {
     }
 
@@ -23,8 +40,17 @@ class Variable2D: public PlotUtils::Variable2DBase<CVUniverse>
     {
 
       std::map<int, std::string> BKGLabels = {{1, "1chargePi"},
+					      {2, "1neutPi"},
+					      {3, "NPi"},
+					      {62, "USPlastic"},
+					      {63, "DSPlastic"},
+					      {44, "Wrong Nucleus"}};  
+      
+      /*
+      std::map<int, std::string> BKGLabels = {{1, "1chargePi"},
                                               {2, "1neutPi"},
                                               {3, "NPi"}};
+      */
 
       //Various breakdowns for signal and background. TODO: Get the mapping correct                                                                                                                                
       std::map<int, std::string> IntTypeLabels = {{1, "QE"},
@@ -49,7 +75,7 @@ class Variable2D: public PlotUtils::Variable2DBase<CVUniverse>
                                                        {9, "mu"},
                                                        {1, "None"}};
       
-      m_backgroundHists = new util::Categorized<Hist, int>(("TwoD_"+GetName() + "_by_BKG_Label").c_str(),
+      m_backgroundHists = new util::Categorized<Hist, int>(("TwoD_"+GetName() + "_background").c_str(),
 							   ("TwoD_" + GetName()).c_str(), BKGLabels,
 							   GetBinVecX(), GetBinVecY(), mc_error_bands);
 
@@ -60,10 +86,12 @@ class Variable2D: public PlotUtils::Variable2DBase<CVUniverse>
       m_SigTargetTypeHists = new util::Categorized<Hist, int>(("TwoD_"+GetName() + "_sig_TargetType").c_str(),
 							      ("TwoD_"+GetName()).c_str(), TargetTypeLabels,
 							      GetBinVecX(), GetBinVecY(), mc_error_bands);
-
+      
+      /*
       m_SigLeadBlobTypeHists = new util::Categorized<Hist, int>(("TwoD_"+GetName() + "_sig_LeadBlobType").c_str(),
 								("TwoD_"+GetName()).c_str(), LeadBlobTypeLabels,
 								GetBinVecX(), GetBinVecY(), mc_error_bands);
+      */
 
       m_BkgIntTypeHists = new util::Categorized<Hist, int>(("TwoD_"+GetName() + "_bkg_IntType").c_str(),
                                                            ("TwoD_"+GetName()).c_str(), IntTypeLabels,
@@ -73,9 +101,11 @@ class Variable2D: public PlotUtils::Variable2DBase<CVUniverse>
 							      ("TwoD_"+GetName()).c_str(), TargetTypeLabels,
 							      GetBinVecX(), GetBinVecY(), mc_error_bands);
 
+      /*
       m_BkgLeadBlobTypeHists = new util::Categorized<Hist, int>(("TwoD_"+GetName() + "_bkg_LeadBlobType").c_str(),
 								("TwoD_"+GetName()).c_str(), LeadBlobTypeLabels,
 								GetBinVecX(), GetBinVecY(), mc_error_bands);
+      */
 
       efficiencyNumerator = new Hist(("TwoD_" + GetName() + "_efficiency_numerator").c_str(), ("TwoD_"+GetName()).c_str(), GetBinVecX(), GetBinVecY(), mc_error_bands);
       efficiencyDenominator = new Hist(("TwoD_" + GetName() + "_efficiency_denominator").c_str(), ("TwoD_" + GetName()).c_str(), GetBinVecX(), GetBinVecY(), truth_error_bands);
@@ -87,10 +117,10 @@ class Variable2D: public PlotUtils::Variable2DBase<CVUniverse>
     util::Categorized<Hist, int>* m_backgroundHists;
     util::Categorized<Hist, int>* m_SigIntTypeHists;
     util::Categorized<Hist, int>* m_SigTargetTypeHists;
-    util::Categorized<Hist, int>* m_SigLeadBlobTypeHists;
+    //util::Categorized<Hist, int>* m_SigLeadBlobTypeHists;
     util::Categorized<Hist, int>* m_BkgIntTypeHists;
     util::Categorized<Hist, int>* m_BkgTargetTypeHists;
-    util::Categorized<Hist, int>* m_BkgLeadBlobTypeHists;
+    //util::Categorized<Hist, int>* m_BkgLeadBlobTypeHists;
 
     Hist* dataHist;  
     Hist* efficiencyNumerator;
@@ -106,7 +136,24 @@ class Variable2D: public PlotUtils::Variable2DBase<CVUniverse>
       //dataHist = new Hist(Form("_data_%s", name), name, GetBinVecX(), GetBinVecY(), data_error_bands);
     }
 
-    void Write(TFile& file)
+    //Repurposing to not write but just set the directory. The writing will be handled by TFile::Write.                                               
+    void WriteData(TFile& file)
+    {
+      TString dirName = (TString)(fDirName);
+      TDirectory* dir;
+      dir = file.GetDirectory(dirName);
+      if (dir == NULL){
+        file.mkdir(dirName);
+      }
+      dir = file.GetDirectory(dirName);
+
+      if (dataHist->hist) {
+        dataHist->hist->SetDirectory(dir);
+        //dataHist->hist->Write();
+      }
+    }
+
+    void WriteMC(TFile& file)
     {
       SyncCVHistos();
 
@@ -136,11 +183,13 @@ class Variable2D: public PlotUtils::Variable2DBase<CVUniverse>
 				    //categ.hist->Write(); //TODO: Or let the TFile destructor do this the "normal" way?
 				  });
 
+      /*
       m_SigLeadBlobTypeHists->visit([dir](Hist& categ)
                                     {
                                       categ.hist->SetDirectory(dir);
                                       //categ.hist->Write(); //TODO: Or let the TFile destructor do this the "normal" way?
 				    });
+      */
 
       m_BkgIntTypeHists->visit([dir](Hist& categ)
 			       {
@@ -154,11 +203,13 @@ class Variable2D: public PlotUtils::Variable2DBase<CVUniverse>
 				    //categ.hist->Write(); //TODO: Or let the TFile destructor do this the "normal" way?                                                                                           
 				  });
 
+      /*
       m_BkgLeadBlobTypeHists->visit([dir](Hist& categ)
                                     {
                                       categ.hist->SetDirectory(dir);
                                       //categ.hist->Write(); //TODO: Or let the TFile destructor do this the "normal" way?
 				    });
+      */
 
       /*
       if (dataHist->hist) {
@@ -200,10 +251,10 @@ class Variable2D: public PlotUtils::Variable2DBase<CVUniverse>
       m_backgroundHists->visit([](Hist& categ) { categ.SyncCVHistos(); });
       m_SigIntTypeHists->visit([](Hist& categ) { categ.SyncCVHistos(); });
       m_SigTargetTypeHists->visit([](Hist& categ) { categ.SyncCVHistos(); });
-      m_SigLeadBlobTypeHists->visit([](Hist& categ) { categ.SyncCVHistos(); });
+      //m_SigLeadBlobTypeHists->visit([](Hist& categ) { categ.SyncCVHistos(); });
       m_BkgIntTypeHists->visit([](Hist& categ) { categ.SyncCVHistos(); });
       m_BkgTargetTypeHists->visit([](Hist& categ) { categ.SyncCVHistos(); });
-      m_BkgLeadBlobTypeHists->visit([](Hist& categ) { categ.SyncCVHistos(); });
+      //m_BkgLeadBlobTypeHists->visit([](Hist& categ) { categ.SyncCVHistos(); });
 
       if(dataHist) dataHist->SyncCVHistos();
       if(efficiencyNumerator) efficiencyNumerator->SyncCVHistos();
@@ -213,6 +264,10 @@ class Variable2D: public PlotUtils::Variable2DBase<CVUniverse>
     }
 
     void SetDirectoryName(std::string name){fDirName = name;}
+    void SetFillVar(bool fill){fFillVar = fill;}
+    bool IsAnaVar(){return fAnaVar;}
+    bool IsFill(){return fFillVar;}
+    TString GetDirectoryName(){return fDirName;}
 };
 
 #endif //VARIABLE2D_H

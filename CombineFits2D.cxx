@@ -1,7 +1,7 @@
-//File: CombineTgts.cxx
-//Info: This is a script to add up all the histograms across various files so that the materials in the targets are combined.
+//File: CombineFits2D.cxx
+//Info: This is a script to combine fit results across 2D pT/pz bins into a MnvH2D* scaling histo to apply scale factors/errors by mulitplication.
 //
-//Usage: CombineTgts <data/MC> <Material> <outDir> <Tgt1 FileName>
+//Usage: CombineFits2D <inFileName> <refFileName> <refHistoFilePath>
 //Author: David Last dlast@sas.upenn.edu/lastd44@gmail.com
 
 //C++ includes
@@ -80,71 +80,193 @@ bool PathExists(string path){
   return (stat (path.c_str(), &buffer) == 0);
 }
 
+vector<int> binsIn1DRange(TAxis* ax, double xMin, double xMax){
+  vector<int> outVec;
+  for (int iBin=0; iBin <= ax->GetNbins()+1; ++iBin){
+    if (ax->GetBinLowEdge(iBin) >= xMin && ax->GetBinUpEdge(iBin) <= xMax) outVec.push_back(iBin);
+  }
+  return outVec;
+}
+
+vector<int> binsIn2DRanges(MnvH2D* hRef, double xMin, double xMax, double yMin, double yMax){
+  vector<int> outVec;
+
+  TAxis* xAxis = hRef->GetXaxis();
+  vector<int> xBins = binsIn1DRange(xAxis,xMin,xMax);
+
+  TAxis* yAxis = hRef->GetYaxis();
+  vector<int> yBins = binsIn1DRange(yAxis,yMin,yMax);
+  for (auto yBin:yBins){
+    for (auto xBin:xBins){
+      //cout << "xBin: " << xBin;
+      //cout << ", yBin: " << yBin;
+      outVec.push_back(hRef->GetBin(xBin,yBin));
+      //cout << ", bin: " << outVec.back() << endl;
+    }
+  }
+  cout << "" << endl;
+  return outVec;
+}
+
 int main(int argc, char* argv[]) {
-
-  map<TString,vector<TString>> tgtsByMat; 
-  tgtsByMat["Fe"]={"Tgt1","Tgt2","Tgt3","Tgt5"};
-  tgtsByMat["Pb"]={"Tgt1","Tgt2","Tgt3","Tgt4","Tgt5"};
-  tgtsByMat["C"]={"Tgt3"};
-  tgtsByMat["Water"]={"WaterTgt"};
-
-  map<TString,vector<TString>> UStgtsByMat;
-  UStgtsByMat["Fe"]={"Tgt2","Tgt3"};
-  UStgtsByMat["Pb"]={"Tgt2","Tgt3","Tgt4"};
-  UStgtsByMat["C"]={"Tgt3"};
-  UStgtsByMat["Water"]={"WaterTgt"};
-
-  map<TString,vector<TString>> DStgtsByMat;
-  DStgtsByMat["Fe"]={"Tgt1","Tgt2","Tgt3","Tgt5"};
-  DStgtsByMat["Pb"]={"Tgt1","Tgt2","Tgt3","Tgt5"};
-  DStgtsByMat["C"]={"Tgt3"};
-  DStgtsByMat["Water"]={"WaterTgt"};
 
   #ifndef NCINTEX
   ROOT::Cintex::Cintex::Enable();
   #endif
 
   //Pass an input file name to this script now
-  if (argc != 5) {
+  if (argc != 4) {
     cout << "Check usage..." << endl;
     return 2;
   }
 
-  bool isMC = ((TString)(argv[1]) == "MC") ? true : false;
-  TString material = argv[2];
-  TString matName = (material != "Water")? "_"+material : "";
-  string outDir=string(argv[3]);
-  string baseFileName=argv[4];
+  TString inFileName= argv[1];
+  TString refFileName = argv[2];
+  TString refName = argv[3];
+  TString refString = "_bin_0_";
 
-  if (material != "Fe" && material != "C" && material != "Pb" && material != "Water"){
-    cout << "Can't handle that material yet." << endl;
-    return -999;
-  }
-
-  if (PathExists(outDir)){
-    cout << "Thank you for choosing a path for output files that exists." << endl;
-  }
-  else{
-    cout << "Output directory doesn't exist. Exiting" << endl;
+  if (!inFileName.Contains(".root")){
+    cout << "Input file is not a root file." << endl;
     return 3;
   }
 
+  if (!refFileName.Contains(".root")){
+    cout << "Reference file is not a root file." << endl;
+    return 4;
+  }
+
+  TFile* inFile = new TFile(inFileName,"READ");
+  TFile* refFile = new TFile(refFileName,"READ");
+
+  MnvH2D* refHisto = (MnvH2D*)refFile->Get(refName);
+
+  map<int,vector<int>> mapOfFitBinsToFillBins;
+
+  vector<int> binsLost;
+  for (int yBin=0; yBin<=refHisto->GetNbinsY()+1; ++yBin){
+    binsLost.push_back(refHisto->GetBin(0,yBin));
+  }
+
+  for (int yBin=0; yBin<=refHisto->GetNbinsY()+1; ++yBin){
+    binsLost.push_back(refHisto->GetBin(refHisto->GetNbinsX()+1,yBin));
+  }
+
+  for (int xBin=1; xBin<=refHisto->GetNbinsX(); ++xBin){
+    binsLost.push_back(refHisto->GetBin(xBin,0));
+  }
+
+  for (int xBin=1; xBin<=refHisto->GetNbinsX(); ++xBin){
+    binsLost.push_back(refHisto->GetBin(xBin,refHisto->GetNbinsY()+1));
+  }
+
+  mapOfFitBinsToFillBins[0] = binsIn2DRanges(refHisto, 1.5,5.0, 0.0,0.25);//bin 0
+  mapOfFitBinsToFillBins[1] = binsIn2DRanges(refHisto, 1.5,5.0, 0.25,0.4);//bin 1
+  mapOfFitBinsToFillBins[2] = binsIn2DRanges(refHisto, 1.5,5.0, 0.4,0.7);//bin 2
+  mapOfFitBinsToFillBins[3] = binsIn2DRanges(refHisto, 1.5,5.0, 0.7,0.85);//bin 3
+  mapOfFitBinsToFillBins[4] = binsIn2DRanges(refHisto, 1.5,5.0, 0.85,1.0);//bin 4
+  mapOfFitBinsToFillBins[5] = binsIn2DRanges(refHisto, 1.5,5.0, 1.0,2.5);//bin 5
+  mapOfFitBinsToFillBins[6] = binsIn2DRanges(refHisto, 5.0,8.0, 0.0,0.25);//bin 6
+  mapOfFitBinsToFillBins[7] = binsIn2DRanges(refHisto, 5.0,8.0, 0.25,0.4);//bin 7
+  mapOfFitBinsToFillBins[8] = binsIn2DRanges(refHisto, 5.0,8.0, 0.4,0.7);//bin 8
+  mapOfFitBinsToFillBins[9] = binsIn2DRanges(refHisto, 5.0,8.0, 0.7,0.85);//bin 9
+  mapOfFitBinsToFillBins[10] = binsIn2DRanges(refHisto, 5.0,8.0, 0.85,1.0);//bin 10
+  mapOfFitBinsToFillBins[11] = binsIn2DRanges(refHisto, 5.0,8.0, 1.0,2.5);//bin 11
+  mapOfFitBinsToFillBins[12] = binsIn2DRanges(refHisto, 8.0,15.0, 0.0,0.55);//bin 12
+  mapOfFitBinsToFillBins[13] = binsIn2DRanges(refHisto, 8.0,15.0, 0.55,2.5);//bin 13
+
+  int nBins = mapOfFitBinsToFillBins.size();
+
+  vector<TString> inFilePieces = BreakName(".root",inFileName);
+
+  TString outFileName = inFilePieces.at(0)+"2D.root";
+  TFile* outFile = new TFile(outFileName,"RECREATE");
+
+  TList* keyList = inFile->GetListOfKeys();
+  if(!keyList){
+    cout << "List of keys failed to get inside inFile." << endl;
+    return 5;
+  }
+
+  TIter nextKey(keyList);
+  TKey* key;
+  while ( key = (TKey*)nextKey() ){
+    TString nameObj = (TString)key->GetName();
+    if (nameObj.Contains(refString)){
+      cout << "Creating new 2D histo starting with: " << nameObj << endl;
+      vector<TString> nameObjPieces = BreakName("_fit_",nameObj);
+      TString fitName = nameObjPieces.back();
+      vector<TString> fitNamePieces = BreakName(refString,fitName);
+      fitName = MashNames("_",fitNamePieces);
+      cout << "Fit Name Parsed To: " << fitName << endl;
+      
+      map<int,MnvH1D*> fitHistos;
+      map<int,double> fitCVResult;
+      map<int,double> fitCVError;
+
+      cout << "Getting: " << nameObj << endl;
+      fitHistos[0] = (MnvH1D*)inFile->Get(nameObj);
+      fitCVResult[0] = fitHistos[0]->GetBinContent(1);
+      fitCVError[0] = fitHistos[0]->GetCVHistoWithStatError().GetBinError(1);
+
+      nameObjPieces = BreakName(refString,nameObj);
+      for (int iFit=1; iFit < nBins;++iFit){
+	TString binNameObj = MashNames("_bin_"+to_string(iFit)+"_",nameObjPieces);
+	cout << "Getting: " << binNameObj << endl;
+	fitHistos[iFit] = (MnvH1D*)inFile->Get(binNameObj);
+	fitCVResult[iFit] = fitHistos[iFit]->GetBinContent(1);
+	fitCVError[iFit] = fitHistos[iFit]->GetCVHistoWithStatError().GetBinError(1);
+      }
+
+      TString refOutName = BreakName("data",refHisto->GetName()).at(0)+fitName;
+      cout << refOutName << endl;
+      MnvH2D* hOut = new MnvH2D(refOutName,"",refHisto->GetNbinsX(),refHisto->GetXaxis()->GetXbins()->GetArray(),refHisto->GetNbinsY(),refHisto->GetYaxis()->GetXbins()->GetArray());
+
+      for (int iFit=0; iFit<fitHistos.size(); ++iFit){
+	for (auto bin: mapOfFitBinsToFillBins[iFit]){
+	  hOut->SetBinContent(bin,fitCVResult[iFit]);
+	  hOut->SetBinError(bin,fitCVError[iFit]);
+	}
+      }
+
+      for (auto bin: binsLost){
+	hOut->SetBinContent(bin,1.0);
+	hOut->SetBinError(bin,0.0);
+      }
+
+      hOut->AddMissingErrorBandsAndFillWithCV(*refHisto);
+
+      const auto errorBandNames = hOut->GetErrorBandNames();
+      for (const auto&  bandName: errorBandNames){
+	const auto univs = hOut->GetVertErrorBand(bandName)->GetHists();
+	for (size_t whichUniv=0; whichUniv < univs.size(); ++ whichUniv){
+	  for (int iFit=0; iFit<fitHistos.size(); ++iFit){
+	    for (auto bin: mapOfFitBinsToFillBins[iFit]){
+	      hOut->GetVertErrorBand(bandName)->GetHist(whichUniv)->SetBinContent(bin,fitHistos[iFit]->GetVertErrorBand(bandName)->GetHist(whichUniv)->GetBinContent(1));
+	    }
+	  }
+	}
+      }
+
+      outFile->cd();
+      hOut->Write();
+      delete hOut;
+      cout << "" << endl;
+    }
+  }
+
+
+  inFile->Close();
+  refFile->Close();
+  outFile->Close();
+  return 0;
+}
+
+  /*
   string rootExt = ".root";
   string slash = "/";
   string token;
-  string fileNameStub = baseFileName;
+  string fileNameStub = inFileName;
   size_t pos=0;
-
-  if (isMC){
-    if ((pos = baseFileName.find("MC")) == string::npos){
-      cout << "File is Not MC, and should be." << endl;
-      return 4;
-    }
-  }
-  else if ((pos = baseFileName.find("Data")) == string::npos){
-    cout << "File is Not Data, and should be." << endl;
-    return 4;
-  }
 
   pos = 0;
   //cout << sigNameStub << endl;
@@ -161,6 +283,14 @@ int main(int argc, char* argv[]) {
   }
 
   cout << "Input file name parsed to: " << fileNameStub << endl;
+
+  if (PathExists(outDir)){
+    cout << "Thank you for choosing a path for output files that exists." << endl;
+  }
+  else{
+    cout << "Output directory doesn't exist. Exiting" << endl;
+    return 3;
+  }
 
   TString tgtFind = "Tgt1";
 
@@ -327,7 +457,7 @@ int main(int argc, char* argv[]) {
   //outFile->Write();
 
   cout << "File Written" << endl;
-  /*
+
   TList* keyList = mcFile->GetListOfKeys();
   if (!keyList){
     cout << "List of keys failed to get." << endl;
@@ -337,7 +467,7 @@ int main(int argc, char* argv[]) {
   TIter next(keyList);
   TKey* key;
   }
-  */
+
   //cout << "Deleting the MnvPlotter." << endl;
   //delete plotter;
 
@@ -363,3 +493,4 @@ int main(int argc, char* argv[]) {
   cout << "HEY YOU DID IT!!!" << endl;
   return 0;
 }
+  */

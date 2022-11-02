@@ -53,7 +53,7 @@
 using namespace std;
 using namespace PlotUtils;
 
-TCanvas* DrawRatio(string name, TFile* file1, TFile* file2){
+TCanvas* DrawRatio(string name, TFile* file1, TFile* file2, double scale){
 
   MnvH1D* m1 = (MnvH1D*)file1->Get((TString)name);
   if (!m1){
@@ -65,6 +65,8 @@ TCanvas* DrawRatio(string name, TFile* file1, TFile* file2){
     cout << "Not in file 2." << endl;
     return nullptr;
   }
+
+  m2->Scale(scale);
 
   TH1D* h1 = (TH1D*)m1->GetCVHistoWithStatError().Clone();
   TH1D* h2 = (TH1D*)m2->GetCVHistoWithStatError().Clone();
@@ -170,6 +172,11 @@ int main(int argc, char* argv[]) {
   TFile* file1 = new TFile(file1Name.c_str(),"READ");
   TFile* file2 = new TFile(file2Name.c_str(),"READ");
 
+  double file1POT = ((TParameter<double>*)file1->Get("POTUsed"))->GetVal();
+  double file2POT = ((TParameter<double>*)file2->Get("POTUsed"))->GetVal();
+
+  double scale = file1POT/file2POT;
+
   TList* keyList = file1->GetListOfKeys();
   if (!keyList){
     cout << "List of keys failed to get." << endl;
@@ -209,7 +216,7 @@ int main(int argc, char* argv[]) {
 	    string name = (string)key->GetName() + "/"+nameInt+"/"+nameDoubleInt;
 	    string nameOut = (string)key->GetName()+"_"+nameInt+"_"+nameDoubleInt;
 	    cout << name << " of class type: " << nameClassDoubleInt <<endl;
-	    TCanvas* c1 = DrawRatio(name,file1,file2);
+	    TCanvas* c1 = DrawRatio(name,file1,file2,scale);
 	    if (!c1){
 	      cout << "See above for why ratio couldn't be plotted." << endl;
 	      continue;
@@ -226,7 +233,7 @@ int main(int argc, char* argv[]) {
 	  string name = (string)key->GetName() + "/"+nameInt;
 	  string nameOut = (string)key->GetName()+"_"+nameInt;
 	  cout << name << " of class type: " << nameClassInt <<endl;
-	  TCanvas* c1 = DrawRatio(name,file1,file2);
+	  TCanvas* c1 = DrawRatio(name,file1,file2,scale);
 	  if (!c1){
 	    cout << "See above for why ratio couldn't be plotted." << endl;
 	    continue;
@@ -244,7 +251,7 @@ int main(int argc, char* argv[]) {
       cout << name << " of class type: " << nameClass << endl;
       //if ((pos=name.find("SB")) != string::npos) continue;
       //cout << "Plotting error summary for: " << name << endl;
-      TCanvas* c1 = DrawRatio(name,file1,file2);
+      TCanvas* c1 = DrawRatio(name,file1,file2,scale);
       if (!c1){
 	cout << "See above for why ratio couldn't be plotted." << endl;
 	continue;

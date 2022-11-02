@@ -12,11 +12,11 @@
 namespace util
 {
   std::map<int,double> TgtDSCut = {{1,4523.0},
-			      {2,4744.0},
-			      {3,5009.0},
-			      {4,5686.0},
-			      {5,5819.0},
-			      {6,5465.0}};
+				   {2,4744.0},
+				   {3,5009.0},
+				   {4,5686.0},
+				   {5,5819.0},
+				   {6,5465.0}};
 
   std::map<int, double> TgtUSPlaneBack = {{1,4455.0},
 					  {2,4676.0},
@@ -52,6 +52,39 @@ namespace util
     else if (vtx_z < TgtDSCut[5]) return 5;
     else return 0;
   }
+  
+  /*
+  int GetTightTargetZ(double vtx_x, double vtx_y, double vtx_z){
+    double Tgt1Lo = PlotUtils::TargetUtils::Get().GetTarget1CenterZMC() - PlotUtils::TargetProp::ThicknessMC::Tgt1::Pb/2;
+    double Tgt2Lo = PlotUtils::TargetUtils::Get().GetTarget2CenterZMC() - PlotUtils::TargetProp::ThicknessMC::Tgt2::Pb/2;
+    double Tgt3Lo = PlotUtils::TargetUtils::Get().GetTarget3CenterZMC() - PlotUtils::TargetProp::ThicknessMC::Tgt3::Pb/2;
+    double Tgt4Lo = PlotUtils::TargetUtils::Get().GetTarget4CenterZMC() - PlotUtils::TargetProp::ThicknessMC::Tgt4::Pb/2;
+    double Tgt5Lo = PlotUtils::TargetUtils::Get().GetTarget5CenterZMC() - PlotUtils::TargetProp::ThicknessMC::Tgt5::Pb/2;
+    double TgtWLo = PlotUtils::TargetProp::WaterTarget::Face;
+
+    double Tgt1Hi = PlotUtils::TargetUtils::Get().GetTarget1CenterZMC() + PlotUtils::TargetProp::ThicknessMC::Tgt1::Pb/2;
+    double Tgt2Hi = PlotUtils::TargetUtils::Get().GetTarget2CenterZMC() + PlotUtils::TargetProp::ThicknessMC::Tgt2::Pb/2;
+    double Tgt3Hi = PlotUtils::TargetUtils::Get().GetTarget3CarbonCenterZMC() + PlotUtils::TargetProp::ThicknessMC::Tgt3::Pb/2;
+    double Tgt4Hi = PlotUtils::TargetUtils::Get().GetTarget4CenterZMC() + PlotUtils::TargetProp::ThicknessMC::Tgt4::Pb/2;
+    double Tgt5Hi = PlotUtils::TargetUtils::Get().GetTarget5CenterZMC() + PlotUtils::TargetProp::ThicknessMC::Tgt5::Pb/2;
+    double TgtWHi = PlotUtils::TargetProp::WaterTarget::Back;
+
+    if (!PlotUtils::TargetUtils::Get().IsInHexagon(vtx_x,vtx_y)) return -1;
+    else if (vtx_z < Tgt1Lo) return 10;
+    else if (vtx_z < Tgt1Hi) return 1;
+    else if (vtx_z < Tgt2Lo) return 21;
+    else if (vtx_z < Tgt2Hi) return 2;
+    else if (vtx_z < Tgt3Lo) return 32;
+    else if (vtx_z < Tgt3Hi) return 3;
+    else if (vtx_z < TgtWLo) return 63;
+    else if (vtx_z < TgtWHi) return 6;
+    else if (vtx_z < Tgt4Lo) return 46;
+    else if (vtx_z < Tgt4Hi) return 4;
+    else if (vtx_z < Tgt5Lo) return 54;
+    else if (vtx_z < Tgt5Hi) return 5;
+    else return 0;
+  }
+  */
 
   std::vector<double> XYProjToTgt(int tgt, double vtx_x, double vtx_y, double vtx_z, std::vector<double> muonP){
     std::vector<double> newXY = {-999,-999};
@@ -156,6 +189,27 @@ namespace util
     return -999;
   }
 
+  int GetTrueTgtCode(int tgtZ, double mc_vtx_x, double mc_vtx_y, double mc_vtx_z){
+    if (tgtZ == 82){
+      if (PlotUtils::TargetUtils::Get().InLead1VolMC(mc_vtx_x, mc_vtx_y, mc_vtx_z)) return 1182;
+      else if (PlotUtils::TargetUtils::Get().InLead2VolMC(mc_vtx_x, mc_vtx_y, mc_vtx_z)) return 2282;
+      else if (PlotUtils::TargetUtils::Get().InLead3VolMC(mc_vtx_x, mc_vtx_y, mc_vtx_z)) return 3382;
+      else if (PlotUtils::TargetUtils::Get().InLead4VolMC(mc_vtx_x, mc_vtx_y, mc_vtx_z)) return 4482;
+      else if (PlotUtils::TargetUtils::Get().InLead5VolMC(mc_vtx_x, mc_vtx_y, mc_vtx_z)) return 5582;
+    }
+    else if (tgtZ == 26){
+      if (PlotUtils::TargetUtils::Get().InIron1VolMC(mc_vtx_x, mc_vtx_y, mc_vtx_z)) return 1126;
+      else if (PlotUtils::TargetUtils::Get().InIron2VolMC(mc_vtx_x, mc_vtx_y, mc_vtx_z)) return 2226;
+      else if (PlotUtils::TargetUtils::Get().InIron3VolMC(mc_vtx_x, mc_vtx_y, mc_vtx_z)) return 3326;
+      else if (PlotUtils::TargetUtils::Get().InIron5VolMC(mc_vtx_x, mc_vtx_y, mc_vtx_z)) return 5526;
+    }
+    else if (tgtZ == 6){
+      if (PlotUtils::TargetUtils::Get().InCarbon3VolMC(mc_vtx_x, mc_vtx_y, mc_vtx_z)) return 3306;
+    }
+    else if (PlotUtils::TargetUtils::Get().InWaterTargetMC(mc_vtx_x, mc_vtx_y, mc_vtx_z, tgtZ)) return 6666;
+    else return -1;
+  }
+
   int GetUSTgtCode(int TgtByZ, double vtx_x, double vtx_y, double vtx_z, std::vector<double> muonP, int ReqTgtID){
     if ( TgtByZ < 10 ) return -999;
     std::vector<double> newXY = {-999, -999};
@@ -230,70 +284,36 @@ namespace util
     return GetRecoTargetCode(newXY[0], newXY[1], zCenter, muonP);
   }
 
-  bool CorrectTargetMaterial(int tgtCode, int tgtType){
+  bool CorrectTargetMaterial(int tgtCode, int trueTgtCode){
     if (tgtCode < 1000) return false;
-    else if (tgtCode == 4482){
-      if (tgtType == 82) return true;
-      else return false;
-    }
-    else if (tgtCode == 6666){
-      if (tgtType == 8) return true;
-      else return false;
-    }
-    else if (tgtCode == 1126){
-      if (tgtType == 26) return true;
-      else return false;
-    }
-    else if (tgtCode == 1182){
-      if (tgtType == 82) return true;
-      else return false;
-    }
+    else if ((tgtCode%100) != 99) return tgtCode == trueTgtCode;
     else if (tgtCode == 1199){
-      if (tgtType == 26 || tgtType == 82) return true;
-      else return false;
-    }
-    else if (tgtCode == 2226){
-      if (tgtType == 26) return true;
-      else return false;
-    }
-    else if (tgtCode == 2282){
-      if (tgtType == 82) return true;
+      if (trueTgtCode == 1126 || trueTgtCode == 1182) return true;
       else return false;
     }
     else if (tgtCode == 2299){
-      if (tgtType == 26 || tgtType == 82) return true;
-      else return false;
-    }
-    else if (tgtCode == 5526){
-      if (tgtType == 26) return true;
-      else return false;
-    }
-    else if (tgtCode == 5582){
-      if (tgtType == 82) return true;
+      if (trueTgtCode == 2226 || trueTgtCode == 2282) return true;
       else return false;
     }
     else if (tgtCode == 5599){
-      if (tgtType == 26 || tgtType == 82) return true;
-      else return false;
-    }
-    else if (tgtCode == 3306){
-      if (tgtType == 6) return true;
-      else return false;
-    }
-    else if (tgtCode == 3326){
-      if (tgtType == 26) return true;
-      else return false;
-    }
-    else if (tgtCode == 3382){
-      if (tgtType == 82) return true;
+      if (trueTgtCode == 5526 || trueTgtCode == 5582) return true;
       else return false;
     }
     else if (tgtCode == 3399){
-      if (tgtType == 26 || tgtType == 82 || tgtType == 6) return true;
+      if (trueTgtCode == 3326 || trueTgtCode == 3382 || trueTgtCode == 3306) return true;
       else return false;
     }
-    else return true;
+    else return false;
   }
+
+  /*
+  bool CorrectTargetZAndMaterial(int tgtCode, int tgtType, double vtx_x, double vtx_y, double vtx_z){
+    bool matCorrect = CorrectTargetMaterial(tgtCode, tgtType);
+    if (!matCorrect) return false;
+    int TgtID = GetTightTargetZ(vtx_x,vtx_y,vtx_z);//GetTargetByZ, no plastic inclusion.
+    if (TgtID != tgtCode/1000) return false;
+  }
+  */
 
   double GetNPlanesDSOfTarget(int tgtCode, double vtx_z){
     int tgtID = tgtCode/1000;

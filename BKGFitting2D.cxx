@@ -1,7 +1,7 @@
-//File: BKGFitting.cxx
-//Info: This script is intended to fit recoil/pTmu plots using TMinuit primarily for the neutron selected sample.
+//File: BKGFitting2D.cxx
+//Info: This script is intended to fit recoil plots using TMinuit primarily for the neutron selected sample. It's a modification to handle 2D samples more directly to avoid issues related to what's saved and not now that I've made changes. Plan to merge into cleaner/more flexible scripts down the line.
 //
-//Usage: BKGFitting <mc_file> <data_file> <outdir> <recoilE/pTmu/vtxZ> <doSyst (only 0 means no)> <Tgts> optional: <mainTagName> <lowFitBinNum> <hiFitBinNum> <do fits in bins of muon momentum (only 0 means no)> TODO: Save the information beyond just printing it out
+//Usage: BKGFitting2D <mc_file> <data_file> <outdir> <doSyst (only 0 means no)> <Tgt> <materialName> optional: <lowFitBinNum> <hiFitBinNum> TODO: Save the information beyond just printing it out
 //Author: David Last dlast@sas.upenn.edu/lastd44@gmail.com
 
 //TODO: Same SegFault Business From My Plotting Code... I'm assuming I just need to delete things carefully that I'm not yet.
@@ -472,7 +472,7 @@ int main(int argc, char* argv[]) {
   #endif
 
   //Pass an input file name to this script now
-  if (argc < 7 || argc > 11) {
+  if (argc < 7 || argc > 9){
     cout << "Check usage..." << endl;
     return 2;
   }
@@ -480,21 +480,21 @@ int main(int argc, char* argv[]) {
   string MCfileName = string(argv[1]);
   string DATAfileName = string(argv[2]);
   string outDir = string(argv[3]);
-  TString varName= argv[4];
-  bool doSyst = (bool)(atoi(argv[5]));
-  bool Tgts = (bool)(atoi(argv[6]));
-  int fitMuonBins = 0;
+  //TString varName= argv[4];
+  bool doSyst = (bool)(atoi(argv[4]));
+  int TgtNum = atoi(argv[5]);
+  TString Mat = argv[6];
+  TString Tgt = "";
   
   //vector<TString> namesToSave = {"pTmu","vtxZ","recoilE"}
   //vector<TString> namesToSave = {"pTmu","recoilE","NPlanes"};
   vector<TString> namesToSave = {};
-
-  int lowBin = 1;//Will be truncated later. Lowest allowed value for pT or recoil fits.
+  
+  int lowBin = 26;//Will be truncated later. Lowest allowed value for pT or recoil fits.
   int hiBin = 50;//Will be truncated later. Highest allowed value for pT or recoil fits.
-  TString mainTag = "";
-  if (argc > 8) lowBin = max(atoi(argv[8]),1);//Not allowed lower than 1
-  if (argc > 9) hiBin = min(50, atoi(argv[9]));//Not allowed higher than 50
-  if (argc > 10) fitMuonBins = atoi(argv[10]);
+  //TString mainTag = "";
+  if (argc > 7) lowBin = max(atoi(argv[7]),1);//Not allowed lower than 1
+  if (argc > 8) hiBin = min(50, atoi(argv[8]));//Not allowed higher than 50
 
   string rootExt = ".root";
   string slash = "/";
@@ -546,78 +546,88 @@ int main(int argc, char* argv[]) {
 
   cout << "Input Data file name parsed to: " << fileNameStub << endl;
 
-  if (varName == "pTmu"){
-    if (lowBin >= 14){
-      cout << "Not a valid fitting range for pTmu. Maximum bin is 14." << endl;
-      return 100;
+  if (TgtNum > 0 && TgtNum < 6){
+    Tgt = "Tgt"+to_string(TgtNum);
+  }
+  else if (TgtNum == 6){
+    Tgt = "WaterTgt";
+  }
+
+  if (Tgt != ""){
+    if (Mat == ""){
+      cout << "Provide Material to fit in this target. Aborting." << endl;
+      return 7;
     }
-    hiBin = min(14,hiBin);
-    mainTag = "_RecoilSB";
+    else if ((TgtNum == 1 || TgtNum ==2 || TgtNum ==5) && Mat != "Fe" && Mat != "Pb"){
+      cout << "Material Not Valid for Tgt." << endl;
+      return 8;
+    }
+    else if (TgtNum == 4 && Mat != "Pb"){
+      cout << "Material Not Valid for Tgt." << endl;
+      return 8;
+    }
+    else if (TgtNum == 6){
+      cout << "Ignoring material to fit water." << endl;
+      Mat = "";
+    }
+    else if (TgtNum == 3 && Mat != "Fe" && Mat != "Pb" && Mat != "C"){
+      cout << "Material Not Valid for Tgt." << endl;
+      return 8;
+    }
   }
-  else if (varName == "recoilE"){
-    if (argc < 8) lowBin = 26;
-    mainTag = "_PreRecoilCut";
+  else if (Mat != "" && Mat != "C" && Mat != "Fe" && Mat != "Pb" && Mat != "Water"){
+    cout << "Invalid Material" << endl;
+    return 9;
   }
-  else {
-    cout << "Not a valid variable name to fit." << endl;
-    return 111;
-  }
-  if (argc > 7) mainTag = argv[7];
 
   //NEED TO CODE IN SOMETHING THAT HANDLES THE VERTEX PLOTS IN THE TARGETS.
 
   //cout << "Setting up MnvPlotter" << endl;
   //MnvPlotter* plotter = new MnvPlotter(kCCQEAntiNuStyle);
 
-  TFile* outFile = new TFile("fitResults.root","RECREATE");
+  TFile* outFile = new TFile((outDir+"/fitResults.root").c_str(),"RECREATE");
   TFile* mcFile = new TFile(MCfileName.c_str(),"READ");
   TFile* dataFile = new TFile(DATAfileName.c_str(),"READ");
 
   TParameter<double>* mcPOT = (TParameter<double>*)mcFile->Get("POTUsed");
   TParameter<double>* dataPOT = (TParameter<double>*)dataFile->Get("POTUsed");
 
-  vector<TString> tags = {mainTag};
+  vector<TString> tags = {};
 
-  if (Tgts){
-    tags.push_back(mainTag+"_Tgt1");
-    tags.push_back(mainTag+"_Tgt2");
-    tags.push_back(mainTag+"_Tgt3");
-    tags.push_back(mainTag+"_Tgt4");
-    tags.push_back(mainTag+"_Tgt5");
-  }
-
-  if (fitMuonBins){
-    tags.push_back((TString)("_bin_lost"));
-    for (int iBin=0; iBin < 14; ++iBin){
-      TString tag = "_bin_"+to_string(iBin);
-      //cout << tag << endl;
-      tags.push_back(tag);
-    }
+  for (int iBin=0; iBin < 14; ++iBin){
+    TString tag = "_bin_"+to_string(iBin);
+    //cout << tag << endl;
+    tags.push_back(tag);
   }
 
   double POTscale = dataPOT->GetVal()/mcPOT->GetVal();
   //cout << "POT scale factor: " << scale << endl;
   
-  //TString varName = "recoilE";
+  TString varName = "recoilE";
 
   for (int iTag=0; iTag < tags.size(); ++iTag){
 
     TString tag = tags.at(iTag);
     TString name = varName+tag;
     TString grabName;
-    if (tag.Contains("_Tgt")){
-      TObjArray* tagArr = tag.Tokenize("Tgt");
-      grabName="ByTgt_Tgt"+((TObjString*)(tagArr->At(tagArr->GetEntries()-1)))->String()+"/"+name;
+    if (Tgt != ""){
+      if (Mat != "") grabName="ByTgt_"+Tgt+"_"+Mat+"/"+name+"_"+Tgt+"_"+Mat;
+      else grabName="ByTgt_"+Tgt+"/"+name+"_"+Tgt;
+    }
+    else if (Mat != ""){
+      grabName = name+"_"+Mat;
     }
     else grabName = name;
 
     cout << "Performing Fitting and Scaling for: " << name << endl;
     cout << "Grabbing: " << grabName << endl;
 
+
+    map<TString,MnvH1D*> varsToSave = {};
+    /*
     double binsNPlanes[22];
     for (unsigned int i=0; i < 22;++i) binsNPlanes[i]=1.0*i-10.5;
 
-    map<TString,MnvH1D*> varsToSave = {};
     for (auto nameSave:namesToSave){
       if (nameSave == "NPlanes"){
 	MnvH1D* hNPlanes = new MnvH1D(nameSave+tag,"",21,binsNPlanes);
@@ -630,6 +640,7 @@ int main(int argc, char* argv[]) {
       }
       else varsToSave[nameSave+tag] = (MnvH1D*)(mcFile->Get(nameSave+tag+"_selected_signal_reco"))->Clone();
     }
+    */
 
     MnvH1D* dataHist = (MnvH1D*)(dataFile->Get(grabName+"_data"))->Clone();
     MnvH1D* sigHist = (MnvH1D*)(mcFile->Get(grabName+"_selected_signal_reco"))->Clone();
@@ -645,11 +656,22 @@ int main(int argc, char* argv[]) {
     MnvH1D* otherHist = (MnvH1D*)(mcFile->Get(grabName+"_background_Other"))->Clone();
     otherHist->Scale(POTscale);
 
+    MnvH1D* USHist = (MnvH1D*)(mcFile->Get(grabName+"_background_USPlastic"))->Clone();
+    USHist->Scale(POTscale);
+    MnvH1D* DSHist = (MnvH1D*)(mcFile->Get(grabName+"_background_DSPlastic"))->Clone();
+    DSHist->Scale(POTscale);
+    MnvH1D* WrongNuclHist = (MnvH1D*)(mcFile->Get(grabName+"_background_Wrong_Nucleus"))->Clone();
+    WrongNuclHist->Scale(POTscale);
+
     MnvH1D* bkgNNeutPiHist = neutPiHist->Clone();
     bkgNNeutPiHist->Add(NPiHist);
 
     MnvH1D* bkg1PiHist = neutPiHist->Clone();
     bkg1PiHist->Add(chargePiHist);
+
+    MnvH1D* physBkgTotHist = bkg1PiHist->Clone();
+    physBkgTotHist->Add(NPiHist);
+    physBkgTotHist->Add(otherHist);
 
     //
     MnvH1D* QEHist = (MnvH1D*)(mcFile->Get(grabName+"_bkg_IntType_QE"))->Clone();
@@ -672,35 +694,48 @@ int main(int argc, char* argv[]) {
     bkgTotHist->Add(RESHist);
 
     map<TString, MnvH1D*> fitHists1A, unfitHists1A;
+    /*
     map<TString, MnvH1D*> fitHists2A, unfitHists2A;
     map<TString, MnvH1D*> fitHists3A, unfitHists3A;
     map<TString, MnvH1D*> fitHists4A, unfitHists4A;
     map<TString, MnvH1D*> fitHists5A, unfitHists5A;
     map<TString, MnvH1D*> fitHists6A, unfitHists6A;
+    */
 
     map<TString, MnvH1D*> fitHists1B, unfitHists1B;
+    /*
     map<TString, MnvH1D*> fitHists2B, unfitHists2B;
     map<TString, MnvH1D*> fitHists3B, unfitHists3B;
     map<TString, MnvH1D*> fitHists4B, unfitHists4B;
     map<TString, MnvH1D*> fitHists5B, unfitHists5B;
     map<TString, MnvH1D*> fitHists6B, unfitHists6B;
+    */
 
     map<TString, vector<TString>> nameKeys1A, nameKeys1B;
+    /*
     map<TString, vector<TString>> nameKeys2A, nameKeys2B;
     map<TString, vector<TString>> nameKeys3A, nameKeys3B;
     map<TString, vector<TString>> nameKeys4A, nameKeys4B;
     map<TString, vector<TString>> nameKeys5A, nameKeys5B;
     map<TString, vector<TString>> nameKeys6A, nameKeys6B;
+    */
 
-    fitHists1A["BKG"]=(MnvH1D*)bkgTotHist->Clone();
+    fitHists1A["BKG"]=(MnvH1D*)physBkgTotHist->Clone();
     fitHists1A["Signal"]=(MnvH1D*)sigHist->Clone();
+    unfitHists1A["US"]=(MnvH1D*)USHist->Clone();
+    unfitHists1A["DS"]=(MnvH1D*)DSHist->Clone();
+    unfitHists1A["WrongNucleus"]=(MnvH1D*)WrongNuclHist->Clone();
     nameKeys1A["BKG"]={"_bkg","_background"};
     nameKeys1A["Signal"]={"_sig","_signal"};
 
-    fitHists1B["BKG"]=(MnvH1D*)bkgTotHist->Clone();
+    fitHists1B["BKG"]=(MnvH1D*)physBkgTotHist->Clone();
     unfitHists1B["Signal"]=(MnvH1D*)sigHist->Clone();
+    unfitHists1B["US"]=(MnvH1D*)USHist->Clone();
+    unfitHists1B["DS"]=(MnvH1D*)DSHist->Clone();
+    unfitHists1B["WrongNucleus"]=(MnvH1D*)WrongNuclHist->Clone();
     nameKeys1B["BKG"]=nameKeys1A["BKG"];
 
+    /*
     fitHists2A["single #pi^{#pm}"]=(MnvH1D*)chargePiHist->Clone();
     fitHists2A["single #pi^{0}"]=(MnvH1D*)neutPiHist->Clone();
     fitHists2A["N#pi"]=(MnvH1D*)NPiHist->Clone();
@@ -781,11 +816,12 @@ int main(int argc, char* argv[]) {
     unfitHists6B["Other"]=(MnvH1D*)OtherIntTypeHist->Clone();
     nameKeys6B["RES"]=nameKeys6A["RES"];
     nameKeys6B["DIS"]=nameKeys6A["DIS"];
+    */
 
     cout << "Fitting 1A" << endl;
     map<TString,map<TString,MnvH1D*>> result = FitScaleFactorsAndDraw(dataHist, fitHists1A, unfitHists1A, name, outDir, "_fit1A", lowBin, hiBin, doSyst, true, varsToSave, nameKeys1A);
     map<TString,MnvH1D*> scaledHists1A = {};
-    scaledHists1A["BKG"]=(MnvH1D*)bkgTotHist->Clone();
+    scaledHists1A["BKG"]=(MnvH1D*)physBkgTotHist->Clone();
     scaledHists1A["Signal"]=(MnvH1D*)sigHist->Clone();
     for(auto hists:scaledHists1A){
       hists.second->Multiply(hists.second,result[name][hists.first]);
@@ -805,7 +841,7 @@ int main(int argc, char* argv[]) {
     cout << "Fitting 1B" << endl;
     result = FitScaleFactorsAndDraw(dataHist, fitHists1B, unfitHists1B, name, outDir, "_fit1B", lowBin, hiBin, doSyst, false, varsToSave, nameKeys1B);
     map<TString,MnvH1D*> scaledHists1B = {};
-    scaledHists1B["BKG"]=(MnvH1D*)bkgTotHist->Clone();
+    scaledHists1B["BKG"]=(MnvH1D*)physBkgTotHist->Clone();
     for(auto hists:scaledHists1B){
       hists.second->Multiply(hists.second,result[name][hists.first]);
       for (auto var:result)var.second[hists.first]->SetDirectory(outFile);
@@ -820,7 +856,7 @@ int main(int argc, char* argv[]) {
       for (auto var:hist.second) delete var.second;
     }
     result.clear();
-
+    /*
     cout << "Fitting 2A" << endl;
     result = FitScaleFactorsAndDraw(dataHist, fitHists2A, unfitHists2A, name, outDir, "_fit2A", lowBin, hiBin, doSyst, true, varsToSave, nameKeys2A);
     map<TString,MnvH1D*> scaledHists2A = {};
@@ -1027,7 +1063,7 @@ int main(int argc, char* argv[]) {
       for (auto var:hist.second) delete var.second;
     }
     result.clear();
-
+    */
     delete dataHist;
     delete sigHist;
     delete chargePiHist;
@@ -1036,6 +1072,9 @@ int main(int argc, char* argv[]) {
     delete otherHist;
     delete bkgNNeutPiHist;
     delete bkg1PiHist;
+    delete DSHist;
+    delete USHist;
+    delete WrongNuclHist;
     delete QEHist;
     delete RESHist;
     delete DISHist;
@@ -1043,10 +1082,13 @@ int main(int argc, char* argv[]) {
     delete OtherIntTypeHist;
     delete bkgNonRESHist;
     delete bkgTotHist;
+    delete physBkgTotHist;
+
     for (auto hist:fitHists1A) delete hist.second;
     for (auto hist:unfitHists1A) delete hist.second;
     for (auto hist:fitHists1B) delete hist.second;
     for (auto hist:unfitHists1B) delete hist.second;
+    /*
     for (auto hist:fitHists2A) delete hist.second;
     for (auto hist:unfitHists2A) delete hist.second;
     for (auto hist:fitHists2B) delete hist.second;
@@ -1067,8 +1109,10 @@ int main(int argc, char* argv[]) {
     for (auto hist:unfitHists6A) delete hist.second;
     for (auto hist:fitHists6B) delete hist.second;
     for (auto hist:unfitHists6B) delete hist.second;
+    */
     for (auto hist:scaledHists1A) delete hist.second;
     for (auto hist:scaledHists1B) delete hist.second;
+    /*
     for (auto hist:scaledHists2A) delete hist.second;
     for (auto hist:scaledHists2B) delete hist.second;
     for (auto hist:scaledHists3A) delete hist.second;
@@ -1081,6 +1125,7 @@ int main(int argc, char* argv[]) {
     for (auto hist:scaledHists6B) delete hist.second;
     for (auto hist:varsToSave) delete hist.second;
     varsToSave.clear();
+    */
   }
 
   cout << "Closing Files... Does this solve the issue of seg fault." << endl;
