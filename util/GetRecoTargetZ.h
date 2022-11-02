@@ -207,7 +207,7 @@ namespace util
       if (PlotUtils::TargetUtils::Get().InCarbon3VolMC(mc_vtx_x, mc_vtx_y, mc_vtx_z)) return 3306;
     }
     else if (PlotUtils::TargetUtils::Get().InWaterTargetMC(mc_vtx_x, mc_vtx_y, mc_vtx_z, tgtZ)) return 6666;
-    else return -1;
+    return -1;
   }
 
   int GetUSTgtCode(int TgtByZ, double vtx_x, double vtx_y, double vtx_z, std::vector<double> muonP, int ReqTgtID){
