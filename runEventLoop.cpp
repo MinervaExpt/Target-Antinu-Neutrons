@@ -195,6 +195,8 @@ void LoopAndFillEventSelection(
 	//int trueTgtID = util::GetTightTargetZ(mc_vtx_x,mc_vtx_y,mc_vtx_z);//Get Target By Z for the true vtx. Tight constraints to not include US or DS plastic.
 	int trueTgtCode = util::GetTrueTgtCode(tgtZ, mc_vtx_x, mc_vtx_y, mc_vtx_z);
 
+	//if (tgtZ == 6 && (tgtID < 0 || tgtID > 6)) std::cout << "True Target Code: " << trueTgtCode << std::endl;
+
 	int tgtType = tgtZ;
 	if (tgtZ==6 && trueTgtCode != 3306) tgtType = 1; //Carbon not in target 3 is in plastic... Maybe need to require trueTgtCode to be carbon... but that can wait on the assumption there's no carbon outside of the carbon target.
 	if (tgtZ==1 && trueTgtCode == 6666) tgtType = 8; //hydrogen in target 6 (water target) is water
@@ -214,6 +216,8 @@ void LoopAndFillEventSelection(
 	if (tgtID > 0 && tgtID < 7){
 	  tmpIsSignal = tmpIsSignal ? util::CorrectTargetMaterial(tgtCode,trueTgtCode) : tmpIsSignal; //Only call it signal if the true material for that section is correct.
 	}
+
+	//if (tgtZ == 6 && (tgtID < 0 || tgtID > 6)) std::cout << "tgtType: " << tgtType << std::endl;
 
 	const bool isSignal = tmpIsSignal;
 
