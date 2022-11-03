@@ -368,7 +368,7 @@ void LoopAndFillEventSelection(
 	    if (tgtType == 200 || tgtType == 300){ //Separating out the plastic backgrounds
 	      bkgd_ID = intType;
 	    }
-	    else if (util::CorrectTargetMaterial(tgtCode,tgtZ) || tgtCode == -1) bkgd_ID = util::GetBackgroundID(*universe);
+	    else if (util::CorrectTargetMaterial(tgtCode,trueTgtCode) || tgtCode == -1) bkgd_ID = util::GetBackgroundID(*universe);
 	    if (bkgd_ID == 44) intType = bkgd_ID;
 	  }
 	  else bkgd_ID = util::GetBackgroundID(*universe);
