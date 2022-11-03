@@ -138,9 +138,9 @@ void DrawBKGCateg(string name, TFile* mcFile, TFile* dataFile, TString sample, d
   h_data->AddMissingErrorBandsAndFillWithCV(*h_Sig);
 
   THStack* h = new THStack();
-  h->Add((TH1D*)h_Wrong_Nucleus_Bkg->GetCVHistoWithError().Clone());
   h->Add((TH1D*)h_USPlastic_Bkg->GetCVHistoWithError().Clone());
   h->Add((TH1D*)h_DSPlastic_Bkg->GetCVHistoWithError().Clone());
+  h->Add((TH1D*)h_Wrong_Nucleus_Bkg->GetCVHistoWithError().Clone());
   h->Add((TH1D*)h_Other_Bkg->GetCVHistoWithError().Clone());
   h->Add((TH1D*)h_NPi_Bkg->GetCVHistoWithError().Clone());
   h->Add((TH1D*)h_1Pi0_Bkg->GetCVHistoWithError().Clone());
@@ -239,17 +239,19 @@ void DrawBKGCateg(string name, TFile* mcFile, TFile* dataFile, TString sample, d
   c1->Update();
 
   //TLegend* leg = new TLegend(1.0-0.6,1.0-0.5,1.0-0.9,1.0-0.9);
-  TLegend* leg = new TLegend(0.1,0.5,0.4,0.9);
+  //TLegend* leg = new TLegend(0.1,0.5,0.4,0.9);
+  TLegend* leg = new TLegend(0.6,0.5,0.9,0.9);
 
   leg->AddEntry(dataHist,"DATA");
   leg->AddEntry(h_Sig,"Signal");
-  leg->AddEntry(h_1PiC_Bkg,"single #pi^{#pm}");
-  leg->AddEntry(h_1Pi0_Bkg,"single #pi^{0}");
-  leg->AddEntry(h_NPi_Bkg,"N#pi");
-  leg->AddEntry(h_Other_Bkg,"Other");
+  if (isTracker) leg->AddEntry(h_1PiC_Bkg,"single #pi^{#pm}");
+  if (isTracker) leg->AddEntry(h_1Pi0_Bkg,"single #pi^{0}");
+  if (isTracker) leg->AddEntry(h_NPi_Bkg,"N#pi");
+  if (isTracker) leg->AddEntry(h_Other_Bkg,"Other");
+  if (!isTracker) leg->AddEntry(h_Wrong_Nucleus_Bkg,"BKG");
   if (!isTracker) leg->AddEntry(h_DSPlastic_Bkg,"DS Plastic");
   if (!isTracker) leg->AddEntry(h_USPlastic_Bkg,"US Plastic");
-  if (!isTracker) leg->AddEntry(h_Wrong_Nucleus_Bkg,"Wrong Nucleus");
+
 
   leg->Draw();
   c1->Update();
