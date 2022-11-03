@@ -62,7 +62,7 @@ void Plot(PlotUtils::MnvH1D& hist, const std::string& stepName, const std::strin
 
   //Uncertainty summary
   PlotUtils::MnvPlotter plotter;
-  plotter.ApplyStyle(PlotUtils::kCCQENuStyle);
+  plotter.ApplyStyle(PlotUtils::kCCQEAntiNuStyle);
   plotter.axis_maximum = 0.4;
 
   plotter.DrawErrorSummary(&hist);

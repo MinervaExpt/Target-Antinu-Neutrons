@@ -686,6 +686,7 @@ int main(int argc, char* argv[]) {
 
     MnvH1D* bkgTotHist = bkgNonRESHist->Clone();
     bkgTotHist->Add(RESHist);
+    bkgTotHist->Add(wrongNuclHist);
 
     map<TString, MnvH1D*> fitHists1A, unfitHists1A;
     /*
@@ -718,15 +719,15 @@ int main(int argc, char* argv[]) {
     fitHists1A["Signal"]=(MnvH1D*)sigHist->Clone();
     unfitHists1A["USPlastic"]=(MnvH1D*)USHist->Clone();
     unfitHists1A["DSPlastic"]=(MnvH1D*)DSHist->Clone();
-    unfitHists1A["WrongNucleus"]=(MnvH1D*)wrongNuclHist->Clone();
-    nameKeys1A["BKG"]={"bkg","background"};
+    //unfitHists1A["WrongNucleus"]=(MnvH1D*)wrongNuclHist->Clone();
+    nameKeys1A["BKG"]={"1chargePi","1neutPi","NPi","Other","Wrong_Nucleus"};
     nameKeys1A["Signal"]={"sig","signal"};
 
     fitHists1B["BKG"]=(MnvH1D*)bkgTotHist->Clone();
     unfitHists1B["Signal"]=(MnvH1D*)sigHist->Clone();
     unfitHists1B["USPlastic"]=(MnvH1D*)USHist->Clone();
     unfitHists1B["DSPlastic"]=(MnvH1D*)DSHist->Clone();
-    unfitHists1B["WrongNucleus"]=(MnvH1D*)wrongNuclHist->Clone();
+    //unfitHists1B["WrongNucleus"]=(MnvH1D*)wrongNuclHist->Clone();
     nameKeys1B["BKG"]=nameKeys1A["BKG"];
 
     /*
