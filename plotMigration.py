@@ -5,7 +5,7 @@ import sys
 fileToRead = ROOT.TFile.Open(sys.argv[1])
 histName = sys.argv[2]
 
-maxX = 1
+maxX = 2.5
 maxY = maxX
 
 xTitle = "Reconstructed Muon Transverse Momentum [GeV/c]"
