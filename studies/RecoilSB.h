@@ -581,7 +581,16 @@ class PreRecoil: public Study
 
       int tgtID = util::GetRecoTargetZ(vtx_x,vtx_y,vtx_z);
       int tgtCode = util::GetRecoTargetCode(vtx_x,vtx_y,vtx_z,muonMom);
-      //int tgtZ = univ.GetTargetZ();
+
+      //Adding this in to change the checks that are done to get the right bkgd id to match what's in runEventLoop... this is due to a change in utilizng the true tgtCode to match instead of just the material.
+      std::vector<double> mc_vtx = univ.GetTrueVtx();
+      double mc_vtx_x = mc_vtx.at(0);
+      double mc_vtx_y = mc_vtx.at(1);
+      double mc_vtx_z = mc_vtx.at(2);
+
+      int tgtZ = univ.GetTargetZ();
+      int trueTgtCode = util::GetTrueTgtCode(tgtZ, mc_vtx_x, mc_vtx_y, mc_vtx_z);
+
       int USTgt = -1;
       int DSTgt = -1;
       //std::cout << fFVregionName << std::endl;
@@ -957,7 +966,7 @@ class PreRecoil: public Study
 	      }
 	      bkgd_ID = intType;
 	    }
-	    else if (util::CorrectTargetMaterial(tgtCode,tgtType) || tgtCode == -1) bkgd_ID = util::GetBackgroundID(univ);
+	    else if (util::CorrectTargetMaterial(tgtCode,trueTgtCode) || tgtCode == -1) bkgd_ID = util::GetBackgroundID(univ);
 	    if (bkgd_ID == 44) intType = bkgd_ID;
 	  }
 	  else bkgd_ID = util::GetBackgroundID(univ);
