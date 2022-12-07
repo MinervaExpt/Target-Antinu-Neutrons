@@ -244,14 +244,13 @@ void DrawBKGCateg(string name, TFile* mcFile, TFile* dataFile, TString sample, d
 
   leg->AddEntry(dataHist,"DATA");
   leg->AddEntry(h_Sig,"Signal");
-  if (isTracker) leg->AddEntry(h_1PiC_Bkg,"single #pi^{#pm}");
-  if (isTracker) leg->AddEntry(h_1Pi0_Bkg,"single #pi^{0}");
-  if (isTracker) leg->AddEntry(h_NPi_Bkg,"N#pi");
-  if (isTracker) leg->AddEntry(h_Other_Bkg,"Other");
+  leg->AddEntry(h_1PiC_Bkg,"single #pi^{#pm}");
+  leg->AddEntry(h_1Pi0_Bkg,"single #pi^{0}");
+  leg->AddEntry(h_NPi_Bkg,"N#pi");
+  leg->AddEntry(h_Other_Bkg,"Other");
   if (!isTracker) leg->AddEntry(h_Wrong_Nucleus_Bkg,"BKG");
   if (!isTracker) leg->AddEntry(h_DSPlastic_Bkg,"DS Plastic");
   if (!isTracker) leg->AddEntry(h_USPlastic_Bkg,"US Plastic");
-
 
   leg->Draw();
   c1->Update();
