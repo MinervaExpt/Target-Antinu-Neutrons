@@ -4,9 +4,10 @@ import sys
 
 fileToRead = ROOT.TFile.Open(sys.argv[1])
 histName = sys.argv[2]
-
-maxX = 2.5
+maxX = float(sys.argv[3])
+minX = float(sys.argv[4])
 maxY = maxX
+minY = minX
 
 xTitle = "Reconstructed Muon Transverse Momentum [GeV/c]"
 yTitle = "True Muon Transverse Momentum [GeV/c]"
@@ -47,8 +48,8 @@ ROOT.gStyle.SetOptStat(0)
 ROOT.gStyle.SetPaintTextFormat("4.2g")
 
 histToPlot = fileToRead.Get(histName)
-histToPlot.GetXaxis().SetRangeUser(0, maxX)
-histToPlot.GetYaxis().SetRangeUser(0, maxY)
+histToPlot.GetXaxis().SetRangeUser(minX, maxX)
+histToPlot.GetYaxis().SetRangeUser(minY, maxY)
 can = ROOT.TCanvas("normalized")
 can.SetRightMargin(0.15) #Make sure z axis label is visible
 plotter = ROOT.PlotUtils.MnvPlotter()
