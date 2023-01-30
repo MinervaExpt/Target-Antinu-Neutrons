@@ -172,8 +172,10 @@ int main(int argc, char* argv[]) {
   TFile* file1 = new TFile(file1Name.c_str(),"READ");
   TFile* file2 = new TFile(file2Name.c_str(),"READ");
 
+  cout << "Getting POT" << endl;
   double file1POT = ((TParameter<double>*)file1->Get("POTUsed"))->GetVal();
   double file2POT = ((TParameter<double>*)file2->Get("POTUsed"))->GetVal();
+  cout << "Got POT" << endl;
 
   double scale = file1POT/file2POT;
 
