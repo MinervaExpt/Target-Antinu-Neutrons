@@ -3,7 +3,7 @@
 //       Subtracts backgrounds, performs unfolding, applies efficiency x acceptance correction, and 
 //       divides by flux and number of nucleons.  Writes a .root file with the cross section histogram.
 //
-//Usage: ExtractCrossSection <unfolding iterations> <data.root> <mc.root> <stop at efficiency correction> <varName>
+//Usage: ExtractCrossSection <unfolding iterations> <data.root> <mc.root> <stop at efficiency correction> <varName> <tgtZ> : optional <flux_file> <fluxVarName>
 //
 //Author: Andrew Olivier aolivier@ur.rochester.edu
 
@@ -19,6 +19,7 @@
 #include "PlotUtils/MnvH1D.h"
 #include "PlotUtils/MnvH2D.h"
 #include "PlotUtils/MnvPlotter.h"
+#include "PlotUtils/TargetUtils.h"
 #pragma GCC diagnostic pop
 
 //ROOT includes
@@ -120,6 +121,35 @@ PlotUtils::MnvH1D* UnfoldHist( PlotUtils::MnvH1D* h_folded, PlotUtils::MnvH2D* h
   return h_unfolded;
 }
 
+double GetTotalScatteringCenters(int targetZ, bool isMC)
+{
+  // TARGET INFO
+  PlotUtils::TargetUtils targetInfo;
+  double Nucleons = 0.0;
+
+  // Target 1 is generally excluded due to rock muon contamination (in the inclusive analysis), keeping for now...
+  if(targetZ == 6){
+    Nucleons = targetInfo.GetPassiveTargetNNucleons( 3, targetZ, isMC ); // Target 3
+  }
+  if(targetZ == 26){                                                                                                                                                                                              
+    Nucleons = targetInfo.GetPassiveTargetNNucleons( 1, targetZ, isMC ) // Target 1
+      + targetInfo.GetPassiveTargetNNucleons( 2, targetZ, isMC ) // Target 2                                                                                                                                
+      + targetInfo.GetPassiveTargetNNucleons( 3, targetZ, isMC ) // Target 3                                                                                                                                
+      + targetInfo.GetPassiveTargetNNucleons( 5, targetZ, isMC );// Target 5
+  }
+  if(targetZ == 82){
+    Nucleons = targetInfo.GetPassiveTargetNNucleons( 1, targetZ, isMC ) // Target 2
+      + targetInfo.GetPassiveTargetNNucleons( 2, targetZ, isMC ) // Target 2
+      + targetInfo.GetPassiveTargetNNucleons( 3, targetZ, isMC ) // Target 3
+      + targetInfo.GetPassiveTargetNNucleons( 4, targetZ, isMC ) // Target 4
+      + targetInfo.GetPassiveTargetNNucleons( 5, targetZ, isMC );// Target 5
+  }
+  if(targetZ > 90 ){
+    Nucleons = targetInfo.GetTrackerNNucleons(5980, 8422, isMC, 850);
+  }
+  return Nucleons;
+}                                                                                                                                                                                                                 
+
 //The final step of cross section extraction: normalize by flux, bin width, POT, and number of targets
 PlotUtils::MnvH1D* normalize(PlotUtils::MnvH1D* efficiencyCorrected, PlotUtils::MnvH1D* fluxIntegral, const double nNucleons, const double POT)
 {
@@ -140,9 +170,9 @@ int main(const int argc, const char** argv)
 
   TH1::AddDirectory(kFALSE); //Needed so that MnvH1D gets to clean up its own MnvLatErrorBands (which are TH1Ds).
 
-  if(argc != 6)
+  if(!(argc == 7 || argc == 9))
   {
-    std::cerr << "Expected 4 arguments, but I got " << argc-1 << ".\n"
+    std::cerr << "Expected 6 or 8 arguments, but I got " << argc-1 << ".\n"
               << "USAGE: ExtractCrossSection <unfolding iterations> <data.root> <mc.root> <stop at eff. corr.> <varName> \n";
     return 1;
   }
@@ -164,6 +194,14 @@ int main(const int argc, const char** argv)
 
   bool stopAtEffCorr = (bool)atoi(argv[4]);
   std::string varName = std::string(argv[5]);
+  int tgtZ = atoi(argv[6]);
+
+  TFile* fluxFile = nullptr;
+  std::string fluxVarName = "";
+  if (argc == 9){
+    fluxFile = TFile::Open(argv[7],"READ");
+    fluxVarName =std::string(argv[8]);
+  }
 
   std::vector<std::string> crossSectionPrefixes;
   for(auto key: *dataFile->GetListOfKeys())
@@ -249,7 +287,8 @@ int main(const int argc, const char** argv)
       unfolded->Clone()->Write("efficiencyCorrected");
 
       if (!stopAtEffCorr){
-	auto flux = util::GetIngredient<PlotUtils::MnvH1D>(*mcFile, "reweightedflux_integrated", prefix);
+	auto flux = (argc==9) ? util::GetIngredient<PlotUtils::MnvH1D>(*fluxFile,"reweightedflux_integrated",fluxVarName) : util::GetIngredient<PlotUtils::MnvH1D>(*mcFile, "reweightedflux_integrated", prefix);
+	/*
 	const auto fiducialFound = std::find_if(mcFile->GetListOfKeys()->begin(), mcFile->GetListOfKeys()->end(),
 						[&prefix](const auto key)
 						{
@@ -260,14 +299,24 @@ int main(const int argc, const char** argv)
 	if(fiducialFound == mcFile->GetListOfKeys()->end()) throw std::runtime_error("Failed to find a number of nucleons that matches prefix " + prefix);
 
 	auto nNucleons = util::GetIngredient<TParameter<double>>(*mcFile, (*fiducialFound)->GetName()); //Dan: Use the same truth fiducial volume for all extractions.  The acceptance correction corrects data back to this fiducial even if the reco fiducial cut is different.
-	auto crossSection = normalize(unfolded, flux, nNucleons->GetVal(), dataPOT);
+	double nNuke = nNucleons->GetVal();
+	*/
+	double nNuke=1.0;
+	if (tgtZ != -1){
+	  nNuke = GetTotalScatteringCenters(tgtZ,true);
+	}
+	else{
+	  nNuke = GetTotalScatteringCenters(99,true);
+	}
+
+	auto crossSection = normalize(unfolded, flux, nNuke, dataPOT);
 	Plot(*crossSection, "crossSection", prefix);
 	crossSection->Clone()->Write("crossSection");
       
 	//Write a "simulated cross section" to compare to the data I just extracted.
 	//If this analysis passed its closure test, this should be the same cross section as
 	//what GENIEXSecExtract would produce.
-	normalize(simEventRate, flux, nNucleons->GetVal(), mcPOT);
+	normalize(simEventRate, flux, nNuke, mcPOT);
       
 	Plot(*simEventRate, "simulatedCrossSection", prefix);
 	simEventRate->Write("simulatedCrossSection");
