@@ -151,7 +151,13 @@ int main(int argc, char* argv[]) {
   while ( key = (TKey*)next() ){
     TString className = (TString)key->GetClassName();
     TString nameObj = (TString)key->GetName();
-    if (!className.Contains("MnvH") || nameObj.Contains("MYBins")) continue;
+    if (!(className.Contains("MnvH") || className == "TParameter<double>") || nameObj.Contains("MYBins")) continue;
+    else if (className == "TParameter<double>"){
+      TParameter<double>* tPar = (TParameter<double>*)(inFile->Get(nameObj))->Clone(nameObj);
+      outFile->cd();
+      tPar->Write();
+      delete tPar;
+    }
     else if (className.Contains("MnvH2")){
       MnvH2D* h2D = (MnvH2D*)(inFile->Get(nameObj))->Clone(nameObj);
       outFile->cd();
@@ -184,10 +190,12 @@ int main(int argc, char* argv[]) {
   }
 
   outFile->cd();
+  /*
   cout << "Getting POT" << endl;
   TParameter<double>* POT = (TParameter<double>*)(inFile->Get("POTUsed"))->Clone("POTUSED");
   cout << "Writing POT" << endl;
   POT->Write();
+  */
 
   cout << "Closing outFile" << endl;
   outFile->Close();
