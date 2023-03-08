@@ -33,6 +33,10 @@ class Variable2D: public PlotUtils::Variable2DBase<CVUniverse>
     {
     }
 
+    int FindBin(double valX, double valY){
+      return dummyHist->FindBin(valX, valY);
+    }
+
     //TODO: It's really silly to have to make 2 sets of error bands just because they point to different trees.
     //      I'd rather the physics of the error bands remain the same and just change which tree they point to.
     void InitializeMCHists(std::map<std::string, std::vector<CVUniverse*>>& mc_error_bands,
@@ -111,6 +115,8 @@ class Variable2D: public PlotUtils::Variable2DBase<CVUniverse>
       efficiencyDenominator = new Hist(("TwoD_" + GetName() + "_efficiency_denominator").c_str(), ("TwoD_" + GetName()).c_str(), GetBinVecX(), GetBinVecY(), truth_error_bands);
       selectedSignalReco = new Hist(("TwoD_" + GetName() + "_selected_signal_reco").c_str(),  ("TwoD_"+GetName()).c_str(), GetBinVecX(), GetBinVecY(), mc_error_bands);
       selectedMCReco = new Hist(("TwoD_" + GetName() + "_selected_mc_reco").c_str(),  ("TwoD_"+GetName()).c_str(), GetBinVecX(), GetBinVecY(), mc_error_bands);
+      migration = new Hist(("TwoD_" + GetName() + "_migration").c_str(),  ("TwoD_"+GetName()).c_str(), (GetNBinsX()+2)*(GetNBinsY()+2), 0, (GetNBinsX()+2)*(GetNBinsY()+2), (GetNBinsX()+2)*(GetNBinsY()+2), 0, (GetNBinsX()+2)*(GetNBinsY()+2), mc_error_bands);
+      dummyHist = new MnvH2D(("TwoD_" + GetName() + "_dummy").c_str(), ("TwoD_"+GetName()).c_str(), GetBinVecX().size() - 1, GetBinVecX().data(), GetBinVecY().size() - 1, GetBinVecY().data());
     }
 
     //Histograms to be filled
@@ -127,7 +133,9 @@ class Variable2D: public PlotUtils::Variable2DBase<CVUniverse>
     Hist* efficiencyDenominator;
     Hist* selectedSignalReco; //Effectively "true background subtracted" distribution for warping studies.                                                                                                         
                               //Also useful for a bakground breakdown plot that you'd use to start background subtraction studies.                                                                                 
-    Hist* selectedMCReco; //Treat the MC CV just like data for the closure test                                           
+    Hist* selectedMCReco; //Treat the MC CV just like data for the closure test                                             
+    Hist* migration; //Treat the MC CV just like data for the closure test                                          
+    MnvH2D* dummyHist;
 
     void InitializeDATAHists(std::vector<CVUniverse*>& data_error_bands)
     {
@@ -240,6 +248,13 @@ class Variable2D: public PlotUtils::Variable2DBase<CVUniverse>
 	  selectedMCReco->hist->SetDirectory(dir);
 	  selectedMCReco->hist->SetName(("TwoD_"+GetName() + "_data").c_str()); //Make this histogram look just like the data for closure tests
 	}
+
+      if(migration)
+	{
+	  migration->hist->SetDirectory(dir);
+	  //migration->hist->Write();
+	}
+
     }
 
     //Only call this manually if you Draw(), Add(), or Divide() plots in this
@@ -261,6 +276,7 @@ class Variable2D: public PlotUtils::Variable2DBase<CVUniverse>
       if(efficiencyDenominator) efficiencyDenominator->SyncCVHistos();
       if(selectedSignalReco) selectedSignalReco->SyncCVHistos();
       if(selectedMCReco) selectedMCReco->SyncCVHistos();
+      if(migration) migration->SyncCVHistos();
     }
 
     void SetDirectoryName(std::string name){fDirName = name;}
