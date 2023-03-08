@@ -18,7 +18,7 @@
 
 typedef std::map<std::string, std::vector<CVUniverse*>> UniverseMap;
 
-UniverseMap GetStandardSystematics(PlotUtils::ChainWrapper* chain, bool doMona = true)
+UniverseMap GetStandardSystematics(PlotUtils::ChainWrapper* chain, std::string response_name_tag = "", bool doMona = true)
 {
   // return map
   UniverseMap error_bands;
@@ -93,7 +93,8 @@ UniverseMap GetStandardSystematics(PlotUtils::ChainWrapper* chain, bool doMona =
 
   // Hadron inelastics cross sections
   //TODO: There's some special recoil function I need to write for the response systematics to work correctly
-  UniverseMap bands_response = PlotUtils::GetResponseSystematicsMap<CVUniverse>(chain);
+  UniverseMap bands_response = PlotUtils::GetResponseSystematicsMap<CVUniverse>(chain, response_name_tag);
+  //UniverseMap bands_response = PlotUtils::GetResponseSystematicsMap<CVUniverse>(chain);
   error_bands.insert(bands_response.begin(), bands_response.end());
 
   return error_bands;

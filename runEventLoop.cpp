@@ -368,7 +368,7 @@ void LoopAndFillEventSelection(
 	    if (tgtType == 200 || tgtType == 300){ //Separating out the plastic backgrounds
 	      bkgd_ID = intType;
 	    }
-	    else if (util::CorrectTargetMaterial(tgtCode,tgtZ) || tgtCode == -1) bkgd_ID = util::GetBackgroundID(*universe);
+	    else if (util::CorrectTargetMaterial(tgtCode,trueTgtCode) || tgtCode == -1) bkgd_ID = util::GetBackgroundID(*universe);
 	    if (bkgd_ID == 44) intType = bkgd_ID;
 	  }
 	  else bkgd_ID = util::GetBackgroundID(*universe);
@@ -826,14 +826,14 @@ int main(const int argc, const char** argv)
   std::cout << nameExt << std::endl;
 
   std::map< std::string, std::vector<CVUniverse*> > error_bands;
-  if(doSystematics) error_bands = GetStandardSystematics(options.m_mc);
+  if(doSystematics) error_bands = GetStandardSystematics(options.m_mc,"dispr_id_and_blobbed_energy_wNuclTargs");
   else{
     std::map<std::string, std::vector<CVUniverse*> > band_flux = PlotUtils::GetFluxSystematicsMap<CVUniverse>(options.m_mc, CVUniverse::GetNFluxUniverses());
     error_bands.insert(band_flux.begin(), band_flux.end()); //Necessary to get flux integral later...
   }
   error_bands["cv"] = {new CVUniverse(options.m_mc)};
   std::map< std::string, std::vector<CVUniverse*> > truth_bands;
-  if(doSystematics) truth_bands = GetStandardSystematics(options.m_truth);
+  if(doSystematics) truth_bands = GetStandardSystematics(options.m_truth,"dispr_id_and_blobbed_energy_wNuclTargs");
   truth_bands["cv"] = {new CVUniverse(options.m_truth)};
 
   double radianCorr = TMath::Pi()/180.;
@@ -1074,19 +1074,20 @@ int main(const int argc, const char** argv)
     PlotUtils::TargetUtils targetInfo;
     assert(error_bands["cv"].size() == 1 && "List of error bands must contain a universe named \"cv\" for the flux integral.");
 
-    //Removed for antineutrino and targets since these functions don't cover those cases as written yet.
+    //Removed for antineutrino and targets since these functions don't cover those cases as written yet. This came from a misunderstanding and it was the muon correlations that weren't covered yet for antineutrino. The case for the targets I need to investigate more.
 
-    /*
     for(const auto& var: vars)
-    {
-      //Flux integral only if systematics are being done (temporary solution)
-      util::GetFluxIntegral(*error_bands["cv"].front(), var->efficiencyNumerator->hist)->Write((var->GetName() + "_reweightedflux_integrated").c_str());
-      //Always use MC number of nucleons for cross section
-      auto nNucleons = new TParameter<double>((var->GetName() + "_fiducial_nucleons").c_str(), targetInfo.GetTrackerNNucleons(minZ, maxZ, true, apothem));
-      nNucleons->Write();
-    }
-    */
-
+      {
+	if (!var->IsAnaVar() || !var->IsFill()) continue;
+	std::cout << "Flux Integral" << std::endl;
+	//Flux integral only if systematics are being done (temporary solution)
+	util::GetFluxIntegral(*error_bands["cv"].front(), var->efficiencyNumerator->hist)->Write((var->GetName() + "_reweightedflux_integrated").c_str());
+	//Always use MC number of nucleons for cross section
+	std::cout << "nNucleons" << std::endl;
+	auto nNucleons = new TParameter<double>((var->GetName() + "_fiducial_nucleons").c_str(), targetInfo.GetTrackerNNucleons(minZ, maxZ, true, apothem));
+	nNucleons->Write();
+      }
+    
     std::cout << "Writing Data Output File" << std::endl;
 
     //Write data results

@@ -173,7 +173,9 @@ void DrawFromMnvH1Ds(MnvH1D* h_data, map<TString, MnvH1D*> hFit, map<TString, Mn
   c1->Update();
 
   //cout << "Legend time." << endl;
-  TLegend* leg = new TLegend(0.7,0.7,0.9,0.9);
+  TLegend* leg;
+  if (whichPlastic == "DSPlastic") leg = new TLegend(0.7,0.7,0.9,0.9);
+  else if (whichPlastic == "USPlastic") leg = new TLegend(0.1,0.7,0.3,0.9);
  
   leg->AddEntry(dataHist,"DATA");
   leg->AddEntry(h_sig,whichPlastic);

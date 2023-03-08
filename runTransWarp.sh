@@ -1,8 +1,8 @@
 #!/bin/bash
 
-#Usage: runTransWarp.sh runEventLoopMC.root warped.root
+#Usage: runTransWarp.sh runEventLoopMC.root warped.root varName
 
-VARIABLE=pTmu
+VARIABLE=$3 #pTmu
 MIGRATION_FILE=$1
 TRUE_HIST=${VARIABLE}_efficiency_numerator
 WARPED_FILE=$2

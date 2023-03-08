@@ -138,9 +138,9 @@ void DrawBKGCateg(string name, TFile* mcFile, TFile* dataFile, TString sample, d
   h_data->AddMissingErrorBandsAndFillWithCV(*h_Sig);
 
   THStack* h = new THStack();
-  h->Add((TH1D*)h_Wrong_Nucleus_Bkg->GetCVHistoWithError().Clone());
   h->Add((TH1D*)h_USPlastic_Bkg->GetCVHistoWithError().Clone());
   h->Add((TH1D*)h_DSPlastic_Bkg->GetCVHistoWithError().Clone());
+  h->Add((TH1D*)h_Wrong_Nucleus_Bkg->GetCVHistoWithError().Clone());
   h->Add((TH1D*)h_Other_Bkg->GetCVHistoWithError().Clone());
   h->Add((TH1D*)h_NPi_Bkg->GetCVHistoWithError().Clone());
   h->Add((TH1D*)h_1Pi0_Bkg->GetCVHistoWithError().Clone());
@@ -239,7 +239,8 @@ void DrawBKGCateg(string name, TFile* mcFile, TFile* dataFile, TString sample, d
   c1->Update();
 
   //TLegend* leg = new TLegend(1.0-0.6,1.0-0.5,1.0-0.9,1.0-0.9);
-  TLegend* leg = new TLegend(0.1,0.5,0.4,0.9);
+  //TLegend* leg = new TLegend(0.1,0.5,0.4,0.9);
+  TLegend* leg = new TLegend(0.6,0.5,0.9,0.9);
 
   leg->AddEntry(dataHist,"DATA");
   leg->AddEntry(h_Sig,"Signal");
@@ -247,9 +248,9 @@ void DrawBKGCateg(string name, TFile* mcFile, TFile* dataFile, TString sample, d
   leg->AddEntry(h_1Pi0_Bkg,"single #pi^{0}");
   leg->AddEntry(h_NPi_Bkg,"N#pi");
   leg->AddEntry(h_Other_Bkg,"Other");
+  if (!isTracker) leg->AddEntry(h_Wrong_Nucleus_Bkg,"BKG");
   if (!isTracker) leg->AddEntry(h_DSPlastic_Bkg,"DS Plastic");
   if (!isTracker) leg->AddEntry(h_USPlastic_Bkg,"US Plastic");
-  if (!isTracker) leg->AddEntry(h_Wrong_Nucleus_Bkg,"Wrong Nucleus");
 
   leg->Draw();
   c1->Update();
@@ -570,37 +571,39 @@ void DrawIntType(string name_QE, TFile* mcFile, TFile* dataFile, TString sample,
   hTmp->SetLineColor(kWhite);
 
   //egend* leg = new TLegend(0.6,0.5,0.9,0.9);
-  TLegend* leg = new TLegend(0.1,0.5,0.4,0.9);
+  TLegend* leg = new TLegend(0.6,0.5,0.9,0.9);
 
-  leg->SetNColumns(2);
+  if (isTracker){
+    leg->SetNColumns(2);
 
-  leg->AddEntry(dataHist,"DATA");
-  leg->AddEntry((TObject*)0,"","");
+    leg->AddEntry(dataHist,"DATA");
+    leg->AddEntry((TObject*)0,"","");
+    
+    leg->AddEntry(h_QE_Sig,"Sig. + QE");
+    leg->AddEntry(h_QE_Bkg,"Bkg. + QE");
 
-  leg->AddEntry(h_QE_Sig,"Sig. + QE");
-  leg->AddEntry(h_QE_Bkg,"Bkg. + QE");
+    leg->AddEntry(h_RES_Sig,"Sig. + RES");
+    leg->AddEntry(h_RES_Bkg,"Bkg. + RES");
 
-  leg->AddEntry(h_RES_Sig,"Sig. + RES");
-  leg->AddEntry(h_RES_Bkg,"Bkg. + RES");
+    leg->AddEntry(h_DIS_Sig,"Sig. + DIS");
+    leg->AddEntry(h_DIS_Bkg,"Bkg. + DIS");
+  
+    leg->AddEntry(h_2p2h_Sig,"Sig. + 2p2h");
+    leg->AddEntry(h_2p2h_Bkg,"Bkg. + 2p2h");
 
-  leg->AddEntry(h_DIS_Sig,"Sig. + DIS");
-  leg->AddEntry(h_DIS_Bkg,"Bkg. + DIS");
-
-  leg->AddEntry(h_2p2h_Sig,"Sig. + 2p2h");
-  leg->AddEntry(h_2p2h_Bkg,"Bkg. + 2p2h");
-
-  leg->AddEntry(h_Other_Sig,"Sig. + Other");
-  leg->AddEntry(h_Other_Bkg,"Bkg. + Other");
-
-  if (!isTracker){
-    leg->AddEntry(hTmp,"","f");
-    leg->AddEntry(h_DSPlastic_Bkg,"DS Plastic");
-
-    leg->AddEntry(hTmp,"","f");
-    leg->AddEntry(h_USPlastic_Bkg,"US Plastic");
-
-    leg->AddEntry(hTmp,"","f");
+    leg->AddEntry(h_Other_Sig,"Sig. + Other");
+    leg->AddEntry(h_Other_Bkg,"Bkg. + Other");
+  }
+  else{
+    leg->AddEntry(dataHist,"DATA");
+    leg->AddEntry(h_QE_Sig,"Sig. + QE");
+    leg->AddEntry(h_RES_Sig,"Sig. + RES");
+    leg->AddEntry(h_DIS_Sig,"Sig. + DIS");
+    leg->AddEntry(h_2p2h_Sig,"Sig. + 2p2h");
+    leg->AddEntry(h_Other_Sig,"Sig. + Other");
     leg->AddEntry(h_Wrong_Nucleus_Bkg,"Wrong Nucleus");
+    leg->AddEntry(h_DSPlastic_Bkg,"DS Plastic");
+    leg->AddEntry(h_USPlastic_Bkg,"US Plastic");
   }
 
   leg->Draw();
