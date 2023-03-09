@@ -28,4 +28,13 @@ namespace util
     auto& frw = PlotUtils::flux_reweighter(univ.GetPlaylist(), univ.GetAnalysisNuPDG(), univ.UseNuEConstraint(), univ.GetNFluxUniverses());
     return frw.GetIntegratedFluxReweighted(univ.GetAnalysisNuPDG(), templateHist, Emin, Emax, useMuonCorrelations);
   }
+
+  PlotUtils::MnvH2D* GetFluxIntegral2D(const CVUniverse& univ, PlotUtils::MnvH2D* templateHist, const double Emin /*GeV*/, const double Emax /*GeV*/)
+  {
+    const bool useMuonCorrelations = true;
+    //assert(!(useMuonCorrelations && (univ.GetAnalysisNuPDG() < 0)) && "Muon momentum correlations are not yet ready for ME antineutrino analyses!");
+
+    auto& frw = PlotUtils::flux_reweighter(univ.GetPlaylist(), univ.GetAnalysisNuPDG(), univ.UseNuEConstraint(), univ.GetNFluxUniverses());
+    return frw.GetIntegratedFluxReweighted(univ.GetAnalysisNuPDG(), templateHist, Emin, Emax, useMuonCorrelations);
+  }
 }
