@@ -14,13 +14,34 @@ class LeadNeutStudy: public Study
 {
   private:
     Variable* fMatchesLead;
+    std::vector<util::Categorized<Variable, int>*> fVars_byLeadNeut;
 
   public:
-    LeadNeutStudy(std::map<std::string, std::vector<CVUniverse*>>& mc_error_bands,
+    LeadNeutStudy(std::vector<Variable*> vars, std::map<std::string, std::vector<CVUniverse*>>& mc_error_bands,
 		  std::map<std::string, std::vector<CVUniverse*>>& truth_error_bands,
 		  std::vector<CVUniverse*>& data_error_bands): Study()
     {
       std::vector<double> myBins = {-1.5,-0.5,0.5,1.5};
+      std::map<int, std::string> LeadNeutLabels = {{-1, "NotNeut"},
+						   {0, "NotLead"},
+						   {1, "Lead"}};
+
+      for (auto& var: vars){
+	fVars_byLeadNeut.push_back(new util::Categorized<Variable, int>(var->GetDirectoryName(),"",var->IsAnaVar(), var->GetName().c_str(),var->GetAxisLabel().c_str(), LeadNeutLabels, var->GetBinVec(), var->GetRecoFunc(), var->GetTrueFunc()));
+      }
+
+      for(auto& cat: fVars_byLeadNeut){ 
+	cat->visit([&mc_error_bands, &truth_error_bands](Variable& var)
+		   {
+		     var.InitializeMCHists(mc_error_bands, truth_error_bands);
+		   });
+      }
+      for(auto& cat: fVars_byLeadNeut){ 
+	cat->visit([&data_error_bands](Variable& var)
+		   {
+		     var.InitializeDATAHists(data_error_bands);
+		   });
+      }
 
       fMatchesLead = new Variable(false,"LeadCandMatches","",myBins);
 
@@ -35,11 +56,23 @@ class LeadNeutStudy: public Study
     void SaveOrDrawMC(TFile& outFile)
     {
       fMatchesLead->WriteMC(outFile);
+      for (auto& cat: fVars_byLeadNeut){
+	cat->visit([&outFile](Variable& var)
+		   {
+		     var.WriteMC(outFile);
+		   });
+      }
     }
 
     void SaveOrDrawData(TFile& outFile)
     {
       fMatchesLead->WriteData(outFile);
+      for (auto& cat: fVars_byLeadNeut){
+	cat->visit([&outFile](Variable& var)
+		   {
+		     var.WriteData(outFile);
+		   });
+      }
     }
 
   private:
@@ -73,6 +106,15 @@ class LeadNeutStudy: public Study
 	  (*fMatchesLead->m_SigIntTypeHists)[intType].FillUniverse(&univ, matchValue, weight);
 	  (*fMatchesLead->m_SigTargetTypeHists)[tgtType].FillUniverse(&univ, matchValue, weight);
 	  //(*fMatchesLead->m_SigLeadBlobTypeHists)[leadBlobType].FillUniverse(&univ, matchValue, weight);
+
+	  for (auto& var: fVars_byLeadNeut){
+	    (*var)[matchValue].selectedMCReco->FillUniverse(&univ, (*var)[matchValue].GetRecoValue(univ), weight);
+	    (*var)[matchValue].selectedSignalReco->FillUniverse(&univ, (*var)[matchValue].GetRecoValue(univ), weight);
+	    (*var)[matchValue].migration->FillUniverse(&univ, (*var)[matchValue].GetRecoValue(univ), (*var)[matchValue].GetTrueValue(univ), weight);
+
+	    (*(*var)[matchValue].m_SigIntTypeHists)[intType].FillUniverse(&univ, (*var)[matchValue].GetRecoValue(univ), weight);
+	    (*(*var)[matchValue].m_SigTargetTypeHists)[tgtType].FillUniverse(&univ, (*var)[matchValue].GetRecoValue(univ), weight);
+	  }
 	}
 	
 	else {
@@ -85,6 +127,14 @@ class LeadNeutStudy: public Study
 	  (*fMatchesLead->m_BkgIntTypeHists)[intType].FillUniverse(&univ, matchValue, weight);
 	  (*fMatchesLead->m_BkgTargetTypeHists)[tgtType].FillUniverse(&univ, matchValue, weight);
 	  //(*fMatchesLead->m_BkgLeadBlobTypeHists)[leadBlobType].FillUniverse(&univ, matchValue, weight);
+
+	  for (auto& var: fVars_byLeadNeut){
+	    (*var)[matchValue].selectedMCReco->FillUniverse(&univ, (*var)[matchValue].GetRecoValue(univ), weight);
+
+	    (*(*var)[matchValue].m_backgroundHists)[bkgd_ID].FillUniverse(&univ, (*var)[matchValue].GetRecoValue(univ), weight);
+	    (*(*var)[matchValue].m_BkgIntTypeHists)[intType].FillUniverse(&univ, (*var)[matchValue].GetRecoValue(univ), weight);
+	    (*(*var)[matchValue].m_BkgTargetTypeHists)[tgtType].FillUniverse(&univ, (*var)[matchValue].GetRecoValue(univ), weight);
+	  }
 	}
       }
       
