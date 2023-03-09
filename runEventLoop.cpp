@@ -314,6 +314,7 @@ void LoopAndFillEventSelection(
 	    if (var->IsFill()){
 	      //Cross section components
 	      var->efficiencyNumerator->FillUniverse(universe, var->GetTrueValueX(*universe), var->GetTrueValueY(*universe), weight);
+	      var->migration->FillUniverse(universe, var->FindBin(var->GetRecoValueX(*universe), var->GetRecoValueY(*universe)), var->FindBin(var->GetTrueValueX(*universe), var->GetTrueValueY(*universe)), weight);//Hacky 2D migration matrix that may not work right...
 	      var->selectedSignalReco->FillUniverse(universe, var->GetRecoValueX(*universe), var->GetRecoValueY(*universe), weight);; //Efficiency numerator in reco variables.  Useful for warping studies.
 
 	      //Various breakdowns of selected signal reco
@@ -347,6 +348,7 @@ void LoopAndFillEventSelection(
 	      if ((*var)[tgtCode].IsFill()){
 		//Cross section components
 		(*var)[tgtCode].efficiencyNumerator->FillUniverse(universe, (*var)[tgtCode].GetTrueValueX(*universe), (*var)[tgtCode].GetTrueValueY(*universe), weight);
+		(*var)[tgtCode].migration->FillUniverse(universe, (*var)[tgtCode].FindBin((*var)[tgtCode].GetRecoValueX(*universe), (*var)[tgtCode].GetRecoValueY(*universe)), (*var)[tgtCode].FindBin((*var)[tgtCode].GetTrueValueX(*universe), (*var)[tgtCode].GetTrueValueY(*universe)), weight);
 		(*var)[tgtCode].selectedSignalReco->FillUniverse(universe, (*var)[tgtCode].GetRecoValueX(*universe), (*var)[tgtCode].GetRecoValueY(*universe), weight);; //Efficiency numerator in reco variables.  Useful for warping studies.
 		//Various breakdowns of selected signal reco
 		(*(*var)[tgtCode].m_SigIntTypeHists)[intType].FillUniverse(universe, (*var)[tgtCode].GetRecoValueX(*universe), (*var)[tgtCode].GetRecoValueY(*universe), weight);;
@@ -1087,6 +1089,21 @@ int main(const int argc, const char** argv)
 	auto nNucleons = new TParameter<double>((var->GetName() + "_fiducial_nucleons").c_str(), targetInfo.GetTrackerNNucleons(minZ, maxZ, true, apothem));
 	nNucleons->Write();
       }
+
+    for(const auto& var: vars2D)
+      {
+	if (!var->IsAnaVar() || !var->IsFill()) continue;
+	std::cout << "Flux Integral 2D" << std::endl;
+	//Flux integral only if systematics are being done (temporary solution)
+	mcOutDir->cd(var->GetDirectoryName());
+	util::GetFluxIntegral2D(*error_bands["cv"].front(), var->efficiencyNumerator->hist)->Write(("TwoD_"+var->GetName() + "_reweightedflux_integrated").c_str());
+	//Always use MC number of nucleons for cross section
+	std::cout << "nNucleons" << std::endl;
+	auto nNucleons = new TParameter<double>(("TwoD_"+var->GetName() + "_fiducial_nucleons").c_str(), targetInfo.GetTrackerNNucleons(minZ, maxZ, true, apothem));
+	nNucleons->Write();
+      }
+
+    mcOutDir->cd();
     
     std::cout << "Writing Data Output File" << std::endl;
 
