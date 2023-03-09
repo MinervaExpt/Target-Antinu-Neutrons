@@ -128,7 +128,7 @@ void LoopAndFillEventSelection(
 
   std::cout << "Starting MC reco loop...\n";
   const int nEntries = chain->GetEntries();
-  for (int i=0; i</*nEntries*/10000; ++i)
+  for (int i=0; i<nEntries; ++i)
   {
     if(i%1000==0) std::cout << i << " / " << nEntries << "\r" << std::endl;
 
@@ -442,7 +442,7 @@ void LoopAndFillData( PlotUtils::ChainWrapper* data,
 {
   std::cout << "Starting data loop...\n";
   const int nEntries = data->GetEntries();
-  for (int i=0; i</*data->GetEntries()*/10000; ++i) {
+  for (int i=0; i<data->GetEntries(); ++i) {
     for (auto universe : data_band) {
       universe->SetEntry(i);
       if(i%1000==0) std::cout << i << " / " << nEntries << "\r" << std::endl;
@@ -524,7 +524,7 @@ void LoopAndFillEffDenom( PlotUtils::ChainWrapper* truth,
 
   std::cout << "Starting efficiency denominator loop...\n";
   const int nEntries = truth->GetEntries();
-  for (int i=0; i</*nEntries*/10000; ++i)
+  for (int i=0; i<nEntries; ++i)
   {
     if(i%1000==0) std::cout << i << " / " << nEntries << "\r" << std::endl;
 
