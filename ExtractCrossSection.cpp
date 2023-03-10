@@ -3,7 +3,7 @@
 //       Subtracts backgrounds, performs unfolding, applies efficiency x acceptance correction, and 
 //       divides by flux and number of nucleons.  Writes a .root file with the cross section histogram.
 //
-//Usage: ExtractCrossSection <unfolding iterations> <data.root> <mc.root> <stop at efficiency correction> <varName> <tgtZ> : optional <flux_file> <fluxVarName>
+//Usage: ExtractCrossSection <unfolding iterations> <data.root> <mc.root> <stop at efficiency correction> <varName> <tgtZ> <multiply by data POT> : optional <flux_file> <fluxVarName>
 //
 //Author: Andrew Olivier aolivier@ur.rochester.edu
 
@@ -170,10 +170,10 @@ int main(const int argc, const char** argv)
 
   TH1::AddDirectory(kFALSE); //Needed so that MnvH1D gets to clean up its own MnvLatErrorBands (which are TH1Ds).
 
-  if(!(argc == 7 || argc == 9))
+  if(!(argc == 8 || argc == 10))
   {
-    std::cerr << "Expected 6 or 8 arguments, but I got " << argc-1 << ".\n"
-              << "USAGE: ExtractCrossSection <unfolding iterations> <data.root> <mc.root> <stop at eff. corr.> <varName> \n";
+    std::cerr << "Expected 7 or 9 arguments, but I got " << argc-1 << ".\n"
+              << "USAGE: ExtractCrossSection <unfolding iterations> <data.root> <mc.root> <stop at eff. corr.> <varName> ...\n";
     return 1;
   }
 
@@ -195,12 +195,13 @@ int main(const int argc, const char** argv)
   bool stopAtEffCorr = (bool)atoi(argv[4]);
   std::string varName = std::string(argv[5]);
   int tgtZ = atoi(argv[6]);
+  bool multPOT = (bool)atoi(argv[7]);
 
   TFile* fluxFile = nullptr;
   std::string fluxVarName = "";
-  if (argc == 9){
-    fluxFile = TFile::Open(argv[7],"READ");
-    fluxVarName =std::string(argv[8]);
+  if (argc == 10){
+    fluxFile = TFile::Open(argv[8],"READ");
+    fluxVarName =std::string(argv[9]);
   }
 
   std::vector<std::string> crossSectionPrefixes;
@@ -310,6 +311,7 @@ int main(const int argc, const char** argv)
 	}
 
 	auto crossSection = normalize(unfolded, flux, nNuke, dataPOT);
+	if (multPOT) crossSection->Scale(dataPOT);
 	Plot(*crossSection, "crossSection", prefix);
 	crossSection->Clone()->Write("crossSection");
       
@@ -317,7 +319,8 @@ int main(const int argc, const char** argv)
 	//If this analysis passed its closure test, this should be the same cross section as
 	//what GENIEXSecExtract would produce.
 	normalize(simEventRate, flux, nNuke, mcPOT);
-      
+	if (multPOT) simEventRate->Scale(dataPOT);      
+
 	Plot(*simEventRate, "simulatedCrossSection", prefix);
 	simEventRate->Write("simulatedCrossSection");
       }
