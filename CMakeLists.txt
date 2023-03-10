@@ -107,6 +107,10 @@ add_executable(ScaleMCToData ScaleMCToData.cxx)
 target_link_libraries(ScaleMCToData ${ROOT_LIBRARIES} MAT MAT-MINERvA)
 install(TARGETS ScaleMCToData DESTINATION bin)
 
+add_executable(AddUpPOT AddUpPOT.cxx)
+target_link_libraries(AddUpPOT ${ROOT_LIBRARIES} MAT MAT-MINERvA)
+install(TARGETS AddUpPOT DESTINATION bin)
+
 add_executable(CombineFits2D CombineFits2D.cxx)
 target_link_libraries(CombineFits2D ${ROOT_LIBRARIES} MAT MAT-MINERvA)
 install(TARGETS CombineFits2D DESTINATION bin)
