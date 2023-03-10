@@ -116,7 +116,52 @@ int main(int argc, char* argv[]) {
   while ( key = (TKey*)next() ){
     TString className = (TString)key->GetClassName();
     TString nameObj = (TString)key->GetName();
-    if (!(className.Contains("MnvH") || className == "TParameter<double>") || nameObj.Contains("MYBins")) continue;
+
+    if (className == "TDirectoryFile"){
+      TDirectory* newOutDir = outFile->mkdir(nameObj);
+      TDirectoryFile* dirInt = (TDirectoryFile*)mcFile->Get(nameObj);
+      TList*  keyIntList = dirInt->GetListOfKeys();
+      if(!keyIntList){
+        cout << "List of keys failed to get inside second directory" << endl;
+        return 20;
+      }
+      TIter nextKeyInt(keyIntList);
+      TKey* keyInt;
+      while ( keyInt = (TKey*)nextKeyInt() ){
+        TString classNameInt = (TString)keyInt->GetClassName();
+        TString nameObjInt = (TString)keyInt->GetName();
+	if (!(classNameInt.Contains("MnvH"))) continue;
+	else if (classNameInt.Contains("MnvH2")){
+	  MnvH2D* h2D = (MnvH2D*)(mcFile->Get(nameObj+"/"+nameObjInt))->Clone(nameObjInt);
+	  if(nameObjInt.Contains("reweightedflux")){
+	    h2D->Scale(dataPOT);
+	  }
+	  else{
+	    h2D->Scale(scale);
+	  }
+	  newOutDir->cd();
+	  h2D->Write();
+	  delete h2D;
+	}
+	else if (classNameInt.Contains("MnvH1")){
+	  MnvH1D* h1D = (MnvH1D*)(mcFile->Get(nameObj+"/"+nameObjInt))->Clone(nameObjInt);
+	  if(nameObjInt.Contains("reweightedflux")){
+	    h1D->Scale(dataPOT);
+	  }
+	  else{
+	    h1D->Scale(scale);
+	  }
+	  newOutDir->cd();
+	  h1D->Write();
+	  delete h1D;
+	}
+	else {
+	  cout << "HUH Inside?" << endl;
+	}
+      }
+    }
+
+    else if (!(className.Contains("MnvH") || className == "TParameter<double>") || nameObj.Contains("MYBins")) continue;
     else if (className == "TParameter<double>"){
       if (!nameObj.Contains("POT")){
 	TParameter<double>* tPar = (TParameter<double>*)(mcFile->Get(nameObj))->Clone(nameObj);
