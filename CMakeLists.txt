@@ -103,6 +103,10 @@ add_executable(ScaleHistos ScaleHistos.cxx)
 target_link_libraries(ScaleHistos ${ROOT_LIBRARIES} MAT MAT-MINERvA)
 install(TARGETS ScaleHistos DESTINATION bin)
 
+add_executable(ScaleMCToData ScaleMCToData.cxx)
+target_link_libraries(ScaleMCToData ${ROOT_LIBRARIES} MAT MAT-MINERvA)
+install(TARGETS ScaleMCToData DESTINATION bin)
+
 add_executable(CombineFits2D CombineFits2D.cxx)
 target_link_libraries(CombineFits2D ${ROOT_LIBRARIES} MAT MAT-MINERvA)
 install(TARGETS CombineFits2D DESTINATION bin)
