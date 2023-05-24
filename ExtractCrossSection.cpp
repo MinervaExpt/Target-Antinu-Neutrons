@@ -288,7 +288,7 @@ int main(const int argc, const char** argv)
       unfolded->Clone()->Write("efficiencyCorrected");
 
       if (!stopAtEffCorr){
-	auto flux = (argc==9) ? util::GetIngredient<PlotUtils::MnvH1D>(*fluxFile,"reweightedflux_integrated",fluxVarName) : util::GetIngredient<PlotUtils::MnvH1D>(*mcFile, "reweightedflux_integrated", prefix);
+	auto flux = (argc==10) ? util::GetIngredient<PlotUtils::MnvH1D>(*fluxFile,"reweightedflux_integrated",fluxVarName) : util::GetIngredient<PlotUtils::MnvH1D>(*mcFile, "reweightedflux_integrated", prefix);
 	/*
 	const auto fiducialFound = std::find_if(mcFile->GetListOfKeys()->begin(), mcFile->GetListOfKeys()->end(),
 						[&prefix](const auto key)
