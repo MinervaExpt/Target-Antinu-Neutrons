@@ -1593,18 +1593,21 @@ int main(int argc, char* argv[]) {
       string nameToSave = name;
       nameToSave.erase(nameToSave.length()-15,nameToSave.length());
       DrawIntType(name,mcFile,dataFile,label,scale,(TString)outDir+(TString)nameToSave);
+      DrawIntTypeTEST(name,mcFile,dataFile,label,scale,(TString)outDir+(TString)nameToSave+"_TEST");
       cout << "" << endl;
     }
     else if ((pos = name.find("_sig_TargetType_Plastic")) != string::npos){
       string nameToSave = name;
       nameToSave.erase(nameToSave.length()-23,nameToSave.length());
       DrawTargetType(name,mcFile,dataFile,label,scale,(TString)outDir+(TString)nameToSave);
+      DrawTargetTypeTEST(name,mcFile,dataFile,label,scale,(TString)outDir+(TString)nameToSave+"_TEST");
       cout << "" << endl;
     }
     else if ((pos = name.find("_sig_LeadBlobType_neut")) != string::npos){
       string nameToSave = name;
       nameToSave.erase(nameToSave.length()-22,nameToSave.length());
       DrawLeadBlobType(name,mcFile,dataFile,label,scale,(TString)outDir+(TString)nameToSave);
+      DrawLeadBlobTypeTEST(name,mcFile,dataFile,label,scale,(TString)outDir+(TString)nameToSave+"_TEST");
       cout << "" << endl;
     }
     else if ((pos = name.find("_selected_signal_reco")) != string::npos){
