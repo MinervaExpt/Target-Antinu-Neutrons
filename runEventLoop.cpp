@@ -3,7 +3,7 @@
 
 #define USAGE \
 "\n*** USAGE ***\n"\
-"runEventLoop <dataPlaylist.txt> <mcPlaylist.txt> <skip_systematics> <MnvTune_v> <FV> <TgtNum> optional: <fileName_tag> <NeutKE>\n\n"\
+"runEventLoop <dataPlaylist.txt> <mcPlaylist.txt> <skip_systematics> <MnvTune_v> <FV> <TgtNum> <doVtx> <sidebandLowerOffset> optional: <fileName_tag> <NeutKE>\n\n"\
 "*** Explanation ***\n"\
 "Reduce MasterAnaDev AnaTuples to event selection histograms to extract a\n"\
 "single-differential inclusive cross section for the 2021 MINERvA 101 tutorial.\n\n"\
@@ -126,7 +126,7 @@ void LoopAndFillEventSelection(
 
   std::cout << "Starting MC reco loop...\n";
   const int nEntries = chain->GetEntries();
-  for (int i=0; i<nEntries; ++i)
+  for (int i=0; i</*nEntries*/1000; ++i)
   {
     if(i%1000==0) std::cout << i << " / " << nEntries << "\r" << std::endl;
 
@@ -442,7 +442,7 @@ void LoopAndFillData( PlotUtils::ChainWrapper* data,
 {
   std::cout << "Starting data loop...\n";
   const int nEntries = data->GetEntries();
-  for (int i=0; i<data->GetEntries(); ++i) {
+  for (int i=0; i</*data->GetEntries()*/1000; ++i) {
     for (auto universe : data_band) {
       universe->SetEntry(i);
       if(i%1000==0) std::cout << i << " / " << nEntries << "\r" << std::endl;
@@ -524,7 +524,7 @@ void LoopAndFillEffDenom( PlotUtils::ChainWrapper* truth,
 
   std::cout << "Starting efficiency denominator loop...\n";
   const int nEntries = truth->GetEntries();
-  for (int i=0; i<nEntries; ++i)
+  for (int i=0; i</*nEntries*/1000; ++i)
   {
     if(i%1000==0) std::cout << i << " / " << nEntries << "\r" << std::endl;
 
@@ -650,7 +650,7 @@ int main(const int argc, const char** argv)
   TH1::AddDirectory(false);
 
   //Validate input.
-  const int nArgsMandatory = 7;
+  const int nArgsMandatory = 8;
   const int nArgsOptional = 2;
   const int nArgsTotal = nArgsMandatory + nArgsOptional;
   if(argc < nArgsMandatory + 1 || argc > nArgsTotal + 1) //argc is the size of argv.  I check for number of arguments + 1 because
@@ -682,6 +682,8 @@ int main(const int argc, const char** argv)
   const TString FVregionName = (TString)FVregionNameTmp;
 
   const bool doVtx = (atoi(argv[7]) != 0);
+
+  const double sbOffset = atof(argv[8]);
 
   TString nameExt = ".root";
 
@@ -718,7 +720,7 @@ int main(const int argc, const char** argv)
     return badCmdLine;
   }
 
-  nameExt = "_MnvTuneV"+tuneVer+"_FVregion_"+FVregionName+nameExt;
+  nameExt = "_MnvTuneV"+tuneVer+"_FVregion_"+FVregionName+"_SidebandOffset_"+(TString)(argv[8])+nameExt;
 
   //Check that necessary TTrees exist in the first file of mc_file_list and data_file_list
   std::string reco_tree_name;
@@ -775,7 +777,8 @@ int main(const int argc, const char** argv)
   preCuts.emplace_back(new MyCCQECuts::PMuRange<CVUniverse, NeutronEvent>("1.5 <= Pmu <= 20",1.5,20.0));
   preCuts.emplace_back(new MyCCQECuts::IsAntiNu<CVUniverse, NeutronEvent>());
   preCuts.emplace_back(new MyCCQECuts::IsSingleTrack<CVUniverse, NeutronEvent>());
-  //preCuts.emplace_back(new MyCCQECuts::LooseRecoilCut<CVUniverse, NeutronEvent>());
+  preCuts.emplace_back(new MyCCQECuts::LooseRecoilCut<CVUniverse, NeutronEvent>(0.5));
+  preCuts.emplace_back(new MyCCQECuts::RemoveRecoilBand<CVUniverse, NeutronEvent>(sbOffset));
   //preCuts.emplace_back(new MyCCQECuts::RecoilCut<CVUniverse, NeutronEvent>());
   if (doNeutronCuts){
     preCuts.emplace_back(new MyNeutCuts::LeadNeutIs3D<CVUniverse, NeutronEvent>());
