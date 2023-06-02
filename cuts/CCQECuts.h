@@ -202,5 +202,29 @@ namespace MyCCQECuts{
 
   };
 
+  //Looser recoil cut useful for the definition of a recoil sideband.
+  template <class UNIVERSE, class EVENT = PlotUtils::detail::empty>
+  class RemoveRecoilBand: public PlotUtils::Cut<UNIVERSE, EVENT>
+  {
+  public:
+    // Constructor
+  RemoveRecoilBand(double offset): PlotUtils::Cut<UNIVERSE, EVENT>("Remove Band Recoil Cut"), fOffset(offset) {}
+
+  private:
+    bool checkCut(const UNIVERSE& univ, EVENT& /*evt*/) const override
+    {
+      double Q2GeV = univ.GetQ2QEPickledGeV();
+      double recoilEGeV = univ.GetDANRecoilEnergyGeV();
+      if (Q2GeV < 0.0 || recoilEGeV < 0.0) return false;
+      else if (Q2GeV < 0.175) return (recoilEGeV < 0.13 || recoilEGeV >= 0.13+fOffset);
+      //else if (Q2GeV < 0.3) return (recoilEGeV < (0.04+0.43*Q2GeV)); Tejin modification. Removed since it's hydrogen specific. Need to revisit this optimization at some point though.
+      else if (Q2GeV < 1.4) return (recoilEGeV < (0.08+0.3*Q2GeV) || recoilEGeV >= (0.08+fOffset+0.3*Q2GeV));
+      else return (recoilEGeV < 0.5 || recoilEGeV >= 0.5+fOffset);
+    }
+
+    const double fOffset;
+
+  };
+
 }
 #endif //David_CCQECuts_H
