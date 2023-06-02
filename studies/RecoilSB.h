@@ -571,7 +571,8 @@ class PreRecoil: public Study
       std::vector<double> muonMom = {univ.GetMuon4V().X(),univ.GetMuon4V().Y(),univ.GetMuon4V().Z()};
 
       //Could code this into the sideband definition, but easier to test the idea by hard-coding here.
-      bool isSideband = univ.GetDANRecoilEnergyGeV() >= 0.5 && univ.GetDANRecoilEnergyGeV() <= 1.0;
+      //bool isSideband = univ.GetDANRecoilEnergyGeV() >= 0.5 && univ.GetDANRecoilEnergyGeV() <= 1.0;
+      bool isSideband = (!SBStat.all());
 
       // At some point just put this into the event structure itself.
       std::vector<double> vtx = univ.GetVtx();
