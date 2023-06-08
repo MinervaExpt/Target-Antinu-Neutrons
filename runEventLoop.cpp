@@ -700,7 +700,7 @@ int main(const int argc, const char** argv)
   if (doNeutronCuts) nameExt = "_wNeutCuts_neutKE_"+std::to_string(neutKESig)+nameExt;
   else splitRecoil = true;
  
-  if (tuneVer != "1" && tuneVer != "2"){
+  if (tuneVer != "1" && tuneVer != "1_noRPA" && tuneVer != "1_no2p2h" && tuneVer != "2"){
     std::cerr << "Must choose between 1 and 2 for the <MnvTune_v> argument. Check usage printed below. \n" << USAGE << "\n";
     return badCmdLine;
   }
@@ -807,9 +807,9 @@ int main(const int argc, const char** argv)
   std::vector<std::unique_ptr<PlotUtils::Reweighter<CVUniverse, NeutronEvent>>> MnvTune;
   MnvTune.emplace_back(new PlotUtils::FluxAndCVReweighter<CVUniverse, NeutronEvent>());
   MnvTune.emplace_back(new PlotUtils::GENIEReweighter<CVUniverse, NeutronEvent>(true, false));
-  MnvTune.emplace_back(new PlotUtils::LowRecoil2p2hReweighter<CVUniverse, NeutronEvent>());
   MnvTune.emplace_back(new PlotUtils::MINOSEfficiencyReweighter<CVUniverse, NeutronEvent>());
-  MnvTune.emplace_back(new PlotUtils::RPAReweighter<CVUniverse, NeutronEvent>());
+  if (tuneVer != "1_no2p2h") MnvTune.emplace_back(new PlotUtils::LowRecoil2p2hReweighter<CVUniverse, NeutronEvent>());
+  if (tuneVer != "1_noRPA") MnvTune.emplace_back(new PlotUtils::RPAReweighter<CVUniverse, NeutronEvent>());
   if (tuneVer == "2") MnvTune.emplace_back(new PlotUtils::LowQ2PiReweighter<CVUniverse, NeutronEvent>("JOINT"));
   MnvTune.emplace_back(new PlotUtils::GeantNeutronCVReweighter<CVUniverse, NeutronEvent>());
 
