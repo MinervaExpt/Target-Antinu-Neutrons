@@ -343,8 +343,7 @@ void DrawIntType(string name_QE, TFile* mcFile, TFile* dataFile, TString sample,
   h_QE_Sig->SetLineColor(TColor::GetColor("#88CCEE"));
   h_QE_Sig->SetFillColor(TColor::GetColor("#88CCEE"));
 
-  //  string name_sig = (string)h_QE_Sig->GetName();
-  string name_sig = name_QE;
+  string name_sig = (string)h_QE_Sig->GetName();
   name_sig.erase(name_sig.length()-3,name_sig.length());
   string name_bkg = name_sig;
   name_bkg.erase(name_bkg.length()-12,name_bkg.length());
@@ -573,36 +572,32 @@ void DrawIntType(string name_QE, TFile* mcFile, TFile* dataFile, TString sample,
   //egend* leg = new TLegend(0.6,0.5,0.9,0.9);
   TLegend* leg = new TLegend(0.6,0.5,0.9,0.9);
 
-  if (isTracker){
-    leg->SetNColumns(2);
-
-    leg->AddEntry(dataHist,"DATA");
-    leg->AddEntry((TObject*)0,"","");
-    
-    leg->AddEntry(h_QE_Sig,"Sig. + QE");
-    leg->AddEntry(h_QE_Bkg,"Bkg. + QE");
-
-    leg->AddEntry(h_RES_Sig,"Sig. + RES");
-    leg->AddEntry(h_RES_Bkg,"Bkg. + RES");
-
-    leg->AddEntry(h_DIS_Sig,"Sig. + DIS");
-    leg->AddEntry(h_DIS_Bkg,"Bkg. + DIS");
+  leg->SetNColumns(2);
   
-    leg->AddEntry(h_2p2h_Sig,"Sig. + 2p2h");
-    leg->AddEntry(h_2p2h_Bkg,"Bkg. + 2p2h");
-
-    leg->AddEntry(h_Other_Sig,"Sig. + Other");
-    leg->AddEntry(h_Other_Bkg,"Bkg. + Other");
-  }
-  else{
-    leg->AddEntry(dataHist,"DATA");
-    leg->AddEntry(h_QE_Sig,"Sig. + QE");
-    leg->AddEntry(h_RES_Sig,"Sig. + RES");
-    leg->AddEntry(h_DIS_Sig,"Sig. + DIS");
-    leg->AddEntry(h_2p2h_Sig,"Sig. + 2p2h");
-    leg->AddEntry(h_Other_Sig,"Sig. + Other");
+  leg->AddEntry(dataHist,"DATA");
+  leg->AddEntry((TObject*)0,"","");
+  
+  leg->AddEntry(h_QE_Sig,"Sig. + QE");
+  leg->AddEntry(h_QE_Bkg,"Bkg. + QE");
+  
+  leg->AddEntry(h_RES_Sig,"Sig. + RES");
+  leg->AddEntry(h_RES_Bkg,"Bkg. + RES");
+  
+  leg->AddEntry(h_DIS_Sig,"Sig. + DIS");
+  leg->AddEntry(h_DIS_Bkg,"Bkg. + DIS");
+  
+  leg->AddEntry(h_2p2h_Sig,"Sig. + 2p2h");
+  leg->AddEntry(h_2p2h_Bkg,"Bkg. + 2p2h");
+  
+  leg->AddEntry(h_Other_Sig,"Sig. + Other");
+  leg->AddEntry(h_Other_Bkg,"Bkg. + Other");
+  
+  if(!isTracker){
+    leg->AddEntry((TObject*)0,"","");
     leg->AddEntry(h_Wrong_Nucleus_Bkg,"Wrong Nucleus");
+    leg->AddEntry((TObject*)0,"","");
     leg->AddEntry(h_DSPlastic_Bkg,"DS Plastic");
+    leg->AddEntry((TObject*)0,"","");
     leg->AddEntry(h_USPlastic_Bkg,"US Plastic");
   }
 
@@ -682,6 +677,318 @@ void DrawIntType(string name_QE, TFile* mcFile, TFile* dataFile, TString sample,
   delete h_DIS_Sig;
   delete h_RES_Sig;
   delete h_QE_Sig;
+  delete c1;
+
+  delete hTmp;
+
+  return;
+}
+
+void DrawIntTypeBKG(string name, TFile* mcFile, TFile* dataFile, TString sample, double scale, TString nameToSave){
+
+  bool primPar = false;
+
+  TString sampleName = sample;
+
+  bool isTracker = sampleName.Contains("Tracker") ? true : false;
+
+  MnvH1D* h_Sig_Top = (MnvH1D*)mcFile->Get((TString)name);
+  MnvH1D* h_Sig = new MnvH1D(h_Sig_Top->GetBinNormalizedCopy());
+  h_Sig->Scale(scale);
+  MnvH1D* mcSum = (MnvH1D*)h_Sig->Clone();
+  h_Sig->SetLineColor(TColor::GetColor("#999933"));
+  h_Sig->SetFillColor(TColor::GetColor("#999933"));
+  //h_Sig->SetLineColor(TColor::GetColor("#88CCEE"));
+  //h_Sig->SetFillColor(TColor::GetColor("#88CCEE"));
+
+  //  string name_sig = (string)h_QE_Sig->GetName();
+  string name_bkg = name;
+  name_bkg.erase(name_bkg.length()-21,name_bkg.length());
+
+  /*
+  string name_sig = name_QE;
+  name_sig.erase(name_sig.length()-3,name_sig.length());
+  string name_bkg = name_sig;
+  name_bkg.erase(name_bkg.length()-12,name_bkg.length());
+  */
+
+  cout << "Handling: " << name << endl;
+  string title = (string)h_Sig->GetTitle();
+  TString Xtitle = h_Sig->GetXaxis()->GetTitle();
+  TString Ytitle = h_Sig->GetYaxis()->GetTitle();
+  string units = Xtitle.Data();
+  units.erase(0,units.find("["));
+  /*
+  cout << title << endl;
+  title.erase(0, 8);
+  cout << title << endl;
+  cout << "" << endl;
+  */
+
+  MnvH1D* h_QE_Bkg_Top = (MnvH1D*)mcFile->Get((TString)name_bkg+"_bkg_IntType_QE"); 
+  MnvH1D* h_QE_Bkg = new MnvH1D(h_QE_Bkg_Top->GetBinNormalizedCopy());
+  h_QE_Bkg->Scale(scale);
+  mcSum->Add(h_QE_Bkg);
+  h_QE_Bkg->SetLineColor(TColor::GetColor("#88CCEE"));
+  h_QE_Bkg->SetFillColor(TColor::GetColor("#88CCEE"));
+
+  MnvH1D* h_RES_Bkg_Top = (MnvH1D*)mcFile->Get((TString)name_bkg+"_bkg_IntType_RES");
+  MnvH1D* h_RES_Bkg = new MnvH1D(h_RES_Bkg_Top->GetBinNormalizedCopy());
+  h_RES_Bkg->Scale(scale);
+  mcSum->Add(h_RES_Bkg);
+  h_RES_Bkg->SetLineColor(TColor::GetColor("#117733"));
+  h_RES_Bkg->SetFillColor(TColor::GetColor("#117733"));
+
+  MnvH1D* h_DIS_Bkg_Top = (MnvH1D*)mcFile->Get((TString)name_bkg+"_bkg_IntType_DIS");
+  MnvH1D* h_DIS_Bkg = new MnvH1D(h_DIS_Bkg_Top->GetBinNormalizedCopy());
+  h_DIS_Bkg->Scale(scale);
+  mcSum->Add(h_DIS_Bkg);
+  h_DIS_Bkg->SetLineColor(TColor::GetColor("#CC6677"));
+  h_DIS_Bkg->SetFillColor(TColor::GetColor("#CC6677"));
+
+  MnvH1D* h_2p2h_Bkg_Top = (MnvH1D*)mcFile->Get((TString)name_bkg+"_bkg_IntType_2p2h");
+  MnvH1D* h_2p2h_Bkg = new MnvH1D(h_2p2h_Bkg_Top->GetBinNormalizedCopy());
+  h_2p2h_Bkg->Scale(scale);
+  mcSum->Add(h_2p2h_Bkg);
+  h_2p2h_Bkg->SetLineColor(TColor::GetColor("#44AA99"));
+  h_2p2h_Bkg->SetFillColor(TColor::GetColor("#44AA99"));
+
+  MnvH1D* h_USPlastic_Bkg_Top = (MnvH1D*)mcFile->Get((TString)name_bkg+"_bkg_IntType_USPlastic");
+  MnvH1D* h_USPlastic_Bkg = new MnvH1D(h_USPlastic_Bkg_Top->GetBinNormalizedCopy());
+  h_USPlastic_Bkg->Scale(scale);
+  mcSum->Add(h_USPlastic_Bkg);
+  h_USPlastic_Bkg->SetLineColor(TColor::GetColor("#A26E1C"));
+  h_USPlastic_Bkg->SetFillColor(TColor::GetColor("#A26E1C"));
+
+  MnvH1D* h_DSPlastic_Bkg_Top = (MnvH1D*)mcFile->Get((TString)name_bkg+"_bkg_IntType_DSPlastic");
+  MnvH1D* h_DSPlastic_Bkg = new MnvH1D(h_DSPlastic_Bkg_Top->GetBinNormalizedCopy());
+  h_DSPlastic_Bkg->Scale(scale);
+  mcSum->Add(h_DSPlastic_Bkg);
+  h_DSPlastic_Bkg->SetLineColor(TColor::GetColor("#C1B185"));
+  h_DSPlastic_Bkg->SetFillColor(TColor::GetColor("#C1B185"));
+
+  MnvH1D* h_Wrong_Nucleus_Bkg_Top = (MnvH1D*)mcFile->Get((TString)name_bkg+"_bkg_IntType_Wrong_Nucleus");
+  MnvH1D* h_Wrong_Nucleus_Bkg = new MnvH1D(h_Wrong_Nucleus_Bkg_Top->GetBinNormalizedCopy());
+  h_Wrong_Nucleus_Bkg->Scale(scale);
+  mcSum->Add(h_Wrong_Nucleus_Bkg);
+  h_Wrong_Nucleus_Bkg->SetLineColor(TColor::GetColor("#909497"));
+  h_Wrong_Nucleus_Bkg->SetFillColor(TColor::GetColor("#909497"));
+
+  MnvH1D* h_Other_Bkg_Top = (MnvH1D*)mcFile->Get((TString)name_bkg+"_bkg_IntType_Other");
+  MnvH1D* h_Other_Bkg = new MnvH1D(h_Other_Bkg_Top->GetBinNormalizedCopy());
+  h_Other_Bkg->Scale(scale);
+  mcSum->Add(h_Other_Bkg);
+  h_Other_Bkg->SetLineColor(TColor::GetColor("#882255"));
+  h_Other_Bkg->SetFillColor(TColor::GetColor("#882255"));
+
+  MnvH1D* h_data_Top = (MnvH1D*)dataFile->Get((TString)name_bkg+"_data");
+  MnvH1D* h_data = new MnvH1D(h_data_Top->GetBinNormalizedCopy());
+  TH1D* dataHist = (TH1D*)h_data->GetCVHistoWithError().Clone();
+  dataHist->SetLineColor(kBlack);
+  dataHist->SetLineWidth(3);
+  h_data->AddMissingErrorBandsAndFillWithCV(*h_Sig);
+
+  THStack* h = new THStack();
+  h->Add((TH1D*)h_Wrong_Nucleus_Bkg->GetCVHistoWithError().Clone());
+  h->Add((TH1D*)h_USPlastic_Bkg->GetCVHistoWithError().Clone());
+  h->Add((TH1D*)h_DSPlastic_Bkg->GetCVHistoWithError().Clone());
+  h->Add((TH1D*)h_Other_Bkg->GetCVHistoWithError().Clone());
+  h->Add((TH1D*)h_2p2h_Bkg->GetCVHistoWithError().Clone());
+  h->Add((TH1D*)h_DIS_Bkg->GetCVHistoWithError().Clone());
+  h->Add((TH1D*)h_RES_Bkg->GetCVHistoWithError().Clone());
+  h->Add((TH1D*)h_QE_Bkg->GetCVHistoWithError().Clone());
+
+  h->Add((TH1D*)h_Sig->GetCVHistoWithError().Clone());
+
+  TCanvas* c1 = new TCanvas("c1","c1",1200,800);
+  TPad* top = new TPad("Overlay","Overlay",0,0.078+0.2,1,1);
+  TPad* bottom = new TPad("Ratio","Ratio",0,0,1,0.078+0.2);
+  top->Draw();
+  bottom->Draw();
+  top->cd();
+
+  double bottomArea = bottom->GetWNDC()*bottom->GetHNDC();
+  double topArea = top->GetWNDC()*top->GetHNDC();
+
+  double areaScale = topArea/bottomArea;
+
+  h->Draw("hist");
+  c1->Update();
+
+  size_t pos = 0;
+  if ((pos=name.find("pTmu_")) != string::npos){
+    cout << "Fixing Axis?" << endl;
+    h->GetXaxis()->SetRangeUser(0,2.5);
+  }
+
+  pos = 0;
+  if ((pos=name.find("_primary_parent")) != string::npos){
+    h->GetXaxis()->SetBinLabel(1,"Other");
+    h->GetXaxis()->SetBinLabel(2,"");
+    h->GetXaxis()->SetBinLabel(3,"n");
+    h->GetXaxis()->SetBinLabel(4,"p");
+    h->GetXaxis()->SetBinLabel(5,"#pi^{0}");
+    h->GetXaxis()->SetBinLabel(6,"#pi^{+}");
+    h->GetXaxis()->SetBinLabel(7,"#pi^{-}");
+    h->GetXaxis()->SetBinLabel(8,"#gamma");
+    h->GetXaxis()->SetBinLabel(9,"e");
+    h->GetXaxis()->SetBinLabel(10,"#mu");
+    h->GetXaxis()->SetLabelSize(0.06);
+    h->GetXaxis()->SetTitle("Blob Primary Parent");
+    h->GetXaxis()->SetTitleSize(0.04);
+    primPar = true;
+  }
+
+  h->SetTitle(sampleName);//+" "+title.c_str());
+  h->GetXaxis()->SetTitle(Xtitle);
+  h->GetXaxis()->SetTitleSize(0.04);
+  if (units.length() != 0) h->GetYaxis()->SetTitle("Events / "+(TString)units);
+  else h->GetYaxis()->SetTitle("Events / bin");
+  h->GetYaxis()->SetTitleSize(0.05);
+  h->GetYaxis()->SetTitleOffset(0.75);
+  if (!primPar) h->SetMaximum((dataHist->GetMaximum())*1.25);
+  
+  pos=0;
+  if ((pos=name.find("_ENHitSB")) != string::npos){
+    sampleName = "EM Blob E/NHit SideBand " + sample;
+    h->SetTitle(sampleName);
+  }
+
+  pos=0;
+  if ((pos=name.find("_NBlobsSB")) != string::npos){
+    sampleName = "N EM Blob SideBand " + sample;
+    h->SetTitle(sampleName);
+  }
+
+  pos=0;
+  if ((pos=name.find("_MichelSB")) != string::npos){
+    sampleName = "Michel SideBand " + sample;
+    h->SetTitle(sampleName);
+  }
+
+  /*
+  if (Xtitle.Contains("pmu")){
+    h->GetXaxis()->SetTitle("p_{#mu} [GeV/c]");
+    h->SetTitle("Muon Momentum "+sampleName);
+  }
+
+  if (Xtitle.Contains("vtxZ")){
+    h->GetXaxis()->SetTitle("vtx. Z [mm]");
+    h->SetTitle("Vertex Z "+sampleName);
+  }
+  */
+
+  //h->Draw("hist");
+  c1->Update();
+  /* This is useful for debugging whether systematics actuall changed.
+  TH1D* h_Tot = (TH1D*)h->GetStack()->Last()->Clone();
+  h_Tot->SetLineColor(kRed);
+  h_Tot->SetFillColorAlpha(kPink + 1, 0.4);
+  h_Tot->Draw("E2 SAME");
+  */
+  dataHist->Draw("same");
+  c1->Update();
+
+  TH1D* hTmp = new TH1D();
+  hTmp->SetFillColor(kWhite);
+  hTmp->SetLineColor(kWhite);
+
+  //egend* leg = new TLegend(0.6,0.5,0.9,0.9);
+  TLegend* leg = new TLegend(0.6,0.5,0.9,0.9);
+
+  leg->SetNColumns(2);
+  
+  leg->AddEntry(dataHist,"DATA");
+  leg->AddEntry((TObject*)0,"","");
+  
+  leg->AddEntry(h_Sig,"Signal");
+  leg->AddEntry(h_QE_Bkg,"Bkg. + QE");
+  leg->AddEntry(h_RES_Bkg,"Bkg. + RES");
+  leg->AddEntry(h_DIS_Bkg,"Bkg. + DIS");
+  leg->AddEntry(h_2p2h_Bkg,"Bkg. + 2p2h");
+  leg->AddEntry(h_Other_Bkg,"Bkg. + Other");
+  
+  if(!isTracker){
+    leg->AddEntry((TObject*)0,"","");
+    leg->AddEntry(h_Wrong_Nucleus_Bkg,"Wrong Nucleus");
+    leg->AddEntry((TObject*)0,"","");
+    leg->AddEntry(h_DSPlastic_Bkg,"DS Plastic");
+    leg->AddEntry((TObject*)0,"","");
+    leg->AddEntry(h_USPlastic_Bkg,"US Plastic");
+  }
+    
+  leg->Draw();
+  c1->Update();
+
+  bottom->cd();
+  bottom->SetTopMargin(0.05);
+  bottom->SetBottomMargin(0.3);
+
+  MnvH1D* ratio = (MnvH1D*)h_data->Clone();
+  ratio->Divide(ratio,mcSum);
+
+  TH1D* mcRatio = new TH1D(mcSum->GetTotalError(false, true, false));
+  for (int iBin=1; iBin <= mcRatio->GetXaxis()->GetNbins(); ++iBin){
+    mcRatio->SetBinError(iBin, max(mcRatio->GetBinContent(iBin),1.0e-9));
+    mcRatio->SetBinContent(iBin, 1);
+  }
+
+  ratio->SetLineColor(kBlack);
+  ratio->SetLineWidth(3);
+  ratio->SetTitle("");
+  //ratio->SetTitleSize(0);
+  ratio->GetYaxis()->SetTitle("Data / MC");
+  ratio->GetYaxis()->SetTitleSize(0.05*areaScale);
+  ratio->GetYaxis()->SetTitleOffset(0.75/areaScale);
+  ratio->GetYaxis()->SetLabelSize(ratio->GetYaxis()->GetLabelSize()*areaScale);
+
+  ratio->GetXaxis()->SetLabelSize(ratio->GetXaxis()->GetLabelSize()*areaScale);
+  ratio->GetXaxis()->SetTitleSize(0.04*areaScale);
+  ratio->SetMinimum(0.5);
+  ratio->SetMaximum(1.5);
+
+  pos=0;
+  if ((pos=name.find("pTmu_")) != string::npos){
+    cout << "Fixing Axis?" << endl;
+    ratio->GetXaxis()->SetRangeUser(0,2.5);
+  }
+  ratio->Draw();
+
+  mcRatio->SetLineColor(kRed);
+  mcRatio->SetLineWidth(3);
+  mcRatio->SetFillColorAlpha(kPink + 1, 0.4);
+  mcRatio->Draw("E2 SAME");
+
+  TH1D* straightLine = (TH1D*)mcRatio->Clone();
+  straightLine->SetFillStyle(0);
+  straightLine->Draw("HIST SAME");
+
+  ratio->Draw("SAME");
+
+  c1->Update();
+
+  c1->Print(nameToSave+"_IntType_BKG_stacked.pdf");
+  c1->Print(nameToSave+"_IntType_BKG_stacked.png");
+  top->SetLogy();
+  c1->Update();
+  c1->Print(nameToSave+"_IntType_BKG_stacked_log.pdf");
+  c1->Print(nameToSave+"_IntType_BKG_stacked_log.png");     
+
+  delete mcSum;
+  delete dataHist;
+  delete h;
+  delete ratio;
+  delete straightLine;
+  delete h_data;
+  delete h_Wrong_Nucleus_Bkg;
+  delete h_DSPlastic_Bkg;
+  delete h_USPlastic_Bkg;
+  delete h_Other_Bkg;
+  delete h_2p2h_Bkg;
+  delete h_DIS_Bkg;
+  delete h_RES_Bkg;
+  delete h_QE_Bkg;
+  delete h_Sig;
   delete c1;
 
   delete hTmp;
@@ -1621,6 +1928,7 @@ int main(int argc, char* argv[]) {
       nameToSave.erase(nameToSave.length()-21,nameToSave.length());
       DrawBKGCateg(name,mcFile,dataFile,label,scale,(TString)outDir+(TString)nameToSave);
       DrawBKGCategTEST(name,mcFile,dataFile,label,scale,(TString)outDir+(TString)nameToSave+"_TEST");
+      DrawIntTypeBKG(name,mcFile,dataFile,label,scale,(TString)outDir+(TString)nameToSave);
       DrawBKGSubtracted(name,mcFile,dataFile,label,scale,(TString)outDir+(TString)nameToSave);
       cout << "" << endl;
     }
