@@ -689,37 +689,32 @@ int main(int argc, char* argv[]) {
     bkgTotHist->Add(wrongNuclHist);
 
     map<TString, MnvH1D*> fitHists1A, unfitHists1A;
-    /*
     map<TString, MnvH1D*> fitHists2A, unfitHists2A;
     map<TString, MnvH1D*> fitHists3A, unfitHists3A;
     map<TString, MnvH1D*> fitHists4A, unfitHists4A;
     map<TString, MnvH1D*> fitHists5A, unfitHists5A;
     map<TString, MnvH1D*> fitHists6A, unfitHists6A;
-    */
 
     map<TString, MnvH1D*> fitHists1B, unfitHists1B;
-    /*
     map<TString, MnvH1D*> fitHists2B, unfitHists2B;
     map<TString, MnvH1D*> fitHists3B, unfitHists3B;
     map<TString, MnvH1D*> fitHists4B, unfitHists4B;
     map<TString, MnvH1D*> fitHists5B, unfitHists5B;
     map<TString, MnvH1D*> fitHists6B, unfitHists6B;
-    */
 
     map<TString, vector<TString>> nameKeys1A, nameKeys1B;
-    /*
     map<TString, vector<TString>> nameKeys2A, nameKeys2B;
     map<TString, vector<TString>> nameKeys3A, nameKeys3B;
     map<TString, vector<TString>> nameKeys4A, nameKeys4B;
     map<TString, vector<TString>> nameKeys5A, nameKeys5B;
     map<TString, vector<TString>> nameKeys6A, nameKeys6B;
-    */
+
 
     fitHists1A["BKG"]=(MnvH1D*)bkgTotHist->Clone();
     fitHists1A["Signal"]=(MnvH1D*)sigHist->Clone();
     unfitHists1A["USPlastic"]=(MnvH1D*)USHist->Clone();
     unfitHists1A["DSPlastic"]=(MnvH1D*)DSHist->Clone();
-    //unfitHists1A["WrongNucleus"]=(MnvH1D*)wrongNuclHist->Clone();
+    unfitHists1A["WrongNucleus"]=(MnvH1D*)wrongNuclHist->Clone();
     nameKeys1A["BKG"]={"1chargePi","1neutPi","NPi","Other","Wrong_Nucleus"};
     nameKeys1A["Signal"]={"sig","signal"};
 
@@ -727,10 +722,9 @@ int main(int argc, char* argv[]) {
     unfitHists1B["Signal"]=(MnvH1D*)sigHist->Clone();
     unfitHists1B["USPlastic"]=(MnvH1D*)USHist->Clone();
     unfitHists1B["DSPlastic"]=(MnvH1D*)DSHist->Clone();
-    //unfitHists1B["WrongNucleus"]=(MnvH1D*)wrongNuclHist->Clone();
+    unfitHists1B["WrongNucleus"]=(MnvH1D*)wrongNuclHist->Clone();
     nameKeys1B["BKG"]=nameKeys1A["BKG"];
 
-    /*
     fitHists2A["single #pi^{#pm}"]=(MnvH1D*)chargePiHist->Clone();
     fitHists2A["single #pi^{0}"]=(MnvH1D*)neutPiHist->Clone();
     fitHists2A["N#pi"]=(MnvH1D*)NPiHist->Clone();
@@ -841,7 +835,6 @@ int main(int argc, char* argv[]) {
     unfitHists6B["WrongNucleus"]=(MnvH1D*)wrongNuclHist->Clone();
     nameKeys6B["RES"]=nameKeys6A["RES"];
     nameKeys6B["DIS"]=nameKeys6A["DIS"];
-    */
 
     cout << "Fitting 1A" << endl;
     map<TString,map<TString,MnvH1D*>> result = FitScaleFactorsAndDraw(dataHist, fitHists1A, unfitHists1A, name, outDir, "_fit1A", lowBin, hiBin, doSyst, true, varsToSave, nameKeys1A);
@@ -881,7 +874,7 @@ int main(int argc, char* argv[]) {
       for (auto var:hist.second) delete var.second;
     }
     result.clear();
-    /*
+
     cout << "Fitting 2A" << endl;
     result = FitScaleFactorsAndDraw(dataHist, fitHists2A, unfitHists2A, name, outDir, "_fit2A", lowBin, hiBin, doSyst, true, varsToSave, nameKeys2A);
     map<TString,MnvH1D*> scaledHists2A = {};
@@ -1088,7 +1081,6 @@ int main(int argc, char* argv[]) {
       for (auto var:hist.second) delete var.second;
     }
     result.clear();
-    */
 
     delete dataHist;
     delete sigHist;
@@ -1112,7 +1104,6 @@ int main(int argc, char* argv[]) {
     for (auto hist:unfitHists1A) delete hist.second;
     for (auto hist:fitHists1B) delete hist.second;
     for (auto hist:unfitHists1B) delete hist.second;
-    /*
     for (auto hist:fitHists2A) delete hist.second;
     for (auto hist:unfitHists2A) delete hist.second;
     for (auto hist:fitHists2B) delete hist.second;
@@ -1133,10 +1124,8 @@ int main(int argc, char* argv[]) {
     for (auto hist:unfitHists6A) delete hist.second;
     for (auto hist:fitHists6B) delete hist.second;
     for (auto hist:unfitHists6B) delete hist.second;
-    */
     for (auto hist:scaledHists1A) delete hist.second;
     for (auto hist:scaledHists1B) delete hist.second;
-    /*
     for (auto hist:scaledHists2A) delete hist.second;
     for (auto hist:scaledHists2B) delete hist.second;
     for (auto hist:scaledHists3A) delete hist.second;
@@ -1147,7 +1136,6 @@ int main(int argc, char* argv[]) {
     for (auto hist:scaledHists5B) delete hist.second;
     for (auto hist:scaledHists6A) delete hist.second;
     for (auto hist:scaledHists6B) delete hist.second;
-    */
     for (auto hist:varsToSave) delete hist.second;
     varsToSave.clear();
   }
