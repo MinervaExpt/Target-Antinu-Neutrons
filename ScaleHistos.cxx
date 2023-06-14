@@ -136,7 +136,8 @@ int main(int argc, char* argv[]) {
     vector<TString> tags = BreakName("_t_",tagChunk);
     //TODO: Make able to handle more complicated case of not just using the fit from 500-1000 of just the background categories.
     for(auto tag: tags) varTagsMap[varName].push_back(tag);
-    varNameMap[varName+tags.at(0)] = scaleName;
+    for(auto tag: tags) varNameMap[varName+tag] = scaleName;
+    //varNameMap[varName+tags.at(0)] = scaleName;
     cout << "" << endl;
   }
 
@@ -172,7 +173,9 @@ int main(int argc, char* argv[]) {
 	for (auto tag: varName.second){
 	  if(!nameObj.Contains(tag)) continue;
 	  cout << "Scaling: " << nameObj << endl;
-	  TString nameOfScale = varNameMap[varName.first+varName.second.at(0)];
+	  //TString nameOfScale = varNameMap[varName.first+varName.second.at(0)];
+	  TString nameOfScale = varNameMap[varName.first+tag];
+	  cout << "With Scale: " << nameOfScale << endl;
 	  MnvH1D* hScale = (MnvH1D*)scaleFile->Get(nameOfScale);
 	  h1D->Multiply(h1D,hScale);
 	  delete hScale;
