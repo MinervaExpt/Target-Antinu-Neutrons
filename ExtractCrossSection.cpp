@@ -170,7 +170,7 @@ int main(const int argc, const char** argv)
 
   TH1::AddDirectory(kFALSE); //Needed so that MnvH1D gets to clean up its own MnvLatErrorBands (which are TH1Ds).
 
-  if(!(argc == 8 || argc == 10))
+  if(!(argc == 9 || argc == 11))
   {
     std::cerr << "Expected 7 or 9 arguments, but I got " << argc-1 << ".\n"
               << "USAGE: ExtractCrossSection <unfolding iterations> <data.root> <mc.root> <stop at eff. corr.> <varName> ...\n";
@@ -196,12 +196,15 @@ int main(const int argc, const char** argv)
   std::string varName = std::string(argv[5]);
   int tgtZ = atoi(argv[6]);
   bool multPOT = (bool)atoi(argv[7]);
+  std::string background_naming = std::string(argv[8]); 
+  if (background_naming != "bkg_IntType") background_naming = "background";
 
   TFile* fluxFile = nullptr;
   std::string fluxVarName = "";
-  if (argc == 10){
-    fluxFile = TFile::Open(argv[8],"READ");
-    fluxVarName =std::string(argv[9]);
+
+  if (argc == 11){
+    fluxFile = TFile::Open(argv[9],"READ");
+    fluxVarName =std::string(argv[10]);
   }
 
   std::vector<std::string> crossSectionPrefixes;
@@ -233,7 +236,7 @@ int main(const int argc, const char** argv)
       std::vector<PlotUtils::MnvH1D*> backgrounds;
       for(auto key: *mcFile->GetListOfKeys())
       {
-        if(std::string(key->GetName()).find(prefix + "_background_") != std::string::npos)
+        if(std::string(key->GetName()).find(prefix + "_" + background_naming + "_") != std::string::npos)
         {
           backgrounds.push_back(util::GetIngredient<PlotUtils::MnvH1D>(*mcFile, key->GetName()));
         }
