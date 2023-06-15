@@ -56,6 +56,27 @@
 using namespace std;
 using namespace PlotUtils;
 
+double Chi2(MnvH1D* m1, MnvH1D* m2){
+  if (m1->GetNbinsX() != m2->GetNbinsX()){
+    cout << "Histos to compare don't have the same number of bins! Returning -999!!!" << endl;
+    return -999.0;
+  }
+  TH1D* h1 = (TH1D*)m1->GetCVHistoWithError().Clone();
+  TH1D* h2 = (TH1D*)m2->GetCVHistoWithError().Clone();
+  double chi2 = 0.0;
+  for (int whichBin = 1; whichBin <= h1->GetNbinsX(); ++whichBin){
+    double h1Content = h1->GetBinContent(whichBin);
+    double h2Content = h2->GetBinContent(whichBin);
+    double h2Err = h2->GetBinError(whichBin);
+    double diff = h1Content-h2Content;
+    if(h2Err > 1e-10) chi2 += (diff*diff)/(h2Err*h2Err);
+  }
+
+  delete h1;
+  delete h2;
+  return chi2;
+}
+
 void DrawBKGCateg(string name, TFile* mcFile, TFile* dataFile, TString sample, double scale, TString nameToSave){
 
   bool primPar = false;
@@ -302,13 +323,15 @@ void DrawBKGCateg(string name, TFile* mcFile, TFile* dataFile, TString sample, d
 
   c1->Update();
 
+  cout << "Chi2 for Data/MC from DrawBKGCateg(): " << Chi2(mcSum, h_data) << endl;
+
   c1->Print(nameToSave+"_BKG_stacked.pdf");
   c1->Print(nameToSave+"_BKG_stacked.png");
   top->SetLogy();
   c1->Update();
   c1->Print(nameToSave+"_BKG_stacked_log.pdf");
   c1->Print(nameToSave+"_BKG_stacked_log.png");         
-  
+
   delete mcSum;
   delete dataHist;
   delete h;
@@ -973,6 +996,8 @@ void DrawIntTypeBKG(string name, TFile* mcFile, TFile* dataFile, TString sample,
   c1->Update();
   c1->Print(nameToSave+"_IntType_BKG_stacked_log.pdf");
   c1->Print(nameToSave+"_IntType_BKG_stacked_log.png");     
+
+  cout << "Chi2 for Data/MC from DrawIntTypeBKG(): " << Chi2(mcSum, h_data) << endl;
 
   delete mcSum;
   delete dataHist;
