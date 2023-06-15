@@ -313,6 +313,11 @@ map<TString,map<TString,MnvH1D*>> FitScaleFactorsAndDraw(MnvH1D* dataHist, map<T
   }
 
   mini->SetFunction(func);
+  double test[5] = {1.0,1.0,1.0,1.0,1.0};
+  const double* test2 = test;
+  
+  cout << "Pre-fit Fit function value." << endl;
+  cout << func.DoEval(test2) << endl;
 
   if (!mini->Minimize()){
     cout << "FIT FAILED" << endl;
@@ -332,20 +337,15 @@ map<TString,map<TString,MnvH1D*>> FitScaleFactorsAndDraw(MnvH1D* dataHist, map<T
   map<TString, double> scaleByName;
   nextPar=0;
   for (auto hist:fitHistsAndNames){
-    cout << "HI" << endl;
     scaleByName[hist.first]=scaleResults[nextPar];
     for (auto var:scaleHists){
-      cout << "HI 2" << endl;
       for (int iBin=0; iBin <= var.second[hist.first]->GetNbinsX()+1; ++iBin){
-	cout << "HI 3" << endl;
 	var.second[hist.first]->SetBinContent(iBin,scaleResults[nextPar]);
 	var.second[hist.first]->SetBinError(iBin,scaleErrors[nextPar]);
       }
-      cout << "HI 4" << endl;
       cout << hist.first << endl;
       var.second[hist.first]->AddMissingErrorBandsAndFillWithCV(*hist.second);
     }
-    cout << "HI 5" << endl;
     ++nextPar;
   }
 
@@ -415,6 +415,8 @@ map<TString,map<TString,MnvH1D*>> FitScaleFactorsAndDraw(MnvH1D* dataHist, map<T
 	
 	miniUniv->SetFunction(funcUniv);
 	
+	cout << "Pre-fit Parameters" << endl;
+
 	if (!miniUniv->Minimize()){
 	  cout << "FIT FAILED" << endl;
 	  cout << "Printing Results." << endl;
