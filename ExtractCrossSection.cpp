@@ -71,6 +71,21 @@ void Plot(PlotUtils::MnvH1D& hist, const std::string& stepName, const std::strin
 
   plotter.DrawErrorSummary(&hist, "TR", true, true, 1e-5, false, "Other");
   can.Print((prefix + "_" + stepName + "_otherUncertainties.png").c_str());
+
+  plotter.DrawErrorSummary(&hist, "TR", true, true, 1e-2, false, "Cross Section Models");
+  can.Print((prefix + "_" + stepName + "_xSecUncertainties.png").c_str());
+
+  plotter.DrawErrorSummary(&hist, "TR", true, true, 1e-2, false, "Recoil Reconstruction");
+  can.Print((prefix + "_" + stepName + "_RecoilUncertainties.png").c_str());
+
+  plotter.DrawErrorSummary(&hist, "TR", true, true, 1e-2, false, "FSI Models");
+  can.Print((prefix + "_" + stepName + "_FSIUncertainties.png").c_str());
+
+  plotter.DrawErrorSummary(&hist, "TR", true, true, 1e-2, false, "Muon Reconstruction");
+  can.Print((prefix + "_" + stepName + "_MuonUncertainties.png").c_str());
+
+  plotter.DrawErrorSummary(&hist, "TR", true, true, 1e-2, false, "GEANT4");
+  can.Print((prefix + "_" + stepName + "_GEANTUncertainties.png").c_str());
 }
 
 //Unfolding function from Aaron Bercelle
@@ -291,7 +306,7 @@ int main(const int argc, const char** argv)
       unfolded->Clone()->Write("efficiencyCorrected");
 
       if (!stopAtEffCorr){
-	auto flux = (argc==10) ? util::GetIngredient<PlotUtils::MnvH1D>(*fluxFile,"reweightedflux_integrated",fluxVarName) : util::GetIngredient<PlotUtils::MnvH1D>(*mcFile, "reweightedflux_integrated", prefix);
+	auto flux = (argc==11) ? util::GetIngredient<PlotUtils::MnvH1D>(*fluxFile,"reweightedflux_integrated",fluxVarName) : util::GetIngredient<PlotUtils::MnvH1D>(*mcFile, "reweightedflux_integrated", prefix);
 	/*
 	const auto fiducialFound = std::find_if(mcFile->GetListOfKeys()->begin(), mcFile->GetListOfKeys()->end(),
 						[&prefix](const auto key)
