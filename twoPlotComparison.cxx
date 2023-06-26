@@ -106,7 +106,7 @@ int main(int argc, char* argv[]) {
   #endif
 
   //Pass an input file name to this script now
-  if (argc != 5) {
+  if (argc != 6) {
     cout << "Check usage..." << endl;
     return 2;
   }
@@ -115,6 +115,7 @@ int main(int argc, char* argv[]) {
   string file2Name=string(argv[2]);
   string outDir=string(argv[3]);
   TString label=argv[4];
+  bool scaleByPOT=bool(atoi(argv[5]));
 
   if (PathExists(outDir)){
     cout << "Thank you for choosing a path for output files that exists." << endl;
@@ -172,12 +173,14 @@ int main(int argc, char* argv[]) {
   TFile* file1 = new TFile(file1Name.c_str(),"READ");
   TFile* file2 = new TFile(file2Name.c_str(),"READ");
 
-  cout << "Getting POT" << endl;
-  double file1POT = ((TParameter<double>*)file1->Get("POTUsed"))->GetVal();
-  double file2POT = ((TParameter<double>*)file2->Get("POTUsed"))->GetVal();
-  cout << "Got POT" << endl;
-
-  double scale = file1POT/file2POT;
+  double scale = 1.0;
+  if (scaleByPOT){
+    cout << "Getting POT" << endl;
+    double file1POT = ((TParameter<double>*)file1->Get("POTUsed"))->GetVal();
+    double file2POT = ((TParameter<double>*)file2->Get("POTUsed"))->GetVal();
+    cout << "Got POT" << endl;
+    scale = file1POT/file2POT;
+  }
 
   TList* keyList = file1->GetListOfKeys();
   if (!keyList){
