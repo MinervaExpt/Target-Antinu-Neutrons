@@ -187,7 +187,7 @@ int main(const int argc, const char** argv)
 
   if(!(argc == 9 || argc == 11))
   {
-    std::cerr << "Expected 7 or 9 arguments, but I got " << argc-1 << ".\n"
+    std::cerr << "Expected 8 or 10 arguments, but I got " << argc-1 << ".\n"
               << "USAGE: ExtractCrossSection <unfolding iterations> <data.root> <mc.root> <stop at eff. corr.> <varName> ...\n";
     return 1;
   }
