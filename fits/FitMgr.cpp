@@ -9,7 +9,7 @@
 #include "fits/FitMgr.h"
 
 namespace fit{
-  FitMgr::FitMgr(const std::vector<fit::ScaleFactor*> fits, const std::vector<TH1D*> unfitHists, const TH1D* dataHist):IBaseFunctionMultiDimTempl<double>(), fFits(fits), 
+  FitMgr::FitMgr(const std::vector<fit::Fit*> fits, const std::vector<TH1D*> unfitHists, const TH1D* dataHist):IBaseFunctionMultiDimTempl<double>(), fFits(fits), 
 								    fUnfitHists(unfitHists), fDataHist(dataHist), fFirstBin(1), fLastBin(-1), fDoFit(true)
   {
     if (fFits.size() == 0){
@@ -20,7 +20,7 @@ namespace fit{
     int nBins = 0;
     if (fDoFit) nBins = fFits.at(0)->GetNBins();
 
-    for(unsigned int iFit; iFit < fFits.size(); ++iFit){
+    for(unsigned int iFit=0; iFit < fFits.size(); ++iFit){
       if (!fDoFit) break;
       if (fFits.at(iFit)->GetNBins() != nBins){
 	std::cout << "No. of bins not consistent... Setting the fit condition to false." << std::endl;
@@ -28,7 +28,7 @@ namespace fit{
       }
     }
 
-    for(unsigned int iFit; iFit < fUnfitHists.size(); ++iFit){
+    for(unsigned int iFit=0; iFit < fUnfitHists.size(); ++iFit){
       if (!fDoFit) break;
       if (fUnfitHists.at(iFit)->GetNbinsX() != nBins){
 	std::cout << "No. of bins not consistent... Setting the fit condition to false." << std::endl;
@@ -45,7 +45,7 @@ namespace fit{
     if (fDoFit){
       fFirstBin = fFits.at(0)->GetFirstFitBin();
       fLastBin = fFits.at(0)->GetLastFitBin();
-      for(unsigned int iFit; iFit < fFits.size(); ++iFit){
+      for(unsigned int iFit=0; iFit < fFits.size(); ++iFit){
 	if (!fDoFit) break;
 	if (fFits.at(iFit)->GetFirstFitBin() != fFirstBin || fFits.at(iFit)->GetLastFitBin() != fLastBin){
 	  std::cout << "No. of fit bins not consistent among fits... Setting the fit condition to false." << std::endl;
@@ -61,7 +61,7 @@ namespace fit{
   unsigned int FitMgr::NDim() const{
     if (!fDoFit) return 0;
     unsigned int nDimSum = 0;
-    for (unsigned int iFit; iFit < fFits.size(); ++iFit){
+    for (unsigned int iFit=0; iFit < fFits.size(); ++iFit){
       nDimSum += fFits.at(iFit)->NDim();
     }
     return nDimSum;

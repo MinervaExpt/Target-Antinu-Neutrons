@@ -19,13 +19,13 @@
 #include <map>
 #include <unordered_map>
 #include <bitset>
-#include "fits/ScaleFactor.h"
+#include "fits/Fit.h"
 
 namespace fit{
   class FitMgr: public ROOT::Math::IBaseFunctionMultiDimTempl<double>{
   private:
     //Members to hold the histos
-    std::vector<fit::ScaleFactor*> fFits;
+    std::vector<fit::Fit*> fFits;
     std::vector<TH1D*> fUnfitHists;
     const TH1D* fDataHist;
     //Members for fit range
@@ -35,7 +35,7 @@ namespace fit{
 
   public:
     //CTOR
-    FitMgr(const std::vector<fit::ScaleFactor*> fits, const std::vector<TH1D*> unfitHists, const TH1D* dataHist);
+    FitMgr(const std::vector<fit::Fit*> fits, const std::vector<TH1D*> unfitHists, const TH1D* dataHist);
 
     unsigned int NDim() const override;
 

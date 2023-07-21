@@ -297,7 +297,7 @@ map<TString,map<TString,MnvH1D*>> FitScaleFactorsAndDraw(MnvH1D* dataHist, map<T
     unfitHists.push_back((TH1D*)hists.second->GetCVHistoWithStatError().Clone());
   }
 
-  vector<fit::ScaleFactor*> fits;
+  vector<fit::Fit*> fits;
   for (auto hist:fitHists){
     fits.push_back(new fit::ScaleFactor(hist,lowBin,hiBin));
   }
@@ -403,7 +403,7 @@ map<TString,map<TString,MnvH1D*>> FitScaleFactorsAndDraw(MnvH1D* dataHist, map<T
 	  unfitHistsUniv.push_back((TH1D*)hists.second->GetVertErrorBand(bandName)->GetHist(whichUniv)->Clone());
 	}
 	
-	vector<fit::ScaleFactor*> fitsUniv;
+	vector<fit::Fit*> fitsUniv;
 	for (auto hist:fitHistsUniv){
 	  fitsUniv.push_back(new fit::ScaleFactor(hist,lowBin,hiBin));
 	}

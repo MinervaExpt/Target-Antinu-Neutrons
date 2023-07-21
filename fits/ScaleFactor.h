@@ -19,31 +19,18 @@
 #include <map>
 #include <unordered_map>
 #include <bitset>
+#include "fits/Fit.h"
 
 namespace fit{
-  class ScaleFactor{
-  private:
-    //Members to hold the histos
-    const TH1D* fFitHist;
-    //Members for fit range
-    int fFirstBin;
-    int fLastBin;
-    bool fDoFit;
-
+  class ScaleFactor: public Fit{
   public:
     //CTOR
     ScaleFactor(const TH1D* fitHist, const int firstBin = 1, const int lastBin = -1);
 
-    unsigned int NDim() const;
+    virtual unsigned int NDim() const override;
 
     //Function which the ROOT fitter will minimize
-    double GetVal(const double* parameters, int whichParam, int whichBin) const;
-
-    int GetNBins();
-    int GetFirstFitBin();
-    int GetLastFitBin();
-
-    void SetFit(bool doFit);
+    virtual double GetVal(const double* parameters, int whichParam, int whichBin) const override;
 
     //DTOR
     virtual ~ScaleFactor() = default;
