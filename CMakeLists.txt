@@ -135,6 +135,10 @@ add_executable(BKGFitting BKGFitting.cxx)
 target_link_libraries(BKGFitting ${ROOT_LIBRARIES} fits MAT MAT-MINERvA)
 install(TARGETS BKGFitting DESTINATION bin)
 
+add_executable(BKGFittingNEWSTRUCTURE BKGFittingNEWSTRUCTURE.cxx)
+target_link_libraries(BKGFittingNEWSTRUCTURE ${ROOT_LIBRARIES} fits MAT MAT-MINERvA)
+install(TARGETS BKGFittingNEWSTRUCTURE DESTINATION bin)
+
 add_executable(BKGFitting2D BKGFitting2D.cxx)
 target_link_libraries(BKGFitting2D ${ROOT_LIBRARIES} fits MAT MAT-MINERvA)
 install(TARGETS BKGFitting2D DESTINATION bin)
