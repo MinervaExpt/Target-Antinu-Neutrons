@@ -18,15 +18,10 @@ namespace fit{
     else return 1;
   }
   
-  std::vector<double> ScaleFactor::GetVals(const double* parameters, int whichParam, int whichBin) const{
-    std::vector<double> values;
-    if (fDoFit){
-      for (auto hist:fFitHists){
-	double value = hist->GetBinContent(whichBin)*((parameters+whichParam)[0]);
-	values.push_back(value);
-      }
-    }
-    return values;
+  double ScaleFactor::GetFitVal(const double* parameters, int whichParam, int whichBin) const{
+    double fitVal = 0.0;
+    if (fDoFit) fitVal = (parameters+whichParam)[0];
+    return fitVal;
   }
 
 }

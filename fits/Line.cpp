@@ -18,16 +18,13 @@ namespace fit{
     else return 2;
   }
   
-  std::vector<double> Line::GetVals(const double* parameters, int whichParam, int whichBin) const{
-    std::vector<double> values;
+  double Line::GetFitVal(const double* parameters, int whichParam, int whichBin) const{
+    double fitVal = 0.0;
     if (fDoFit){
-      for (auto hist:fFitHists){
-	double binCenter = hist->GetBinCenter(whichBin);
-	double value = hist->GetBinContent(whichBin)*((parameters+whichParam)[0]+(parameters+whichParam)[1]*(binCenter));
-	values.push_back(value);
-      }
+      double binCenter = fFitHists.at(0)->GetBinCenter(whichBin);
+      fitVal = (parameters+whichParam)[0]+(parameters+whichParam)[1]*(binCenter);
     }
-    return values;
+    return fitVal;
   }
 
 }

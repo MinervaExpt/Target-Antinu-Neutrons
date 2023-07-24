@@ -51,6 +51,7 @@
 
 //Analysis includes
 #include "fits/ScaleFactor.h"
+#include "fits/Line.h"
 #include "fits/NonFit.h"
 #include "fits/FitMgr.h"
 

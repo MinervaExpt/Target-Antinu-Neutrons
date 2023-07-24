@@ -17,15 +17,10 @@ namespace fit{
     return 0;
   }
   
-  std::vector<double> NonFit::GetVals(const double* parameters, int whichParam, int whichBin) const{
-    std::vector<double> values;
-    if (fDoFit){
-      for (auto hist:fFitHists){
-	double value = hist->GetBinContent(whichBin);
-	values.push_back(value);
-      }
-    }
-    return values;
+  double NonFit::GetFitVal(const double* parameters, int whichParam, int whichBin) const{
+    double fitVal = 0.0;
+    if (fDoFit) fitVal = 1.0;
+    return fitVal;
   }
 
 }

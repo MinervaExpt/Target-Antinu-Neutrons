@@ -30,7 +30,7 @@ namespace fit{
     unsigned int NDim() const override;
 
     //Function which the ROOT fitter will minimize
-    std::vector<double> GetVals(const double* parameters, int whichParam, int whichBin) const override;
+    double GetFitVal(const double* parameters, int whichParam, int whichBin) const override;
 
     //DTOR
     ~NonFit() = default;

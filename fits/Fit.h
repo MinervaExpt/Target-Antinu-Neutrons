@@ -42,7 +42,10 @@ namespace fit{
     virtual unsigned int NDim() const;
 
     //Function which the ROOT fitter will minimize
-    virtual std::vector<double> GetVals(const double* parameters, int whichParam, int whichBin) const;
+    virtual double GetFitVal(const double* paramters, int whichParam, int whichBin) const;
+
+    //Function which gets bin content and scales it by the fit function value from GetFitVal(...)
+    std::vector<double> GetVals(const double* parameters, int whichParam, int whichBin) const;
 
     int GetNBins();
     int GetFirstFitBin();

@@ -40,9 +40,20 @@ namespace fit{
     return 0;//This base class should not be used without a specified fit function to be overwritten in derived classes, which also therefore define the number of relevant parameters.
   }
   
+  double Fit::GetFitVal(const double* parameters, int whichParam, int whichBin) const{
+    return 0.0;//This base class should not be used without a specified fit function to be overwritten in derived classes.
+  }
+
   std::vector<double> Fit::GetVals(const double* parameters, int whichParam, int whichBin) const{
-    std::vector<double> vals;
-    return vals;//This base class should not be used without a specified fit dunction to be overwritten in derived classes.
+    std::vector<double> values;
+    if (fDoFit){
+      double fitVal = GetFitVal(parameters,whichParam,whichBin);
+      for (auto hist:fFitHists){
+	double value = hist->GetBinContent(whichBin)*fitVal;
+        values.push_back(value);
+      }
+    }
+    return values;
   }
 
   int Fit::GetNBins() { return fNBins; }
