@@ -26,26 +26,31 @@ namespace fit{
     //
   public:
     //Members to hold the histos
-    const TH1D* fFitHist;
+    const std::vector<TH1D*> fFitHists;
     //Members for fit range
+    int fNBins;
     int fFirstBin;
     int fLastBin;
+    //Quick Access to number of regions
+    int fNRegions;
+    //Check if you are using this fit
     bool fDoFit;
 
     //CTOR
-    Fit(const TH1D* fitHist, const int firstBin = 1, const int lastBin = -1);
+    Fit(const std::vector<TH1D*> fitHists, const int firstBin = 1, const int lastBin = -1);
 
     virtual unsigned int NDim() const;
 
     //Function which the ROOT fitter will minimize
-    virtual double GetVal(const double* parameters, int whichParam, int whichBin) const;
+    virtual std::vector<double> GetVals(const double* parameters, int whichParam, int whichBin) const;
 
     int GetNBins();
     int GetFirstFitBin();
     int GetLastFitBin();
 
+    int GetNRegions();
+
     bool CheckFit();
-    void SetFit(bool doFit);
 
     //DTOR
     virtual ~Fit() = default;

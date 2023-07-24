@@ -51,6 +51,7 @@
 
 //Analysis includes
 #include "fits/ScaleFactor.h"
+#include "fits/NonFit.h"
 #include "fits/FitMgr.h"
 
 //PlotUtils includes??? Trying anything at this point...
@@ -299,10 +300,18 @@ map<TString,map<TString,MnvH1D*>> FitScaleFactorsAndDraw(MnvH1D* dataHist, map<T
 
   vector<fit::Fit*> fits;
   for (auto hist:fitHists){
-    fits.push_back(new fit::ScaleFactor(hist,lowBin,hiBin));
+    std::vector<TH1D*> hists(1,hist);
+    fits.push_back(new fit::ScaleFactor(hists,lowBin,hiBin));
   }
 
-  fit::FitMgr func(fits,unfitHists,hData);
+  for (auto hist:unfitHists){
+    std::vector<TH1D*> hists(1,hist);
+    fits.push_back(new fit::NonFit(hists,lowBin,hiBin));
+  }
+
+  std::vector<TH1D*> dataHists(1,hData);
+
+  fit::FitMgr func(fits,dataHists);
 
   auto* mini = new ROOT::Minuit2::Minuit2Minimizer(ROOT::Minuit2::kMigrad);
 
@@ -402,13 +411,19 @@ map<TString,map<TString,MnvH1D*>> FitScaleFactorsAndDraw(MnvH1D* dataHist, map<T
 	for (auto hists:unfitHistsAndNames){
 	  unfitHistsUniv.push_back((TH1D*)hists.second->GetVertErrorBand(bandName)->GetHist(whichUniv)->Clone());
 	}
-	
+
 	vector<fit::Fit*> fitsUniv;
 	for (auto hist:fitHistsUniv){
-	  fitsUniv.push_back(new fit::ScaleFactor(hist,lowBin,hiBin));
+	  std::vector<TH1D*> hists(1,hist);
+	  fitsUniv.push_back(new fit::ScaleFactor(hists,lowBin,hiBin));
 	}
-	
-	fit::FitMgr funcUniv(fitsUniv,unfitHistsUniv,hData);
+
+	for (auto hist:unfitHistsUniv){
+	  std::vector<TH1D*> hists(1,hist);
+	  fitsUniv.push_back(new fit::NonFit(hists,lowBin,hiBin));
+	}
+
+	fit::FitMgr funcUniv(fitsUniv,dataHists);
 	
 	auto* miniUniv = new ROOT::Minuit2::Minuit2Minimizer(ROOT::Minuit2::kMigrad);
 	

@@ -1,4 +1,4 @@
-//File: ScaleFactor.h
+//File: NonFit.h
 //Info: Class for passing as a function to TMinuit for minimization.
 //      Largely derived by example from Andrew Olivier's 
 //      github.com/MinervaExpt/NucCCNeutrons/tree/develop/fits/Universe.h 
@@ -6,8 +6,8 @@
 //
 //Author: David Last dlast@sas.upenn.edu/lastd44@gmail.com
 
-#ifndef SCALEFACTOR_H
-#define SCALEFACTOR_H
+#ifndef NONFIT_H
+#define NONFIT_H
 
 #include "TH1D.h"
 #include "TVector3.h"
@@ -22,10 +22,10 @@
 #include "fits/Fit.h"
 
 namespace fit{
-  class ScaleFactor: public Fit{
+  class NonFit: public Fit{
   public:
     //CTOR
-    ScaleFactor(const std::vector<TH1D*> fitHist, const int firstBin = 1, const int lastBin = -1);
+    NonFit(const std::vector<TH1D*> fitHist, const int firstBin = 1, const int lastBin = -1);
 
     unsigned int NDim() const override;
 
@@ -33,7 +33,7 @@ namespace fit{
     std::vector<double> GetVals(const double* parameters, int whichParam, int whichBin) const override;
 
     //DTOR
-    ~ScaleFactor() = default;
+    ~NonFit() = default;
   };
 }
 
