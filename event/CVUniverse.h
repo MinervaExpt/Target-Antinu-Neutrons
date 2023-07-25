@@ -123,7 +123,8 @@ class CVUniverse : public PlotUtils::MinervaUniverse {
   }
 
   virtual bool IsMinosMatchMuon() const {
-    return GetInt("has_interaction_vertex") == 1;
+    int matchMuon = GetIsMinosMatchTrack();
+    return (matchMuon == 1);
   }
   
   ROOT::Math::XYZTVector GetVertex() const
