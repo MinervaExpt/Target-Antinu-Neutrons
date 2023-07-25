@@ -18,9 +18,15 @@ namespace fit{
   }
   
   double NonFit::GetFitVal(const double* parameters, int whichParam, int whichBin) const{
-    double fitVal = 0.0;
+    double fitVal = -999.0;
     if (fDoFit) fitVal = 1.0;
     return fitVal;
+  }
+
+  double NonFit::GetFitErr(const double* parameters, const double* errors, int whichParam, int whichBin) const{
+    double fitErr = -999.0;
+    if (fDoFit) fitErr = 0.0;
+    return fitErr;
   }
 
 }

@@ -44,6 +44,8 @@ namespace fit{
     //Function which the ROOT fitter will minimize
     virtual double GetFitVal(const double* paramters, int whichParam, int whichBin) const;
 
+    virtual double GetFitErr(const double* paramters, const double* errors, int whichParam, int whichBin) const;
+
     //Function which gets bin content and scales it by the fit function value from GetFitVal(...)
     std::vector<double> GetVals(const double* parameters, int whichParam, int whichBin) const;
 

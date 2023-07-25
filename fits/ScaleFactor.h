@@ -32,6 +32,8 @@ namespace fit{
     //Scaling function which the ROOT fitter will minimize
     double GetFitVal(const double* parameters, int whichParam, int whichBin) const override;
 
+    double GetFitErr(const double* parameters, const double* errors, int whichParam, int whichBin) const override;
+
     //DTOR
     ~ScaleFactor() = default;
   };

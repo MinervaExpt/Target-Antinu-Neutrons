@@ -19,9 +19,15 @@ namespace fit{
   }
   
   double ScaleFactor::GetFitVal(const double* parameters, int whichParam, int whichBin) const{
-    double fitVal = 0.0;
+    double fitVal = -999.0;
     if (fDoFit) fitVal = (parameters+whichParam)[0];
     return fitVal;
+  }
+
+  double ScaleFactor::GetFitErr(const double* parameters, const double* errors, int whichParam, int whichBin) const{
+    double fitErr = -999.0;
+    if (fDoFit) fitErr = (errors+whichParam)[0];
+    return fitErr;
   }
 
 }

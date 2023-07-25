@@ -41,7 +41,11 @@ namespace fit{
   }
   
   double Fit::GetFitVal(const double* parameters, int whichParam, int whichBin) const{
-    return 0.0;//This base class should not be used without a specified fit function to be overwritten in derived classes.
+    return -999.0;//This base class should not be used without a specified fit function to be overwritten in derived classes.
+  }
+
+  double Fit::GetFitErr(const double* parameters, const double* errors, int whichParam, int whichBin) const{
+    return -999.0;//This base class should not be used without a specified fit function to be overwritten in derived classes.
   }
 
   std::vector<double> Fit::GetVals(const double* parameters, int whichParam, int whichBin) const{

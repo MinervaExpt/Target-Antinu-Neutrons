@@ -19,12 +19,24 @@ namespace fit{
   }
   
   double Line::GetFitVal(const double* parameters, int whichParam, int whichBin) const{
-    double fitVal = 0.0;
+    double fitVal = -999.0;
     if (fDoFit){
       double binCenter = fFitHists.at(0)->GetBinCenter(whichBin);
       fitVal = (parameters+whichParam)[0]+(parameters+whichParam)[1]*(binCenter);
     }
     return fitVal;
+  }
+
+  double Line::GetFitErr(const double* parameters, const double* errors, int whichParam, int whichBin) const{
+    double fitErr = -999.0;
+    if (fDoFit){
+      double binCenter = fFitHists.at(0)->GetBinCenter(whichBin);
+      double err0 = (errors+whichParam)[0];
+      double err1 = (errors+whichParam)[1];
+      double var = err0*err0 + (err1*binCenter)*(err1*binCenter);
+      fitErr = std::pow(var, 0.5);
+    }
+    return fitErr;
   }
 
 }
