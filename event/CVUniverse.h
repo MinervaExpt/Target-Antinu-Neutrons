@@ -327,6 +327,10 @@ class CVUniverse : public PlotUtils::MinervaUniverse {
     return recoilE;
   }
 
+  virtual double ApplyCaloTuning(double E) const{
+    return E;
+  }
+
   virtual int GetPTPZBin() const{
     double pT = GetMuonPT();
     double pZ = GetMuonPz();
