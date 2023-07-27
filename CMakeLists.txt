@@ -47,6 +47,9 @@ endif()
 
 include(${ROOT_USE_FILE})
 
+find_package(yaml-cpp 0.6.0 REQUIRED)
+include_directories(${YAML_CPP_INCLUDE_DIR})
+
 find_package(MAT REQUIRED)
 include_directories(${MAT_INCLUDE_DIR})
 
@@ -72,7 +75,7 @@ add_subdirectory(fits)
 
 #Build main executables
 add_executable(runEventLoop runEventLoop.cpp)
-target_link_libraries(runEventLoop ${ROOT_LIBRARIES} util event fits MAT MAT-MINERvA) #event cuts studies systematics)
+target_link_libraries(runEventLoop ${ROOT_LIBRARIES} util event fits MAT MAT-MINERvA yaml-cpp) #event cuts studies systematics)
 install(TARGETS runEventLoop DESTINATION bin)
 
 add_executable(ExtractCrossSection ExtractCrossSection.cpp)
