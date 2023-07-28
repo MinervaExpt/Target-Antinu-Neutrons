@@ -302,7 +302,7 @@ map<TString,map<TString,MnvH1D*>> FitScaleFactorsAndDraw(MnvH1D* dataHist, map<T
   vector<fit::Fit*> fits;
   for (auto hist:fitHists){
     std::vector<TH1D*> hists(1,hist);
-    fits.push_back(new fit::ScaleFactor(hists,lowBin,hiBin));
+    fits.push_back(new fit::Line(hists,lowBin,hiBin));
   }
 
   for (auto hist:unfitHists){
@@ -317,10 +317,14 @@ map<TString,map<TString,MnvH1D*>> FitScaleFactorsAndDraw(MnvH1D* dataHist, map<T
   auto* mini = new ROOT::Minuit2::Minuit2Minimizer(ROOT::Minuit2::kMigrad);
 
   int nextPar = 0;
+  int nextFit = 0;
   for (auto hist:fitHistsAndNames){
-    string var = hist.first.Data();
-    mini->SetVariable(nextPar,var,1.0,1.0);
-    nextPar++;
+    for (int iPar=0; iPar < fits.at(nextFit)->NDim(); ++iPar){
+      TString var = hist.first+"_"+to_string(iPar);
+      mini->SetVariable(nextPar+iPar,(string)var.Data(),1.0,1.0);
+    }
+    nextPar += fits.at(nextFit)->NDim();
+    ++nextFit;
   }
 
   if (nextPar != func.NDim()){
@@ -346,23 +350,30 @@ map<TString,map<TString,MnvH1D*>> FitScaleFactorsAndDraw(MnvH1D* dataHist, map<T
   const double* scaleResults = mini->X();
   const double* scaleErrors = mini->Errors();
   map<TString, double> scaleByName;
+  nextFit=0;
   nextPar=0;
   for (auto hist:fitHistsAndNames){
     cout << "HI" << endl;
-    scaleByName[hist.first]=scaleResults[nextPar];
+    scaleByName[hist.first]=scaleResults[nextPar]; //TODO: Modify this such that it affects later details correctly.
     for (auto var:scaleHists){
       cout << "HI 2" << endl;
       for (int iBin=0; iBin <= var.second[hist.first]->GetNbinsX()+1; ++iBin){
 	cout << "HI 3" << endl;
-	var.second[hist.first]->SetBinContent(iBin,scaleResults[nextPar]);
-	var.second[hist.first]->SetBinError(iBin,scaleErrors[nextPar]);
+	int whichBin = iBin;
+	if (iBin < lowBin) whichBin = lowBin;
+	else if (iBin > hiBin) whichBin = hiBin;
+	double fitVal = fits.at(nextFit)->GetFitVal(scaleResults,nextPar,whichBin);
+	double fitErr = fits.at(nextFit)->GetFitErr(scaleResults,scaleErrors,nextPar,whichBin);
+	var.second[hist.first]->SetBinContent(iBin,fitVal);
+	var.second[hist.first]->SetBinError(iBin,fitErr);
       }
       cout << "HI 4" << endl;
       cout << hist.first << endl;
       var.second[hist.first]->AddMissingErrorBandsAndFillWithCV(*hist.second);
     }
     cout << "HI 5" << endl;
-    ++nextPar;
+    nextPar += fits.at(nextFit)->NDim();
+    ++nextFit;
   }
 
   /*
@@ -374,10 +385,12 @@ map<TString,map<TString,MnvH1D*>> FitScaleFactorsAndDraw(MnvH1D* dataHist, map<T
 
   //cout << "Trying to draw pre-scaling." << endl;
 
-  cout << "Scaling the entire MnvH1D first." << endl;
+  //cout << "Scaling the entire MnvH1D first." << endl;
+  /* Removed. Think I don't need to scale before fitting universes. Though I do lose the check I had before where I could see the effect without any error modificaitons, but I don't need that since the full scaling is more correct.
   for (auto hist:fitHistsAndNames){
-    hist.second->Scale(scaleByName[hist.first]);
+    hist.second->Multiply(scaleHists[hist.first]);
   }
+  */
 
   if (doSyst){
     cout << "Looping over systematic universes." << endl;
@@ -416,7 +429,7 @@ map<TString,map<TString,MnvH1D*>> FitScaleFactorsAndDraw(MnvH1D* dataHist, map<T
 	vector<fit::Fit*> fitsUniv;
 	for (auto hist:fitHistsUniv){
 	  std::vector<TH1D*> hists(1,hist);
-	  fitsUniv.push_back(new fit::ScaleFactor(hists,lowBin,hiBin));
+	  fitsUniv.push_back(new fit::Line(hists,lowBin,hiBin));
 	}
 
 	for (auto hist:unfitHistsUniv){
@@ -429,19 +442,27 @@ map<TString,map<TString,MnvH1D*>> FitScaleFactorsAndDraw(MnvH1D* dataHist, map<T
 	auto* miniUniv = new ROOT::Minuit2::Minuit2Minimizer(ROOT::Minuit2::kMigrad);
 	
 	int parNext = 0;
+	int fitNext = 0;
 	for (auto hist:fitHistsAndNames){
-	  string var = hist.first.Data();
-	  miniUniv->SetVariable(parNext,var,1.0,1.0);
-	  parNext++;
+	  for (int iPar=0; iPar < fitsUniv.at(fitNext)->NDim(); ++iPar){
+	    TString var = hist.first+"_"+to_string(iPar);
+	    miniUniv->SetVariable(parNext+iPar,(string)var.Data(),1.0,1.0);
+	  }
+	  parNext += fitsUniv.at(fitNext)->NDim();
+	  ++fitNext;
 	}
 	
 	if (parNext != funcUniv.NDim()){
 	  cout << "The number of parameters was unexpected for some reason..." << endl;
 	  return scaleHists;
 	}
+
+	cout << "Setting Function." << endl;
 	
 	miniUniv->SetFunction(funcUniv);
 	
+	cout << "MINIMIZING Function." << endl;
+
 	if (!miniUniv->Minimize()){
 	  cout << "FIT FAILED" << endl;
 	  cout << "Printing Results." << endl;
@@ -457,11 +478,22 @@ map<TString,map<TString,MnvH1D*>> FitScaleFactorsAndDraw(MnvH1D* dataHist, map<T
 	
 	const double* scaleResultsUniv = miniUniv->X();
 	parNext=0;
+	fitNext=0;
 	for (auto hist:fitHistsAndNames){
-	  hist.second->GetVertErrorBand(bandName)->GetHist(whichUniv)->Scale(scaleResultsUniv[parNext]);	
-	  for (auto var:scaleHists) var.second[hist.first]->GetVertErrorBand(bandName)->GetHist(whichUniv)->Scale(scaleResultsUniv[parNext]);
-	  scaleFactorHists[hist.first]->Fill(quelUniv,scaleResultsUniv[parNext]);
-	  ++parNext;
+	  //hist.second->GetVertErrorBand(bandName)->GetHist(whichUniv)->Scale(scaleResultsUniv[parNext]);	
+	  for (auto var:scaleHists){
+	    for (int iBin=0; iBin <= var.second[hist.first]->GetVertErrorBand(bandName)->GetHist(whichUniv)->GetNbinsX()+1; ++iBin){
+	      int whichBin = iBin;
+	      if (iBin < lowBin) whichBin = lowBin;
+	      else if (iBin > hiBin) whichBin = hiBin;
+	      double fitValUniv = fitsUniv.at(fitNext)->GetFitVal(scaleResultsUniv,parNext,whichBin);
+	      var.second[hist.first]->GetVertErrorBand(bandName)->GetHist(whichUniv)->SetBinContent(iBin,fitValUniv);
+	    }
+	    //var.second[hist.first]->GetVertErrorBand(bandName)->GetHist(whichUniv)->Scale(scaleResultsUniv[parNext]);
+	  }
+	  //scaleFactorHists[hist.first]->Fill(quelUniv,scaleResultsUniv[parNext]);
+	  parNext+= fitsUniv.at(fitNext)->NDim();
+	  ++fitNext;
 	}
 	
 	quelUniv += 1.0;
@@ -519,7 +551,8 @@ int main(int argc, char* argv[]) {
   bool Tgts = (bool)(atoi(argv[7]));
   int fitMuonBins = 0;
   
-  vector<TString> namesToSave = {"pTmu","recoilE"};
+  //vector<TString> namesToSave = {"pTmu","recoilE"};
+  vector<TString> namesToSave = {"recoilE"};
   //vector<TString> namesToSave = {"pTmu","recoilE","NPlanes"};
   //vector<TString> namesToSave = {};
 

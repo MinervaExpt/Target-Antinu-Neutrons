@@ -358,10 +358,12 @@ map<TString,map<TString,MnvH1D*>> FitScaleFactorsAndDraw(MnvH1D* dataHist, map<T
 
   //cout << "Trying to draw pre-scaling." << endl;
 
+  /*
   cout << "Scaling the entire MnvH1D first." << endl;
   for (auto hist:fitHistsAndNames){
     hist.second->Scale(scaleByName[hist.first]);
   }
+  */ 
 
   if (doSyst){
     cout << "Looping over systematic universes." << endl;
@@ -431,7 +433,7 @@ map<TString,map<TString,MnvH1D*>> FitScaleFactorsAndDraw(MnvH1D* dataHist, map<T
 	const double* scaleResultsUniv = miniUniv->X();
 	parNext=0;
 	for (auto hist:fitHistsAndNames){
-	  hist.second->GetVertErrorBand(bandName)->GetHist(whichUniv)->Scale(scaleResultsUniv[parNext]);	
+	  //hist.second->GetVertErrorBand(bandName)->GetHist(whichUniv)->Scale(scaleResultsUniv[parNext]);	
 	  for (auto var:scaleHists) var.second[hist.first]->GetVertErrorBand(bandName)->GetHist(whichUniv)->Scale(scaleResultsUniv[parNext]);
 	  scaleFactorHists[hist.first]->Fill(quelUniv,scaleResultsUniv[parNext]);
 	  ++parNext;
@@ -492,7 +494,8 @@ int main(int argc, char* argv[]) {
   bool Tgts = (bool)(atoi(argv[7]));
   int fitMuonBins = 0;
   
-  vector<TString> namesToSave = {"pTmu","recoilE"};
+  vector<TString> namesToSave = {"recoilE"};
+  //vector<TString> namesToSave = {"pTmu","recoilE"};
   //vector<TString> namesToSave = {"pTmu","recoilE","NPlanes"};
   //vector<TString> namesToSave = {};
 
