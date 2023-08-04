@@ -70,11 +70,11 @@ namespace fit{
       int theParam = whichParam;
       for (int iFit = 0; iFit < whichFit; ++iFit) theParam += fFits.at(iFit)->NDim();
       double val0 = RecurseGetVal0(parameters, theParam, whichFit);
-      std::cout << "0 val: " << val0 << std::endl;
+      //std::cout << "0 val: " << val0 << std::endl;
       fitVal = fFits.at(whichFit)->GetFitVal(parameters, theParam, whichBin, val0);
-      std::cout << "fitVal: " << fitVal << std::endl;
+      //std::cout << "fitVal: " << fitVal << std::endl;
     }
-    std::cout << "fitVal for fit: " << fName << ", " << fitVal << std::endl;
+    //std::cout << "fitVal for fit: " << fName << ", " << fitVal << std::endl;
     return fitVal;
   }
 
