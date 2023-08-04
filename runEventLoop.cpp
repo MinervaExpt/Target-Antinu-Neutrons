@@ -857,12 +857,16 @@ int main(const int argc, const char** argv)
 		      myRecoilBins,
 		      myRecoilQ2Bins,
 		      myPmuBins,
-		      myVtxZBins//,
+		      myVtxZBins,
+		      finePTBins//,
 		      //myBlobEBins
 		      ;
 
   const double robsRecoilBinWidth = 50; //MeV
   for(int whichBin = 0; whichBin < 100 + 1; ++whichBin) robsRecoilBins.push_back(robsRecoilBinWidth * whichBin);
+
+  const double finePTBinWidth = 0.01; //GeV
+  for(int whichBin = 0; whichBin < (2.5/finePTBinWidth) + 1; ++whichBin) finePTBins.push_back(finePTBinWidth * whichBin);
 
   const double nBlobsBinWidth = 1;
   for(int whichBin = 0; whichBin < 21; ++whichBin) nBlobsBins.push_back(nBlobsBinWidth * whichBin);
@@ -889,7 +893,8 @@ int main(const int argc, const char** argv)
   //for(int whichBin = 0; whichBin < 51; ++whichBin) myBlobEBins.push_back(myBlobEBinWidth * whichBin);
 
   std::vector<Variable*> vars = {
-    new Variable(true, "pTmu", "p_{T, #mu} [GeV/c]", dansPTBins, &CVUniverse::GetMuonPT, &CVUniverse::GetMuonPTTrue),
+    //new Variable(true, "pTmu", "p_{T, #mu} [GeV/c]", dansPTBins, &CVUniverse::GetMuonPT, &CVUniverse::GetMuonPTTrue),
+    new Variable(true, "pTmu", "p_{T, #mu} [GeV/c]", finePTBins, &CVUniverse::GetMuonPT, &CVUniverse::GetMuonPTTrue),
     new Variable(false, "pzmu", "p_{||, #mu} [GeV/c]", dansPzBins, &CVUniverse::GetMuonPz, &CVUniverse::GetMuonPzTrue),
     //new Variable((TString)("MyBins"),"pTmu_MYBins", "p_{T, #mu} [GeV/c]", myPTBins, &CVUniverse::GetMuonPT, &CVUniverse::GetMuonPTTrue),
     new Variable(false, "pTmu_MYBins", "p_{T, #mu} [GeV/c]", myPTBins, &CVUniverse::GetMuonPT, &CVUniverse::GetMuonPTTrue),
