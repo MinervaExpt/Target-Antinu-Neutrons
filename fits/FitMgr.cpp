@@ -76,16 +76,27 @@ namespace fit{
   
   double FitMgr::DoEval(const double* parameters) const{
     //For now, just copying in the chi^2 function more or less directly from Andrew
+    //std::cout << "Bin lo in DoEval: " << fFirstBin << std::endl;
+    //std::cout << "Bin hi in DoEval: " << fLastBin << std::endl;
     double chi2 = 0.0;
-    if (!fDoFit) return chi2;
+    if (!fDoFit){
+      std::cout << "Not fitting..." << std::endl;
+      return chi2;
+    }
     
     for (int whichBin = fFirstBin; whichBin <= fLastBin; ++whichBin){
+      //std::cout << "whichBin Global: " << whichBin << std::endl; 
       int whichParam = 0;
       std::vector<double> fitSums(fNRegions, 0.0);
 
       for(unsigned int whichFit=0; whichFit < fFits.size(); ++whichFit){
 	std::vector<double> values = fFits.at(whichFit)->GetVals(parameters, whichParam, whichBin);
-	if (values.size() != fNRegions) return 0.0;
+	if (values.size() != fNRegions){
+	  //std::cout << "Issue getting vals!" << std::endl;
+	  //std::cout << "whichFit: " << whichFit << std::endl;
+	  //std::cout << "only got: " << values.size() << std::endl;
+	  return 0.0;
+	}
 	for(int iRegion=0; iRegion < fNRegions; ++iRegion) fitSums.at(iRegion) += values.at(iRegion);
 	whichParam += fFits.at(whichFit)->NDim();
       }
