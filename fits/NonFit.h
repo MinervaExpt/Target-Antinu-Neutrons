@@ -10,6 +10,7 @@
 #define NONFIT_H
 
 #include "TH1D.h"
+#include "TString.h"
 #include "TVector3.h"
 #include "Math/IFunction.h"
 #include "stdlib.h"
@@ -25,14 +26,14 @@ namespace fit{
   class NonFit: public Fit{
   public:
     //CTOR
-    NonFit(const std::vector<TH1D*> fitHist, const int firstBin = 1, const int lastBin = -1);
+    NonFit(const std::vector<TH1D*> fitHist, TString name, const int firstBin = 1, const int lastBin = -1);
 
     unsigned int NDim() const override;
 
     //Function which the ROOT fitter will minimize
-    double GetFitVal(const double* parameters, int whichParam, int whichBin) const override;
+    double GetFitVal(const double* parameters, int whichParam, int whichBin, double extVal0 = -999.0) const override;
 
-    double GetFitErr(const double* parameters, const double* errors, int whichParam, int whichBin) const override;
+    double GetFitErr(const double* parameters, const double* errors, int whichParam, int whichBin, double extErr0 = -999.0) const override;
 
     //DTOR
     ~NonFit() = default;

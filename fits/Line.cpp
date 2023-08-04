@@ -9,34 +9,41 @@
 #include "fits/Line.h"
 
 namespace fit{
-  Line::Line(const std::vector<TH1D*> fitHists, int firstBin, int lastBin):Fit(fitHists, firstBin, lastBin)
+  Line::Line(const std::vector<TH1D*> fitHists, TString name, int firstBin, int lastBin):Fit(fitHists, name, firstBin, lastBin)
   {
   }
 
   unsigned int Line::NDim() const{
     if (!fDoFit) return 0;
+    else if (fExtVal0) return 1;
     else return 2;
   }
   
-  double Line::GetFitVal(const double* parameters, int whichParam, int whichBin) const{
+  double Line::GetFitVal(const double* parameters, int whichParam, int whichBin, double extVal0) const{
     double fitVal = -999.0;
     if (fDoFit){
-      double binCenter = fFitHists.at(0)->GetBinCenter(whichBin);
-      fitVal = (parameters+whichParam)[0]+(parameters+whichParam)[1]*(binCenter);
+      double lowCenter = fFitHists.at(0)->GetBinCenter(fFirstBin);
+      double totDiff = fFitHists.at(0)->GetBinCenter(fLastBin)-lowCenter;
+      double binDiff = fFitHists.at(0)->GetBinCenter(whichBin)-lowCenter;
+      double range = fFitHists.at(0)->GetBinCenter(fLastBin)-lowCenter;
+      double val0 = (fExtVal0) ? extVal0 : (parameters+whichParam)[0];
+      double val1 = (fExtVal0) ? (parameters+whichParam)[0] : (parameters+whichParam)[1];
+      fitVal = val0 + (val1-val0)*(binDiff/totDiff);
     }
     return fitVal;
   }
 
-  double Line::GetFitErr(const double* parameters, const double* errors, int whichParam, int whichBin) const{
+  double Line::GetFitErr(const double* parameters, const double* errors, int whichParam, int whichBin, double extErr0) const{
     double fitErr = -999.0;
     if (fDoFit){
-      double binCenter = fFitHists.at(0)->GetBinCenter(whichBin);
-      double err0 = (errors+whichParam)[0];
-      double err1 = (errors+whichParam)[1];
-      double var = err0*err0 + (err1*binCenter)*(err1*binCenter);
+      double lowCenter = fFitHists.at(0)->GetBinCenter(fFirstBin);
+      double totDiff = fFitHists.at(0)->GetBinCenter(fLastBin)-lowCenter;
+      double binDiff = fFitHists.at(0)->GetBinCenter(whichBin)-lowCenter;
+      double err0 = (fExtVal0) ? extErr0 : (errors+whichParam)[0];
+      double err1 = (fExtVal0) ? (errors+whichParam)[0] : (errors+whichParam)[1];
+      double var = (1-(binDiff/totDiff))*(1-(binDiff/totDiff))*err0*err0 + (binDiff/totDiff)*(binDiff/totDiff)*err1*err1;
       fitErr = std::pow(var, 0.5);
     }
     return fitErr;
   }
-
 }

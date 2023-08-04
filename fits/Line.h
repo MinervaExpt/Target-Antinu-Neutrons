@@ -25,14 +25,14 @@ namespace fit{
   class Line: public Fit{
   public:
     //CTOR
-    Line(const std::vector<TH1D*> fitHist, const int firstBin = 1, const int lastBin = -1);
+    Line(const std::vector<TH1D*> fitHists, TString name, const int firstBin = 1, const int lastBin = -1);
 
     unsigned int NDim() const override;
 
     //Function which the ROOT fitter will minimize
-    double GetFitVal(const double* parameters, int whichParam, int whichBin) const override;
+    double GetFitVal(const double* parameters, int whichParam, int whichBin, double extVal0 = -999.0) const override;
 
-    double GetFitErr(const double* parameters, const double* errors, int whichParam, int whichBin) const override;
+    double GetFitErr(const double* parameters, const double* errors, int whichParam, int whichBin, double extErr0 = -999.0) const override;
 
     //DTOR
     ~Line() = default;

@@ -9,24 +9,24 @@
 #include "fits/ScaleFactor.h"
 
 namespace fit{
-  ScaleFactor::ScaleFactor(const std::vector<TH1D*> fitHists, int firstBin, int lastBin):Fit(fitHists, firstBin, lastBin)
+  ScaleFactor::ScaleFactor(const std::vector<TH1D*> fitHists, TString name, int firstBin, int lastBin):Fit(fitHists, name, firstBin, lastBin)
   {
   }
 
   unsigned int ScaleFactor::NDim() const{
-    if (!fDoFit) return 0;
+    if (!fDoFit || fExtVal0) return 0;
     else return 1;
   }
   
-  double ScaleFactor::GetFitVal(const double* parameters, int whichParam, int whichBin) const{
+  double ScaleFactor::GetFitVal(const double* parameters, int whichParam, int whichBin, double extVal0) const{
     double fitVal = -999.0;
-    if (fDoFit) fitVal = (parameters+whichParam)[0];
+    if (fDoFit) fitVal = (fExtVal0) ? extVal0 : (parameters+whichParam)[0];
     return fitVal;
   }
 
-  double ScaleFactor::GetFitErr(const double* parameters, const double* errors, int whichParam, int whichBin) const{
+  double ScaleFactor::GetFitErr(const double* parameters, const double* errors, int whichParam, int whichBin, double extErr0) const{
     double fitErr = -999.0;
-    if (fDoFit) fitErr = (errors+whichParam)[0];
+    if (fDoFit) fitErr = (fExtVal0) ? extErr0 : (errors+whichParam)[0];
     return fitErr;
   }
 

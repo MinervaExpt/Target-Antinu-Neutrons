@@ -9,7 +9,11 @@
 #include "fits/Fit.h"
 
 namespace fit{
-  Fit::Fit(const std::vector<TH1D*> fitHists, int firstBin, int lastBin): fFitHists(fitHists), fNBins(0), fFirstBin(firstBin), fLastBin(lastBin), fNRegions(0), fDoFit(true)
+  bool compFitStartBins(Fit* fit1, Fit* fit2){
+    return (fit1->GetFirstFitBin() < fit2->GetFirstFitBin());
+  }
+  
+  Fit::Fit(const std::vector<TH1D*> fitHists, TString name, int firstBin, int lastBin): fFitHists(fitHists), fNBins(0), fName(name), fFirstBin(firstBin), fLastBin(lastBin), fNRegions(0), fDoFit(true), fExtVal0(false)
   {
     if (fFitHists.size() == 0){
       std::cout << "Function has no histos to fit... Setting the fit condition to false." << std::endl;
@@ -40,11 +44,11 @@ namespace fit{
     return 0;//This base class should not be used without a specified fit function to be overwritten in derived classes, which also therefore define the number of relevant parameters.
   }
   
-  double Fit::GetFitVal(const double* parameters, int whichParam, int whichBin) const{
+  double Fit::GetFitVal(const double* parameters, int whichParam, int whichBin, double extVal0) const{
     return -999.0;//This base class should not be used without a specified fit function to be overwritten in derived classes.
   }
 
-  double Fit::GetFitErr(const double* parameters, const double* errors, int whichParam, int whichBin) const{
+  double Fit::GetFitErr(const double* parameters, const double* errors, int whichParam, int whichBin, double extErr0) const{
     return -999.0;//This base class should not be used without a specified fit function to be overwritten in derived classes.
   }
 
@@ -67,4 +71,9 @@ namespace fit{
   int Fit::GetNRegions() { return fNRegions; }
 
   bool Fit::CheckFit() { return fDoFit; }
+  
+  TString Fit::FitName() { return fName; }
+
+  void Fit::SetExtVal0(bool setVal) { fExtVal0 = setVal; }
+  bool Fit::CheckExtVal0() { return fExtVal0; }
 }
