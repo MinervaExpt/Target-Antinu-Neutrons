@@ -262,8 +262,10 @@ void DrawFromMnvH1Ds(MnvH1D* h_data, map<TString, MnvH1D*> hFit, map<TString, Mn
   return;
 }
 
-map<TString,MnvH1D*> PerformFit(map<TString, map<TString, vector<MnvH1D*>>> mcHistsAndFitTypes, vector<MnvH1D*> dataHists, TString varName, TString outDir, TString fitName, int lowBin, int hiBin, bool doSyst, map<TString, vector<TString>> tagsToSave)
+map<TString,MnvH1D*> PerformFit(map<TString, map<TString, vector<MnvH1D*>>> mcHistsAndFitTypes, map<TString, vector<tuple<TString, int, int>>> piecewiseBins, vector<MnvH1D*> dataHists, TString varName, TString outDir, TString fitName, int lowBin, int hiBin, bool doSyst, map<TString, vector<TString>> tagsToSave)
 {
+  cout << "low bin: " << lowBin << endl;
+  cout << "hi bin: " << hiBin << endl;
   TString nameTag = fitName+"_low_"+(TString)(to_string(lowBin))+"_hi_"+(TString)(to_string(hiBin));
   TString name = varName+nameTag;
 
@@ -325,6 +327,48 @@ map<TString,MnvH1D*> PerformFit(map<TString, map<TString, vector<MnvH1D*>>> mcHi
     }
   }
 
+  for (auto hists:mcHistsAndFitTypes["Piecewise"]){
+    TString dumpTag = "";//tag which lets you know which histos to scale later.
+    for (auto tag:tagsToSave[hists.first]){
+      dumpTag = dumpTag+"_t_"+tag;
+    }
+    vector<TH1D*> fitHists = {};
+    for (auto hist:hists.second){
+      if (!setRef){
+	refHist = (MnvH1D*)(hist->Clone());
+	setRef = true;
+      }
+      fitHists.push_back((TH1D*)hist->GetCVHistoWithStatError().Clone());
+    }
+    vector<fit::Fit*> fitPieces;
+    for (auto piece:piecewiseBins[hists.first]){
+      TString fitType = get<0>(piece);
+      int pieceLoBin = get<1>(piece);
+      int pieceHiBin = get<2>(piece);
+      if(fitType == "ScaleFactor"){
+	fitPieces.push_back(new fit::ScaleFactor(fitHists,hists.first,pieceLoBin,pieceHiBin));
+      }
+      else if (fitType == "Line"){	
+	fitPieces.push_back(new fit::Line(fitHists,hists.first,pieceLoBin,pieceHiBin));
+      }
+      else{
+	cout << "Unsupported piecewise fit piece passed. Aborting Fits." << endl;
+	return scaleHists;
+      }
+    }
+    sort(fitPieces.begin(), fitPieces.end(), fit::compFitStartBins);
+    cout << "Initializing: " << hists.first << endl;
+    for (auto fitPiece:fitPieces){
+      cout << "first bin: " << fitPiece->GetFirstFitBin() << endl;
+      cout << "last bin: " << fitPiece->GetLastFitBin() << endl;
+    }
+    fits.push_back(new fit::Piecewise(fitPieces,fitHists,hists.first,lowBin,hiBin));
+
+    if (hists.second.size()){
+      scaleHists[hists.first]= new MnvH1D(varName+"_fit_"+name+dumpTag,"",hists.second.at(0)->GetNbinsX(),hists.second.at(0)->GetXaxis()->GetXbins()->GetArray());
+    }
+  }
+
   for (auto hists:mcHistsAndFitTypes["NonFit"]){
     vector<TH1D*> fitHists = {};
     for (auto hist:hists.second){
@@ -338,6 +382,10 @@ map<TString,MnvH1D*> PerformFit(map<TString, map<TString, vector<MnvH1D*>>> mcHi
   }
 
   fit::FitMgr func(fits,hDataVec);
+  if (!func.CheckFit()){
+    cout << "OOPS" << endl;
+    return scaleHists;
+  }
 
   auto* mini = new ROOT::Minuit2::Minuit2Minimizer(ROOT::Minuit2::kMigrad);
 
@@ -374,6 +422,8 @@ map<TString,MnvH1D*> PerformFit(map<TString, map<TString, vector<MnvH1D*>>> mcHi
     printCorrMatrix(*mini, func.NDim());
   }
 
+  cout << "Moving ON" << endl;
+
   const double* scaleResults = mini->X();
   const double* scaleErrors = mini->Errors();
   map<TString, double> scaleByName;
@@ -383,8 +433,10 @@ map<TString,MnvH1D*> PerformFit(map<TString, map<TString, vector<MnvH1D*>>> mcHi
     if (!fitName.Contains("NonFit")){
       for (int iBin=0; iBin <= scaleHists[fitName]->GetNbinsX()+1; ++iBin){
 	int whichBin = iBin;
-	if (iBin < lowBin) whichBin = lowBin;
-	else if (iBin > hiBin) whichBin = hiBin;
+	int fitLowBin = fit->GetFirstFitBin();
+	int fitHiBin = fit->GetLastFitBin();
+	if (iBin < fitLowBin) whichBin = fitLowBin;
+	else if (iBin > fitHiBin) whichBin = fitHiBin;
 	double fitVal = fit->GetFitVal(scaleResults,nextPar,whichBin);
 	double fitErr = fit->GetFitErr(scaleResults,scaleErrors,nextPar,whichBin);
 	scaleHists[fitName]->SetBinContent(iBin,fitVal);
@@ -910,15 +962,20 @@ int main(int argc, char* argv[]) {
 
     TString tag = tags.at(iTag);
     TString name = varName+tag;
-    TString grabName;
+    TString grabName, grabName_noTag;
     if (tag.Contains("_Tgt")){
       TObjArray* tagArr = tag.Tokenize("Tgt");
       grabName="ByTgt_Tgt"+((TObjString*)(tagArr->At(tagArr->GetEntries()-1)))->String()+"/"+name;
+      grabName_noTag = "ByTgt_Tgt"+((TObjString*)(tagArr->At(tagArr->GetEntries()-1)))->String()+"/"+varName;
     }
-    else grabName = name;
+    else{
+      grabName = name;
+      grabName_noTag = varName;
+    }
 
     cout << "Performing Fitting and Scaling for: " << name << endl;
     cout << "Grabbing: " << grabName << endl;
+    cout << "TESTING NO TAG: " << grabName_noTag << endl;
 
     double binsNPlanes[22];
     for (unsigned int i=0; i < 22;++i) binsNPlanes[i]=1.0*i-10.5;
@@ -938,60 +995,100 @@ int main(int argc, char* argv[]) {
     }
 
     MnvH1D* dataHist = (MnvH1D*)(dataFile->Get(grabName+"_data"))->Clone();
+    MnvH1D* dataHist_noTag = (MnvH1D*)(dataFile->Get(grabName_noTag+"_data"))->Clone();
     vector<MnvH1D*> dataHists;
     dataHists.push_back((MnvH1D*)dataHist->Clone());
+    dataHists.push_back((MnvH1D*)dataHist_noTag->Clone());
 
     MnvH1D* sigHist = (MnvH1D*)(mcFile->Get(grabName+"_selected_signal_reco"))->Clone();
+    MnvH1D* sigHist_noTag = (MnvH1D*)(mcFile->Get(grabName_noTag+"_selected_signal_reco"))->Clone();
     sigHist->Scale(POTscale);
+    sigHist_noTag->Scale(POTscale);
 
     //
     MnvH1D* chargePiHist = (MnvH1D*)(mcFile->Get(grabName+"_background_1chargePi"))->Clone();
+    MnvH1D* chargePiHist_noTag = (MnvH1D*)(mcFile->Get(grabName_noTag+"_background_1chargePi"))->Clone();
     chargePiHist->Scale(POTscale);
+    chargePiHist_noTag->Scale(POTscale);
     MnvH1D* neutPiHist = (MnvH1D*)(mcFile->Get(grabName+"_background_1neutPi"))->Clone();
+    MnvH1D* neutPiHist_noTag = (MnvH1D*)(mcFile->Get(grabName_noTag+"_background_1neutPi"))->Clone();
     neutPiHist->Scale(POTscale);
+    neutPiHist_noTag->Scale(POTscale);
     MnvH1D* NPiHist = (MnvH1D*)(mcFile->Get(grabName+"_background_NPi"))->Clone();
+    MnvH1D* NPiHist_noTag = (MnvH1D*)(mcFile->Get(grabName_noTag+"_background_NPi"))->Clone();
     NPiHist->Scale(POTscale);
+    NPiHist_noTag->Scale(POTscale);
     MnvH1D* otherHist = (MnvH1D*)(mcFile->Get(grabName+"_background_Other"))->Clone();
+    MnvH1D* otherHist_noTag = (MnvH1D*)(mcFile->Get(grabName_noTag+"_background_Other"))->Clone();
     otherHist->Scale(POTscale);
+    otherHist_noTag->Scale(POTscale);
 
     MnvH1D* wrongNuclHist = (MnvH1D*)(mcFile->Get(grabName+"_background_Wrong_Nucleus"))->Clone();
+    MnvH1D* wrongNuclHist_noTag = (MnvH1D*)(mcFile->Get(grabName_noTag+"_background_Wrong_Nucleus"))->Clone();
     wrongNuclHist->Scale(POTscale);
+    wrongNuclHist_noTag->Scale(POTscale);
 
     MnvH1D* USHist = (MnvH1D*)(mcFile->Get(grabName+"_background_USPlastic"))->Clone();
+    MnvH1D* USHist_noTag = (MnvH1D*)(mcFile->Get(grabName_noTag+"_background_USPlastic"))->Clone();
     USHist->Scale(POTscale);
+    USHist_noTag->Scale(POTscale);
 
     MnvH1D* DSHist = (MnvH1D*)(mcFile->Get(grabName+"_background_DSPlastic"))->Clone();
+    MnvH1D* DSHist_noTag = (MnvH1D*)(mcFile->Get(grabName_noTag+"_background_DSPlastic"))->Clone();
     DSHist->Scale(POTscale);
+    DSHist_noTag->Scale(POTscale);
 
     MnvH1D* bkgNNeutPiHist = neutPiHist->Clone();
+    MnvH1D* bkgNNeutPiHist_noTag = neutPiHist_noTag->Clone();
     bkgNNeutPiHist->Add(NPiHist);
+    bkgNNeutPiHist_noTag->Add(NPiHist_noTag);
 
     MnvH1D* bkg1PiHist = neutPiHist->Clone();
+    MnvH1D* bkg1PiHist_noTag = neutPiHist_noTag->Clone();
     bkg1PiHist->Add(chargePiHist);
+    bkg1PiHist_noTag->Add(chargePiHist_noTag);
 
     //
     MnvH1D* QEHist = (MnvH1D*)(mcFile->Get(grabName+"_bkg_IntType_QE"))->Clone();
+    MnvH1D* QEHist_noTag = (MnvH1D*)(mcFile->Get(grabName_noTag+"_bkg_IntType_QE"))->Clone();
     QEHist->Scale(POTscale);
+    QEHist_noTag->Scale(POTscale);
     MnvH1D* RESHist = (MnvH1D*)(mcFile->Get(grabName+"_bkg_IntType_RES"))->Clone();
+    MnvH1D* RESHist_noTag = (MnvH1D*)(mcFile->Get(grabName_noTag+"_bkg_IntType_RES"))->Clone();
     RESHist->Scale(POTscale);
+    RESHist_noTag->Scale(POTscale);
     MnvH1D* DISHist = (MnvH1D*)(mcFile->Get(grabName+"_bkg_IntType_DIS"))->Clone();
+    MnvH1D* DISHist_noTag = (MnvH1D*)(mcFile->Get(grabName_noTag+"_bkg_IntType_DIS"))->Clone();
     DISHist->Scale(POTscale);
+    DISHist_noTag->Scale(POTscale);
     MnvH1D* MECHist = (MnvH1D*)(mcFile->Get(grabName+"_bkg_IntType_2p2h"))->Clone();
+    MnvH1D* MECHist_noTag = (MnvH1D*)(mcFile->Get(grabName_noTag+"_bkg_IntType_2p2h"))->Clone();
     MECHist->Scale(POTscale);
+    MECHist_noTag->Scale(POTscale);
     MnvH1D* OtherIntTypeHist = (MnvH1D*)(mcFile->Get(grabName+"_bkg_IntType_Other"))->Clone();
+    MnvH1D* OtherIntTypeHist_noTag = (MnvH1D*)(mcFile->Get(grabName_noTag+"_bkg_IntType_Other"))->Clone();
     OtherIntTypeHist->Scale(POTscale);
+    OtherIntTypeHist_noTag->Scale(POTscale);
 
     MnvH1D* bkgNonRESHist = DISHist->Clone();
     bkgNonRESHist->Add(QEHist);
     bkgNonRESHist->Add(MECHist);
     bkgNonRESHist->Add(OtherIntTypeHist);
+    MnvH1D* bkgNonRESHist_noTag = DISHist_noTag->Clone();
+    bkgNonRESHist_noTag->Add(QEHist_noTag);
+    bkgNonRESHist_noTag->Add(MECHist_noTag);
+    bkgNonRESHist_noTag->Add(OtherIntTypeHist_noTag);
 
     MnvH1D* bkgTotHist = bkgNonRESHist->Clone();
     bkgTotHist->Add(RESHist);
     bkgTotHist->Add(wrongNuclHist);
+    MnvH1D* bkgTotHist_noTag = bkgNonRESHist_noTag->Clone();
+    bkgTotHist_noTag->Add(RESHist_noTag);
+    bkgTotHist_noTag->Add(wrongNuclHist_noTag);
 
     map<TString, MnvH1D*> fitHists1A, unfitHists1A;
     map<TString, map<TString, vector<MnvH1D*>>> fitTEST1A;
+    map<TString, vector<tuple<TString, int, int>>> fitPieces1A;
 
     map<TString, vector<TString>> nameKeys1A;
     map<TString, vector<TString>> nameKeysTEST1A;
@@ -1004,10 +1101,21 @@ int main(int argc, char* argv[]) {
     nameKeys1A["BKG"]={"1chargePi","1neutPi","NPi","Other","Wrong_Nucleus"};
     nameKeys1A["Signal"]={"sig","signal"};
 
-    fitTEST1A["NonFit"]["Signal"].push_back((MnvH1D*)sigHist->Clone());
-    fitTEST1A["Line"]["BKG"].push_back((MnvH1D*)bkgTotHist->Clone());
+    fitTEST1A["Piecewise"]["Signal"].push_back((MnvH1D*)sigHist->Clone());
+    fitTEST1A["Piecewise"]["Signal"].push_back((MnvH1D*)sigHist_noTag->Clone());
+    fitTEST1A["Piecewise"]["BKG"].push_back((MnvH1D*)bkgTotHist->Clone());
+    fitTEST1A["Piecewise"]["BKG"].push_back((MnvH1D*)bkgTotHist_noTag->Clone());
     fitTEST1A["NonFit"]["USPlastic"].push_back((MnvH1D*)USHist->Clone());
+    fitTEST1A["NonFit"]["USPlastic"].push_back((MnvH1D*)USHist_noTag->Clone());
     fitTEST1A["NonFit"]["DSPlastic"].push_back((MnvH1D*)DSHist->Clone());
+    fitTEST1A["NonFit"]["DSPlastic"].push_back((MnvH1D*)DSHist_noTag->Clone());
+
+    fitPieces1A["Signal"].push_back(make_tuple("ScaleFactor",8,999));
+    fitPieces1A["Signal"].push_back(make_tuple("ScaleFactor",1,4));
+    fitPieces1A["Signal"].push_back(make_tuple("ScaleFactor",5,7));
+
+    fitPieces1A["BKG"].push_back(make_tuple("Line",8,999));
+    fitPieces1A["BKG"].push_back(make_tuple("Line",1,7));
 
     nameKeysTEST1A["BKG"]=nameKeys1A["BKG"];
     nameKeysTEST1A["Signal"]=nameKeys1A["Signal"];
@@ -1033,7 +1141,7 @@ int main(int argc, char* argv[]) {
     result.clear();
 
     cout << "Fitting NEW TEST" << endl;
-    map<TString, MnvH1D*> TESTresult = PerformFit(fitTEST1A, dataHists, name, outDir, "_fitTEST", lowBin, hiBin, doSyst, nameKeysTEST1A);
+    map<TString, MnvH1D*> TESTresult = PerformFit(fitTEST1A, fitPieces1A, dataHists, name, outDir, "_fitTEST", lowBin, hiBin, doSyst, nameKeysTEST1A);
     for (auto hist:TESTresult) hist.second->SetDirectory(outFile);    
     outFile->Write();
     for (auto hist:TESTresult) delete hist.second;
