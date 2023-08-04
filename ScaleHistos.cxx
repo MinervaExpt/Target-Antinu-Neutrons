@@ -1,7 +1,7 @@
 //File: ScaleHistos.cxx
 //Info: This script takes an input MC file and a scale factors file to produce a copy with the right histos scaled
 //
-//Usage: ScaleHistos <inFile> <scaleFile> <fitName> <outFile>
+//Usage: ScaleHistos <inFile> <scaleFile> <fitName> <outFile> <scaleSig yes if anything other than 0>
 //Author: David Last dlast@sas.upenn.edu/lastd44@gmail.com
 
 //C++ includes
@@ -100,7 +100,7 @@ int main(int argc, char* argv[]) {
   //Worth combining the different scalings together?
 
   //Pass an input file name to this script now
-  if (argc != 5) {
+  if (argc != 6) {
     cout << "Check usage..." << endl;
     return 2;
   }
@@ -109,6 +109,7 @@ int main(int argc, char* argv[]) {
   TString scaleFileName = argv[2];
   TString fitName = argv[3];
   TString outFileName = argv[4];
+  bool scaleSig = (bool)atoi(argv[5]);
 
   TFile* inFile = new TFile(inFileName,"READ");
   TFile* scaleFile = new TFile(scaleFileName,"READ");
@@ -135,8 +136,10 @@ int main(int argc, char* argv[]) {
     TString tagChunk = fitPieces.at(1);
     vector<TString> tags = BreakName("_t_",tagChunk);
     //TODO: Make able to handle more complicated case of not just using the fit from 500-1000 of just the background categories.
-    for(auto tag: tags) varTagsMap[varName].push_back(tag);
-    varNameMap[varName+tags.at(0)] = scaleName;
+    for(auto tag: tags){
+      varTagsMap[varName].push_back(tag);
+      varNameMap[varName+tag] = scaleName;
+    }
     cout << "" << endl;
   }
 
@@ -170,9 +173,11 @@ int main(int argc, char* argv[]) {
       for (auto varName: varTagsMap){
 	if (!nameObj.Contains(varName.first) || scaled) continue;
 	for (auto tag: varName.second){
+	  if(!scaleSig && tag.Contains("sig")) continue;
 	  if(!nameObj.Contains(tag)) continue;
 	  cout << "Scaling: " << nameObj << endl;
-	  TString nameOfScale = varNameMap[varName.first+varName.second.at(0)];
+	  TString nameOfScale = varNameMap[varName.first+tag];
+	  cout << "With Scale: " << nameOfScale << endl;
 	  MnvH1D* hScale = (MnvH1D*)scaleFile->Get(nameOfScale);
 	  h1D->Multiply(h1D,hScale);
 	  delete hScale;
