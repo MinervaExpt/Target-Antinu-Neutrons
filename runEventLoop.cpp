@@ -865,7 +865,7 @@ int main(const int argc, const char** argv)
   const double robsRecoilBinWidth = 50; //MeV
   for(int whichBin = 0; whichBin < 100 + 1; ++whichBin) robsRecoilBins.push_back(robsRecoilBinWidth * whichBin);
 
-  const double finePTBinWidth = 0.01; //GeV
+  const double finePTBinWidth = 0.001; //GeV
   for(int whichBin = 0; whichBin < (2.5/finePTBinWidth) + 1; ++whichBin) finePTBins.push_back(finePTBinWidth * whichBin);
 
   const double nBlobsBinWidth = 1;
