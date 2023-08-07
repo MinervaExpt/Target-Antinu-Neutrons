@@ -85,7 +85,7 @@ void optimizeBins(TString inFileName, TString varName, double nPercent) {
     //cout << "Percent: " << percent << endl;
     if (percent >= nPercent){
       combineBins = false;
-      cout << "Combine bin upper bound: " << h->GetYaxis()->GetBinUpEdge(iBinY) << ", with diagonal percent: " << percent << endl;
+      cout << "Combine bin upper bound: " << h->GetYaxis()->GetBinUpEdge(iBinY) << ", with diagonal percent of row: " << percent <<", and total bin content: " << sums.first << endl;
     }
     else{
       combineBins = true;
@@ -94,7 +94,7 @@ void optimizeBins(TString inFileName, TString varName, double nPercent) {
   }
 
   double percent = (sums.second > 0.0) ? 100.0*(sums.first/sums.second) : 0.0;
-  cout << "Final percent: " << percent << endl;
+  cout << "Final percent: " << percent << ", and total bin content: " << sums.first << endl;
 
   delete h;
 }
