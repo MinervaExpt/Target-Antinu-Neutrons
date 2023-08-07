@@ -844,6 +844,7 @@ int main(const int argc, const char** argv)
   
   //Same as Amit's seemingly. Bin normalized these are smoother.
   std::vector<double> dansPTBins = {0, 0.075, 0.15, 0.25, 0.325, 0.4, 0.475, 0.55, 0.7, 0.85, 1, 1.25, 1.5, 2.5},
+                      carbonOptimalPTBins = {0, 0.09, 0.18, 0.25, 0.34, 0.425, 0.515, 0.64, 0.78, 0.94, 1.15, 1.5},
                       //dansPTBins = {0, 0.075, 0.15, 0.25, 0.325, 0.4, 0.475, 0.55, 0.7, 0.85, 1, 1.25, 1.5, 2.5, 4.5},
                       myPTBins = {0, 0.075, 0.15, 0.25, 0.325, 0.4, 0.475, 0.55, 0.625, 0.7, 0.775, 0.85, 0.925, 1, 1.125, 1.25, 1.5, 2.5, 4.5},
 		      myQ2QEBins = {0,0.00625,0.0125,0.025,0.0375,0.05,0.1,0.15,0.2,0.3,0.4,0.6,0.8,1.0,1.2,2.0},
@@ -894,7 +895,8 @@ int main(const int argc, const char** argv)
 
   std::vector<Variable*> vars = {
     //new Variable(true, "pTmu", "p_{T, #mu} [GeV/c]", dansPTBins, &CVUniverse::GetMuonPT, &CVUniverse::GetMuonPTTrue),
-    new Variable(true, "pTmu", "p_{T, #mu} [GeV/c]", finePTBins, &CVUniverse::GetMuonPT, &CVUniverse::GetMuonPTTrue),
+    //new Variable(true, "pTmu", "p_{T, #mu} [GeV/c]", finePTBins, &CVUniverse::GetMuonPT, &CVUniverse::GetMuonPTTrue),
+    new Variable(true, "pTmu", "p_{T, #mu} [GeV/c]", carbonOptimalPTBins, &CVUniverse::GetMuonPT, &CVUniverse::GetMuonPTTrue),
     new Variable(false, "pzmu", "p_{||, #mu} [GeV/c]", dansPzBins, &CVUniverse::GetMuonPz, &CVUniverse::GetMuonPzTrue),
     //new Variable((TString)("MyBins"),"pTmu_MYBins", "p_{T, #mu} [GeV/c]", myPTBins, &CVUniverse::GetMuonPT, &CVUniverse::GetMuonPTTrue),
     new Variable(false, "pTmu_MYBins", "p_{T, #mu} [GeV/c]", myPTBins, &CVUniverse::GetMuonPT, &CVUniverse::GetMuonPTTrue),

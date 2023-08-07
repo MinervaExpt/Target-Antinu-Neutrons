@@ -22,23 +22,23 @@ class Variable: public PlotUtils::VariableBase<CVUniverse>
     TString fDirName;
   public:
     template <class ...ARGS>
-    Variable(bool isAnalysisVar, ARGS... args): PlotUtils::VariableBase<CVUniverse>(args...), fAnaVar(isAnalysisVar), fFillVar(true), fDirName(""), fAllBreakdowns(false)
+    Variable(bool isAnalysisVar, ARGS... args): PlotUtils::VariableBase<CVUniverse>(args...), fAnaVar(isAnalysisVar), fFillVar(true), fDirName(""), fAllBreakdowns(isAnalysisVar)
     {
     }
 
     template <class ...ARGS>
-    Variable(bool isAnalysisVar, bool fillVar, ARGS... args): PlotUtils::VariableBase<CVUniverse>(args...), fAnaVar(isAnalysisVar), fFillVar(fillVar), fDirName(""), fAllBreakdowns(false)
+    Variable(bool isAnalysisVar, bool fillVar, ARGS... args): PlotUtils::VariableBase<CVUniverse>(args...), fAnaVar(isAnalysisVar), fFillVar(fillVar), fDirName(""), fAllBreakdowns(isAnalysisVar)
     {
     }
 
     //This is risky and only safe because right now VariableBase won't have an ambiguous constructor... Think of a way to protect against this if possible...
     template <class ...ARGS>
-    Variable(TString name, bool isAnalysisVar, ARGS... args): PlotUtils::VariableBase<CVUniverse>(args...), fAnaVar(isAnalysisVar), fFillVar(true), fDirName(name), fAllBreakdowns(false)
+    Variable(TString name, bool isAnalysisVar, ARGS... args): PlotUtils::VariableBase<CVUniverse>(args...), fAnaVar(isAnalysisVar), fFillVar(true), fDirName(name), fAllBreakdowns(isAnalysisVar)
     {
     }
 
     template <class ...ARGS>
-    Variable(TString name, bool isAnalysisVar, bool fillVar, ARGS... args): PlotUtils::VariableBase<CVUniverse>(args...), fAnaVar(isAnalysisVar), fFillVar(fillVar), fDirName(name), fAllBreakdowns(false)
+    Variable(TString name, bool isAnalysisVar, bool fillVar, ARGS... args): PlotUtils::VariableBase<CVUniverse>(args...), fAnaVar(isAnalysisVar), fFillVar(fillVar), fDirName(name), fAllBreakdowns(isAnalysisVar)
     {
     }
 
