@@ -112,6 +112,12 @@ else()
   add_dependencies(update MAT-MINERvA-update MAT-update UnfoldUtils-update)
 endif()
 
+ExternalProject_Add(yaml-cpp
+                    GIT_REPOSITORY https://github.com/jbeder/yaml-cpp.git
+                    GIT_TAG yaml-cpp-0.6.0
+                    SOURCE_DIR ${SOURCE_CODE_DIR}/yaml-cpp
+                    CMAKE_ARGS -DCMAKE_INSTALL_PREFIX:PATH=${CMAKE_INSTALL_PREFIX} -DCMAKE_BUILD_TYPE:STRING=${CMAKE_BUILD_TYPE})
+
 #Configure the analysis code itself from the source code in the parent directory.
 #No need to download!  This is necessary because ExternalProject_Add()
 #happens at build time.  FetchContent() fixes this in CMake 3.11, but
@@ -121,7 +127,7 @@ ExternalProject_Add(Target-Antinu-Neutrons
                     CMAKE_ARGS -DCMAKE_INSTALL_PREFIX:PATH=${CMAKE_INSTALL_PREFIX} -DCMAKE_BUILD_TYPE:STRING=${CMAKE_BUILD_TYPE}
                     UPDATE_COMMAND ""
                     PATCH_COMMAND ""
-                    DEPENDS MAT MAT-MINERvA UnfoldUtils GENIEXSecExtract)
+                    DEPENDS MAT MAT-MINERvA UnfoldUtils GENIEXSecExtract yaml-cpp)
 
 #Make a symbolic link to MATFluxAndReweightFiles because Andrew didn't think about
 #naming it "data" before he created a bunch of CVS directories that only Rob can remove :(

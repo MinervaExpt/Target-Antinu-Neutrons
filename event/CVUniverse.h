@@ -123,7 +123,8 @@ class CVUniverse : public PlotUtils::MinervaUniverse {
   }
 
   virtual bool IsMinosMatchMuon() const {
-    return GetInt("has_interaction_vertex") == 1;
+    int matchMuon = GetIsMinosMatchTrack();
+    return (matchMuon == 1);
   }
   
   ROOT::Math::XYZTVector GetVertex() const
@@ -324,6 +325,10 @@ class CVUniverse : public PlotUtils::MinervaUniverse {
   virtual double GetRecoilEnergyGeV() const{
     double recoilE = GetRecoilEnergy()*MeVGeV;
     return recoilE;
+  }
+
+  virtual double ApplyCaloTuning(double E) const{
+    return E;
   }
 
   virtual int GetPTPZBin() const{

@@ -1,4 +1,4 @@
-//File: BKGFitting.cxx
+//File: BKGFittingNEWSTRUCTURE.cxx
 //Info: This script is intended to fit recoil/pTmu plots using TMinuit primarily for the neutron selected sample.
 //
 //Usage: BKGFitting <mc_file> <data_file> <outdir> <outFileTag> <recoilE/pTmu/vtxZ> <doSyst (only 0 means no)> <Tgts> optional: <mainTagName> <lowFitBinNum> <hiFitBinNum> <do fits in bins of muon momentum (only 0 means no)> TODO: Save the information beyond just printing it out
@@ -50,7 +50,10 @@
 #include "TMinuitMinimizer.h"
 
 //Analysis includes
-#include "fits/ScaleFactors.h"
+#include "fits/ScaleFactor.h"
+#include "fits/Line.h"
+#include "fits/NonFit.h"
+#include "fits/FitMgr.h"
 
 //PlotUtils includes??? Trying anything at this point...
 #include "PlotUtils/MnvH1D.h"
@@ -296,15 +299,32 @@ map<TString,map<TString,MnvH1D*>> FitScaleFactorsAndDraw(MnvH1D* dataHist, map<T
     unfitHists.push_back((TH1D*)hists.second->GetCVHistoWithStatError().Clone());
   }
 
-  fit::ScaleFactors func(fitHists,unfitHists,hData,lowBin,hiBin);
+  vector<fit::Fit*> fits;
+  for (auto hist:fitHists){
+    std::vector<TH1D*> hists(1,hist);
+    fits.push_back(new fit::Line(hists,lowBin,hiBin));
+  }
+
+  for (auto hist:unfitHists){
+    std::vector<TH1D*> hists(1,hist);
+    fits.push_back(new fit::NonFit(hists,lowBin,hiBin));
+  }
+
+  std::vector<TH1D*> dataHists(1,hData);
+
+  fit::FitMgr func(fits,dataHists);
 
   auto* mini = new ROOT::Minuit2::Minuit2Minimizer(ROOT::Minuit2::kMigrad);
 
   int nextPar = 0;
+  int nextFit = 0;
   for (auto hist:fitHistsAndNames){
-    string var = hist.first.Data();
-    mini->SetVariable(nextPar,var,1.0,1.0);
-    nextPar++;
+    for (int iPar=0; iPar < fits.at(nextFit)->NDim(); ++iPar){
+      TString var = hist.first+"_"+to_string(iPar);
+      mini->SetVariable(nextPar+iPar,(string)var.Data(),1.0,1.0);
+    }
+    nextPar += fits.at(nextFit)->NDim();
+    ++nextFit;
   }
 
   if (nextPar != func.NDim()){
@@ -313,11 +333,6 @@ map<TString,map<TString,MnvH1D*>> FitScaleFactorsAndDraw(MnvH1D* dataHist, map<T
   }
 
   mini->SetFunction(func);
-  double test[5] = {1.0,1.0,1.0,1.0,1.0};
-  const double* test2 = test;
-  
-  cout << "Pre-fit Fit function value." << endl;
-  cout << func.DoEval(test2) << endl;
 
   if (!mini->Minimize()){
     cout << "FIT FAILED" << endl;
@@ -335,18 +350,30 @@ map<TString,map<TString,MnvH1D*>> FitScaleFactorsAndDraw(MnvH1D* dataHist, map<T
   const double* scaleResults = mini->X();
   const double* scaleErrors = mini->Errors();
   map<TString, double> scaleByName;
+  nextFit=0;
   nextPar=0;
   for (auto hist:fitHistsAndNames){
-    scaleByName[hist.first]=scaleResults[nextPar];
+    cout << "HI" << endl;
+    scaleByName[hist.first]=scaleResults[nextPar]; //TODO: Modify this such that it affects later details correctly.
     for (auto var:scaleHists){
+      cout << "HI 2" << endl;
       for (int iBin=0; iBin <= var.second[hist.first]->GetNbinsX()+1; ++iBin){
-	var.second[hist.first]->SetBinContent(iBin,scaleResults[nextPar]);
-	var.second[hist.first]->SetBinError(iBin,scaleErrors[nextPar]);
+	cout << "HI 3" << endl;
+	int whichBin = iBin;
+	if (iBin < lowBin) whichBin = lowBin;
+	else if (iBin > hiBin) whichBin = hiBin;
+	double fitVal = fits.at(nextFit)->GetFitVal(scaleResults,nextPar,whichBin);
+	double fitErr = fits.at(nextFit)->GetFitErr(scaleResults,scaleErrors,nextPar,whichBin);
+	var.second[hist.first]->SetBinContent(iBin,fitVal);
+	var.second[hist.first]->SetBinError(iBin,fitErr);
       }
+      cout << "HI 4" << endl;
       cout << hist.first << endl;
       var.second[hist.first]->AddMissingErrorBandsAndFillWithCV(*hist.second);
     }
-    ++nextPar;
+    cout << "HI 5" << endl;
+    nextPar += fits.at(nextFit)->NDim();
+    ++nextFit;
   }
 
   /*
@@ -358,12 +385,12 @@ map<TString,map<TString,MnvH1D*>> FitScaleFactorsAndDraw(MnvH1D* dataHist, map<T
 
   //cout << "Trying to draw pre-scaling." << endl;
 
-  /*
-  cout << "Scaling the entire MnvH1D first." << endl;
+  //cout << "Scaling the entire MnvH1D first." << endl;
+  /* Removed. Think I don't need to scale before fitting universes. Though I do lose the check I had before where I could see the effect without any error modificaitons, but I don't need that since the full scaling is more correct.
   for (auto hist:fitHistsAndNames){
-    hist.second->Scale(scaleByName[hist.first]);
+    hist.second->Multiply(scaleHists[hist.first]);
   }
-  */ 
+  */
 
   if (doSyst){
     cout << "Looping over systematic universes." << endl;
@@ -398,26 +425,43 @@ map<TString,map<TString,MnvH1D*>> FitScaleFactorsAndDraw(MnvH1D* dataHist, map<T
 	for (auto hists:unfitHistsAndNames){
 	  unfitHistsUniv.push_back((TH1D*)hists.second->GetVertErrorBand(bandName)->GetHist(whichUniv)->Clone());
 	}
-	
-	fit::ScaleFactors funcUniv(fitHistsUniv,unfitHistsUniv,hData,lowBin,hiBin);
+
+	vector<fit::Fit*> fitsUniv;
+	for (auto hist:fitHistsUniv){
+	  std::vector<TH1D*> hists(1,hist);
+	  fitsUniv.push_back(new fit::Line(hists,lowBin,hiBin));
+	}
+
+	for (auto hist:unfitHistsUniv){
+	  std::vector<TH1D*> hists(1,hist);
+	  fitsUniv.push_back(new fit::NonFit(hists,lowBin,hiBin));
+	}
+
+	fit::FitMgr funcUniv(fitsUniv,dataHists);
 	
 	auto* miniUniv = new ROOT::Minuit2::Minuit2Minimizer(ROOT::Minuit2::kMigrad);
 	
 	int parNext = 0;
+	int fitNext = 0;
 	for (auto hist:fitHistsAndNames){
-	  string var = hist.first.Data();
-	  miniUniv->SetVariable(parNext,var,1.0,1.0);
-	  parNext++;
+	  for (int iPar=0; iPar < fitsUniv.at(fitNext)->NDim(); ++iPar){
+	    TString var = hist.first+"_"+to_string(iPar);
+	    miniUniv->SetVariable(parNext+iPar,(string)var.Data(),1.0,1.0);
+	  }
+	  parNext += fitsUniv.at(fitNext)->NDim();
+	  ++fitNext;
 	}
 	
 	if (parNext != funcUniv.NDim()){
 	  cout << "The number of parameters was unexpected for some reason..." << endl;
 	  return scaleHists;
 	}
+
+	cout << "Setting Function." << endl;
 	
 	miniUniv->SetFunction(funcUniv);
 	
-	cout << "Pre-fit Parameters" << endl;
+	cout << "MINIMIZING Function." << endl;
 
 	if (!miniUniv->Minimize()){
 	  cout << "FIT FAILED" << endl;
@@ -434,11 +478,22 @@ map<TString,map<TString,MnvH1D*>> FitScaleFactorsAndDraw(MnvH1D* dataHist, map<T
 	
 	const double* scaleResultsUniv = miniUniv->X();
 	parNext=0;
+	fitNext=0;
 	for (auto hist:fitHistsAndNames){
 	  //hist.second->GetVertErrorBand(bandName)->GetHist(whichUniv)->Scale(scaleResultsUniv[parNext]);	
-	  for (auto var:scaleHists) var.second[hist.first]->GetVertErrorBand(bandName)->GetHist(whichUniv)->Scale(scaleResultsUniv[parNext]);
-	  scaleFactorHists[hist.first]->Fill(quelUniv,scaleResultsUniv[parNext]);
-	  ++parNext;
+	  for (auto var:scaleHists){
+	    for (int iBin=0; iBin <= var.second[hist.first]->GetVertErrorBand(bandName)->GetHist(whichUniv)->GetNbinsX()+1; ++iBin){
+	      int whichBin = iBin;
+	      if (iBin < lowBin) whichBin = lowBin;
+	      else if (iBin > hiBin) whichBin = hiBin;
+	      double fitValUniv = fitsUniv.at(fitNext)->GetFitVal(scaleResultsUniv,parNext,whichBin);
+	      var.second[hist.first]->GetVertErrorBand(bandName)->GetHist(whichUniv)->SetBinContent(iBin,fitValUniv);
+	    }
+	    //var.second[hist.first]->GetVertErrorBand(bandName)->GetHist(whichUniv)->Scale(scaleResultsUniv[parNext]);
+	  }
+	  //scaleFactorHists[hist.first]->Fill(quelUniv,scaleResultsUniv[parNext]);
+	  parNext+= fitsUniv.at(fitNext)->NDim();
+	  ++fitNext;
 	}
 	
 	quelUniv += 1.0;
@@ -496,8 +551,8 @@ int main(int argc, char* argv[]) {
   bool Tgts = (bool)(atoi(argv[7]));
   int fitMuonBins = 0;
   
-  vector<TString> namesToSave = {"recoilE"};
   //vector<TString> namesToSave = {"pTmu","recoilE"};
+  vector<TString> namesToSave = {"recoilE"};
   //vector<TString> namesToSave = {"pTmu","recoilE","NPlanes"};
   //vector<TString> namesToSave = {};
 
@@ -694,32 +749,37 @@ int main(int argc, char* argv[]) {
     bkgTotHist->Add(wrongNuclHist);
 
     map<TString, MnvH1D*> fitHists1A, unfitHists1A;
+    /*
     map<TString, MnvH1D*> fitHists2A, unfitHists2A;
     map<TString, MnvH1D*> fitHists3A, unfitHists3A;
     map<TString, MnvH1D*> fitHists4A, unfitHists4A;
     map<TString, MnvH1D*> fitHists5A, unfitHists5A;
     map<TString, MnvH1D*> fitHists6A, unfitHists6A;
+    */
 
     map<TString, MnvH1D*> fitHists1B, unfitHists1B;
+    /*
     map<TString, MnvH1D*> fitHists2B, unfitHists2B;
     map<TString, MnvH1D*> fitHists3B, unfitHists3B;
     map<TString, MnvH1D*> fitHists4B, unfitHists4B;
     map<TString, MnvH1D*> fitHists5B, unfitHists5B;
     map<TString, MnvH1D*> fitHists6B, unfitHists6B;
+    */
 
     map<TString, vector<TString>> nameKeys1A, nameKeys1B;
+    /*
     map<TString, vector<TString>> nameKeys2A, nameKeys2B;
     map<TString, vector<TString>> nameKeys3A, nameKeys3B;
     map<TString, vector<TString>> nameKeys4A, nameKeys4B;
     map<TString, vector<TString>> nameKeys5A, nameKeys5B;
     map<TString, vector<TString>> nameKeys6A, nameKeys6B;
-
+    */
 
     fitHists1A["BKG"]=(MnvH1D*)bkgTotHist->Clone();
     fitHists1A["Signal"]=(MnvH1D*)sigHist->Clone();
     unfitHists1A["USPlastic"]=(MnvH1D*)USHist->Clone();
     unfitHists1A["DSPlastic"]=(MnvH1D*)DSHist->Clone();
-    unfitHists1A["WrongNucleus"]=(MnvH1D*)wrongNuclHist->Clone();
+    //unfitHists1A["WrongNucleus"]=(MnvH1D*)wrongNuclHist->Clone();
     nameKeys1A["BKG"]={"1chargePi","1neutPi","NPi","Other","Wrong_Nucleus"};
     nameKeys1A["Signal"]={"sig","signal"};
 
@@ -727,9 +787,10 @@ int main(int argc, char* argv[]) {
     unfitHists1B["Signal"]=(MnvH1D*)sigHist->Clone();
     unfitHists1B["USPlastic"]=(MnvH1D*)USHist->Clone();
     unfitHists1B["DSPlastic"]=(MnvH1D*)DSHist->Clone();
-    unfitHists1B["WrongNucleus"]=(MnvH1D*)wrongNuclHist->Clone();
+    //unfitHists1B["WrongNucleus"]=(MnvH1D*)wrongNuclHist->Clone();
     nameKeys1B["BKG"]=nameKeys1A["BKG"];
 
+    /*
     fitHists2A["single #pi^{#pm}"]=(MnvH1D*)chargePiHist->Clone();
     fitHists2A["single #pi^{0}"]=(MnvH1D*)neutPiHist->Clone();
     fitHists2A["N#pi"]=(MnvH1D*)NPiHist->Clone();
@@ -840,6 +901,7 @@ int main(int argc, char* argv[]) {
     unfitHists6B["WrongNucleus"]=(MnvH1D*)wrongNuclHist->Clone();
     nameKeys6B["RES"]=nameKeys6A["RES"];
     nameKeys6B["DIS"]=nameKeys6A["DIS"];
+    */
 
     cout << "Fitting 1A" << endl;
     map<TString,map<TString,MnvH1D*>> result = FitScaleFactorsAndDraw(dataHist, fitHists1A, unfitHists1A, name, outDir, "_fit1A", lowBin, hiBin, doSyst, true, varsToSave, nameKeys1A);
@@ -879,7 +941,7 @@ int main(int argc, char* argv[]) {
       for (auto var:hist.second) delete var.second;
     }
     result.clear();
-
+    /*
     cout << "Fitting 2A" << endl;
     result = FitScaleFactorsAndDraw(dataHist, fitHists2A, unfitHists2A, name, outDir, "_fit2A", lowBin, hiBin, doSyst, true, varsToSave, nameKeys2A);
     map<TString,MnvH1D*> scaledHists2A = {};
@@ -1086,6 +1148,7 @@ int main(int argc, char* argv[]) {
       for (auto var:hist.second) delete var.second;
     }
     result.clear();
+    */
 
     delete dataHist;
     delete sigHist;
@@ -1109,6 +1172,7 @@ int main(int argc, char* argv[]) {
     for (auto hist:unfitHists1A) delete hist.second;
     for (auto hist:fitHists1B) delete hist.second;
     for (auto hist:unfitHists1B) delete hist.second;
+    /*
     for (auto hist:fitHists2A) delete hist.second;
     for (auto hist:unfitHists2A) delete hist.second;
     for (auto hist:fitHists2B) delete hist.second;
@@ -1129,8 +1193,10 @@ int main(int argc, char* argv[]) {
     for (auto hist:unfitHists6A) delete hist.second;
     for (auto hist:fitHists6B) delete hist.second;
     for (auto hist:unfitHists6B) delete hist.second;
+    */
     for (auto hist:scaledHists1A) delete hist.second;
     for (auto hist:scaledHists1B) delete hist.second;
+    /*
     for (auto hist:scaledHists2A) delete hist.second;
     for (auto hist:scaledHists2B) delete hist.second;
     for (auto hist:scaledHists3A) delete hist.second;
@@ -1141,6 +1207,7 @@ int main(int argc, char* argv[]) {
     for (auto hist:scaledHists5B) delete hist.second;
     for (auto hist:scaledHists6A) delete hist.second;
     for (auto hist:scaledHists6B) delete hist.second;
+    */
     for (auto hist:varsToSave) delete hist.second;
     varsToSave.clear();
   }
