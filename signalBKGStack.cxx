@@ -366,7 +366,8 @@ void DrawIntType(string name_QE, TFile* mcFile, TFile* dataFile, TString sample,
   h_QE_Sig->SetLineColor(TColor::GetColor("#88CCEE"));
   h_QE_Sig->SetFillColor(TColor::GetColor("#88CCEE"));
 
-  string name_sig = (string)h_QE_Sig->GetName();
+  //string name_sig = (string)h_QE_Sig->GetName();
+  string name_sig = name_QE;
   name_sig.erase(name_sig.length()-3,name_sig.length());
   string name_bkg = name_sig;
   name_bkg.erase(name_bkg.length()-12,name_bkg.length());
@@ -1892,24 +1893,30 @@ int main(int argc, char* argv[]) {
 	pos=0;
 	if ((pos=nameInt.find("TwoD")) != string::npos || (pos=nameInt.find("vtxZ")) != string::npos || (pos=name.find("Inner")) != string::npos) continue;
 	else if((pos = name.find("_sig_IntType_QE")) != string::npos){
+	  cout << "Entering internal IntType" << endl;
+	  cout << "Should be handling: " << name << endl;
 	  string nameToSave = nameInt;
 	  nameToSave.erase(nameToSave.length()-15,nameToSave.length());
 	  DrawIntType(name,mcFile,dataFile,label,scale,(TString)outDir+(TString)nameToSave);
 	  cout << "" << endl;
 	}
 	else if ((pos = name.find("_sig_TargetType_Plastic")) != string::npos){
+	  cout << "Entering internal TgtType" << endl;
 	  string nameToSave = nameInt;
 	  nameToSave.erase(nameToSave.length()-23,nameToSave.length());
 	  DrawTargetType(name,mcFile,dataFile,label,scale,(TString)outDir+(TString)nameToSave);
 	  cout << "" << endl;
 	}
 	else if ((pos = name.find("_sig_LeadBlobType_neut")) != string::npos){
+	  cout << "Entering internal LeadBlobType" << endl;
 	  string nameToSave = nameInt;
 	  nameToSave.erase(nameToSave.length()-22,nameToSave.length());
 	  DrawLeadBlobType(name,mcFile,dataFile,label,scale,(TString)outDir+(TString)nameToSave);
 	  cout << "" << endl;
 	}
 	else if ((pos = name.find("_selected_signal_reco")) != string::npos){
+	  cout << "Entering internal BKGCateg" << endl;
+	  cout << "Should be handling: " << name << endl;
 	  string nameToSave = nameInt;
 	  nameToSave.erase(nameToSave.length()-21,nameToSave.length());
 	  DrawBKGCateg(name,mcFile,dataFile,label,scale,(TString)outDir+(TString)nameToSave);
@@ -1922,6 +1929,7 @@ int main(int argc, char* argv[]) {
     string name=(string)key->GetName();
     if((pos=name.find("TwoD")) != string::npos || (pos=name.find("vtxZ")) != string::npos || (pos=name.find("Inner")) != string::npos) continue;
     else if((pos = name.find("_sig_IntType_QE")) != string::npos){
+      cout << "Entering base IntType" << endl;
       string nameToSave = name;
       nameToSave.erase(nameToSave.length()-15,nameToSave.length());
       DrawIntType(name,mcFile,dataFile,label,scale,(TString)outDir+(TString)nameToSave);
@@ -1929,6 +1937,7 @@ int main(int argc, char* argv[]) {
       cout << "" << endl;
     }
     else if ((pos = name.find("_sig_TargetType_Plastic")) != string::npos){
+      cout << "Entering base Tgt" << endl;
       string nameToSave = name;
       nameToSave.erase(nameToSave.length()-23,nameToSave.length());
       DrawTargetType(name,mcFile,dataFile,label,scale,(TString)outDir+(TString)nameToSave);
@@ -1936,6 +1945,7 @@ int main(int argc, char* argv[]) {
       cout << "" << endl;
     }
     else if ((pos = name.find("_sig_LeadBlobType_neut")) != string::npos){
+      cout << "Entering base Blob" << endl;
       string nameToSave = name;
       nameToSave.erase(nameToSave.length()-22,nameToSave.length());
       DrawLeadBlobType(name,mcFile,dataFile,label,scale,(TString)outDir+(TString)nameToSave);
@@ -1949,6 +1959,7 @@ int main(int argc, char* argv[]) {
       //else if ((pos = name.find("EMBlobE_")) != string::npos) continue;
       //else if ((pos = name.find("EMBlobNHit_")) != string::npos) continue;
       //else if ((pos = name.find("EMBlobENHitRatio_")) != string::npos) continue;
+      cout << "Entering base BKG" << endl;
       string nameToSave = name;
       nameToSave.erase(nameToSave.length()-21,nameToSave.length());
       DrawBKGCateg(name,mcFile,dataFile,label,scale,(TString)outDir+(TString)nameToSave);
