@@ -3,7 +3,7 @@
 //       Subtracts backgrounds, performs unfolding, applies efficiency x acceptance correction, and 
 //       divides by flux and number of nucleons.  Writes a .root file with the cross section histogram.
 //
-//Usage: ExtractCrossSection <unfolding iterations> <data.root> <mc.root> <stop at efficiency correction> <varName> <tgtZ> <multiply by data POT> : optional <flux_file> <fluxVarName>
+//Usage: ExtractCrossSection <unfolding iterations> <data.root> <mc.root> <stop at efficiency correction> <varName> <tgtZ> <no. Flux Universes> <multiply by data POT> <background naming> : optional <flux_file> <fluxVarName>
 //
 //Author: Andrew Olivier aolivier@ur.rochester.edu
 
@@ -20,6 +20,7 @@
 #include "PlotUtils/MnvH2D.h"
 #include "PlotUtils/MnvPlotter.h"
 #include "PlotUtils/TargetUtils.h"
+#include "PlotUtils/FluxReweighter.h"
 #pragma GCC diagnostic pop
 
 //ROOT includes
@@ -168,12 +169,17 @@ double GetTotalScatteringCenters(int targetZ, bool isMC)
 //The final step of cross section extraction: normalize by flux, bin width, POT, and number of targets
 PlotUtils::MnvH1D* normalize(PlotUtils::MnvH1D* efficiencyCorrected, PlotUtils::MnvH1D* fluxIntegral, const double nNucleons, const double POT)
 {
+  std::cout << "Dividing" << std::endl;
   efficiencyCorrected->Divide(efficiencyCorrected, fluxIntegral);
-
+  
+  std::cout << "Scaling" << std::endl;
   efficiencyCorrected->Scale(1./nNucleons/POT);
+  std::cout << "Units" << std::endl;
   efficiencyCorrected->Scale(1.e4); //Flux histogram is in m^-2, but convention is to report cm^2
+  std::cout << "Bin Width" << std::endl;
   efficiencyCorrected->Scale(1., "width");
 
+  std::cout << "Returning" << std::endl;
   return efficiencyCorrected;
 }
 
@@ -185,9 +191,9 @@ int main(const int argc, const char** argv)
 
   TH1::AddDirectory(kFALSE); //Needed so that MnvH1D gets to clean up its own MnvLatErrorBands (which are TH1Ds).
 
-  if(!(argc == 9 || argc == 11))
+  if(!(argc == 10 || argc == 12))
   {
-    std::cerr << "Expected 8 or 10 arguments, but I got " << argc-1 << ".\n"
+    std::cerr << "Expected 9 or 11 arguments, but I got " << argc-1 << ".\n"
               << "USAGE: ExtractCrossSection <unfolding iterations> <data.root> <mc.root> <stop at eff. corr.> <varName> ...\n";
     return 1;
   }
@@ -210,16 +216,21 @@ int main(const int argc, const char** argv)
   bool stopAtEffCorr = (bool)atoi(argv[4]);
   std::string varName = std::string(argv[5]);
   int tgtZ = atoi(argv[6]);
-  bool multPOT = (bool)atoi(argv[7]);
-  std::string background_naming = std::string(argv[8]); 
+  int numFluxUniv = atoi(argv[7]);
+  int nuPDG = -14; //hard-coded for my analyses
+  const std::string project_dir = "targets_2345_jointNueIMD";//Copied from Anezka for target fluxes
+  bool multPOT = (bool)atoi(argv[8]);
+  std::string background_naming = std::string(argv[9]); 
   if (background_naming != "bkg_IntType") background_naming = "background";
 
   TFile* fluxFile = nullptr;
   std::string fluxVarName = "";
 
-  if (argc == 11){
-    fluxFile = TFile::Open(argv[9],"READ");
-    fluxVarName =std::string(argv[10]);
+  auto& frw = PlotUtils::flux_reweighter("minervame6A", nuPDG, true, numFluxUniv);//playlist hard-coded to 6A for all anti-nu. Anezka says conclusion was flux consistent enough that this is fine.
+
+  if (argc == 12){
+    fluxFile = TFile::Open(argv[10],"READ");
+    fluxVarName =std::string(argv[11]);
   }
 
   std::vector<std::string> crossSectionPrefixes;
@@ -306,7 +317,18 @@ int main(const int argc, const char** argv)
       unfolded->Clone()->Write("efficiencyCorrected");
 
       if (!stopAtEffCorr){
-	auto flux = (argc==11) ? util::GetIngredient<PlotUtils::MnvH1D>(*fluxFile,"reweightedflux_integrated",fluxVarName) : util::GetIngredient<PlotUtils::MnvH1D>(*mcFile, "reweightedflux_integrated", prefix);
+	PlotUtils::MnvH1D* flux;//Hard-coded for 1D. Might break... but currently necessary...
+
+	std::string material;
+	if (tgtZ == 6) material = "carbon";
+	else if (tgtZ == 26) material = "iron";
+	else if (tgtZ == 82) material = "lead";
+	else material = "water"; //Not sure this is correct... Going to ignore for now... cause water issues... also I'm not doing the nucleon division correctly for water, so really ignoring it for now...
+
+	if (argc == 12) flux = util::GetIngredient<PlotUtils::MnvH1D>(*fluxFile,"reweightedflux_integrated",fluxVarName);
+	else if (tgtZ == -1) flux = util::GetIngredient<PlotUtils::MnvH1D>(*mcFile, "reweightedflux_integrated", prefix);
+	else flux = frw.GetIntegratedTargetFlux(nuPDG, material, unfolded, 0, 100, project_dir);
+
 	/*
 	const auto fiducialFound = std::find_if(mcFile->GetListOfKeys()->begin(), mcFile->GetListOfKeys()->end(),
 						[&prefix](const auto key)
@@ -331,13 +353,14 @@ int main(const int argc, const char** argv)
 	auto crossSection = normalize(unfolded, flux, nNuke, dataPOT);
 	if (multPOT) crossSection->Scale(dataPOT);
 	Plot(*crossSection, "crossSection", prefix);
+	outFile->cd();
 	crossSection->Clone()->Write("crossSection");
       
 	//Write a "simulated cross section" to compare to the data I just extracted.
 	//If this analysis passed its closure test, this should be the same cross section as
 	//what GENIEXSecExtract would produce.
 	normalize(simEventRate, flux, nNuke, mcPOT);
-	if (multPOT) simEventRate->Scale(dataPOT);      
+	if (multPOT) simEventRate->Scale(dataPOT);  
 
 	Plot(*simEventRate, "simulatedCrossSection", prefix);
 	simEventRate->Write("simulatedCrossSection");
