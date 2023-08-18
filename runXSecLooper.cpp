@@ -1,3 +1,5 @@
+//TODO: ADD THE NORMALIZATION VALUE FROM THE TARGETS HERE. SELF-NORMALIZE.
+
 #include "GENIEXSecExtract/XSecLooper.h"
 
 #include "TFile.h"
@@ -6,16 +8,57 @@
 #include <PlotUtils/MnvH1D.h>
 #include <PlotUtils/MnvH2D.h>
 
+#include "util/GetRecoTargetZ.h"
+
 #include <cstdlib>
 typedef unsigned int uint;
 
 class MinModDepCCQEXSec : public XSec
 {
 public:
-  MinModDepCCQEXSec(const char* name)
-    :XSec(name)
+  MinModDepCCQEXSec(const char* name, const int tgtZ)
+    :XSec(name), fTgtZ(tgtZ), fApothem(850.0)
   {
   };
+
+  bool inApothem( ChainWrapper& chw, int entry ){
+    double x=fabs(chw.GetValue("mc_vtx", entry, 0));
+    double y=fabs(chw.GetValue("mc_vtx", entry, 1));
+
+    if(x*x + y*y < fApothem*fApothem) return true;
+
+    double lenOfSide = fApothem * ( 2 / sqrt(3) );
+
+    if( x > fApothem )
+      return false;
+
+    if( y < lenOfSide/2.0 )
+      return true;
+
+    double slope = (lenOfSide / 2.0) / fApothem;
+    if( y < lenOfSide - x*slope )
+      return true;
+
+    return false;    
+  }
+
+  //Hard-coding correct target. This uses the same function I'm using in the selection of my truth in the event loop is there something conceptually wrong aobut that...?
+  bool isCorrectTgt( ChainWrapper& chw, int entry ){
+    double x=chw.GetValue("mc_vtx", entry, 0);
+    double y=chw.GetValue("mc_vtx", entry, 1);
+    double z=chw.GetValue("mc_vtx", entry, 2);
+    int trueTgtZ = chw.GetValue("mc_targetZ", entry);
+
+    if (fTgtZ != -1){
+      if (fTgtZ != trueTgtZ) return false;
+      int trueTgtCode = util::GetTrueTgtCode(trueTgtZ, x, y, z);//Is this problematic to use the exact same definition? Feels self-fulfilling...
+      return (trueTgtCode > 0 && trueTgtCode != 6666); //Currently ignoring water still.
+    }
+    else {
+      return (z > 5980 && z < 8422);
+    }
+    return false;
+  }
 
   bool isCCInclusiveSignal( ChainWrapper& chw, int entry )
   {
@@ -81,10 +124,17 @@ public:
     if((int)chw.GetValue("mc_incoming", entry)!=-14) return false;
     if((int)chw.GetValue("mc_current", entry)!=1) return false;
     if(!isCCInclusiveSignal  ( chw, entry ) ) return false;
+    if(!inApothem(chw,entry)) return false;
+    if(!isCorrectTgt(chw,entry)) return false;
     if(!isFSSignal(chw, entry)) return false;
     
     return true;
   }
+
+  const int fTgtZ;
+
+  const double fApothem;
+
 };
 
 int main(const int argc, const char** argv)
@@ -118,23 +168,23 @@ int main(const int argc, const char** argv)
 
   // Setting the number of Universes in the GENIE error band (default 100, put 0 if you do not want to include the universes)
   loop.setNumUniv(0); 
-  loop.setFiducial(5980, 8422);
+  loop.setFiducial(5980, 8422);//
 
   // Add the differential cross section dsigma/ds_dpT
   //double pt_edges[] = { 0.0, 0.075, 0.15, 0.25, 0.325, 0.4, 0.475, 0.55, 0.7, 0.85, 1.0, 1.25, 1.5, 2.5, 4.5 };
   //int pt_nbins = 14; 
 
   //Hard-coded to latest optimization for carbon migration matrix...
-  //  double pt_edges[] = { 0.0, 0.09, 0.18, 0.25, 0.34, 0.425, 0.515, 0.64, 0.78, 0.94, 1.15, 1.5};
-  //int pt_nbins = 11;
+  double pt_edges_carbon[] = { 0.0, 0.09, 0.18, 0.25, 0.34, 0.425, 0.515, 0.64, 0.78, 0.94, 1.15, 1.5};
+  int pt_nbins_carbon = 11;
 
   //Coded for testing against the latest before the Carbon bin optimization effort
-  double pt_edges[] = { 0.0, 0.075, 0.15, 0.25, 0.325, 0.4, 0.475, 0.55, 0.7, 0.85, 1.0, 1.25, 1.5, 2.5};
-  int pt_nbins = 13;
+  double pt_edges_std[] = { 0.0, 0.075, 0.15, 0.25, 0.325, 0.4, 0.475, 0.55, 0.7, 0.85, 1.0, 1.25, 1.5, 2.5};
+  int pt_nbins_std = 13;
  
   // Flux-integrated over the range 0.0 to 100.0 GeV
-  MinModDepCCQEXSec* ds_dpT = new MinModDepCCQEXSec("pT");
-  ds_dpT->setBinEdges(pt_nbins, pt_edges);
+  MinModDepCCQEXSec* ds_dpT = new MinModDepCCQEXSec("pTmu_Tracker_std_binning", -1);
+  ds_dpT->setBinEdges(pt_nbins_std, pt_edges_std);
   ds_dpT->setVariable(XSec::kPTLep);
   ds_dpT->setIsFluxIntegrated(true);
   ds_dpT->setDimension(1);
@@ -142,6 +192,16 @@ int main(const int argc, const char** argv)
   ds_dpT->setNormalizationType(XSec::kPerNucleon);  
   ds_dpT->setUniverses(0); //default value, put 0 if you do not want universes to be included.
   loop.addXSec(ds_dpT);
+
+  MinModDepCCQEXSec* ds_dpT_carbon = new MinModDepCCQEXSec("pTmu_Tracker_carbon_binning", -1);
+  ds_dpT_carbon->setBinEdges(pt_nbins_carbon, pt_edges_carbon);
+  ds_dpT_carbon->setVariable(XSec::kPTLep);
+  ds_dpT_carbon->setIsFluxIntegrated(true);
+  ds_dpT_carbon->setDimension(1);
+  ds_dpT_carbon->setFluxIntLimits(0.0, 100.0);
+  ds_dpT_carbon->setNormalizationType(XSec::kPerNucleon);  
+  ds_dpT_carbon->setUniverses(0); //default value, put 0 if you do not want universes to be included.
+  loop.addXSec(ds_dpT_carbon);
 
   loop.runLoop();
 
