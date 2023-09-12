@@ -96,6 +96,8 @@ enum ErrorCodes
 #include "PlotUtils/LowQ2PiReweighter.h"
 #include "PlotUtils/RPAReweighter.h"
 #include "PlotUtils/MINOSEfficiencyReweighter.h"
+#include "PlotUtils/SuSAFromValencia2p2hReweighter.h"
+#include "PlotUtils/BodekRitchieReweighter.h"
 #include "PlotUtils/TargetUtils.h"
 #pragma GCC diagnostic pop
 
@@ -703,7 +705,7 @@ int main(const int argc, const char** argv)
   if (doNeutronCuts) nameExt = "_wNeutCuts_neutKE_"+std::to_string(neutKESig)+nameExt;
   else splitRecoil = true;
  
-  if (tuneVer != "1" && tuneVer != "1_noRPA" && tuneVer != "1_no2p2h" && tuneVer != "2"){
+  if (tuneVer != "1" && tuneVer != "1_noRPA" && tuneVer != "1_no2p2h" && tuneVer != "2" && tuneVer != "1_SuSA" && tuneVer != "1_BodekRitchie"){
     std::cerr << "Must choose between 1 and 2 for the <MnvTune_v> argument. Check usage printed below. \n" << USAGE << "\n";
     return badCmdLine;
   }
@@ -812,9 +814,12 @@ int main(const int argc, const char** argv)
   MnvTune.emplace_back(new PlotUtils::FluxAndCVReweighter<CVUniverse, NeutronEvent>());
   MnvTune.emplace_back(new PlotUtils::GENIEReweighter<CVUniverse, NeutronEvent>(true, false));
   MnvTune.emplace_back(new PlotUtils::MINOSEfficiencyReweighter<CVUniverse, NeutronEvent>());
-  if (tuneVer != "1_no2p2h") MnvTune.emplace_back(new PlotUtils::LowRecoil2p2hReweighter<CVUniverse, NeutronEvent>());
+  if (tuneVer != "1_no2p2h" && tuneVer != "1_SuSA") MnvTune.emplace_back(new PlotUtils::LowRecoil2p2hReweighter<CVUniverse, NeutronEvent>());
   if (tuneVer != "1_noRPA") MnvTune.emplace_back(new PlotUtils::RPAReweighter<CVUniverse, NeutronEvent>());
   if (tuneVer == "2") MnvTune.emplace_back(new PlotUtils::LowQ2PiReweighter<CVUniverse, NeutronEvent>("JOINT"));
+  if (tuneVer == "1_SuSA") MnvTune.emplace_back(new PlotUtils::SuSAFromValencia2p2hReweighter<CVUniverse, NeutronEvent>());
+  if (tuneVer == "1_BodekRitchie") MnvTune.emplace_back(new PlotUtils::BodekRitchieReweighter<CVUniverse, NeutronEvent>(1));
+  //TODO: Other Warps just need to see if these even work...
   MnvTune.emplace_back(new PlotUtils::GeantNeutronCVReweighter<CVUniverse, NeutronEvent>());
 
   PlotUtils::Model<CVUniverse, NeutronEvent> model(std::move(MnvTune));
@@ -845,6 +850,8 @@ int main(const int argc, const char** argv)
   //Same as Amit's seemingly. Bin normalized these are smoother.
   std::vector<double> dansPTBins = {0, 0.075, 0.15, 0.25, 0.325, 0.4, 0.475, 0.55, 0.7, 0.85, 1, 1.25, 1.5, 2.5},
                       carbonOptimalPTBins = {0, 0.09, 0.18, 0.25, 0.34, 0.425, 0.515, 0.64, 0.78, 0.94, 1.15, 1.5},
+                      blendedPTBins = {0, 0.125, 0.25, 0.38, 0.515, 0.64, 0.78, 0.94, 1.15, 1.5},
+		      combinedPTBins = {0, 0.18, 0.34, 0.515, 0.64, 0.78, 0.94, 1.15, 1.5},
                       //dansPTBins = {0, 0.075, 0.15, 0.25, 0.325, 0.4, 0.475, 0.55, 0.7, 0.85, 1, 1.25, 1.5, 2.5, 4.5},
                       myPTBins = {0, 0.075, 0.15, 0.25, 0.325, 0.4, 0.475, 0.55, 0.625, 0.7, 0.775, 0.85, 0.925, 1, 1.125, 1.25, 1.5, 2.5, 4.5},
 		      myQ2QEBins = {0,0.00625,0.0125,0.025,0.0375,0.05,0.1,0.15,0.2,0.3,0.4,0.6,0.8,1.0,1.2,2.0},
@@ -897,6 +904,8 @@ int main(const int argc, const char** argv)
     //new Variable(true, "pTmu", "p_{T, #mu} [GeV/c]", dansPTBins, &CVUniverse::GetMuonPT, &CVUniverse::GetMuonPTTrue),
     //new Variable(true, "pTmu", "p_{T, #mu} [GeV/c]", finePTBins, &CVUniverse::GetMuonPT, &CVUniverse::GetMuonPTTrue),
     new Variable(true, "pTmu", "p_{T, #mu} [GeV/c]", carbonOptimalPTBins, &CVUniverse::GetMuonPT, &CVUniverse::GetMuonPTTrue),
+    new Variable(true, "pTmu_blended", "p_{T, #mu} [GeV/c]", blendedPTBins, &CVUniverse::GetMuonPT, &CVUniverse::GetMuonPTTrue),
+    new Variable(true, "pTmu_combined", "p_{T, #mu} [GeV/c]", combinedPTBins, &CVUniverse::GetMuonPT, &CVUniverse::GetMuonPTTrue),
     new Variable(false, "pzmu", "p_{||, #mu} [GeV/c]", dansPzBins, &CVUniverse::GetMuonPz, &CVUniverse::GetMuonPzTrue),
     //new Variable((TString)("MyBins"),"pTmu_MYBins", "p_{T, #mu} [GeV/c]", myPTBins, &CVUniverse::GetMuonPT, &CVUniverse::GetMuonPTTrue),
     new Variable(false, "pTmu_MYBins", "p_{T, #mu} [GeV/c]", myPTBins, &CVUniverse::GetMuonPT, &CVUniverse::GetMuonPTTrue),
@@ -956,6 +965,17 @@ int main(const int argc, const char** argv)
       vars2D.push_back(new Variable2D(true,"pmu2D",*vars[1],*vars[0]));
     }
   }
+
+  if (!doSystematics){
+    //var.push_back(); Use this to add useful variables that can be checked without systematics:
+    //thetaMu (could add above too)
+    //detector Location for neutron to be found
+    //neutron variables
+    //vars2D vertex x/y?
+    //Etc. ...
+    //Just things to check generally...
+  }
+
   
   //Commented out during testing of analysis variable flag
   /*
