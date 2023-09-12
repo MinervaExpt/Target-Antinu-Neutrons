@@ -7,11 +7,54 @@
 #include "TH2.h"
 #include <PlotUtils/MnvH1D.h>
 #include <PlotUtils/MnvH2D.h>
+#include <PlotUtils/TargetUtils.h>
+#include <PlotUtils/PlotUtilsPhysicalConstants.h>
 
 #include "util/GetRecoTargetZ.h"
 
 #include <cstdlib>
 typedef unsigned int uint;
+
+//Borrowed largely from NSFNukeCCInclusive Code in Anezka's working directory
+double GetNormFactor(int tgtZ){
+  //Borrowed instead from Aaron Bercellie. It would make sense that the number of tracker targets utilized in the GENIE event rates is the entire simulated tracker, that explains why none of the options I tried resulted in a factor that made sense. Aaron's code seemed to also 
+  const double tracker_mass = PlotUtils::TargetUtils::Get().GetTrackerMass(PlotUtils::TargetProp::Tracker::Face, PlotUtils::TargetProp::Tracker::Back, true, 850.);
+  const double nAtoms_C = tracker_mass * PlotUtils::TargetUtils::Get().GetTrackerElementMassFraction( 6, true ) * PlotUtils::TargetProp::AtomsPerGram::C;
+  const double nAtoms_C_temp = PlotUtils::TargetUtils::Get().GetTrackerElementNAtoms( 6, PlotUtils::TargetProp::Tracker::Face, PlotUtils::TargetProp::Tracker::Back, true, 850.);
+  double trackerAtomsC = PlotUtils::TargetUtils::Get().GetTrackerElementNAtoms( 6, 5980, 8422, true, 850.0);
+
+  std::cout << "Tracker C12 Atoms 3 ways: " << nAtoms_C << ", " << nAtoms_C_temp << ", " << trackerAtomsC << std::endl;
+
+  double nucleons = 0.0;
+  if (tgtZ == 6){
+    nucleons += PlotUtils::TargetUtils::Get().GetPassiveTargetNNucleons(3, tgtZ, true, 850.0);
+  }
+  else if (tgtZ == 26){
+    nucleons += PlotUtils::TargetUtils::Get().GetPassiveTargetNNucleons(1, tgtZ, true, 850.0);
+    nucleons += PlotUtils::TargetUtils::Get().GetPassiveTargetNNucleons(2, tgtZ, true, 850.0);
+    nucleons += PlotUtils::TargetUtils::Get().GetPassiveTargetNNucleons(3, tgtZ, true, 850.0);
+    nucleons += PlotUtils::TargetUtils::Get().GetPassiveTargetNNucleons(5, tgtZ, true, 850.0);
+  }
+  else if (tgtZ == 82){
+    nucleons += PlotUtils::TargetUtils::Get().GetPassiveTargetNNucleons(1, tgtZ, true, 850.0);
+    nucleons += PlotUtils::TargetUtils::Get().GetPassiveTargetNNucleons(2, tgtZ, true, 850.0);
+    nucleons += PlotUtils::TargetUtils::Get().GetPassiveTargetNNucleons(3, tgtZ, true, 850.0);
+    nucleons += PlotUtils::TargetUtils::Get().GetPassiveTargetNNucleons(4, tgtZ, true, 850.0);
+    nucleons += PlotUtils::TargetUtils::Get().GetPassiveTargetNNucleons(5, tgtZ, true, 850.0);
+  }
+  else if (tgtZ == 8){
+    nucleons += PlotUtils::TargetUtils::Get().GetPassiveTargetNNucleons(6, tgtZ, true, 850.0);
+    nucleons += PlotUtils::TargetUtils::Get().GetPassiveTargetNNucleons(6, 1, true, 850.0);
+  }
+  else if (tgtZ == -1){
+    nucleons += PlotUtils::TargetUtils::Get().GetTrackerNNucleons( 5980, 8422. , true, 850.0 ); //Hard-coding to see effect of requiring this compared to the normalization factor calculated by xSecLooper with it's own 
+  }
+
+  //double output = (nucleons > 0) ? trackerAtomsC/nucleons : 1.0;
+  double output = (nucleons > 0) ? nAtoms_C/nucleons : 1.0;
+  return output;
+}
+
 
 class MinModDepCCQEXSec : public XSec
 {
@@ -49,13 +92,18 @@ public:
     double z=chw.GetValue("mc_vtx", entry, 2);
     int trueTgtZ = chw.GetValue("mc_targetZ", entry);
 
-    if (fTgtZ != -1){
-      if (fTgtZ != trueTgtZ) return false;
+    if (fTgtZ == -1){
+      return (z > 5980 && z < 8422);
+    }
+    else if (fTgtZ == 8){
+      if ((trueTgtZ != fTgtZ) && (trueTgtZ != 1)) return false;
       int trueTgtCode = util::GetTrueTgtCode(trueTgtZ, x, y, z);//Is this problematic to use the exact same definition? Feels self-fulfilling...
-      return (trueTgtCode > 0 && trueTgtCode != 6666); //Currently ignoring water still.
+      return (trueTgtCode == 6666);
     }
     else {
-      return (z > 5980 && z < 8422);
+      if (fTgtZ != trueTgtZ) return false;
+      int trueTgtCode = util::GetTrueTgtCode(trueTgtZ, x, y, z);//Is this problematic to use the exact same definition? Feels self-fulfilling...
+      return (trueTgtCode > 0 && trueTgtCode != 6666); //Water handled above.
     }
     return false;
   }
@@ -139,19 +187,26 @@ public:
 
 int main(const int argc, const char** argv)
 {
+
+  /*
+  std::cout << GetNormFactor(-1) << std::endl;
+  return 1;
+  */
+
   //Read a playlist file from the command line
-  if(argc < 3)
+  if(argc < 4)
   {
-    std::cerr << "Expected at least 2 command line argument, but got " << argc - 1 << ".\n\n"
-              << "USAGE: runXSecLooper <outName> <MCPlaylists.txt>\n\n"
+    std::cerr << "Expected at least 3 command line argument, but got " << argc - 1 << ".\n\n"
+              << "USAGE: runXSecLooper <outName> <playlist> <MCPlaylists.txt>\n\n"
               << "MCPlaylists.txt are a list of files which shall contain one .root file per line that has a Truth tree in it.\n"
               << "This program returns 0 when it suceeds.  It produces a .root file with GENIEXSECEXTRACT in its name.\n";
     return 1;
   }
 
   string outName = argv[1];
+  TString pList = argv[2];
 
-  std::vector<const char*> fileNames(argv+2,argv+argc);
+  std::vector<const char*> fileNames(argv+3,argv+argc);
 
   // Create the XSecLooper and tell it the input files
   // Inputs should be the merged ntuples:
@@ -164,7 +219,20 @@ int main(const int argc, const char** argv)
 
   // Tell the XSecLooper which neutrino type we're considering (mandatory)
   loop.setNuPDG(-14);
-  loop.setPlaylist(PlotUtils::FluxReweighter::minervame6A);
+  if (pList.Contains("5A")){
+    loop.setPlaylist(PlotUtils::FluxReweighter::minervame5A);
+  }
+  else if (pList.Contains("6")){
+    loop.setPlaylist(PlotUtils::FluxReweighter::minervame6A);
+  }
+  else if (pList.Contains("All")){
+    loop.setPlaylist(PlotUtils::FluxReweighter::minervame6A);
+  }
+  else{
+    cout << " Unknown playlist value." << endl;
+    return 86;
+  }
+
 
   // Setting the number of Universes in the GENIE error band (default 100, put 0 if you do not want to include the universes)
   loop.setNumUniv(0); 
@@ -181,7 +249,7 @@ int main(const int argc, const char** argv)
   //Coded for testing against the latest before the Carbon bin optimization effort
   double pt_edges_std[] = { 0.0, 0.075, 0.15, 0.25, 0.325, 0.4, 0.475, 0.55, 0.7, 0.85, 1.0, 1.25, 1.5, 2.5};
   int pt_nbins_std = 13;
- 
+
   // Flux-integrated over the range 0.0 to 100.0 GeV
   MinModDepCCQEXSec* ds_dpT = new MinModDepCCQEXSec("pTmu_Tracker_std_binning", -1);
   ds_dpT->setBinEdges(pt_nbins_std, pt_edges_std);
@@ -189,19 +257,113 @@ int main(const int argc, const char** argv)
   ds_dpT->setIsFluxIntegrated(true);
   ds_dpT->setDimension(1);
   ds_dpT->setFluxIntLimits(0.0, 100.0);
-  ds_dpT->setNormalizationType(XSec::kPerNucleon);  
+  ds_dpT->setNormalizationType(XSec::kSelfNorm);  
+  ds_dpT->setNormalizationValue(GetNormFactor(-1));
   ds_dpT->setUniverses(0); //default value, put 0 if you do not want universes to be included.
   loop.addXSec(ds_dpT);
 
-  MinModDepCCQEXSec* ds_dpT_carbon = new MinModDepCCQEXSec("pTmu_Tracker_carbon_binning", -1);
-  ds_dpT_carbon->setBinEdges(pt_nbins_carbon, pt_edges_carbon);
-  ds_dpT_carbon->setVariable(XSec::kPTLep);
-  ds_dpT_carbon->setIsFluxIntegrated(true);
-  ds_dpT_carbon->setDimension(1);
-  ds_dpT_carbon->setFluxIntLimits(0.0, 100.0);
-  ds_dpT_carbon->setNormalizationType(XSec::kPerNucleon);  
-  ds_dpT_carbon->setUniverses(0); //default value, put 0 if you do not want universes to be included.
-  loop.addXSec(ds_dpT_carbon);
+  MinModDepCCQEXSec* ds_dpT_carbon_bins = new MinModDepCCQEXSec("pTmu_Tracker_carbon_binning", -1);
+  ds_dpT_carbon_bins->setBinEdges(pt_nbins_carbon, pt_edges_carbon);
+  ds_dpT_carbon_bins->setVariable(XSec::kPTLep);
+  ds_dpT_carbon_bins->setIsFluxIntegrated(true);
+  ds_dpT_carbon_bins->setDimension(1);
+  ds_dpT_carbon_bins->setFluxIntLimits(0.0, 100.0);
+  ds_dpT_carbon_bins->setNormalizationType(XSec::kSelfNorm);  
+  ds_dpT_carbon_bins->setNormalizationValue(GetNormFactor(-1));
+  ds_dpT_carbon_bins->setUniverses(0); //default value, put 0 if you do not want universes to be included.
+  loop.addXSec(ds_dpT_carbon_bins);
+
+  // Flux-integrated over the range 0.0 to 100.0 GeV
+  MinModDepCCQEXSec* ds_dpT_C = new MinModDepCCQEXSec("pTmu_C_std_binning", 6);
+  ds_dpT_C->setBinEdges(pt_nbins_std, pt_edges_std);
+  ds_dpT_C->setVariable(XSec::kPTLep);
+  ds_dpT_C->setIsFluxIntegrated(true);
+  ds_dpT_C->setDimension(1);
+  ds_dpT_C->setFluxIntLimits(0.0, 100.0);
+  ds_dpT_C->setNormalizationType(XSec::kSelfNorm);  
+  ds_dpT_C->setNormalizationValue(GetNormFactor(6));
+  ds_dpT_C->setUniverses(0); //default value, put 0 if you do not want universes to be included.
+  loop.addXSec(ds_dpT_C);
+
+  MinModDepCCQEXSec* ds_dpT_C_carbon_bins = new MinModDepCCQEXSec("pTmu_C_carbon_binning", 6);
+  ds_dpT_C_carbon_bins->setBinEdges(pt_nbins_carbon, pt_edges_carbon);
+  ds_dpT_C_carbon_bins->setVariable(XSec::kPTLep);
+  ds_dpT_C_carbon_bins->setIsFluxIntegrated(true);
+  ds_dpT_C_carbon_bins->setDimension(1);
+  ds_dpT_C_carbon_bins->setFluxIntLimits(0.0, 100.0);
+  ds_dpT_C_carbon_bins->setNormalizationType(XSec::kSelfNorm);  
+  ds_dpT_C_carbon_bins->setNormalizationValue(GetNormFactor(6));
+  ds_dpT_C_carbon_bins->setUniverses(0); //default value, put 0 if you do not want universes to be included.
+  loop.addXSec(ds_dpT_C_carbon_bins);
+
+  // Flux-integrated over the range 0.0 to 100.0 GeV
+  MinModDepCCQEXSec* ds_dpT_Fe = new MinModDepCCQEXSec("pTmu_Iron_std_binning", 26);
+  ds_dpT_Fe->setBinEdges(pt_nbins_std, pt_edges_std);
+  ds_dpT_Fe->setVariable(XSec::kPTLep);
+  ds_dpT_Fe->setIsFluxIntegrated(true);
+  ds_dpT_Fe->setDimension(1);
+  ds_dpT_Fe->setFluxIntLimits(0.0, 100.0);
+  ds_dpT_Fe->setNormalizationType(XSec::kSelfNorm);  
+  ds_dpT_Fe->setNormalizationValue(GetNormFactor(26));
+  ds_dpT_Fe->setUniverses(0); //default value, put 0 if you do not want universes to be included.
+  loop.addXSec(ds_dpT_Fe);
+
+  MinModDepCCQEXSec* ds_dpT_Fe_carbon_bins = new MinModDepCCQEXSec("pTmu_Iron_carbon_binning", 26);
+  ds_dpT_Fe_carbon_bins->setBinEdges(pt_nbins_carbon, pt_edges_carbon);
+  ds_dpT_Fe_carbon_bins->setVariable(XSec::kPTLep);
+  ds_dpT_Fe_carbon_bins->setIsFluxIntegrated(true);
+  ds_dpT_Fe_carbon_bins->setDimension(1);
+  ds_dpT_Fe_carbon_bins->setFluxIntLimits(0.0, 100.0);
+  ds_dpT_Fe_carbon_bins->setNormalizationType(XSec::kSelfNorm);  
+  ds_dpT_Fe_carbon_bins->setNormalizationValue(GetNormFactor(26));
+  ds_dpT_Fe_carbon_bins->setUniverses(0); //default value, put 0 if you do not want universes to be included.
+  loop.addXSec(ds_dpT_Fe_carbon_bins);
+
+  // Flux-integrated over the range 0.0 to 100.0 GeV
+  MinModDepCCQEXSec* ds_dpT_Pb = new MinModDepCCQEXSec("pTmu_Lead_std_binning", 82);
+  ds_dpT_Pb->setBinEdges(pt_nbins_std, pt_edges_std);
+  ds_dpT_Pb->setVariable(XSec::kPTLep);
+  ds_dpT_Pb->setIsFluxIntegrated(true);
+  ds_dpT_Pb->setDimension(1);
+  ds_dpT_Pb->setFluxIntLimits(0.0, 100.0);
+  ds_dpT_Pb->setNormalizationType(XSec::kSelfNorm);  
+  ds_dpT_Pb->setNormalizationValue(GetNormFactor(82));
+  ds_dpT_Pb->setUniverses(0); //default value, put 0 if you do not want universes to be included.
+  loop.addXSec(ds_dpT_Pb);
+
+  MinModDepCCQEXSec* ds_dpT_Pb_carbon_bins = new MinModDepCCQEXSec("pTmu_Lead_carbon_binning", 82);
+  ds_dpT_Pb_carbon_bins->setBinEdges(pt_nbins_carbon, pt_edges_carbon);
+  ds_dpT_Pb_carbon_bins->setVariable(XSec::kPTLep);
+  ds_dpT_Pb_carbon_bins->setIsFluxIntegrated(true);
+  ds_dpT_Pb_carbon_bins->setDimension(1);
+  ds_dpT_Pb_carbon_bins->setFluxIntLimits(0.0, 100.0);
+  ds_dpT_Pb_carbon_bins->setNormalizationType(XSec::kSelfNorm);  
+  ds_dpT_Pb_carbon_bins->setNormalizationValue(GetNormFactor(82));
+  ds_dpT_Pb_carbon_bins->setUniverses(0); //default value, put 0 if you do not want universes to be included.
+  loop.addXSec(ds_dpT_Pb_carbon_bins);
+
+  // Flux-integrated over the range 0.0 to 100.0 GeV
+  MinModDepCCQEXSec* ds_dpT_Water = new MinModDepCCQEXSec("pTmu_Water_std_binning", 8);
+  ds_dpT_Water->setBinEdges(pt_nbins_std, pt_edges_std);
+  ds_dpT_Water->setVariable(XSec::kPTLep);
+  ds_dpT_Water->setIsFluxIntegrated(true);
+  ds_dpT_Water->setDimension(1);
+  ds_dpT_Water->setFluxIntLimits(0.0, 100.0);
+  ds_dpT_Water->setNormalizationType(XSec::kSelfNorm);  
+  ds_dpT_Water->setNormalizationValue(GetNormFactor(8));
+  ds_dpT_Water->setUniverses(0); //default value, put 0 if you do not want universes to be included.
+  loop.addXSec(ds_dpT_Water);
+
+  MinModDepCCQEXSec* ds_dpT_Water_carbon_bins = new MinModDepCCQEXSec("pTmu_Water_carbon_binning", 8);
+  ds_dpT_Water_carbon_bins->setBinEdges(pt_nbins_carbon, pt_edges_carbon);
+  ds_dpT_Water_carbon_bins->setVariable(XSec::kPTLep);
+  ds_dpT_Water_carbon_bins->setIsFluxIntegrated(true);
+  ds_dpT_Water_carbon_bins->setDimension(1);
+  ds_dpT_Water_carbon_bins->setFluxIntLimits(0.0, 100.0);
+  ds_dpT_Water_carbon_bins->setNormalizationType(XSec::kSelfNorm);  
+  ds_dpT_Water_carbon_bins->setNormalizationValue(GetNormFactor(8));
+  ds_dpT_Water_carbon_bins->setUniverses(0); //default value, put 0 if you do not want universes to be included.
+  loop.addXSec(ds_dpT_Water_carbon_bins);
 
   loop.runLoop();
 
@@ -213,8 +375,6 @@ int main(const int argc, const char** argv)
     loop.getXSecs()[i]->getXSecHist()->Write();
     loop.getXSecs()[i]->getEvRateHist()->Write();
   }
-
-
 
   return 0;
 }
