@@ -998,7 +998,7 @@ int main(const int argc, const char** argv)
   std::vector<Study*> studies = {
     //new EMSideBands(vars, error_bands, truth_bands, data_band),
     //new MichelAndNBlobSB(vars, error_bands, truth_bands, data_band),
-    //new NeutronVariables(maxZ, minZ, error_bands, truth_bands, data_band),
+    new NeutronVariables(maxZ, minZ, error_bands, truth_bands, data_band),
     //new RecoilSB(vars, error_bands, truth_bands, data_band, splitRecoil),
     new PreRecoil(vars, error_bands, truth_bands, data_band, splitRecoil, doNeutronCuts, FVregionName, TgtNum, doVtx),
   };
