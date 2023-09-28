@@ -1,7 +1,7 @@
 //File: signalBKGStack.cxx
 //Info: This is a script to run a loop over all MC breakdown plots in a single histos file and save nice plots from them. Primarily used for validation against older plots.
 //
-//Usage: signalBKGStack <mc_file> <data_file> <output_directory> <plot_label>
+//Usage: signalBKGStack <mc_file> <data_file> <output_directory> <plot_label> <pTmu_axis_label>
 //Author: David Last dlast@sas.upenn.edu/lastd44@gmail.com
 
 //TODO: FIX SEGFAULT ISSUE AT END OF EXECUTION... UNCLEAR WHY THAT'S HAPPENING AND IT DOESN'T SEEM TO AFFECT ANYTHING... MAYBE NEED TO CLOSE FILES? Cloning maybe tries to add keys to the file and it doesn't close well when that's the case?
@@ -77,7 +77,7 @@ double Chi2(MnvH1D* m1, MnvH1D* m2){
   return chi2;
 }
 
-void DrawBKGCateg(string name, TFile* mcFile, TFile* dataFile, TString sample, double scale, TString nameToSave){
+void DrawBKGCateg(string name, TFile* mcFile, TFile* dataFile, TString sample, TString pTaxis, double scale, TString nameToSave){
 
   bool primPar = false;
 
@@ -94,6 +94,14 @@ void DrawBKGCateg(string name, TFile* mcFile, TFile* dataFile, TString sample, d
 
   cout << "Handling: " << name << endl;
   string title = (string)h_Sig->GetTitle();
+
+  //This is a fix for the fact that the variable axes for the targets doesn't quite get saved correctly.
+  size_t pos = 0;
+  if ((pos=name.find("pTmu_")) != string::npos){
+    cout << "Fixing Axis?" << endl;
+    h_Sig->GetXaxis()->SetTitle(pTaxis);
+  }
+
   TString Xtitle = h_Sig->GetXaxis()->GetTitle();
   TString Ytitle = h_Sig->GetYaxis()->GetTitle();
   string units = Xtitle.Data();
@@ -185,12 +193,6 @@ void DrawBKGCateg(string name, TFile* mcFile, TFile* dataFile, TString sample, d
   h->Draw("hist");
   c1->Update();
 
-  size_t pos = 0;
-  if ((pos=name.find("pTmu_")) != string::npos){
-    cout << "Fixing Axis?" << endl;
-    h->GetXaxis()->SetRangeUser(0,2.5);
-  }
-
   pos = 0;
   if ((pos=name.find("_primary_parent")) != string::npos){
     h->GetXaxis()->SetBinLabel(1,"Other");
@@ -204,36 +206,36 @@ void DrawBKGCateg(string name, TFile* mcFile, TFile* dataFile, TString sample, d
     h->GetXaxis()->SetBinLabel(9,"e");
     h->GetXaxis()->SetBinLabel(10,"#mu");
     h->GetXaxis()->SetLabelSize(0.06);
-    h->GetXaxis()->SetTitle("Blob Primary Parent");
+    h->GetXaxis()->SetTitle("GENIE FS Particle Whose Lineage Led to the Lead Reconstructed Neutron Candidate");
     h->GetXaxis()->SetTitleSize(0.04);
     primPar = true;
   }
 
-  h->SetTitle(sampleName);//+" "+title.c_str());
-  h->GetXaxis()->SetTitle(Xtitle);
+  //h->SetTitle(sampleName);//+" "+title.c_str());
+  if (!primPar) h->GetXaxis()->SetTitle(Xtitle);
   h->GetXaxis()->SetTitleSize(0.04);
   if (units.length() != 0) h->GetYaxis()->SetTitle("Events / "+(TString)units);
   else h->GetYaxis()->SetTitle("Events / bin");
   h->GetYaxis()->SetTitleSize(0.05);
   h->GetYaxis()->SetTitleOffset(0.75);
-  if (!primPar)h->SetMaximum((dataHist->GetMaximum())*1.25);
+  if (!primPar) h->SetMaximum((dataHist->GetMaximum())*1.25);
 
   pos=0;
   if ((pos=name.find("_ENHitSB")) != string::npos){
     sampleName = "EM Blob E/NHit SideBand " + sample;
-    h->SetTitle(sampleName);
+    //h->SetTitle(sampleName);
   }
 
   pos=0;
   if ((pos=name.find("_NBlobsSB")) != string::npos){
     sampleName = "N EM Blob SideBand " + sample;
-    h->SetTitle(sampleName);
+    //h->SetTitle(sampleName);
   }
 
   pos=0;
   if ((pos=name.find("_MichelSB")) != string::npos){
     sampleName = "Michel SideBand " + sample;
-    h->SetTitle(sampleName);
+    //h->SetTitle(sampleName);
   }
 
   /*
@@ -282,7 +284,8 @@ void DrawBKGCateg(string name, TFile* mcFile, TFile* dataFile, TString sample, d
 
   MnvH1D* ratio = (MnvH1D*)h_data->Clone();
   ratio->Divide(ratio,mcSum);
-
+  ratio->GetXaxis()->SetTitle(Xtitle);
+    
   TH1D* mcRatio = new TH1D(mcSum->GetTotalError(false, true, false));
   for (int iBin=1; iBin <= mcRatio->GetXaxis()->GetNbins(); ++iBin){
     mcRatio->SetBinError(iBin, max(mcRatio->GetBinContent(iBin),1.0e-9));
@@ -304,10 +307,12 @@ void DrawBKGCateg(string name, TFile* mcFile, TFile* dataFile, TString sample, d
   ratio->SetMaximum(1.5);
 
   pos=0;
+  /*
   if ((pos=name.find("pTmu_")) != string::npos){
     cout << "Fixing Axis?" << endl;
     ratio->GetXaxis()->SetRangeUser(0,2.5);
   }
+  */
   ratio->Draw();
 
   mcRatio->SetLineColor(kRed);
@@ -351,7 +356,7 @@ void DrawBKGCateg(string name, TFile* mcFile, TFile* dataFile, TString sample, d
   return;
 }
 
-void DrawIntType(string name_QE, TFile* mcFile, TFile* dataFile, TString sample, double scale, TString nameToSave){
+void DrawIntType(string name_QE, TFile* mcFile, TFile* dataFile, TString sample, TString pTaxis, double scale, TString nameToSave){
 
   bool primPar = false;
 
@@ -374,6 +379,14 @@ void DrawIntType(string name_QE, TFile* mcFile, TFile* dataFile, TString sample,
 
   cout << "Handling: " << name_sig << endl;
   string title = (string)h_QE_Sig->GetTitle();
+
+  //This is a fix for the fact that the variable axes for the targets doesn't quite get saved correctly.
+  size_t pos = 0;
+  if ((pos=name_sig.find("pTmu_")) != string::npos){
+    cout << "Fixing Axis?" << endl;
+    h_QE_Sig->GetXaxis()->SetTitle(pTaxis);
+  }
+
   TString Xtitle = h_QE_Sig->GetXaxis()->GetTitle();
   TString Ytitle = h_QE_Sig->GetYaxis()->GetTitle();
   string units = Xtitle.Data();
@@ -515,11 +528,13 @@ void DrawIntType(string name_QE, TFile* mcFile, TFile* dataFile, TString sample,
   h->Draw("hist");
   c1->Update();
 
+  /*
   size_t pos = 0;
   if ((pos=name_sig.find("pTmu_")) != string::npos){
     cout << "Fixing Axis?" << endl;
     h->GetXaxis()->SetRangeUser(0,2.5);
   }
+  */
 
   pos = 0;
   if ((pos=name_sig.find("_primary_parent")) != string::npos){
@@ -534,13 +549,14 @@ void DrawIntType(string name_QE, TFile* mcFile, TFile* dataFile, TString sample,
     h->GetXaxis()->SetBinLabel(9,"e");
     h->GetXaxis()->SetBinLabel(10,"#mu");
     h->GetXaxis()->SetLabelSize(0.06);
-    h->GetXaxis()->SetTitle("Blob Primary Parent");
+    h->GetXaxis()->SetTitle("GENIE FS Particle Whose Lineage Led to the Lead Reconstructed Neutron Candidate");
+    //h->GetXaxis()->SetTitle("Blob Primary Parent");
     h->GetXaxis()->SetTitleSize(0.04);
     primPar = true;
   }
 
-  h->SetTitle(sampleName);//+" "+title.c_str());
-  h->GetXaxis()->SetTitle(Xtitle);
+  //h->SetTitle(sampleName);//+" "+title.c_str());
+  if (!primPar) h->GetXaxis()->SetTitle(Xtitle);
   h->GetXaxis()->SetTitleSize(0.04);
   if (units.length() != 0) h->GetYaxis()->SetTitle("Events / "+(TString)units);
   else h->GetYaxis()->SetTitle("Events / bin");
@@ -551,19 +567,19 @@ void DrawIntType(string name_QE, TFile* mcFile, TFile* dataFile, TString sample,
   pos=0;
   if ((pos=name_sig.find("_ENHitSB")) != string::npos){
     sampleName = "EM Blob E/NHit SideBand " + sample;
-    h->SetTitle(sampleName);
+    //h->SetTitle(sampleName);
   }
 
   pos=0;
   if ((pos=name_sig.find("_NBlobsSB")) != string::npos){
     sampleName = "N EM Blob SideBand " + sample;
-    h->SetTitle(sampleName);
+    //h->SetTitle(sampleName);
   }
 
   pos=0;
   if ((pos=name_sig.find("_MichelSB")) != string::npos){
     sampleName = "Michel SideBand " + sample;
-    h->SetTitle(sampleName);
+    //h->SetTitle(sampleName);
   }
 
   /*
@@ -615,15 +631,17 @@ void DrawIntType(string name_QE, TFile* mcFile, TFile* dataFile, TString sample,
   
   leg->AddEntry(h_Other_Sig,"Sig. + Other");
   leg->AddEntry(h_Other_Bkg,"Bkg. + Other");
-  
+
+
   if(!isTracker){
-    leg->AddEntry((TObject*)0,"","");
-    leg->AddEntry(h_Wrong_Nucleus_Bkg,"Wrong Nucleus");
     leg->AddEntry((TObject*)0,"","");
     leg->AddEntry(h_DSPlastic_Bkg,"DS Plastic");
     leg->AddEntry((TObject*)0,"","");
     leg->AddEntry(h_USPlastic_Bkg,"US Plastic");
+    leg->AddEntry((TObject*)0,"","");
+    leg->AddEntry(h_Wrong_Nucleus_Bkg,"Wrong Nucleus");
   }
+
 
   leg->Draw();
   c1->Update();
@@ -634,6 +652,7 @@ void DrawIntType(string name_QE, TFile* mcFile, TFile* dataFile, TString sample,
 
   MnvH1D* ratio = (MnvH1D*)h_data->Clone();
   ratio->Divide(ratio,mcSum);
+  ratio->GetXaxis()->SetTitle(Xtitle);
 
   TH1D* mcRatio = new TH1D(mcSum->GetTotalError(false, true, false));
   for (int iBin=1; iBin <= mcRatio->GetXaxis()->GetNbins(); ++iBin){
@@ -656,10 +675,12 @@ void DrawIntType(string name_QE, TFile* mcFile, TFile* dataFile, TString sample,
   ratio->SetMaximum(1.5);
 
   pos=0;
+  /*
   if ((pos=name_sig.find("pTmu_")) != string::npos){
     cout << "Fixing Axis?" << endl;
     ratio->GetXaxis()->SetRangeUser(0,2.5);
   }
+  */
   ratio->Draw();
 
   mcRatio->SetLineColor(kRed);
@@ -708,7 +729,7 @@ void DrawIntType(string name_QE, TFile* mcFile, TFile* dataFile, TString sample,
   return;
 }
 
-void DrawIntTypeBKG(string name, TFile* mcFile, TFile* dataFile, TString sample, double scale, TString nameToSave){
+void DrawIntTypeBKG(string name, TFile* mcFile, TFile* dataFile, TString sample, TString pTaxis, double scale, TString nameToSave){
 
   bool primPar = false;
 
@@ -738,6 +759,14 @@ void DrawIntTypeBKG(string name, TFile* mcFile, TFile* dataFile, TString sample,
 
   cout << "Handling: " << name << endl;
   string title = (string)h_Sig->GetTitle();
+
+  //This is a fix for the fact that the variable axes for the targets doesn't quite get saved correctly.
+  size_t pos = 0;
+  if ((pos=name.find("pTmu_")) != string::npos){
+    cout << "Fixing Axis?" << endl;
+    h_Sig->GetXaxis()->SetTitle(pTaxis);
+  }
+
   TString Xtitle = h_Sig->GetXaxis()->GetTitle();
   TString Ytitle = h_Sig->GetYaxis()->GetTitle();
   string units = Xtitle.Data();
@@ -839,11 +868,13 @@ void DrawIntTypeBKG(string name, TFile* mcFile, TFile* dataFile, TString sample,
   h->Draw("hist");
   c1->Update();
 
-  size_t pos = 0;
+  //size_t pos = 0;
+  /*
   if ((pos=name.find("pTmu_")) != string::npos){
     cout << "Fixing Axis?" << endl;
     h->GetXaxis()->SetRangeUser(0,2.5);
   }
+  */
 
   pos = 0;
   if ((pos=name.find("_primary_parent")) != string::npos){
@@ -858,13 +889,14 @@ void DrawIntTypeBKG(string name, TFile* mcFile, TFile* dataFile, TString sample,
     h->GetXaxis()->SetBinLabel(9,"e");
     h->GetXaxis()->SetBinLabel(10,"#mu");
     h->GetXaxis()->SetLabelSize(0.06);
-    h->GetXaxis()->SetTitle("Blob Primary Parent");
+    h->GetXaxis()->SetTitle("GENIE FS Particle Whose Lineage Led to the Lead Reconstructed Neutron Candidate");
+    //h->GetXaxis()->SetTitle("Blob Primary Parent");
     h->GetXaxis()->SetTitleSize(0.04);
     primPar = true;
   }
 
-  h->SetTitle(sampleName);//+" "+title.c_str());
-  h->GetXaxis()->SetTitle(Xtitle);
+  //h->SetTitle(sampleName);//+" "+title.c_str());
+  if (!primPar) h->GetXaxis()->SetTitle(Xtitle);
   h->GetXaxis()->SetTitleSize(0.04);
   if (units.length() != 0) h->GetYaxis()->SetTitle("Events / "+(TString)units);
   else h->GetYaxis()->SetTitle("Events / bin");
@@ -875,19 +907,19 @@ void DrawIntTypeBKG(string name, TFile* mcFile, TFile* dataFile, TString sample,
   pos=0;
   if ((pos=name.find("_ENHitSB")) != string::npos){
     sampleName = "EM Blob E/NHit SideBand " + sample;
-    h->SetTitle(sampleName);
+    //h->SetTitle(sampleName);
   }
 
   pos=0;
   if ((pos=name.find("_NBlobsSB")) != string::npos){
     sampleName = "N EM Blob SideBand " + sample;
-    h->SetTitle(sampleName);
+    //h->SetTitle(sampleName);
   }
 
   pos=0;
   if ((pos=name.find("_MichelSB")) != string::npos){
     sampleName = "Michel SideBand " + sample;
-    h->SetTitle(sampleName);
+    //h->SetTitle(sampleName);
   }
 
   /*
@@ -931,14 +963,14 @@ void DrawIntTypeBKG(string name, TFile* mcFile, TFile* dataFile, TString sample,
   leg->AddEntry(h_DIS_Bkg,"Bkg. + DIS");
   leg->AddEntry(h_2p2h_Bkg,"Bkg. + 2p2h");
   leg->AddEntry(h_Other_Bkg,"Bkg. + Other");
-  
+
   if(!isTracker){
-    leg->AddEntry((TObject*)0,"","");
-    leg->AddEntry(h_Wrong_Nucleus_Bkg,"Wrong Nucleus");
     leg->AddEntry((TObject*)0,"","");
     leg->AddEntry(h_DSPlastic_Bkg,"DS Plastic");
     leg->AddEntry((TObject*)0,"","");
     leg->AddEntry(h_USPlastic_Bkg,"US Plastic");
+    leg->AddEntry((TObject*)0,"","");
+    leg->AddEntry(h_Wrong_Nucleus_Bkg,"Wrong Nucleus");
   }
     
   leg->Draw();
@@ -950,6 +982,7 @@ void DrawIntTypeBKG(string name, TFile* mcFile, TFile* dataFile, TString sample,
 
   MnvH1D* ratio = (MnvH1D*)h_data->Clone();
   ratio->Divide(ratio,mcSum);
+  ratio->GetXaxis()->SetTitle(Xtitle);
 
   TH1D* mcRatio = new TH1D(mcSum->GetTotalError(false, true, false));
   for (int iBin=1; iBin <= mcRatio->GetXaxis()->GetNbins(); ++iBin){
@@ -972,10 +1005,13 @@ void DrawIntTypeBKG(string name, TFile* mcFile, TFile* dataFile, TString sample,
   ratio->SetMaximum(1.5);
 
   pos=0;
+  /*
   if ((pos=name.find("pTmu_")) != string::npos){
     cout << "Fixing Axis?" << endl;
     ratio->GetXaxis()->SetRangeUser(0,2.5);
   }
+  */
+
   ratio->Draw();
 
   mcRatio->SetLineColor(kRed);
@@ -1022,7 +1058,7 @@ void DrawIntTypeBKG(string name, TFile* mcFile, TFile* dataFile, TString sample,
   return;
 }
 
-void DrawTargetType(string name_Plastic, TFile* mcFile, TFile* dataFile, TString sample, double scale, TString nameToSave){
+void DrawTargetType(string name_Plastic, TFile* mcFile, TFile* dataFile, TString sample, TString pTaxis, double scale, TString nameToSave){
 
   bool primPar = false;
 
@@ -1043,6 +1079,14 @@ void DrawTargetType(string name_Plastic, TFile* mcFile, TFile* dataFile, TString
 
   cout << "Handling: " << name_sig << endl;
   string title = (string)h_Plastic_Sig->GetTitle();
+
+  //This is a fix for the fact that the variable axes for the targets doesn't quite get saved correctly.
+  size_t pos = 0;
+  if ((pos=name_sig.find("pTmu_")) != string::npos){
+    cout << "Fixing Axis?" << endl;
+    h_Plastic_Sig->GetXaxis()->SetTitle(pTaxis);
+  }
+
   TString Xtitle = h_Plastic_Sig->GetXaxis()->GetTitle();
   TString Ytitle = h_Plastic_Sig->GetYaxis()->GetTitle();
   string units = Xtitle.Data();
@@ -1212,11 +1256,13 @@ void DrawTargetType(string name_Plastic, TFile* mcFile, TFile* dataFile, TString
   h->Draw("hist");
   c1->Update();
 
+  /*
   size_t pos = 0;
   if ((pos=name_sig.find("pTmu_")) != string::npos){
     cout << "Fixing Axis?" << endl;
     h->GetXaxis()->SetRangeUser(0,2.5);
   }
+  */
 
   pos=0;
   if ((pos=name_sig.find("_primary_parent")) != string::npos){
@@ -1231,13 +1277,14 @@ void DrawTargetType(string name_Plastic, TFile* mcFile, TFile* dataFile, TString
     h->GetXaxis()->SetBinLabel(9,"e");
     h->GetXaxis()->SetBinLabel(10,"#mu");
     h->GetXaxis()->SetLabelSize(0.06);
-    h->GetXaxis()->SetTitle("Blob Primary Parent");
+    h->GetXaxis()->SetTitle("GENIE FS Particle Whose Lineage Led to the Lead Reconstructed Neutron Candidate");    
+    //h->GetXaxis()->SetTitle("Blob Primary Parent");
     h->GetXaxis()->SetTitleSize(0.04);
     primPar = true;
   }
 
-  h->SetTitle(sampleName);//+" "+title.c_str());
-  h->GetXaxis()->SetTitle(Xtitle);
+  //h->SetTitle(sampleName);//+" "+title.c_str());
+  if (!primPar) h->GetXaxis()->SetTitle(Xtitle);
   h->GetXaxis()->SetTitleSize(0.04);
   if (units.length() != 0) h->GetYaxis()->SetTitle("Events / "+(TString)units);
   else h->GetYaxis()->SetTitle("Events / bin");
@@ -1248,19 +1295,19 @@ void DrawTargetType(string name_Plastic, TFile* mcFile, TFile* dataFile, TString
   pos=0;
   if ((pos=name_sig.find("_ENHitSB")) != string::npos){
     sampleName = "EM Blob E/NHit SideBand " + sample;
-    h->SetTitle(sampleName);
+    //h->SetTitle(sampleName);
   }
 
   pos=0;
   if ((pos=name_sig.find("_NBlobsSB")) != string::npos){
     sampleName = "N EM Blob SideBand " + sample;
-    h->SetTitle(sampleName);
+    //h->SetTitle(sampleName);
   }
 
   pos=0;
   if ((pos=name_sig.find("_MichelSB")) != string::npos){
     sampleName = "Michel SideBand " + sample;
-    h->SetTitle(sampleName);
+    //h->SetTitle(sampleName);
   }
 
   /*
@@ -1327,6 +1374,7 @@ void DrawTargetType(string name_Plastic, TFile* mcFile, TFile* dataFile, TString
 
   MnvH1D* ratio = (MnvH1D*)h_data->Clone();
   ratio->Divide(ratio,mcSum);
+  ratio->GetXaxis()->SetTitle(Xtitle);
 
   TH1D* mcRatio = new TH1D(mcSum->GetTotalError(false, true, false));
   for (int iBin=1; iBin <= mcRatio->GetXaxis()->GetNbins(); ++iBin){
@@ -1349,10 +1397,12 @@ void DrawTargetType(string name_Plastic, TFile* mcFile, TFile* dataFile, TString
   ratio->SetMaximum(1.5);
 
   pos=0;
+  /*
   if ((pos=name_sig.find("pTmu_")) != string::npos){
     cout << "Fixing Axis?" << endl;
     ratio->GetXaxis()->SetRangeUser(0,2.5);
   }
+  */
   ratio->Draw();
 
   mcRatio->SetLineColor(kRed);
@@ -1402,7 +1452,7 @@ void DrawTargetType(string name_Plastic, TFile* mcFile, TFile* dataFile, TString
   return;
 }
 
-void DrawLeadBlobType(string name_Neut, TFile* mcFile, TFile* dataFile, TString sample, double scale, TString nameToSave){
+void DrawLeadBlobType(string name_Neut, TFile* mcFile, TFile* dataFile, TString sample, TString pTaxis, double scale, TString nameToSave){
 
   bool primPar = false;
 
@@ -1423,6 +1473,13 @@ void DrawLeadBlobType(string name_Neut, TFile* mcFile, TFile* dataFile, TString 
   cout << "Handling: " << name_sig << endl;
 
   string title = (string)h_Neut_Sig->GetTitle();
+  //This is a fix for the fact that the variable axes for the targets doesn't quite get saved correctly.
+  size_t pos = 0;
+  if ((pos=name_sig.find("pTmu_")) != string::npos){
+    cout << "Fixing Axis?" << endl;
+    h_Neut_Sig->GetXaxis()->SetTitle(pTaxis);
+  }
+
   TString Xtitle = h_Neut_Sig->GetXaxis()->GetTitle();
   TString Ytitle = h_Neut_Sig->GetYaxis()->GetTitle();
   string units = Xtitle.Data();
@@ -1591,11 +1648,13 @@ void DrawLeadBlobType(string name_Neut, TFile* mcFile, TFile* dataFile, TString 
 
   //ToDo: Get the naming of the axes fixed to be what it needs to be/make it easier to automate. This will need to be accompanied by a change to the Variable class to get the labels correct there. Current changes temporary in the interest of making plots for a talk on Oct. 14, 2021 in the exclusives meeting.
 
+  /*
   size_t pos = 0;
   if ((pos=name_sig.find("pTmu_")) != string::npos){
     cout << "Fixing Axis?" << endl;
     h->GetXaxis()->SetRangeUser(0,2.5);
   }
+  */
 
   pos=0;
   if ((pos=name_sig.find("_primary_parent")) != string::npos){
@@ -1615,8 +1674,8 @@ void DrawLeadBlobType(string name_Neut, TFile* mcFile, TFile* dataFile, TString 
     primPar = true;
   }
 
-  h->SetTitle(sampleName);//+" "+title.c_str());
-  h->GetXaxis()->SetTitle(Xtitle);
+  //h->SetTitle(sampleName);//+" "+title.c_str());
+  if (!primPar) h->GetXaxis()->SetTitle(Xtitle);
   h->GetXaxis()->SetTitleSize(0.04);
   if (units.length() != 0) h->GetYaxis()->SetTitle("Events / "+(TString)units);
   else h->GetYaxis()->SetTitle("Events / bin");
@@ -1627,19 +1686,19 @@ void DrawLeadBlobType(string name_Neut, TFile* mcFile, TFile* dataFile, TString 
   pos=0;
   if ((pos=name_sig.find("_ENHitSB")) != string::npos){
     sampleName = "EM Blob E/NHit SideBand " + sample;
-    h->SetTitle(sampleName);
+    //h->SetTitle(sampleName);
   }
 
   pos=0;
   if ((pos=name_sig.find("_NBlobsSB")) != string::npos){
     sampleName = "N EM Blob SideBand " + sample;
-    h->SetTitle(sampleName);
+    //h->SetTitle(sampleName);
   }
 
   pos=0;
   if ((pos=name_sig.find("_MichelSB")) != string::npos){
     sampleName = "Michel SideBand " + sample;
-    h->SetTitle(sampleName);
+    //h->SetTitle(sampleName);
   }
 
   /*
@@ -1706,6 +1765,7 @@ void DrawLeadBlobType(string name_Neut, TFile* mcFile, TFile* dataFile, TString 
 
   MnvH1D* ratio = (MnvH1D*)h_data->Clone();
   ratio->Divide(ratio,mcSum);
+  ratio->GetXaxis()->SetTitle(Xtitle);
 
   TH1D* mcRatio = new TH1D(mcSum->GetTotalError(false, true, false));
   for (int iBin=1; iBin <= mcRatio->GetXaxis()->GetNbins(); ++iBin){
@@ -1728,10 +1788,12 @@ void DrawLeadBlobType(string name_Neut, TFile* mcFile, TFile* dataFile, TString 
   ratio->SetMaximum(1.5);
 
   pos=0;
+  /*
   if ((pos=name_sig.find("pTmu_")) != string::npos){
     cout << "Fixing Axis?" << endl;
     ratio->GetXaxis()->SetRangeUser(0,2.5);
   }
+  */
   ratio->Draw();
 
   mcRatio->SetLineColor(kRed);
@@ -1795,7 +1857,7 @@ int main(int argc, char* argv[]) {
   #endif
 
   //Pass an input file name to this script now
-  if (argc != 5) {
+  if (argc != 6) {
     cout << "Check usage..." << endl;
     return 2;
   }
@@ -1804,6 +1866,7 @@ int main(int argc, char* argv[]) {
   string DATAfileName=string(argv[2]);
   string outDir=string(argv[3]);
   TString label=argv[4];
+  TString pTaxis=argv[5];
 
   if (PathExists(outDir)){
     cout << "Thank you for choosing a path for output files that exists." << endl;
@@ -1897,21 +1960,21 @@ int main(int argc, char* argv[]) {
 	  cout << "Should be handling: " << name << endl;
 	  string nameToSave = nameInt;
 	  nameToSave.erase(nameToSave.length()-15,nameToSave.length());
-	  DrawIntType(name,mcFile,dataFile,label,scale,(TString)outDir+(TString)nameToSave);
+	  DrawIntType(name,mcFile,dataFile,label,pTaxis,scale,(TString)outDir+(TString)nameToSave);
 	  cout << "" << endl;
 	}
 	else if ((pos = name.find("_sig_TargetType_Plastic")) != string::npos){
 	  cout << "Entering internal TgtType" << endl;
 	  string nameToSave = nameInt;
 	  nameToSave.erase(nameToSave.length()-23,nameToSave.length());
-	  DrawTargetType(name,mcFile,dataFile,label,scale,(TString)outDir+(TString)nameToSave);
+	  DrawTargetType(name,mcFile,dataFile,label,pTaxis,scale,(TString)outDir+(TString)nameToSave);
 	  cout << "" << endl;
 	}
 	else if ((pos = name.find("_sig_LeadBlobType_neut")) != string::npos){
 	  cout << "Entering internal LeadBlobType" << endl;
 	  string nameToSave = nameInt;
 	  nameToSave.erase(nameToSave.length()-22,nameToSave.length());
-	  DrawLeadBlobType(name,mcFile,dataFile,label,scale,(TString)outDir+(TString)nameToSave);
+	  DrawLeadBlobType(name,mcFile,dataFile,label,pTaxis,scale,(TString)outDir+(TString)nameToSave);
 	  cout << "" << endl;
 	}
 	else if ((pos = name.find("_selected_signal_reco")) != string::npos){
@@ -1919,7 +1982,7 @@ int main(int argc, char* argv[]) {
 	  cout << "Should be handling: " << name << endl;
 	  string nameToSave = nameInt;
 	  nameToSave.erase(nameToSave.length()-21,nameToSave.length());
-	  DrawBKGCateg(name,mcFile,dataFile,label,scale,(TString)outDir+(TString)nameToSave);
+	  DrawBKGCateg(name,mcFile,dataFile,label,pTaxis,scale,(TString)outDir+(TString)nameToSave);
 	  cout << "" << endl;
 	}	
       }
@@ -1932,24 +1995,24 @@ int main(int argc, char* argv[]) {
       cout << "Entering base IntType" << endl;
       string nameToSave = name;
       nameToSave.erase(nameToSave.length()-15,nameToSave.length());
-      DrawIntType(name,mcFile,dataFile,label,scale,(TString)outDir+(TString)nameToSave);
-      DrawIntTypeTEST(name,mcFile,dataFile,label,scale,(TString)outDir+(TString)nameToSave+"_TEST");
+      DrawIntType(name,mcFile,dataFile,label,pTaxis,scale,(TString)outDir+(TString)nameToSave);
+      DrawIntTypeTEST(name,mcFile,dataFile,label,pTaxis,scale,(TString)outDir+(TString)nameToSave+"_TEST");
       cout << "" << endl;
     }
     else if ((pos = name.find("_sig_TargetType_Plastic")) != string::npos){
       cout << "Entering base Tgt" << endl;
       string nameToSave = name;
       nameToSave.erase(nameToSave.length()-23,nameToSave.length());
-      DrawTargetType(name,mcFile,dataFile,label,scale,(TString)outDir+(TString)nameToSave);
-      DrawTargetTypeTEST(name,mcFile,dataFile,label,scale,(TString)outDir+(TString)nameToSave+"_TEST");
+      DrawTargetType(name,mcFile,dataFile,label,pTaxis,scale,(TString)outDir+(TString)nameToSave);
+      DrawTargetTypeTEST(name,mcFile,dataFile,label,pTaxis,scale,(TString)outDir+(TString)nameToSave+"_TEST");
       cout << "" << endl;
     }
     else if ((pos = name.find("_sig_LeadBlobType_neut")) != string::npos){
       cout << "Entering base Blob" << endl;
       string nameToSave = name;
       nameToSave.erase(nameToSave.length()-22,nameToSave.length());
-      DrawLeadBlobType(name,mcFile,dataFile,label,scale,(TString)outDir+(TString)nameToSave);
-      DrawLeadBlobTypeTEST(name,mcFile,dataFile,label,scale,(TString)outDir+(TString)nameToSave+"_TEST");
+      DrawLeadBlobType(name,mcFile,dataFile,label,pTaxis,scale,(TString)outDir+(TString)nameToSave);
+      DrawLeadBlobTypeTEST(name,mcFile,dataFile,label,pTaxis,scale,(TString)outDir+(TString)nameToSave+"_TEST");
       cout << "" << endl;
     }
     else if ((pos = name.find("_selected_signal_reco")) != string::npos){
@@ -1962,10 +2025,10 @@ int main(int argc, char* argv[]) {
       cout << "Entering base BKG" << endl;
       string nameToSave = name;
       nameToSave.erase(nameToSave.length()-21,nameToSave.length());
-      DrawBKGCateg(name,mcFile,dataFile,label,scale,(TString)outDir+(TString)nameToSave);
-      DrawBKGCategTEST(name,mcFile,dataFile,label,scale,(TString)outDir+(TString)nameToSave+"_TEST");
-      DrawIntTypeBKG(name,mcFile,dataFile,label,scale,(TString)outDir+(TString)nameToSave);
-      DrawBKGSubtracted(name,mcFile,dataFile,label,scale,(TString)outDir+(TString)nameToSave);
+      DrawBKGCateg(name,mcFile,dataFile,label,pTaxis,scale,(TString)outDir+(TString)nameToSave);
+      DrawBKGCategTEST(name,mcFile,dataFile,label,pTaxis,scale,(TString)outDir+(TString)nameToSave+"_TEST");
+      DrawIntTypeBKG(name,mcFile,dataFile,label,pTaxis,scale,(TString)outDir+(TString)nameToSave);
+      DrawBKGSubtracted(name,mcFile,dataFile,label,pTaxis,scale,(TString)outDir+(TString)nameToSave);
       cout << "" << endl;
     }
     /*

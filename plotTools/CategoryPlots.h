@@ -1100,7 +1100,7 @@ void Draw2DBKGCategStackWithBKGScale(string name, TFile* mcFile, TFile* dataFile
   return;
 }
 
-void DrawBKGCategTEST(string name, TFile* mcFile, TFile* dataFile, TString sample, double scale, TString nameToSave){
+void DrawBKGCategTEST(string name, TFile* mcFile, TFile* dataFile, TString sample, TString pTaxis, double scale, TString nameToSave){
 
   bool primPar = false;
 
@@ -1117,6 +1117,14 @@ void DrawBKGCategTEST(string name, TFile* mcFile, TFile* dataFile, TString sampl
 
   cout << "Handling: " << name << endl;
   string title = (string)h_Sig->GetTitle();
+
+  //This is a fix for the fact that the variable axes for the targets doesn't quite get saved correctly.
+  size_t pos = 0;
+  if ((pos=name.find("pTmu_")) != string::npos){
+    cout << "Fixing Axis?" << endl;
+    h_Sig->GetXaxis()->SetTitle(pTaxis);
+  }
+
   TString Xtitle = h_Sig->GetXaxis()->GetTitle();
   TString Ytitle = h_Sig->GetYaxis()->GetTitle();
   string units = Xtitle.Data();
@@ -1192,27 +1200,31 @@ void DrawBKGCategTEST(string name, TFile* mcFile, TFile* dataFile, TString sampl
   h->Add((TH1D*)h_Sig->GetCVHistoWithError().Clone());
 
   TCanvas* c1 = new TCanvas("c1","c1",1200,800);
-  TPad* top = new TPad("Overlay","Overlay",0,0.078+0.2,1,1);
-  TPad* bottom = new TPad("Ratio","Ratio",0,0,1,0.078+0.2);
-  top->Draw();
-  bottom->Draw();
-  top->cd();
+  //Change to draw one version with the ratio and one without
+  c1->cd();
+  //TPad* top = new TPad("Overlay","Overlay",0,0.078+0.2,1,1);
+  //TPad* bottom = new TPad("Ratio","Ratio",0,0,1,0.078+0.2);
+  //top->Draw();
+  //bottom->Draw();
+  //top->cd();
 
-  double bottomArea = bottom->GetWNDC()*bottom->GetHNDC();
-  double topArea = top->GetWNDC()*top->GetHNDC();
+  //double bottomArea = bottom->GetWNDC()*bottom->GetHNDC();
+  //double topArea = top->GetWNDC()*top->GetHNDC();
 
-  double areaScale = topArea/bottomArea;
+  //double areaScale = topArea/bottomArea;
 
-  cout << "areaScale: " << areaScale << endl;
+  //cout << "areaScale: " << areaScale << endl;
 
   h->Draw("hist");
   c1->Update();
 
+  /*
   size_t pos = 0;
   if ((pos=name.find("pTmu_")) != string::npos){
     cout << "Fixing Axis?" << endl;
     h->GetXaxis()->SetRangeUser(0,2.5);
   }
+  */
 
   pos = 0;
   if ((pos=name.find("_primary_parent")) != string::npos){
@@ -1227,13 +1239,14 @@ void DrawBKGCategTEST(string name, TFile* mcFile, TFile* dataFile, TString sampl
     h->GetXaxis()->SetBinLabel(9,"e");
     h->GetXaxis()->SetBinLabel(10,"#mu");
     h->GetXaxis()->SetLabelSize(0.06);
-    h->GetXaxis()->SetTitle("Blob Primary Parent");
+    h->GetXaxis()->SetTitle("GENIE FS Particle Whose Lineage Led to the Lead Reconstructed Neutron Candidate");
+    //h->GetXaxis()->SetTitle("Blob Primary Parent");
     h->GetXaxis()->SetTitleSize(0.04);
     primPar = true;
   }
 
-  h->SetTitle(sampleName);//+" "+title.c_str());
-  h->GetXaxis()->SetTitle(Xtitle);
+  //h->SetTitle(sampleName);//+" "+title.c_str());
+  if (!primPar) h->GetXaxis()->SetTitle(Xtitle);
   h->GetXaxis()->SetTitleSize(0.04);
   if (units.length() != 0) h->GetYaxis()->SetTitle("Events / "+(TString)units);
   else h->GetYaxis()->SetTitle("Events / bin");
@@ -1244,19 +1257,19 @@ void DrawBKGCategTEST(string name, TFile* mcFile, TFile* dataFile, TString sampl
   pos=0;
   if ((pos=name.find("_ENHitSB")) != string::npos){
     sampleName = "EM Blob E/NHit SideBand " + sample;
-    h->SetTitle(sampleName);
+    //h->SetTitle(sampleName);
   }
 
   pos=0;
   if ((pos=name.find("_NBlobsSB")) != string::npos){
     sampleName = "N EM Blob SideBand " + sample;
-    h->SetTitle(sampleName);
+    //h->SetTitle(sampleName);
   }
 
   pos=0;
   if ((pos=name.find("_MichelSB")) != string::npos){
     sampleName = "Michel SideBand " + sample;
-    h->SetTitle(sampleName);
+    //h->SetTitle(sampleName);
   }
 
   /*
@@ -1283,7 +1296,8 @@ void DrawBKGCategTEST(string name, TFile* mcFile, TFile* dataFile, TString sampl
   c1->Update();
 
   //TLegend* leg = new TLegend(1.0-0.6,1.0-0.5,1.0-0.9,1.0-0.9);
-  TLegend* leg = new TLegend(0.1,0.5,0.4,0.9);
+  //TLegend* leg = new TLegend(0.1,0.5,0.4,0.9);
+  TLegend* leg = new TLegend(0.6,0.5,0.9,0.9);
 
   leg->AddEntry(dataHist,"DATA");
   leg->AddEntry(h_Sig,"Signal");
@@ -1298,12 +1312,14 @@ void DrawBKGCategTEST(string name, TFile* mcFile, TFile* dataFile, TString sampl
   leg->Draw();
   c1->Update();
 
+  /*
   bottom->cd();
   bottom->SetTopMargin(0.05);
   bottom->SetBottomMargin(0.3);
 
   MnvH1D* ratio = (MnvH1D*)h_data->Clone();
   ratio->Divide(ratio,mcSum);
+  ratio->GetXaxis()->SetTitle(Xtitle);
 
   TH1D* mcRatio = new TH1D(mcSum->GetTotalError(false, true, false));
   for (int iBin=1; iBin <= mcRatio->GetXaxis()->GetNbins(); ++iBin){
@@ -1344,10 +1360,12 @@ void DrawBKGCategTEST(string name, TFile* mcFile, TFile* dataFile, TString sampl
   ratio->Draw("SAME");
 
   c1->Update();
+  */
 
   c1->Print(nameToSave+"_BKG_stacked.pdf");
   c1->Print(nameToSave+"_BKG_stacked.png");
-  top->SetLogy();
+  c1->SetLogy();
+  //top->SetLogy();
   c1->Update();
   c1->Print(nameToSave+"_BKG_stacked_log.pdf");
   c1->Print(nameToSave+"_BKG_stacked_log.png");         
@@ -1355,8 +1373,8 @@ void DrawBKGCategTEST(string name, TFile* mcFile, TFile* dataFile, TString sampl
   delete mcSum;
   delete dataHist;
   delete h;
-  delete ratio;
-  delete straightLine;
+  //delete ratio;
+  //delete straightLine;
   delete h_data;
   delete h_Sig;
   delete h_1PiC_Bkg;
@@ -1371,7 +1389,7 @@ void DrawBKGCategTEST(string name, TFile* mcFile, TFile* dataFile, TString sampl
   return;
 }
 
-void DrawBKGSubtracted(string name, TFile* mcFile, TFile* dataFile, TString sample, double scale, TString nameToSave){
+void DrawBKGSubtracted(string name, TFile* mcFile, TFile* dataFile, TString sample, TString pTaxis, double scale, TString nameToSave){
 
   bool primPar = false;
 
@@ -1390,6 +1408,14 @@ void DrawBKGSubtracted(string name, TFile* mcFile, TFile* dataFile, TString samp
 
   cout << "Handling: " << name << endl;
   string title = (string)h_Sig->GetTitle();
+
+  //This is a fix for the fact that the variable axes for the targets doesn't quite get saved correctly.
+  size_t pos = 0;
+  if ((pos=name.find("pTmu_")) != string::npos){
+    cout << "Fixing Axis?" << endl;
+    h_Sig->GetXaxis()->SetTitle(pTaxis);
+  }
+
   TString Xtitle = h_Sig->GetXaxis()->GetTitle();
   TString Ytitle = h_Sig->GetYaxis()->GetTitle();
   string units = Xtitle.Data();
@@ -1441,6 +1467,7 @@ void DrawBKGSubtracted(string name, TFile* mcFile, TFile* dataFile, TString samp
   dataHist->SetLineWidth(3);
 
   TCanvas* c1 = new TCanvas("c1","c1",1200,800);
+  c1->cd();
   TPad* top = new TPad("Overlay","Overlay",0,0.078+0.2,1,1);
   TPad* bottom = new TPad("Ratio","Ratio",0,0,1,0.078+0.2);
   top->Draw();
@@ -1454,11 +1481,14 @@ void DrawBKGSubtracted(string name, TFile* mcFile, TFile* dataFile, TString samp
 
   cout << "areaScale: " << areaScale << endl;
 
+  /*
   size_t pos = 0;
   if ((pos=name.find("pTmu_")) != string::npos){
     cout << "Fixing Axis?" << endl;
     sigHist->GetXaxis()->SetRangeUser(0,2.5);
   }
+  */
+
   sigHist->SetMaximum((dataHist->GetMaximum())*1.25);
 
   sigHist->Draw("hists");
@@ -1483,6 +1513,7 @@ void DrawBKGSubtracted(string name, TFile* mcFile, TFile* dataFile, TString samp
 
   MnvH1D* ratio = (MnvH1D*)h_data->Clone();
   ratio->Divide(ratio,h_Sig);
+  ratio->GetXaxis()->SetTitle(Xtitle);
 
   TH1D* mcRatio = new TH1D(h_Sig->GetTotalError(false, true, false));
   for (int iBin=1; iBin <= mcRatio->GetXaxis()->GetNbins(); ++iBin){
@@ -1550,7 +1581,7 @@ void DrawBKGSubtracted(string name, TFile* mcFile, TFile* dataFile, TString samp
   return;
 }
 
-void DrawIntTypeTEST(string name_QE, TFile* mcFile, TFile* dataFile, TString sample, double scale, TString nameToSave){
+void DrawIntTypeTEST(string name_QE, TFile* mcFile, TFile* dataFile, TString sample, TString pTaxis, double scale, TString nameToSave){
 
   bool primPar = false;
 
@@ -1573,6 +1604,14 @@ void DrawIntTypeTEST(string name_QE, TFile* mcFile, TFile* dataFile, TString sam
 
   cout << "Handling: " << name_sig << endl;
   string title = (string)h_QE_Sig->GetTitle();
+
+  //This is a fix for the fact that the variable axes for the targets doesn't quite get saved correctly.
+  size_t pos = 0;
+  if ((pos=name_sig.find("pTmu_")) != string::npos){
+    cout << "Fixing Axis?" << endl;
+    h_QE_Sig->GetXaxis()->SetTitle(pTaxis);
+  }
+
   TString Xtitle = h_QE_Sig->GetXaxis()->GetTitle();
   TString Ytitle = h_QE_Sig->GetYaxis()->GetTitle();
   string units = Xtitle.Data();
@@ -1700,6 +1739,8 @@ void DrawIntTypeTEST(string name_QE, TFile* mcFile, TFile* dataFile, TString sam
   h->Add((TH1D*)h_QE_Sig->GetCVHistoWithError().Clone());
 
   TCanvas* c1 = new TCanvas("c1","c1",1200,800);
+  c1->cd();
+  /*
   TPad* top = new TPad("Overlay","Overlay",0,0.078+0.2,1,1);
   TPad* bottom = new TPad("Ratio","Ratio",0,0,1,0.078+0.2);
   top->Draw();
@@ -1710,15 +1751,18 @@ void DrawIntTypeTEST(string name_QE, TFile* mcFile, TFile* dataFile, TString sam
   double topArea = top->GetWNDC()*top->GetHNDC();
 
   double areaScale = topArea/bottomArea;
+  */
 
   h->Draw("hist");
   c1->Update();
 
+  /*
   size_t pos = 0;
   if ((pos=name_sig.find("pTmu_")) != string::npos){
     cout << "Fixing Axis?" << endl;
     h->GetXaxis()->SetRangeUser(0,2.5);
   }
+  */
 
   pos = 0;
   if ((pos=name_sig.find("_primary_parent")) != string::npos){
@@ -1733,13 +1777,14 @@ void DrawIntTypeTEST(string name_QE, TFile* mcFile, TFile* dataFile, TString sam
     h->GetXaxis()->SetBinLabel(9,"e");
     h->GetXaxis()->SetBinLabel(10,"#mu");
     h->GetXaxis()->SetLabelSize(0.06);
-    h->GetXaxis()->SetTitle("Blob Primary Parent");
+    h->GetXaxis()->SetTitle("GENIE FS Particle Whose Lineage Led to the Lead Reconstructed Neutron Candidate");
+    //h->GetXaxis()->SetTitle("Blob Primary Parent");
     h->GetXaxis()->SetTitleSize(0.04);
     primPar = true;
   }
 
-  h->SetTitle(sampleName);//+" "+title.c_str());
-  h->GetXaxis()->SetTitle(Xtitle);
+  //h->SetTitle(sampleName);//+" "+title.c_str());
+  if (!primPar) h->GetXaxis()->SetTitle(Xtitle);
   h->GetXaxis()->SetTitleSize(0.04);
   if (units.length() != 0) h->GetYaxis()->SetTitle("Events / "+(TString)units);
   else h->GetYaxis()->SetTitle("Events / bin");
@@ -1750,19 +1795,19 @@ void DrawIntTypeTEST(string name_QE, TFile* mcFile, TFile* dataFile, TString sam
   pos=0;
   if ((pos=name_sig.find("_ENHitSB")) != string::npos){
     sampleName = "EM Blob E/NHit SideBand " + sample;
-    h->SetTitle(sampleName);
+    //h->SetTitle(sampleName);
   }
 
   pos=0;
   if ((pos=name_sig.find("_NBlobsSB")) != string::npos){
     sampleName = "N EM Blob SideBand " + sample;
-    h->SetTitle(sampleName);
+    //h->SetTitle(sampleName);
   }
 
   pos=0;
   if ((pos=name_sig.find("_MichelSB")) != string::npos){
     sampleName = "Michel SideBand " + sample;
-    h->SetTitle(sampleName);
+    //h->SetTitle(sampleName);
   }
 
   /*
@@ -1792,8 +1837,8 @@ void DrawIntTypeTEST(string name_QE, TFile* mcFile, TFile* dataFile, TString sam
   hTmp->SetFillColor(kWhite);
   hTmp->SetLineColor(kWhite);
 
-  //egend* leg = new TLegend(0.6,0.5,0.9,0.9);
-  TLegend* leg = new TLegend(0.1,0.5,0.4,0.9);
+  TLegend* leg = new TLegend(0.6,0.5,0.9,0.9);
+  //TLegend* leg = new TLegend(0.1,0.5,0.4,0.9);
 
   leg->SetNColumns(2);
 
@@ -1829,12 +1874,14 @@ void DrawIntTypeTEST(string name_QE, TFile* mcFile, TFile* dataFile, TString sam
   leg->Draw();
   c1->Update();
 
+  /*
   bottom->cd();
   bottom->SetTopMargin(0.05);
   bottom->SetBottomMargin(0.3);
 
   MnvH1D* ratio = (MnvH1D*)h_data->Clone();
   ratio->Divide(ratio,mcSum);
+  ratio->GetXaxis()->SetTitle(Xtitle);
 
   TH1D* mcRatio = new TH1D(mcSum->GetTotalError(false, true, false));
   for (int iBin=1; iBin <= mcRatio->GetXaxis()->GetNbins(); ++iBin){
@@ -1875,10 +1922,11 @@ void DrawIntTypeTEST(string name_QE, TFile* mcFile, TFile* dataFile, TString sam
   ratio->Draw("SAME");
 
   c1->Update();
-
+  */
   c1->Print(nameToSave+"_IntType_stacked.pdf");
   c1->Print(nameToSave+"_IntType_stacked.png");
-  top->SetLogy();
+  //  top->SetLogy();
+  c1->SetLogy();
   c1->Update();
   c1->Print(nameToSave+"_IntType_stacked_log.pdf");
   c1->Print(nameToSave+"_IntType_stacked_log.png");     
@@ -1886,8 +1934,8 @@ void DrawIntTypeTEST(string name_QE, TFile* mcFile, TFile* dataFile, TString sam
   delete mcSum;
   delete dataHist;
   delete h;
-  delete ratio;
-  delete straightLine;
+  //delete ratio;
+  //delete straightLine;
   delete h_data;
   delete h_Wrong_Nucleus_Bkg;
   delete h_DSPlastic_Bkg;
@@ -1909,7 +1957,7 @@ void DrawIntTypeTEST(string name_QE, TFile* mcFile, TFile* dataFile, TString sam
   return;
 }
 
-void DrawTargetTypeTEST(string name_Plastic, TFile* mcFile, TFile* dataFile, TString sample, double scale, TString nameToSave){
+void DrawTargetTypeTEST(string name_Plastic, TFile* mcFile, TFile* dataFile, TString sample, TString pTaxis, double scale, TString nameToSave){
 
   bool primPar = false;
 
@@ -1930,6 +1978,14 @@ void DrawTargetTypeTEST(string name_Plastic, TFile* mcFile, TFile* dataFile, TSt
 
   cout << "Handling: " << name_sig << endl;
   string title = (string)h_Plastic_Sig->GetTitle();
+
+  //This is a fix for the fact that the variable axes for the targets doesn't quite get saved correctly.
+  size_t pos = 0;
+  if ((pos=name_sig.find("pTmu_")) != string::npos){
+    cout << "Fixing Axis?" << endl;
+    h_Plastic_Sig->GetXaxis()->SetTitle(pTaxis);
+  }
+
   TString Xtitle = h_Plastic_Sig->GetXaxis()->GetTitle();
   TString Ytitle = h_Plastic_Sig->GetYaxis()->GetTitle();
   string units = Xtitle.Data();
@@ -2085,6 +2141,8 @@ void DrawTargetTypeTEST(string name_Plastic, TFile* mcFile, TFile* dataFile, TSt
   h->Add((TH1D*)h_Plastic_Sig->GetCVHistoWithError().Clone());
 
   TCanvas* c1 = new TCanvas("c1","c1",1200,800);
+  c1->cd();
+  /*
   TPad* top = new TPad("Overlay","Overlay",0,0.078+0.2,1,1);
   TPad* bottom = new TPad("Ratio","Ratio",0,0,1,0.078+0.2);
   top->Draw();
@@ -2095,15 +2153,18 @@ void DrawTargetTypeTEST(string name_Plastic, TFile* mcFile, TFile* dataFile, TSt
   double topArea = top->GetWNDC()*top->GetHNDC();
 
   double areaScale = topArea/bottomArea;
+  */
 
   h->Draw("hist");
   c1->Update();
 
+  /*
   size_t pos = 0;
   if ((pos=name_sig.find("pTmu_")) != string::npos){
     cout << "Fixing Axis?" << endl;
     h->GetXaxis()->SetRangeUser(0,2.5);
   }
+  */
 
   pos=0;
   if ((pos=name_sig.find("_primary_parent")) != string::npos){
@@ -2118,13 +2179,14 @@ void DrawTargetTypeTEST(string name_Plastic, TFile* mcFile, TFile* dataFile, TSt
     h->GetXaxis()->SetBinLabel(9,"e");
     h->GetXaxis()->SetBinLabel(10,"#mu");
     h->GetXaxis()->SetLabelSize(0.06);
-    h->GetXaxis()->SetTitle("Blob Primary Parent");
+    h->GetXaxis()->SetTitle("GENIE FS Particle Whose Lineage Led to the Lead Reconstructed Neutron Candidate");
+    //h->GetXaxis()->SetTitle("Blob Primary Parent");
     h->GetXaxis()->SetTitleSize(0.04);
     primPar = true;
   }
 
-  h->SetTitle(sampleName);//+" "+title.c_str());
-  h->GetXaxis()->SetTitle(Xtitle);
+  //h->SetTitle(sampleName);//+" "+title.c_str());
+  if (!primPar) h->GetXaxis()->SetTitle(Xtitle);
   h->GetXaxis()->SetTitleSize(0.04);
   if (units.length() != 0) h->GetYaxis()->SetTitle("Events / "+(TString)units);
   else h->GetYaxis()->SetTitle("Events / bin");
@@ -2135,19 +2197,19 @@ void DrawTargetTypeTEST(string name_Plastic, TFile* mcFile, TFile* dataFile, TSt
   pos=0;
   if ((pos=name_sig.find("_ENHitSB")) != string::npos){
     sampleName = "EM Blob E/NHit SideBand " + sample;
-    h->SetTitle(sampleName);
+    //h->SetTitle(sampleName);
   }
 
   pos=0;
   if ((pos=name_sig.find("_NBlobsSB")) != string::npos){
     sampleName = "N EM Blob SideBand " + sample;
-    h->SetTitle(sampleName);
+    //h->SetTitle(sampleName);
   }
 
   pos=0;
   if ((pos=name_sig.find("_MichelSB")) != string::npos){
     sampleName = "Michel SideBand " + sample;
-    h->SetTitle(sampleName);
+    //h->SetTitle(sampleName);
   }
 
   /*
@@ -2173,8 +2235,8 @@ void DrawTargetTypeTEST(string name_Plastic, TFile* mcFile, TFile* dataFile, TSt
   dataHist->Draw("same");
   c1->Update();
 
-  //TLegend* leg = new TLegend(0.6,0.5,0.9,0.9);
-  TLegend* leg = new TLegend(0.1,0.5,0.4,0.9);
+  TLegend* leg = new TLegend(0.6,0.5,0.9,0.9);
+  //TLegend* leg = new TLegend(0.1,0.5,0.4,0.9);
 
   leg->SetNColumns(2);
 
@@ -2208,12 +2270,14 @@ void DrawTargetTypeTEST(string name_Plastic, TFile* mcFile, TFile* dataFile, TSt
   leg->Draw();
   c1->Update();
 
+  /*
   bottom->cd();
   bottom->SetTopMargin(0.05);
   bottom->SetBottomMargin(0.3);
 
   MnvH1D* ratio = (MnvH1D*)h_data->Clone();
   ratio->Divide(ratio,mcSum);
+  ratio->GetXaxis()->SetTitle(Xtitle);
 
   TH1D* mcRatio = new TH1D(mcSum->GetTotalError(false, true, false));
   for (int iBin=1; iBin <= mcRatio->GetXaxis()->GetNbins(); ++iBin){
@@ -2254,10 +2318,12 @@ void DrawTargetTypeTEST(string name_Plastic, TFile* mcFile, TFile* dataFile, TSt
   ratio->Draw("SAME");
 
   c1->Update();
+  */
 
   c1->Print(nameToSave+"_TargetType_stacked.pdf");
   c1->Print(nameToSave+"_TargetType_stacked.png");
-  top->SetLogy();
+  //top->SetLogy();
+  c1->SetLogy();
   c1->Update();
   c1->Print(nameToSave+"_TargetType_stacked_log.pdf");
   c1->Print(nameToSave+"_TargetType_stacked_log.png");  
@@ -2265,8 +2331,8 @@ void DrawTargetTypeTEST(string name_Plastic, TFile* mcFile, TFile* dataFile, TSt
   delete mcSum;
   delete dataHist;
   delete h;
-  delete ratio;
-  delete straightLine;
+  //delete ratio;
+  //delete straightLine;
   delete h_data;
   delete h_Other_Bkg;
   delete h_C_Bkg;
@@ -2289,7 +2355,7 @@ void DrawTargetTypeTEST(string name_Plastic, TFile* mcFile, TFile* dataFile, TSt
   return;
 }
 
-void DrawLeadBlobTypeTEST(string name_Neut, TFile* mcFile, TFile* dataFile, TString sample, double scale, TString nameToSave){
+void DrawLeadBlobTypeTEST(string name_Neut, TFile* mcFile, TFile* dataFile, TString sample, TString pTaxis, double scale, TString nameToSave){
 
   bool primPar = false;
 
@@ -2310,6 +2376,14 @@ void DrawLeadBlobTypeTEST(string name_Neut, TFile* mcFile, TFile* dataFile, TStr
   cout << "Handling: " << name_sig << endl;
 
   string title = (string)h_Neut_Sig->GetTitle();
+
+  //This is a fix for the fact that the variable axes for the targets doesn't quite get saved correctly.
+  size_t pos = 0;
+  if ((pos=name_sig.find("pTmu_")) != string::npos){
+    cout << "Fixing Axis?" << endl;
+    h_Neut_Sig->GetXaxis()->SetTitle(pTaxis);
+  }
+
   TString Xtitle = h_Neut_Sig->GetXaxis()->GetTitle();
   TString Ytitle = h_Neut_Sig->GetYaxis()->GetTitle();
   string units = Xtitle.Data();
@@ -2462,6 +2536,8 @@ void DrawLeadBlobTypeTEST(string name_Neut, TFile* mcFile, TFile* dataFile, TStr
   h->Add((TH1D*)h_Neut_Sig->GetCVHistoWithError().Clone());
 
   TCanvas* c1 = new TCanvas("c1","c1",1200,800);
+  c1->cd();
+  /*
   TPad* top = new TPad("Overlay","Overlay",0,0.078+0.2,1,1);
   TPad* bottom = new TPad("Ratio","Ratio",0,0,1,0.078+0.2);
   top->Draw();
@@ -2472,17 +2548,20 @@ void DrawLeadBlobTypeTEST(string name_Neut, TFile* mcFile, TFile* dataFile, TStr
   double topArea = top->GetWNDC()*top->GetHNDC();
 
   double areaScale = topArea/bottomArea;
+  */
 
   h->Draw("hist");
   c1->Update();
 
   //ToDo: Get the naming of the axes fixed to be what it needs to be/make it easier to automate. This will need to be accompanied by a change to the Variable class to get the labels correct there. Current changes temporary in the interest of making plots for a talk on Oct. 14, 2021 in the exclusives meeting.
 
+  /*
   size_t pos = 0;
   if ((pos=name_sig.find("pTmu_")) != string::npos){
     cout << "Fixing Axis?" << endl;
     h->GetXaxis()->SetRangeUser(0,2.5);
   }
+  */
 
   pos=0;
   if ((pos=name_sig.find("_primary_parent")) != string::npos){
@@ -2497,13 +2576,14 @@ void DrawLeadBlobTypeTEST(string name_Neut, TFile* mcFile, TFile* dataFile, TStr
     h->GetXaxis()->SetBinLabel(9,"e");
     h->GetXaxis()->SetBinLabel(10,"#mu");
     h->GetXaxis()->SetLabelSize(0.06);
-    h->GetXaxis()->SetTitle("Blob Primary Parent");
+    h->GetXaxis()->SetTitle("GENIE FS Particle Whose Lineage Led to the Lead Reconstructed Neutron Candidate");
+    //h->GetXaxis()->SetTitle("Blob Primary Parent");
     h->GetXaxis()->SetTitleSize(0.04);
     primPar = true;
   }
 
-  h->SetTitle(sampleName);//+" "+title.c_str());
-  h->GetXaxis()->SetTitle(Xtitle);
+  //h->SetTitle(sampleName);//+" "+title.c_str());
+  if (!primPar) h->GetXaxis()->SetTitle(Xtitle);
   h->GetXaxis()->SetTitleSize(0.04);
   if (units.length() != 0) h->GetYaxis()->SetTitle("Events / "+(TString)units);
   else h->GetYaxis()->SetTitle("Events / bin");
@@ -2514,19 +2594,19 @@ void DrawLeadBlobTypeTEST(string name_Neut, TFile* mcFile, TFile* dataFile, TStr
   pos=0;
   if ((pos=name_sig.find("_ENHitSB")) != string::npos){
     sampleName = "EM Blob E/NHit SideBand " + sample;
-    h->SetTitle(sampleName);
+    //h->SetTitle(sampleName);
   }
 
   pos=0;
   if ((pos=name_sig.find("_NBlobsSB")) != string::npos){
     sampleName = "N EM Blob SideBand " + sample;
-    h->SetTitle(sampleName);
+    //h->SetTitle(sampleName);
   }
 
   pos=0;
   if ((pos=name_sig.find("_MichelSB")) != string::npos){
     sampleName = "Michel SideBand " + sample;
-    h->SetTitle(sampleName);
+    //h->SetTitle(sampleName);
   }
 
   /*
@@ -2552,8 +2632,8 @@ void DrawLeadBlobTypeTEST(string name_Neut, TFile* mcFile, TFile* dataFile, TStr
   dataHist->Draw("same");
   c1->Update();
 
-  //TLegend* leg = new TLegend(0.6,0.5,0.9,0.9);
-  TLegend* leg = new TLegend(0.1,0.5,0.4,0.9);
+  TLegend* leg = new TLegend(0.6,0.5,0.9,0.9);
+  //TLegend* leg = new TLegend(0.1,0.5,0.4,0.9);
 
   leg->SetNColumns(2);
 
@@ -2587,12 +2667,14 @@ void DrawLeadBlobTypeTEST(string name_Neut, TFile* mcFile, TFile* dataFile, TStr
   leg->Draw();
   c1->Update();
 
+  /*
   bottom->cd();
   bottom->SetTopMargin(0.05);
   bottom->SetBottomMargin(0.3);
 
   MnvH1D* ratio = (MnvH1D*)h_data->Clone();
   ratio->Divide(ratio,mcSum);
+  ratio->GetXaxis()->SetTitle(Xtitle);
 
   TH1D* mcRatio = new TH1D(mcSum->GetTotalError(false, true, false));
   for (int iBin=1; iBin <= mcRatio->GetXaxis()->GetNbins(); ++iBin){
@@ -2633,10 +2715,12 @@ void DrawLeadBlobTypeTEST(string name_Neut, TFile* mcFile, TFile* dataFile, TStr
   ratio->Draw("SAME");
 
   c1->Update();
+  */
 
   c1->Print(nameToSave+"_LeadBlobType_stacked.pdf");
   c1->Print(nameToSave+"_LeadBlobType_stacked.png");
-  top->SetLogy();
+  //top->SetLogy();
+  c1->SetLogy();
   c1->Update();
   c1->Print(nameToSave+"_LeadBlobType_stacked_log.pdf");
   c1->Print(nameToSave+"_LeadBlobType_stacked_log.png");
@@ -2644,8 +2728,8 @@ void DrawLeadBlobTypeTEST(string name_Neut, TFile* mcFile, TFile* dataFile, TStr
   delete mcSum;
   delete dataHist;
   delete h;
-  delete ratio;
-  delete straightLine;
+  //delete ratio;
+  //delete straightLine;
   delete h_data;
   delete h_None_Bkg;
   delete h_Other_Bkg;
