@@ -1251,7 +1251,8 @@ void DrawBKGCategTEST(string name, TFile* mcFile, TFile* dataFile, TString sampl
   if (units.length() != 0) h->GetYaxis()->SetTitle("Events / "+(TString)units);
   else h->GetYaxis()->SetTitle("Events / bin");
   h->GetYaxis()->SetTitleSize(0.05);
-  h->GetYaxis()->SetTitleOffset(0.75);
+  //h->GetYaxis()->SetTitleOffset(0.75);
+  h->GetYaxis()->SetTitleOffset(0.95);
   if (!primPar)h->SetMaximum((dataHist->GetMaximum())*1.25);
 
   pos=0;
@@ -1789,7 +1790,8 @@ void DrawIntTypeTEST(string name_QE, TFile* mcFile, TFile* dataFile, TString sam
   if (units.length() != 0) h->GetYaxis()->SetTitle("Events / "+(TString)units);
   else h->GetYaxis()->SetTitle("Events / bin");
   h->GetYaxis()->SetTitleSize(0.05);
-  h->GetYaxis()->SetTitleOffset(0.75);
+  //h->GetYaxis()->SetTitleOffset(0.75);
+  h->GetYaxis()->SetTitleOffset(0.95);
   if (!primPar) h->SetMaximum((dataHist->GetMaximum())*1.25);
   
   pos=0;
@@ -1837,6 +1839,14 @@ void DrawIntTypeTEST(string name_QE, TFile* mcFile, TFile* dataFile, TString sam
   hTmp->SetFillColor(kWhite);
   hTmp->SetLineColor(kWhite);
 
+  TLatex* latex = new TLatex( 0.2, 0.83, "MINER#nuA Work in Progress" );
+  latex->SetTextFont(43);
+  latex->SetTextSize(32);
+  latex->SetNDC();
+  latex->Draw();
+  latex->SetTextColor(kRed);
+  c1->Update();
+
   TLegend* leg = new TLegend(0.6,0.5,0.9,0.9);
   //TLegend* leg = new TLegend(0.1,0.5,0.4,0.9);
 
@@ -1868,7 +1878,7 @@ void DrawIntTypeTEST(string name_QE, TFile* mcFile, TFile* dataFile, TString sam
     leg->AddEntry(h_USPlastic_Bkg,"US Plastic");
 
     leg->AddEntry(hTmp,"","f");
-    leg->AddEntry(h_Wrong_Nucleus_Bkg,"Wrong Nucleus");
+    leg->AddEntry(h_Wrong_Nucleus_Bkg,"Another Target");
   }
 
   leg->Draw();
@@ -2191,7 +2201,8 @@ void DrawTargetTypeTEST(string name_Plastic, TFile* mcFile, TFile* dataFile, TSt
   if (units.length() != 0) h->GetYaxis()->SetTitle("Events / "+(TString)units);
   else h->GetYaxis()->SetTitle("Events / bin");
   h->GetYaxis()->SetTitleSize(0.05);
-  h->GetYaxis()->SetTitleOffset(0.75);
+  //h->GetYaxis()->SetTitleOffset(0.75);
+  h->GetYaxis()->SetTitleOffset(0.95);
   if (!primPar)h->SetMaximum((dataHist->GetMaximum())*1.25);
   
   pos=0;
@@ -2588,7 +2599,8 @@ void DrawLeadBlobTypeTEST(string name_Neut, TFile* mcFile, TFile* dataFile, TStr
   if (units.length() != 0) h->GetYaxis()->SetTitle("Events / "+(TString)units);
   else h->GetYaxis()->SetTitle("Events / bin");
   h->GetYaxis()->SetTitleSize(0.05);
-  h->GetYaxis()->SetTitleOffset(0.75);
+  //h->GetYaxis()->SetTitleOffset(0.75);
+  h->GetYaxis()->SetTitleOffset(0.95);
   if (!primPar)h->SetMaximum((dataHist->GetMaximum())*1.25);
   
   pos=0;
