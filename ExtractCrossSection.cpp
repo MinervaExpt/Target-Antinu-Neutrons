@@ -3,7 +3,7 @@
 //       Subtracts backgrounds, performs unfolding, applies efficiency x acceptance correction, and 
 //       divides by flux and number of nucleons.  Writes a .root file with the cross section histogram.
 //
-//Usage: ExtractCrossSection <unfolding iterations> <data.root> <mc.root> <stop at efficiency correction> <varName> <tgtZ> <no. Flux Universes> <multiply by data POT> <background naming> : optional <flux_file> <fluxVarName>
+//Usage: ExtractCrossSection <unfolding iterations> <data.root> <mc.root> <stop at efficiency correction> <varName> <tgtZ> <no. Flux Universes> <multiply by data POT> <background naming> <5A Fraction> : optional <flux_file> <fluxVarName>
 //
 //Author: Andrew Olivier aolivier@ur.rochester.edu
 
@@ -147,20 +147,24 @@ double GetTotalScatteringCenters(int targetZ, bool isMC)
   if(targetZ == 6){
     Nucleons = targetInfo.GetPassiveTargetNNucleons( 3, targetZ, isMC ); // Target 3
   }
-  if(targetZ == 26){                                                                                                                                                                                              
+  else if(targetZ == 26){                                                                                                                                                                                              
     Nucleons = targetInfo.GetPassiveTargetNNucleons( 1, targetZ, isMC ) // Target 1
       + targetInfo.GetPassiveTargetNNucleons( 2, targetZ, isMC ) // Target 2                                                                                                                                
       + targetInfo.GetPassiveTargetNNucleons( 3, targetZ, isMC ) // Target 3                                                                                                                                
       + targetInfo.GetPassiveTargetNNucleons( 5, targetZ, isMC );// Target 5
   }
-  if(targetZ == 82){
+  else if(targetZ == 82){
     Nucleons = targetInfo.GetPassiveTargetNNucleons( 1, targetZ, isMC ) // Target 2
       + targetInfo.GetPassiveTargetNNucleons( 2, targetZ, isMC ) // Target 2
       + targetInfo.GetPassiveTargetNNucleons( 3, targetZ, isMC ) // Target 3
       + targetInfo.GetPassiveTargetNNucleons( 4, targetZ, isMC ) // Target 4
       + targetInfo.GetPassiveTargetNNucleons( 5, targetZ, isMC );// Target 5
   }
-  if(targetZ > 90 ){
+  else if(targetZ == 8){
+    Nucleons = targetInfo.GetPassiveTargetNNucleons( 6, targetZ, isMC );//Water
+      //+ targetInfo.GetPassiveTargetNNucleons( 6, 1, isMC );//Water Hydrogen is handled above. This was wrong from before. Explains why it seemed about a factor of 2 low... essentially divided by the number of water nucleons twice...
+      }
+  else if(targetZ > 90 ){
     Nucleons = targetInfo.GetTrackerNNucleons(5980, 8422, isMC, 850);
   }
   return Nucleons;
@@ -191,9 +195,9 @@ int main(const int argc, const char** argv)
 
   TH1::AddDirectory(kFALSE); //Needed so that MnvH1D gets to clean up its own MnvLatErrorBands (which are TH1Ds).
 
-  if(!(argc == 10 || argc == 12))
+  if(!(argc == 11 || argc == 13))
   {
-    std::cerr << "Expected 9 or 11 arguments, but I got " << argc-1 << ".\n"
+    std::cerr << "Expected 10 or 12 arguments, but I got " << argc-1 << ".\n"
               << "USAGE: ExtractCrossSection <unfolding iterations> <data.root> <mc.root> <stop at eff. corr.> <varName> ...\n";
     return 1;
   }
@@ -218,7 +222,7 @@ int main(const int argc, const char** argv)
   int tgtZ = atoi(argv[6]);
   int numFluxUniv = atoi(argv[7]);
   int nuPDG = -14; //hard-coded for my analyses
-  const std::string project_dir = "targets_2345_jointNueIMD";//Copied from Anezka for target fluxes
+  const std::string project_dir = "targets_12345_jointNueIMD";//Copied from Anezka for target fluxes
   bool multPOT = (bool)atoi(argv[8]);
   std::string background_naming = std::string(argv[9]); 
   if (background_naming != "bkg_IntType") background_naming = "background";
@@ -226,11 +230,14 @@ int main(const int argc, const char** argv)
   TFile* fluxFile = nullptr;
   std::string fluxVarName = "";
 
-  auto& frw = PlotUtils::flux_reweighter("minervame6A", nuPDG, true, numFluxUniv);//playlist hard-coded to 6A for all anti-nu. Anezka says conclusion was flux consistent enough that this is fine.
+  auto& frw6A = PlotUtils::flux_reweighter("minervame6A", nuPDG, true, numFluxUniv);//playlist hard-coded to 6A for all anti-nu. Anezka says conclusion was flux consistent enough that this is fine.
+  auto& frw5A = PlotUtils::flux_reweighter("minervame5A", nuPDG, true, numFluxUniv);//playlist hard-coded to 6A for all anti-nu. Anezka says conclusion was flux consistent enough that this is fine.
 
-  if (argc == 12){
-    fluxFile = TFile::Open(argv[10],"READ");
-    fluxVarName =std::string(argv[11]);
+  double frac5A = atof(argv[10]);
+
+  if (argc == 13){
+    fluxFile = TFile::Open(argv[11],"READ");
+    fluxVarName =std::string(argv[12]);
   }
 
   std::vector<std::string> crossSectionPrefixes;
@@ -323,11 +330,25 @@ int main(const int argc, const char** argv)
 	if (tgtZ == 6) material = "carbon";
 	else if (tgtZ == 26) material = "iron";
 	else if (tgtZ == 82) material = "lead";
-	else material = "water"; //Not sure this is correct... Going to ignore for now... cause water issues... also I'm not doing the nucleon division correctly for water, so really ignoring it for now...
+	else if (tgtZ == 8){
+	  material = ""; //Not sure this is correct... Going to ignore for now... cause water issues... also I'm not doing the nucleon division correctly for water, so really ignoring it for now...
+	  if (argc != 13){
+	    std::cout << "Returning random value for code since water requires a tracker flux to be provided." << std::endl;
+	    return -12039;
+	  }
+	}
+	else material = "badTarget";
 
-	if (argc == 12) flux = util::GetIngredient<PlotUtils::MnvH1D>(*fluxFile,"reweightedflux_integrated",fluxVarName);
+	if (argc == 13) flux = util::GetIngredient<PlotUtils::MnvH1D>(*fluxFile,"reweightedflux_integrated",fluxVarName);
 	else if (tgtZ == -1) flux = util::GetIngredient<PlotUtils::MnvH1D>(*mcFile, "reweightedflux_integrated", prefix);
-	else flux = frw.GetIntegratedTargetFlux(nuPDG, material, unfolded, 0, 100, project_dir);
+	else{ 
+	  flux = frw6A.GetIntegratedTargetFlux(nuPDG, material, unfolded, 0, 100, project_dir);
+	  PlotUtils::MnvH1D* flux5A = frw5A.GetIntegratedTargetFlux(nuPDG, material, unfolded, 0, 100, project_dir);
+	  flux->Scale((1.0-frac5A));
+	  flux5A->Scale(frac5A);
+	  flux->Add(flux5A);
+	  delete flux5A;
+	}
 
 	/*
 	const auto fiducialFound = std::find_if(mcFile->GetListOfKeys()->begin(), mcFile->GetListOfKeys()->end(),
