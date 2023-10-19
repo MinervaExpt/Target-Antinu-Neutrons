@@ -883,7 +883,7 @@ int main(int argc, char* argv[]) {
   int fitMuonBins = 0;
   
   //vector<TString> namesToSave = {"pTmu","recoilE"};
-  vector<TString> namesToSave = {varName};
+  vector<TString> namesToSave = {varName};//, "NPlanes"};
   //vector<TString> namesToSave = {"pTmu","recoilE","NPlanes"};
   //vector<TString> namesToSave = {};
 
@@ -944,12 +944,12 @@ int main(int argc, char* argv[]) {
 
   cout << "Input Data file name parsed to: " << fileNameStub << endl;
 
-  if (varName == "pTmu"){
-    if (lowBin >= 14){
+  if (varName.Contains("pTmu")){
+    if (lowBin >= 9){
       cout << "Not a valid fitting range for pTmu. Maximum bin is 14." << endl;
       return 100;
     }
-    hiBin = min(14,hiBin);
+    hiBin = min(9,hiBin);
     mainTag = "_RecoilSB";
   }
   else if (varName == "recoilE"){
@@ -1017,15 +1017,29 @@ int main(int argc, char* argv[]) {
     cout << "Grabbing: " << grabName << endl;
     cout << "TESTING NO TAG: " << grabName_noTag << endl;
 
+
+    //TODO:
+    // 
+    double[11] coarseVtxBinsUS;//Modified to be a number of planes instead of vertex Z values.                                             
+    for (int iBin=0; iBin<11;++iBin) coarseVtxBinsUS[iBin] = (double)iBin-10.5;
+
+    double[11] coarseVtxBinsDS;//Modified to be a number of planes instead of vertex Z values.                                             
+    for (int iBin=11; iBin<22;++iBin) coarseVtxBinsDS[iBin-11] = (double)iBin-10.5;
+
     double binsNPlanes[22];
     for (unsigned int i=0; i < 22;++i) binsNPlanes[i]=1.0*i-10.5;
 
     map<TString,MnvH1D*> varsToSave = {};
     for (auto nameSave:namesToSave){
+      //TODO:
+      // 
       if (nameSave == "NPlanes"){
-	MnvH1D* hNPlanes = new MnvH1D(nameSave+tag,"",21,binsNPlanes);
-	varsToSave[nameSave+tag] = hNPlanes->Clone();
+	MnvH1D* hNPlanesUS = new MnvH1D("vtxZ_ByTgt_US"+tag,"",10,coarseVtxBinsUS);
+	varsToSave[nameSave+"US"+tag] = hNPlanesUS->Clone();
+	MnvH1D* hNPlanesDS = new MnvH1D(nameSave+"DS"+tag,"",10,coarseVtxBinsDS);
+	varsToSave[nameSave+"DS"+tag] = hNPlanesDS->Clone();
       }
+      //
       else if (tag.Contains("_Tgt")){
 	TObjArray* tagArr = tag.Tokenize("Tgt");
 	TString grabNameSave = "ByTgt_Tgt"+((TObjString*)(tagArr->At(tagArr->GetEntries()-1)))->String()+"/"+nameSave+tag;
@@ -1150,13 +1164,13 @@ int main(int argc, char* argv[]) {
     fitTEST1A["NonFit"]["DSPlastic"].push_back((MnvH1D*)DSHist->Clone());
     fitTEST1A["NonFit"]["DSPlastic"].push_back((MnvH1D*)DSHist_noTag->Clone());
 
-    fitPieces1A["Signal"].push_back(make_tuple("ScaleFactor",8,999));
-    fitPieces1A["Signal"].push_back(make_tuple("ScaleFactor",1,4));
-    fitPieces1A["Signal"].push_back(make_tuple("ScaleFactor",5,7));
+    fitPieces1A["Signal"].push_back(make_tuple("Line",5,999));
+    fitPieces1A["Signal"].push_back(make_tuple("ScaleFactor",3,4));
+    fitPieces1A["Signal"].push_back(make_tuple("ScaleFactor",1,2));
 
-    fitPieces1A["BKG"].push_back(make_tuple("ScaleFactor",11,999));
-    fitPieces1A["BKG"].push_back(make_tuple("Line",8,10));
-    fitPieces1A["BKG"].push_back(make_tuple("Line",1,7));
+    //fitPieces1A["BKG"].push_back(make_tuple("ScaleFactor",11,999));
+    fitPieces1A["BKG"].push_back(make_tuple("Line",6,999));
+    fitPieces1A["BKG"].push_back(make_tuple("Line",1,6));
 
     nameKeysTEST1A["BKG"]=nameKeys1A["BKG"];
     nameKeysTEST1A["Signal"]=nameKeys1A["Signal"];
