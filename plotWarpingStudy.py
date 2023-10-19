@@ -12,9 +12,15 @@ ratio0Name = "Ratio_modelData_trueData_Stat_0_Iter_"
 lineWidth = 3
 iterChosen = 2
 
+outName = sys.argv[1]
+
+if outName.find(".root") != -1:
+  print "GOTTA NAME YOUR OUTPUT FILE"
+  exit
+
 can = ROOT.TCanvas("chi2")
 
-for fileName in sys.argv[1:]:
+for fileName in sys.argv[2:]:
   myFile = ROOT.TFile.Open(fileName)
 
   #Try to infer a useful universe name from the file name
@@ -34,7 +40,8 @@ for fileName in sys.argv[1:]:
   spread.SetTitleOffset(0.825, "Y")
   spread.SetTitleSize(0.05,"XY")
   spread.Draw("colz")
-  can.Print(fileName + "_fullRange.png")
+  can.Print(outName + "_fullRange.png")
+  spread.GetXaxis().SetRangeUser(1.0,30.0)
   spread.GetYaxis().SetRangeUser(0.0,100.0)
   spread.Draw("colz")
 
@@ -52,12 +59,14 @@ for fileName in sys.argv[1:]:
   median.Draw("HIST SAME")
 
   #Draw lines at number of degrees of freedom and 2x NDF
-  ndfLine = ROOT.TLine(1, yNDF, spread.GetXaxis().GetXmax(), yNDF)
+  #ndfLine = ROOT.TLine(1, yNDF, spread.GetXaxis().GetXmax(), yNDF)
+  ndfLine = ROOT.TLine(1, yNDF, 30, yNDF)
   ndfLine.SetLineWidth(lineWidth)
   ndfLine.SetLineStyle(ROOT.kDashed)
   ndfLine.Draw()
 
-  doubleNDFLine = ROOT.TLine(1, 2*yNDF, spread.GetXaxis().GetXmax(), 2*yNDF)
+  #doubleNDFLine = ROOT.TLine(1, 2*yNDF, spread.GetXaxis().GetXmax(), 2*yNDF)
+  doubleNDFLine = ROOT.TLine(1, 2*yNDF, 30, 2*yNDF)
   doubleNDFLine.SetLineColor(ROOT.kRed)
   doubleNDFLine.SetLineWidth(lineWidth)
   doubleNDFLine.SetLineStyle(ROOT.kDashed)
@@ -79,7 +88,7 @@ for fileName in sys.argv[1:]:
   #leg.AddEntry(iterLine, str(iterChosen) + " iterations", "l")
   leg.Draw()
 
-  can.Print(fileName + "_ZoomedIn.png")
+  can.Print(outName + "_ZoomedIn.png")
   
   iterations = [str(it) for it in range(1,11)]+[str(10*it) for it in range(2,3)]+[str(50*it) for it in range(1,3)]
   colorsList = [ROOT.kBlack,ROOT.kRed,ROOT.kRed-6,ROOT.kGreen,ROOT.kGreen-6,ROOT.kBlue,ROOT.kBlue-6,ROOT.kOrange,ROOT.kOrange-6,ROOT.kTeal,ROOT.kTeal-6,ROOT.kViolet,ROOT.kViolet-6]
@@ -104,4 +113,4 @@ for fileName in sys.argv[1:]:
     leg2.AddEntry(hist,"Iteration "+iterations[counter])
     counter+=1
   leg2.Draw()
-  can.Print(fileName+"_Ratio_Stat_0.png")
+  can.Print(outName+"_Ratio_Stat_0.png")
