@@ -44,7 +44,7 @@ double GetNormFactor(int tgtZ){
   }
   else if (tgtZ == 8){
     nucleons += PlotUtils::TargetUtils::Get().GetPassiveTargetNNucleons(6, tgtZ, true, 850.0);
-    nucleons += PlotUtils::TargetUtils::Get().GetPassiveTargetNNucleons(6, 1, true, 850.0);
+    //nucleons += PlotUtils::TargetUtils::Get().GetPassiveTargetNNucleons(6, 1, true, 850.0); This was wrong. The oxygen and hydrgoen are not handled separately. They are handled all at once.
   }
   else if (tgtZ == -1){
     nucleons += PlotUtils::TargetUtils::Get().GetTrackerNNucleons( 5980, 8422. , true, 850.0 ); //Hard-coding to see effect of requiring this compared to the normalization factor calculated by xSecLooper with it's own 
@@ -246,6 +246,14 @@ int main(const int argc, const char** argv)
   double pt_edges_carbon[] = { 0.0, 0.09, 0.18, 0.25, 0.34, 0.425, 0.515, 0.64, 0.78, 0.94, 1.15, 1.5};
   int pt_nbins_carbon = 11;
 
+  //Hard-coded to latest optimization for carbon migration matrix...
+  double pt_edges_blended[] = {0, 0.125, 0.25, 0.38, 0.515, 0.64, 0.78, 0.94, 1.15, 1.5};
+  int pt_nbins_blended = 9;
+
+  //Hard-coded to latest optimization for carbon migration matrix...
+  double pt_edges_combined[] = { 0.0, 0.18, 0.34, 0.515, 0.64, 0.78, 0.94, 1.15, 1.5};
+  int pt_nbins_combined = 8;
+
   //Coded for testing against the latest before the Carbon bin optimization effort
   double pt_edges_std[] = { 0.0, 0.075, 0.15, 0.25, 0.325, 0.4, 0.475, 0.55, 0.7, 0.85, 1.0, 1.25, 1.5, 2.5};
   int pt_nbins_std = 13;
@@ -273,6 +281,28 @@ int main(const int argc, const char** argv)
   ds_dpT_carbon_bins->setUniverses(0); //default value, put 0 if you do not want universes to be included.
   loop.addXSec(ds_dpT_carbon_bins);
 
+  MinModDepCCQEXSec* ds_dpT_blended_bins = new MinModDepCCQEXSec("pTmu_Tracker_blended_binning", -1);
+  ds_dpT_blended_bins->setBinEdges(pt_nbins_blended, pt_edges_blended);
+  ds_dpT_blended_bins->setVariable(XSec::kPTLep);
+  ds_dpT_blended_bins->setIsFluxIntegrated(true);
+  ds_dpT_blended_bins->setDimension(1);
+  ds_dpT_blended_bins->setFluxIntLimits(0.0, 100.0);
+  ds_dpT_blended_bins->setNormalizationType(XSec::kSelfNorm);  
+  ds_dpT_blended_bins->setNormalizationValue(GetNormFactor(-1));
+  ds_dpT_blended_bins->setUniverses(0); //default value, put 0 if you do not want universes to be included.
+  loop.addXSec(ds_dpT_blended_bins);
+
+  MinModDepCCQEXSec* ds_dpT_combined_bins = new MinModDepCCQEXSec("pTmu_Tracker_combined_binning", -1);
+  ds_dpT_combined_bins->setBinEdges(pt_nbins_combined, pt_edges_combined);
+  ds_dpT_combined_bins->setVariable(XSec::kPTLep);
+  ds_dpT_combined_bins->setIsFluxIntegrated(true);
+  ds_dpT_combined_bins->setDimension(1);
+  ds_dpT_combined_bins->setFluxIntLimits(0.0, 100.0);
+  ds_dpT_combined_bins->setNormalizationType(XSec::kSelfNorm);  
+  ds_dpT_combined_bins->setNormalizationValue(GetNormFactor(-1));
+  ds_dpT_combined_bins->setUniverses(0); //default value, put 0 if you do not want universes to be included.
+  loop.addXSec(ds_dpT_combined_bins);
+
   // Flux-integrated over the range 0.0 to 100.0 GeV
   MinModDepCCQEXSec* ds_dpT_C = new MinModDepCCQEXSec("pTmu_C_std_binning", 6);
   ds_dpT_C->setBinEdges(pt_nbins_std, pt_edges_std);
@@ -295,6 +325,28 @@ int main(const int argc, const char** argv)
   ds_dpT_C_carbon_bins->setNormalizationValue(GetNormFactor(6));
   ds_dpT_C_carbon_bins->setUniverses(0); //default value, put 0 if you do not want universes to be included.
   loop.addXSec(ds_dpT_C_carbon_bins);
+
+  MinModDepCCQEXSec* ds_dpT_C_blended_bins = new MinModDepCCQEXSec("pTmu_C_blended_binning", 6);
+  ds_dpT_C_blended_bins->setBinEdges(pt_nbins_blended, pt_edges_blended);
+  ds_dpT_C_blended_bins->setVariable(XSec::kPTLep);
+  ds_dpT_C_blended_bins->setIsFluxIntegrated(true);
+  ds_dpT_C_blended_bins->setDimension(1);
+  ds_dpT_C_blended_bins->setFluxIntLimits(0.0, 100.0);
+  ds_dpT_C_blended_bins->setNormalizationType(XSec::kSelfNorm);  
+  ds_dpT_C_blended_bins->setNormalizationValue(GetNormFactor(6));
+  ds_dpT_C_blended_bins->setUniverses(0); //default value, put 0 if you do not want universes to be included.
+  loop.addXSec(ds_dpT_C_blended_bins);
+
+  MinModDepCCQEXSec* ds_dpT_C_combined_bins = new MinModDepCCQEXSec("pTmu_C_combined_binning", 6);
+  ds_dpT_C_combined_bins->setBinEdges(pt_nbins_combined, pt_edges_combined);
+  ds_dpT_C_combined_bins->setVariable(XSec::kPTLep);
+  ds_dpT_C_combined_bins->setIsFluxIntegrated(true);
+  ds_dpT_C_combined_bins->setDimension(1);
+  ds_dpT_C_combined_bins->setFluxIntLimits(0.0, 100.0);
+  ds_dpT_C_combined_bins->setNormalizationType(XSec::kSelfNorm);  
+  ds_dpT_C_combined_bins->setNormalizationValue(GetNormFactor(6));
+  ds_dpT_C_combined_bins->setUniverses(0); //default value, put 0 if you do not want universes to be included.
+  loop.addXSec(ds_dpT_C_combined_bins);
 
   // Flux-integrated over the range 0.0 to 100.0 GeV
   MinModDepCCQEXSec* ds_dpT_Fe = new MinModDepCCQEXSec("pTmu_Iron_std_binning", 26);
@@ -319,6 +371,28 @@ int main(const int argc, const char** argv)
   ds_dpT_Fe_carbon_bins->setUniverses(0); //default value, put 0 if you do not want universes to be included.
   loop.addXSec(ds_dpT_Fe_carbon_bins);
 
+  MinModDepCCQEXSec* ds_dpT_Fe_blended_bins = new MinModDepCCQEXSec("pTmu_Iron_blended_binning", 26);
+  ds_dpT_Fe_blended_bins->setBinEdges(pt_nbins_blended, pt_edges_blended);
+  ds_dpT_Fe_blended_bins->setVariable(XSec::kPTLep);
+  ds_dpT_Fe_blended_bins->setIsFluxIntegrated(true);
+  ds_dpT_Fe_blended_bins->setDimension(1);
+  ds_dpT_Fe_blended_bins->setFluxIntLimits(0.0, 100.0);
+  ds_dpT_Fe_blended_bins->setNormalizationType(XSec::kSelfNorm);  
+  ds_dpT_Fe_blended_bins->setNormalizationValue(GetNormFactor(26));
+  ds_dpT_Fe_blended_bins->setUniverses(0); //default value, put 0 if you do not want universes to be included.
+  loop.addXSec(ds_dpT_Fe_blended_bins);
+
+  MinModDepCCQEXSec* ds_dpT_Fe_combined_bins = new MinModDepCCQEXSec("pTmu_Iron_combined_binning", 26);
+  ds_dpT_Fe_combined_bins->setBinEdges(pt_nbins_combined, pt_edges_combined);
+  ds_dpT_Fe_combined_bins->setVariable(XSec::kPTLep);
+  ds_dpT_Fe_combined_bins->setIsFluxIntegrated(true);
+  ds_dpT_Fe_combined_bins->setDimension(1);
+  ds_dpT_Fe_combined_bins->setFluxIntLimits(0.0, 100.0);
+  ds_dpT_Fe_combined_bins->setNormalizationType(XSec::kSelfNorm);  
+  ds_dpT_Fe_combined_bins->setNormalizationValue(GetNormFactor(26));
+  ds_dpT_Fe_combined_bins->setUniverses(0); //default value, put 0 if you do not want universes to be included.
+  loop.addXSec(ds_dpT_Fe_combined_bins);
+
   // Flux-integrated over the range 0.0 to 100.0 GeV
   MinModDepCCQEXSec* ds_dpT_Pb = new MinModDepCCQEXSec("pTmu_Lead_std_binning", 82);
   ds_dpT_Pb->setBinEdges(pt_nbins_std, pt_edges_std);
@@ -342,6 +416,28 @@ int main(const int argc, const char** argv)
   ds_dpT_Pb_carbon_bins->setUniverses(0); //default value, put 0 if you do not want universes to be included.
   loop.addXSec(ds_dpT_Pb_carbon_bins);
 
+  MinModDepCCQEXSec* ds_dpT_Pb_blended_bins = new MinModDepCCQEXSec("pTmu_Lead_blended_binning", 82);
+  ds_dpT_Pb_blended_bins->setBinEdges(pt_nbins_blended, pt_edges_blended);
+  ds_dpT_Pb_blended_bins->setVariable(XSec::kPTLep);
+  ds_dpT_Pb_blended_bins->setIsFluxIntegrated(true);
+  ds_dpT_Pb_blended_bins->setDimension(1);
+  ds_dpT_Pb_blended_bins->setFluxIntLimits(0.0, 100.0);
+  ds_dpT_Pb_blended_bins->setNormalizationType(XSec::kSelfNorm);  
+  ds_dpT_Pb_blended_bins->setNormalizationValue(GetNormFactor(82));
+  ds_dpT_Pb_blended_bins->setUniverses(0); //default value, put 0 if you do not want universes to be included.
+  loop.addXSec(ds_dpT_Pb_blended_bins);
+
+  MinModDepCCQEXSec* ds_dpT_Pb_combined_bins = new MinModDepCCQEXSec("pTmu_Lead_combined_binning", 82);
+  ds_dpT_Pb_combined_bins->setBinEdges(pt_nbins_combined, pt_edges_combined);
+  ds_dpT_Pb_combined_bins->setVariable(XSec::kPTLep);
+  ds_dpT_Pb_combined_bins->setIsFluxIntegrated(true);
+  ds_dpT_Pb_combined_bins->setDimension(1);
+  ds_dpT_Pb_combined_bins->setFluxIntLimits(0.0, 100.0);
+  ds_dpT_Pb_combined_bins->setNormalizationType(XSec::kSelfNorm);  
+  ds_dpT_Pb_combined_bins->setNormalizationValue(GetNormFactor(82));
+  ds_dpT_Pb_combined_bins->setUniverses(0); //default value, put 0 if you do not want universes to be included.
+  loop.addXSec(ds_dpT_Pb_combined_bins);
+
   // Flux-integrated over the range 0.0 to 100.0 GeV
   MinModDepCCQEXSec* ds_dpT_Water = new MinModDepCCQEXSec("pTmu_Water_std_binning", 8);
   ds_dpT_Water->setBinEdges(pt_nbins_std, pt_edges_std);
@@ -364,6 +460,28 @@ int main(const int argc, const char** argv)
   ds_dpT_Water_carbon_bins->setNormalizationValue(GetNormFactor(8));
   ds_dpT_Water_carbon_bins->setUniverses(0); //default value, put 0 if you do not want universes to be included.
   loop.addXSec(ds_dpT_Water_carbon_bins);
+
+  MinModDepCCQEXSec* ds_dpT_Water_blended_bins = new MinModDepCCQEXSec("pTmu_Water_blended_binning", 8);
+  ds_dpT_Water_blended_bins->setBinEdges(pt_nbins_blended, pt_edges_blended);
+  ds_dpT_Water_blended_bins->setVariable(XSec::kPTLep);
+  ds_dpT_Water_blended_bins->setIsFluxIntegrated(true);
+  ds_dpT_Water_blended_bins->setDimension(1);
+  ds_dpT_Water_blended_bins->setFluxIntLimits(0.0, 100.0);
+  ds_dpT_Water_blended_bins->setNormalizationType(XSec::kSelfNorm);  
+  ds_dpT_Water_blended_bins->setNormalizationValue(GetNormFactor(8));
+  ds_dpT_Water_blended_bins->setUniverses(0); //default value, put 0 if you do not want universes to be included.
+  loop.addXSec(ds_dpT_Water_blended_bins);
+
+  MinModDepCCQEXSec* ds_dpT_Water_combined_bins = new MinModDepCCQEXSec("pTmu_Water_combined_binning", 8);
+  ds_dpT_Water_combined_bins->setBinEdges(pt_nbins_combined, pt_edges_combined);
+  ds_dpT_Water_combined_bins->setVariable(XSec::kPTLep);
+  ds_dpT_Water_combined_bins->setIsFluxIntegrated(true);
+  ds_dpT_Water_combined_bins->setDimension(1);
+  ds_dpT_Water_combined_bins->setFluxIntLimits(0.0, 100.0);
+  ds_dpT_Water_combined_bins->setNormalizationType(XSec::kSelfNorm);  
+  ds_dpT_Water_combined_bins->setNormalizationValue(GetNormFactor(8));
+  ds_dpT_Water_combined_bins->setUniverses(0); //default value, put 0 if you do not want universes to be included.
+  loop.addXSec(ds_dpT_Water_combined_bins);
 
   loop.runLoop();
 
