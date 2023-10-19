@@ -154,7 +154,56 @@ int main(int argc, char* argv[]) {
   while ( key = (TKey*)next() ){
     TString className = (TString)key->GetClassName();
     TString nameObj = (TString)key->GetName();
-    if (!(className.Contains("MnvH") || className == "TParameter<double>") || nameObj.Contains("MYBins")) continue;
+    if (className == "TDirectoryFile"){
+      TDirectory* newOutDir = outFile->mkdir(nameObj);
+      TDirectoryFile* dirInt = (TDirectoryFile*)inFile->Get(nameObj);
+      TList*  keyIntList = dirInt->GetListOfKeys();
+      if(!keyIntList){
+        cout << "List of keys failed to get inside second directory" << endl;
+        return 20;
+      }
+      TIter nextKeyInt(keyIntList);
+      TKey* keyInt;
+      while ( keyInt = (TKey*)nextKeyInt() ){
+	TString classNameInt = (TString)keyInt->GetClassName();
+        TString nameObjInt = (TString)keyInt->GetName();
+        if (!(classNameInt.Contains("MnvH")) || nameObjInt.Contains("MYBins")) continue;
+        else if (classNameInt.Contains("MnvH2")){
+	  //Could eventually be used as a way to check nuisance variables from a fit... for now just a direct copy over.
+	  MnvH2D* h2D = (MnvH2D*)(inFile->Get(nameObj+"/"+nameObjInt))->Clone(nameObjInt);
+	  newOutDir->cd();
+	  h2D->Write();
+	  delete h2D;
+	}
+	else if (classNameInt.Contains("MnvH1")){
+	  bool scaled = false;
+	  MnvH1D* h1D = (MnvH1D*)(inFile->Get(nameObj+"/"+nameObjInt))->Clone(nameObjInt);
+	  for (auto varName: varTagsMap){
+	    if (!nameObjInt.Contains(varName.first) || scaled) continue;
+	    for (auto tag: varName.second){
+	      if(!scaleSig && tag.Contains("sig")) continue;
+	      if(!nameObjInt.Contains(tag)) continue;
+	      cout << "Scaling: " << nameObjInt << endl;
+	      TString nameOfScale = varNameMap[varName.first+tag];
+	      cout << "With Scale: " << nameOfScale << endl;
+	      MnvH1D* hScale = (MnvH1D*)scaleFile->Get(nameOfScale);
+	      h1D->Multiply(h1D,hScale);
+	      delete hScale;
+	      scaled = true;
+	      break;
+	    }
+	  }
+	  newOutDir->cd();
+	  h1D->Write();
+	  delete h1D;
+	}
+	else {
+	  cout << "HUH Inside?" << endl;
+	}
+      }
+    }
+
+    else if (!(className.Contains("MnvH") || className == "TParameter<double>") || nameObj.Contains("MYBins")) continue;
     else if (className == "TParameter<double>"){
       TParameter<double>* tPar = (TParameter<double>*)(inFile->Get(nameObj))->Clone(nameObj);
       outFile->cd();
