@@ -1,7 +1,7 @@
 //File: ScaleMCToData.cxx
 //Info: This script takes an input MC file and a scale factors file to produce a copy with the right histos scaled
 //
-//Usage: ScaleMCToData <mcFile> <dataFile> <outFile>
+//Usage: ScaleMCToData <mcFile> <dataFile> <outFile> : optional <fixed scale>
 //Author: David Last dlast@sas.upenn.edu/lastd44@gmail.com
 
 //C++ includes
@@ -87,7 +87,7 @@ int main(int argc, char* argv[]) {
   #endif
 
   //Pass an input file name to this script now
-  if (argc != 4) {
+  if (argc < 4 || argc > 5) {
     cout << "Check usage..." << endl;
     return 2;
   }
@@ -95,15 +95,17 @@ int main(int argc, char* argv[]) {
   TString mcFileName = argv[1];
   TString dataFileName = argv[2];
   TString outFileName = argv[3];
+  double fixedScale = 1.0;
+  if (argc==5) fixedScale = atof(argv[4]);
 
   TFile* mcFile = new TFile(mcFileName,"READ");
-  TFile* dataFile = new TFile(dataFileName,"READ");
+  TFile* dataFile = (argc==5) ? nullptr : new TFile(dataFileName,"READ");
   TFile* outFile = new TFile(outFileName,"RECREATE");
 
-  double mcPOT = ((TParameter<double>*)mcFile->Get("POTUsed"))->GetVal();
-  double dataPOT = ((TParameter<double>*)dataFile->Get("POTUsed"))->GetVal();
+  double mcPOT = (argc==5) ? 0.0 : ((TParameter<double>*)mcFile->Get("POTUsed"))->GetVal();
+  double dataPOT = (argc==5) ? 0.0 : ((TParameter<double>*)dataFile->Get("POTUsed"))->GetVal();
 
-  double scale = dataPOT/mcPOT;
+  double scale = (argc==5) ? fixedScale : dataPOT/mcPOT;
 
   TList* keyList = mcFile->GetListOfKeys();
   if (!keyList){
@@ -169,7 +171,7 @@ int main(int argc, char* argv[]) {
 	tPar->Write();
 	delete tPar;
       }
-      else{
+      else if (argc==4){
 	TParameter<double>* tPar = (TParameter<double>*)(dataFile->Get(nameObj))->Clone(nameObj);
 	outFile->cd();
 	tPar->Write();
@@ -218,7 +220,7 @@ int main(int argc, char* argv[]) {
 
   cout << "Closing input files" << endl;
   mcFile->Close();
-  dataFile->Close();
+  if (argc==4) dataFile->Close();
 
   cout << "HEY YOU DID IT" << endl;
   return 0;
