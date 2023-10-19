@@ -903,12 +903,12 @@ int main(const int argc, const char** argv)
   std::vector<Variable*> vars = {
     //new Variable(true, "pTmu", "p_{T, #mu} [GeV/c]", dansPTBins, &CVUniverse::GetMuonPT, &CVUniverse::GetMuonPTTrue),
     //new Variable(true, "pTmu", "p_{T, #mu} [GeV/c]", finePTBins, &CVUniverse::GetMuonPT, &CVUniverse::GetMuonPTTrue),
-    new Variable(true, "pTmu", "p_{T, #mu} [GeV/c]", carbonOptimalPTBins, &CVUniverse::GetMuonPT, &CVUniverse::GetMuonPTTrue),
-    new Variable(true, "pTmu_blended", "p_{T, #mu} [GeV/c]", blendedPTBins, &CVUniverse::GetMuonPT, &CVUniverse::GetMuonPTTrue),
-    new Variable(true, "pTmu_combined", "p_{T, #mu} [GeV/c]", combinedPTBins, &CVUniverse::GetMuonPT, &CVUniverse::GetMuonPTTrue),
+    new Variable(true, "pTmu", "p_{T, #mu} [GeV/c]", blendedPTBins, &CVUniverse::GetMuonPT, &CVUniverse::GetMuonPTTrue),
+    //new Variable(true, "pTmu_carbonOptimized", "p_{T, #mu} [GeV/c]", carbonOptimalPTBins, &CVUniverse::GetMuonPT, &CVUniverse::GetMuonPTTrue),
+    // new Variable(true, "pTmu_combined", "p_{T, #mu} [GeV/c]", combinedPTBins, &CVUniverse::GetMuonPT, &CVUniverse::GetMuonPTTrue),
     new Variable(false, "pzmu", "p_{||, #mu} [GeV/c]", dansPzBins, &CVUniverse::GetMuonPz, &CVUniverse::GetMuonPzTrue),
     //new Variable((TString)("MyBins"),"pTmu_MYBins", "p_{T, #mu} [GeV/c]", myPTBins, &CVUniverse::GetMuonPT, &CVUniverse::GetMuonPTTrue),
-    new Variable(false, "pTmu_MYBins", "p_{T, #mu} [GeV/c]", myPTBins, &CVUniverse::GetMuonPT, &CVUniverse::GetMuonPTTrue),
+    //new Variable(false, "pTmu_MYBins", "p_{T, #mu} [GeV/c]", myPTBins, &CVUniverse::GetMuonPT, &CVUniverse::GetMuonPTTrue),
     new Variable(false, "nBlobs", "No.", nBlobsBins, &CVUniverse::GetNNeutBlobs),//Don't need GetDummyTrue perhaps...
     new Variable(false, "recoilE", "Recoil E [GeV]", myRecoilBins, &CVUniverse::GetDANRecoilEnergyGeV),//Don't need GetDummyTrue perhaps...
     new Variable(false, "Q2QE", "Q^{2}_{QE} [GeV^{2}]", myQ2QEBins, &CVUniverse::GetQ2QEPickledGeV),
