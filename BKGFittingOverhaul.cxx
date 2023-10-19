@@ -1020,10 +1020,10 @@ int main(int argc, char* argv[]) {
 
     //TODO:
     // 
-    double[11] coarseVtxBinsUS;//Modified to be a number of planes instead of vertex Z values.                                             
+    double coarseVtxBinsUS[11];//Modified to be a number of planes instead of vertex Z values.                                             
     for (int iBin=0; iBin<11;++iBin) coarseVtxBinsUS[iBin] = (double)iBin-10.5;
 
-    double[11] coarseVtxBinsDS;//Modified to be a number of planes instead of vertex Z values.                                             
+    double coarseVtxBinsDS[11];//Modified to be a number of planes instead of vertex Z values.                                             
     for (int iBin=11; iBin<22;++iBin) coarseVtxBinsDS[iBin-11] = (double)iBin-10.5;
 
     double binsNPlanes[22];
