@@ -705,7 +705,7 @@ int main(const int argc, const char** argv)
   if (doNeutronCuts) nameExt = "_wNeutCuts_neutKE_"+std::to_string(neutKESig)+nameExt;
   else splitRecoil = true;
  
-  if (tuneVer != "1" && tuneVer != "1_noRPA" && tuneVer != "1_no2p2h" && tuneVer != "2" && tuneVer != "1_SuSA" && tuneVer != "1_BodekRitchie"){
+  if (tuneVer != "1" && tuneVer != "1_noRPA" && tuneVer != "1_no2p2h" && tuneVer != "2" && tuneVer != "1_SuSA" && tuneVer != "1_BodekRitchie" && tuneVer != "None"){
     std::cerr << "Must choose between 1 and 2 for the <MnvTune_v> argument. Check usage printed below. \n" << USAGE << "\n";
     return badCmdLine;
   }
@@ -814,11 +814,13 @@ int main(const int argc, const char** argv)
   MnvTune.emplace_back(new PlotUtils::FluxAndCVReweighter<CVUniverse, NeutronEvent>());
   MnvTune.emplace_back(new PlotUtils::GENIEReweighter<CVUniverse, NeutronEvent>(true, false));
   MnvTune.emplace_back(new PlotUtils::MINOSEfficiencyReweighter<CVUniverse, NeutronEvent>());
-  if (tuneVer != "1_no2p2h" && tuneVer != "1_SuSA") MnvTune.emplace_back(new PlotUtils::LowRecoil2p2hReweighter<CVUniverse, NeutronEvent>());
-  if (tuneVer != "1_noRPA") MnvTune.emplace_back(new PlotUtils::RPAReweighter<CVUniverse, NeutronEvent>());
-  if (tuneVer == "2") MnvTune.emplace_back(new PlotUtils::LowQ2PiReweighter<CVUniverse, NeutronEvent>("JOINT"));
-  if (tuneVer == "1_SuSA") MnvTune.emplace_back(new PlotUtils::SuSAFromValencia2p2hReweighter<CVUniverse, NeutronEvent>());
-  if (tuneVer == "1_BodekRitchie") MnvTune.emplace_back(new PlotUtils::BodekRitchieReweighter<CVUniverse, NeutronEvent>(1));
+  if (tuneVer != "None"){
+    if (tuneVer != "1_no2p2h" && tuneVer != "1_SuSA") MnvTune.emplace_back(new PlotUtils::LowRecoil2p2hReweighter<CVUniverse, NeutronEvent>());
+    if (tuneVer != "1_noRPA") MnvTune.emplace_back(new PlotUtils::RPAReweighter<CVUniverse, NeutronEvent>());
+    if (tuneVer == "2") MnvTune.emplace_back(new PlotUtils::LowQ2PiReweighter<CVUniverse, NeutronEvent>("JOINT"));
+    if (tuneVer == "1_SuSA") MnvTune.emplace_back(new PlotUtils::SuSAFromValencia2p2hReweighter<CVUniverse, NeutronEvent>());
+    if (tuneVer == "1_BodekRitchie") MnvTune.emplace_back(new PlotUtils::BodekRitchieReweighter<CVUniverse, NeutronEvent>(1));
+  }
   //TODO: Other Warps just need to see if these even work...
   MnvTune.emplace_back(new PlotUtils::GeantNeutronCVReweighter<CVUniverse, NeutronEvent>());
 
