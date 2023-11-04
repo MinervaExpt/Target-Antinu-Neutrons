@@ -18,9 +18,9 @@ def isFSSignal(mytree):
     nHeavy = 0
 
     for p in range(0,nfsp):
-        if(pdg[p]==2112 and Efsp[p] > 0.010): 
+        if(pdg[p]==2112 and (Efsp[p]-(939.57/1000.0)) > 0.010): 
             nNeutrons += 1
-        elif(pdg[p]==2212 and Efsp[p] > 0.120):
+        elif(pdg[p]==2212 and (Efsp[p]-(938.272/1000.0)) > 0.120):
             nProtons += 1
         elif(abs(pdg[p])==13):
             nMuons += 1
