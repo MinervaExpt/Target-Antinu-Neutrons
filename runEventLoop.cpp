@@ -948,7 +948,7 @@ int main(const int argc, const char** argv)
     }
   }
 
-  std::vector<Variable2D*> vars2D = {};
+  std::vector<Variable2D*> vars2D = {new Variable2D(true,"recoil_v_pT",*vars[0],*vars[vars.size()-3])};//recoil vs. pT for check on the background tuning in tracker (to start) be careful to change this if variables move around...
   /*
     new Variable2D(true,"pmu2D",*vars[1],*vars[0]),//pT v. p"z"
     //new Variable2D(false, *vars[5],*vars[4]),//recoil v. Q2
