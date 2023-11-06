@@ -314,8 +314,8 @@ void LoopAndFillEventSelection(
           {
 	    if (var->IsFill()){
 	      //Cross section components
-	      var->efficiencyNumerator->FillUniverse(universe, var->GetTrueValueX(*universe), var->GetTrueValueY(*universe), weight);
-	      var->migration->FillUniverse(universe, var->FindBin(var->GetRecoValueX(*universe), var->GetRecoValueY(*universe)), var->FindBin(var->GetTrueValueX(*universe), var->GetTrueValueY(*universe)), weight);//Hacky 2D migration matrix that may not work right...
+	      if (var->IsAnaVar()) var->efficiencyNumerator->FillUniverse(universe, var->GetTrueValueX(*universe), var->GetTrueValueY(*universe), weight);
+	      if (var->IsAnaVar()) var->migration->FillUniverse(universe, var->FindBin(var->GetRecoValueX(*universe), var->GetRecoValueY(*universe)), var->FindBin(var->GetTrueValueX(*universe), var->GetTrueValueY(*universe)), weight);//Hacky 2D migration matrix that may not work right...
 	      var->selectedSignalReco->FillUniverse(universe, var->GetRecoValueX(*universe), var->GetRecoValueY(*universe), weight);; //Efficiency numerator in reco variables.  Useful for warping studies.
 
 	      //Various breakdowns of selected signal reco
@@ -573,7 +573,7 @@ void LoopAndFillEffDenom( PlotUtils::ChainWrapper* truth,
 	
         for(auto var: vars2D)
         {
-          if(var->IsFill()) var->efficiencyDenominator->FillUniverse(universe, var->GetTrueValueX(*universe), var->GetTrueValueY(*universe), weight);
+          if(var->IsFill() && var->IsAnaVar()) var->efficiencyDenominator->FillUniverse(universe, var->GetTrueValueX(*universe), var->GetTrueValueY(*universe), weight);
         }
 
 	//I think I just need to check the true target material here... I'm not certain about that, but I think that's right...
@@ -884,8 +884,10 @@ int main(const int argc, const char** argv)
   const double n5BinWidth = 1;
   for(int whichBin = 0; whichBin < 6; ++whichBin) n5Bins.push_back(n5BinWidth * whichBin);
 
-  const double myRecoilBinWidth = 1.0/50.;
-  for(int whichBin = 0; whichBin < 51; ++whichBin) myRecoilBins.push_back(myRecoilBinWidth * whichBin);
+  //const double myRecoilBinWidth = 1.0/60.;
+  const double myRecoilBinWidth = 1.0/50.;//default
+  //for(int whichBin = 0; whichBin < 61; ++whichBin) myRecoilBins.push_back(myRecoilBinWidth * whichBin);
+  for(int whichBin = 0; whichBin < 51; ++whichBin) myRecoilBins.push_back(myRecoilBinWidth * whichBin);//default
 
   const double myRecoilQ2BinWidth = 1.0;
   for(int whichBin = 0; whichBin < 15*50+1; ++whichBin) myRecoilQ2Bins.push_back(myRecoilQ2BinWidth * whichBin);
@@ -948,7 +950,10 @@ int main(const int argc, const char** argv)
     }
   }
 
-  std::vector<Variable2D*> vars2D = {new Variable2D(true,"recoil_v_pT",*vars[0],*vars[vars.size()-3])};//recoil vs. pT for check on the background tuning in tracker (to start) be careful to change this if variables move around...
+  std::vector<Variable2D*> vars2D = {new Variable2D(false,"recoil_v_pT",*vars[0],*vars[vars.size()-3])};
+  std::cout << "Checking N bins X: " << vars2D.at(0)->GetNBinsX() << "Y: " << vars2D.at(0)->GetNBinsY() << std::endl;
+  //recoil vs. pT for check on the background tuning in tracker (to start) be careful to change this if variables move around...
+  //vars2D.push_back(new Variable2D(true,"pmu2D",*vars[1],*vars[0]));//Test to see if this runs just fine when the versus recoil had so many issues... AND how big it gets.
   /*
     new Variable2D(true,"pmu2D",*vars[1],*vars[0]),//pT v. p"z"
     //new Variable2D(false, *vars[5],*vars[4]),//recoil v. Q2

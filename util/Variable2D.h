@@ -111,11 +111,13 @@ class Variable2D: public PlotUtils::Variable2DBase<CVUniverse>
 								GetBinVecX(), GetBinVecY(), mc_error_bands);
       */
 
-      efficiencyNumerator = new Hist(("TwoD_" + GetName() + "_efficiency_numerator").c_str(), ("TwoD_"+GetName()).c_str(), GetBinVecX(), GetBinVecY(), mc_error_bands);
-      efficiencyDenominator = new Hist(("TwoD_" + GetName() + "_efficiency_denominator").c_str(), ("TwoD_" + GetName()).c_str(), GetBinVecX(), GetBinVecY(), truth_error_bands);
+      if (fAnaVar){ 
+	efficiencyNumerator = new Hist(("TwoD_" + GetName() + "_efficiency_numerator").c_str(), ("TwoD_"+GetName()).c_str(), GetBinVecX(), GetBinVecY(), mc_error_bands);
+	efficiencyDenominator = new Hist(("TwoD_" + GetName() + "_efficiency_denominator").c_str(), ("TwoD_" + GetName()).c_str(), GetBinVecX(), GetBinVecY(), truth_error_bands);
+      }
       selectedSignalReco = new Hist(("TwoD_" + GetName() + "_selected_signal_reco").c_str(),  ("TwoD_"+GetName()).c_str(), GetBinVecX(), GetBinVecY(), mc_error_bands);
       selectedMCReco = new Hist(("TwoD_" + GetName() + "_selected_mc_reco").c_str(),  ("TwoD_"+GetName()).c_str(), GetBinVecX(), GetBinVecY(), mc_error_bands);
-      migration = new Hist(("TwoD_" + GetName() + "_migration").c_str(),  ("TwoD_"+GetName()).c_str(), (GetNBinsX()+2)*(GetNBinsY()+2), 0, (GetNBinsX()+2)*(GetNBinsY()+2), (GetNBinsX()+2)*(GetNBinsY()+2), 0, (GetNBinsX()+2)*(GetNBinsY()+2), mc_error_bands);
+      if (fAnaVar) migration = new Hist(("TwoD_" + GetName() + "_migration").c_str(),  ("TwoD_"+GetName()).c_str(), (GetNBinsX()+2)*(GetNBinsY()+2), 0, (GetNBinsX()+2)*(GetNBinsY()+2), (GetNBinsX()+2)*(GetNBinsY()+2), 0, (GetNBinsX()+2)*(GetNBinsY()+2), mc_error_bands);
       dummyHist = new MnvH2D(("TwoD_" + GetName() + "_dummy").c_str(), ("TwoD_"+GetName()).c_str(), GetBinVecX().size() - 1, GetBinVecX().data(), GetBinVecY().size() - 1, GetBinVecY().data());
     }
 
@@ -226,13 +228,13 @@ class Variable2D: public PlotUtils::Variable2DBase<CVUniverse>
       }
       */
 
-      if(efficiencyNumerator)
+      if(efficiencyNumerator && fAnaVar)
       {
         efficiencyNumerator->hist->SetDirectory(dir); //TODO: Can I get around having to call SetDirectory() this many times somehow?
         //efficiencyNumerator->hist->Write();
       }
 
-      if(efficiencyDenominator)
+      if(efficiencyDenominator && fAnaVar)
       {
         efficiencyDenominator->hist->SetDirectory(dir);
         //efficiencyDenominator->hist->Write();
@@ -249,7 +251,7 @@ class Variable2D: public PlotUtils::Variable2DBase<CVUniverse>
 	  selectedMCReco->hist->SetName(("TwoD_"+GetName() + "_data").c_str()); //Make this histogram look just like the data for closure tests
 	}
 
-      if(migration)
+      if(migration && fAnaVar)
 	{
 	  migration->hist->SetDirectory(dir);
 	  //migration->hist->Write();
@@ -272,11 +274,11 @@ class Variable2D: public PlotUtils::Variable2DBase<CVUniverse>
       //m_BkgLeadBlobTypeHists->visit([](Hist& categ) { categ.SyncCVHistos(); });
 
       if(dataHist) dataHist->SyncCVHistos();
-      if(efficiencyNumerator) efficiencyNumerator->SyncCVHistos();
-      if(efficiencyDenominator) efficiencyDenominator->SyncCVHistos();
+      if(efficiencyNumerator && fAnaVar) efficiencyNumerator->SyncCVHistos();
+      if(efficiencyDenominator && fAnaVar) efficiencyDenominator->SyncCVHistos();
       if(selectedSignalReco) selectedSignalReco->SyncCVHistos();
       if(selectedMCReco) selectedMCReco->SyncCVHistos();
-      if(migration) migration->SyncCVHistos();
+      if(migration && fAnaVar) migration->SyncCVHistos();
     }
 
     void SetDirectoryName(std::string name){fDirName = name;}
