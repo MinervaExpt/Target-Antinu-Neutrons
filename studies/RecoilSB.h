@@ -23,6 +23,8 @@ class PreRecoil: public Study
     std::vector<util::Categorized<Variable, int>*> fVars_ByTgt;
     std::map<int, util::Categorized<Variable,int>*> fVtx_US_ByTgt;
     std::map<int, util::Categorized<Variable,int>*> fVtx_DS_ByTgt;
+    std::map<int, util::Categorized<Variable2D,int>*> fVtx2D_US_ByTgt;
+    std::map<int, util::Categorized<Variable2D,int>*> fVtx2D_DS_ByTgt;
     std::vector<Variable2D*> fVars2D;
     std::vector<util::Categorized<Variable2D, int>*> fVars2D_ByTgt;
     std::vector<util::Categorized<Variable2D, int>*> fVars2D_US_ByTgt;
@@ -154,6 +156,8 @@ class PreRecoil: public Study
 	      for (auto& tgt: util::TgtCodeList[fTgtID]){
 		fVtx_US_ByTgt[tgt.first]=new util::Categorized<Variable, int>(("ByTgt_"+tgt.second).c_str(), "US_ByType", false, (var->GetName()+"_ByTgt_"+tgt.second+"_PreRecoilCut").c_str(),var->GetAxisLabel().c_str(), util::TgtTypeList,coarseVtxBinsUS,var->GetRecoFunc(),var->GetTrueFunc());
 		fVtx_DS_ByTgt[tgt.first]=new util::Categorized<Variable, int>(("ByTgt_"+tgt.second).c_str(), "DS_ByType", false, (var->GetName()+"_ByTgt_"+tgt.second+"_PreRecoilCut").c_str(),var->GetAxisLabel().c_str(), util::TgtTypeList,coarseVtxBinsDS,var->GetRecoFunc(),var->GetTrueFunc());
+		fVtx2D_US_ByTgt[tgt.first]=new util::Categorized<Variable2D, int>(("ByTgt_"+tgt.second).c_str(), "US_ByType", false, (var->GetName()+"2D_ByTgt_"+tgt.second+"_PreRecoilCut").c_str(),*fVars[0],*fVtx_US_ByTgt[tgt.first]);
+		fVtx2D_DS_ByTgt[tgt.first]=new util::Categorized<Variable2D, int>(("ByTgt_"+tgt.second).c_str(), "DS_ByType", false, (var->GetName()+"2D_ByTgt_"+tgt.second+"_PreRecoilCut").c_str(),*fVars[0],*fVtx_DS_ByTgt[tgt.first]);
 	      }
 	    }
 	  }
