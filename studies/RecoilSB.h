@@ -173,6 +173,7 @@ class PreRecoil: public Study
       fVars2D = {};
       fVars2D_ByTgt = {};
       //Look to main code for other 2D variable initializations.
+      if (!fFVregionName.Contains("Target")) fVars2D.push_back(new Variable2D(false,"recoil_v_pT_PreRecoilCut",*vars[0],*vars[vars.size()-3]));
       if (!fDoNeutronCuts){
 	for (auto& var: fVars) var->SetFillVar(false);
 	if (fFVregionName.Contains("Target")){
