@@ -25,6 +25,10 @@ class PreRecoil: public Study
     util::Categorized<Variable, int>* fVtxTest_US_ByTgt;
     util::Categorized<Variable, int>* fVtxTest_DS_Post_ByTgt;
     util::Categorized<Variable, int>* fVtxTest_DS_ByTgt;
+    util::Categorized<Variable2D, int>* fVtxTest2D_US_Post_ByTgt;
+    util::Categorized<Variable2D, int>* fVtxTest2D_US_ByTgt;
+    util::Categorized<Variable2D, int>* fVtxTest2D_DS_Post_ByTgt;
+    util::Categorized<Variable2D, int>* fVtxTest2D_DS_ByTgt;
     std::map<int, util::Categorized<Variable,int>*> fVtx_US_ByTgt;
     std::map<int, util::Categorized<Variable,int>*> fVtx_DS_ByTgt;
     //std::map<int, util::Categorized<Variable2D,int>*> fVtx2D_US_ByTgt;
@@ -161,6 +165,12 @@ class PreRecoil: public Study
 	      fVtxTest_US_ByTgt = new util::Categorized<Variable, int>(var->GetDirectoryName(), "ByTgt", false, (var->GetName()+"_OuterUSPlastic_PreRecoilCut").c_str(),var->GetAxisLabel().c_str(), util::TgtCodeList[fTgtID],coarseVtxBinsUS,var->GetRecoFunc(),var->GetTrueFunc());
 	      fVtxTest_DS_Post_ByTgt = new util::Categorized<Variable, int>(var->GetDirectoryName(), "ByTgt", false, (var->GetName()+"_OuterDSPlastic").c_str(),var->GetAxisLabel().c_str(), util::TgtCodeList[fTgtID],coarseVtxBinsDS,var->GetRecoFunc(),var->GetTrueFunc());
 	      fVtxTest_DS_ByTgt = new util::Categorized<Variable, int>(var->GetDirectoryName(), "ByTgt", false, (var->GetName()+"_OuterDSPlastic_PreRecoilCut").c_str(),var->GetAxisLabel().c_str(), util::TgtCodeList[fTgtID],coarseVtxBinsDS,var->GetRecoFunc(),var->GetTrueFunc());
+
+	      fVtxTest2D_US_Post_ByTgt = new util::Categorized<Variable2D, int>(var->GetDirectoryName(), "ByTgt", false, (var->GetName()+"_v_pT_OuterUSPlastic").c_str(), util::TgtCodeList[fTgtID], *fVars[0], (*fVtxTest_US_Post_ByTgt)[0]);
+	      fVtxTest2D_US_ByTgt = new util::Categorized<Variable2D, int>(var->GetDirectoryName(), "ByTgt", false, (var->GetName()+"_v_pT_OuterUSPlastic_PreRecoilCut").c_str(), util::TgtCodeList[fTgtID], *fVars[0], (*fVtxTest_US_ByTgt)[0]);
+	      fVtxTest2D_DS_Post_ByTgt = new util::Categorized<Variable2D, int>(var->GetDirectoryName(), "ByTgt", false, (var->GetName()+"_v_pT_OuterDSPlastic").c_str(), util::TgtCodeList[fTgtID], *fVars[0], (*fVtxTest_DS_Post_ByTgt)[0]);
+	      fVtxTest2D_DS_ByTgt = new util::Categorized<Variable2D, int>(var->GetDirectoryName(), "ByTgt", false, (var->GetName()+"_v_pT_OuterDSPlastic_PreRecoilCut").c_str(), util::TgtCodeList[fTgtID], *fVars[0], (*fVtxTest_DS_ByTgt)[0]);
+
 	      for (auto& tgt: util::TgtCodeList[fTgtID]){
 		fVtx_US_ByTgt[tgt.first]=new util::Categorized<Variable, int>(("ByTgt_"+tgt.second).c_str(), "US_ByType", false, (var->GetName()+"_ByTgt_"+tgt.second+"_PreRecoilCut").c_str(),var->GetAxisLabel().c_str(), util::TgtTypeList,coarseVtxBinsUS,var->GetRecoFunc(),var->GetTrueFunc());
 		fVtx_DS_ByTgt[tgt.first]=new util::Categorized<Variable, int>(("ByTgt_"+tgt.second).c_str(), "DS_ByType", false, (var->GetName()+"_ByTgt_"+tgt.second+"_PreRecoilCut").c_str(),var->GetAxisLabel().c_str(), util::TgtTypeList,coarseVtxBinsDS,var->GetRecoFunc(),var->GetTrueFunc());
@@ -277,7 +287,12 @@ class PreRecoil: public Study
       fVtxTest_US_Post_ByTgt->visit([&data_error_bands](Variable& var){
 	  var.InitializeDATAHists(data_error_bands);
 	});
-
+      fVtxTest2D_US_Post_ByTgt->visit([&mc_error_bands, &truth_error_bands](Variable2D& var){
+	  var.InitializeMCHists(mc_error_bands, truth_error_bands);
+	});
+      fVtxTest2D_US_Post_ByTgt->visit([&data_error_bands](Variable2D& var){
+	  var.InitializeDATAHists(data_error_bands);
+	});
 
       fVtxTest_US_ByTgt->visit([&mc_error_bands, &truth_error_bands](Variable& var){
 	  var.InitializeMCHists(mc_error_bands, truth_error_bands);
@@ -285,7 +300,12 @@ class PreRecoil: public Study
       fVtxTest_US_ByTgt->visit([&data_error_bands](Variable& var){
 	  var.InitializeDATAHists(data_error_bands);
 	});
-
+      fVtxTest2D_US_ByTgt->visit([&mc_error_bands, &truth_error_bands](Variable2D& var){
+	  var.InitializeMCHists(mc_error_bands, truth_error_bands);
+	});
+      fVtxTest2D_US_ByTgt->visit([&data_error_bands](Variable2D& var){
+	  var.InitializeDATAHists(data_error_bands);
+	});
 
       fVtxTest_DS_Post_ByTgt->visit([&mc_error_bands, &truth_error_bands](Variable& var){
 	  var.InitializeMCHists(mc_error_bands, truth_error_bands);
@@ -293,12 +313,23 @@ class PreRecoil: public Study
       fVtxTest_DS_Post_ByTgt->visit([&data_error_bands](Variable& var){
 	  var.InitializeDATAHists(data_error_bands);
 	});
-
+      fVtxTest2D_DS_Post_ByTgt->visit([&mc_error_bands, &truth_error_bands](Variable2D& var){
+	  var.InitializeMCHists(mc_error_bands, truth_error_bands);
+	});
+      fVtxTest2D_DS_Post_ByTgt->visit([&data_error_bands](Variable2D& var){
+	  var.InitializeDATAHists(data_error_bands);
+	});
 
       fVtxTest_DS_ByTgt->visit([&mc_error_bands, &truth_error_bands](Variable& var){
 	  var.InitializeMCHists(mc_error_bands, truth_error_bands);
 	});
       fVtxTest_DS_ByTgt->visit([&data_error_bands](Variable& var){
+	  var.InitializeDATAHists(data_error_bands);
+	});
+      fVtxTest2D_DS_ByTgt->visit([&mc_error_bands, &truth_error_bands](Variable2D& var){
+	  var.InitializeMCHists(mc_error_bands, truth_error_bands);
+	});
+      fVtxTest2D_DS_ByTgt->visit([&data_error_bands](Variable2D& var){
 	  var.InitializeDATAHists(data_error_bands);
 	});
 
@@ -453,13 +484,28 @@ class PreRecoil: public Study
       fVtxTest_US_Post_ByTgt->visit([&outFile](Variable& var){
 	  var.WriteMC(outFile);
 	});
+      fVtxTest2D_US_Post_ByTgt->visit([&outFile](Variable2D& var){
+	  var.WriteMC(outFile);
+	});
+
       fVtxTest_US_ByTgt->visit([&outFile](Variable& var){
 	  var.WriteMC(outFile);
 	});
+      fVtxTest2D_US_ByTgt->visit([&outFile](Variable2D& var){
+	  var.WriteMC(outFile);
+	});
+
       fVtxTest_DS_Post_ByTgt->visit([&outFile](Variable& var){
 	  var.WriteMC(outFile);
 	});
+      fVtxTest2D_DS_Post_ByTgt->visit([&outFile](Variable2D& var){
+	  var.WriteMC(outFile);
+	});
+
       fVtxTest_DS_ByTgt->visit([&outFile](Variable& var){
+	  var.WriteMC(outFile);
+	});
+      fVtxTest2D_DS_ByTgt->visit([&outFile](Variable2D& var){
 	  var.WriteMC(outFile);
 	});
 
@@ -557,13 +603,28 @@ class PreRecoil: public Study
       fVtxTest_US_Post_ByTgt->visit([&outFile](Variable& var){
 	  var.WriteData(outFile);
 	});
+      fVtxTest2D_US_Post_ByTgt->visit([&outFile](Variable2D& var){
+	  var.WriteData(outFile);
+	});
+
       fVtxTest_US_ByTgt->visit([&outFile](Variable& var){
 	  var.WriteData(outFile);
 	});
+      fVtxTest2D_US_ByTgt->visit([&outFile](Variable2D& var){
+	  var.WriteData(outFile);
+	});
+
       fVtxTest_DS_Post_ByTgt->visit([&outFile](Variable& var){
 	  var.WriteData(outFile);
 	});
+      fVtxTest2D_DS_Post_ByTgt->visit([&outFile](Variable2D& var){
+	  var.WriteData(outFile);
+	});
+
       fVtxTest_DS_ByTgt->visit([&outFile](Variable& var){
+	  var.WriteData(outFile);
+	});
+      fVtxTest2D_DS_ByTgt->visit([&outFile](Variable2D& var){
 	  var.WriteData(outFile);
 	});
 
@@ -787,6 +848,12 @@ class PreRecoil: public Study
 		  (*(*fVtxTest_US_ByTgt)[USTgt].m_SigTargetTypeHists)[tgtType].FillUniverse(&univ, util::GetNPlanesUSOfTarget(USTgt,(*fVtxTest_US_ByTgt)[USTgt].GetRecoValue(univ)), weight);
 		  //(*(*fVtxTest_US_ByTgt)[USTgt].m_SigLeadBlobTypeHists)[leadBlobType].FillUniverse(&univ, util::GetNPlanesUSOfTarget(USTgt,(*fVtxTest_US_ByTgt)[USTgt].GetRecoValue(univ)), weight);
 		}
+
+		(*fVtxTest2D_US_ByTgt)[USTgt].selectedMCReco->FillUniverse(&univ, (*fVtxTest2D_US_ByTgt)[USTgt].GetRecoValueX(univ), util::GetNPlanesUSOfTarget(USTgt,(*fVtxTest2D_US_ByTgt)[USTgt].GetRecoValueY(univ)), weight); //"Fake data" for closure
+		(*fVtxTest2D_US_ByTgt)[USTgt].selectedSignalReco->FillUniverse(&univ, (*fVtxTest2D_US_ByTgt)[USTgt].GetRecoValueX(univ), util::GetNPlanesUSOfTarget(USTgt,(*fVtxTest2D_US_ByTgt)[USTgt].GetRecoValueY(univ)), weight);
+		(*(*fVtxTest2D_US_ByTgt)[USTgt].m_SigIntTypeHists)[intType].FillUniverse(&univ, (*fVtxTest2D_US_ByTgt)[USTgt].GetRecoValueX(univ), util::GetNPlanesUSOfTarget(USTgt,(*fVtxTest2D_US_ByTgt)[USTgt].GetRecoValueY(univ)), weight);
+		(*(*fVtxTest2D_US_ByTgt)[USTgt].m_SigTargetTypeHists)[tgtType].FillUniverse(&univ, (*fVtxTest2D_US_ByTgt)[USTgt].GetRecoValueX(univ), util::GetNPlanesUSOfTarget(USTgt,(*fVtxTest2D_US_ByTgt)[USTgt].GetRecoValueY(univ)), weight);
+		//(*(*fVtxTest2D_US_ByTgt)[USTgt].m_SigLeadBlobTypeHists)[leadBlobType].FillUniverse(&univ, (*fVtxTest2D_US_ByTgt)[USTgt].GetRecoValueX(univ), util::GetNPlanesUSOfTarget(USTgt,(*fVtxTest2D_US_ByTgt)[USTgt].GetRecoValueY(univ)), weight);
 	      }
 
 	      if(DSTgt > 0){
@@ -797,6 +864,12 @@ class PreRecoil: public Study
 		  (*(*fVtxTest_DS_ByTgt)[DSTgt].m_SigTargetTypeHists)[tgtType].FillUniverse(&univ, util::GetNPlanesDSOfTarget(DSTgt,(*fVtxTest_DS_ByTgt)[DSTgt].GetRecoValue(univ)), weight);
 		  //(*(*fVtxTest_DS_ByTgt)[DSTgt].m_SigLeadBlobTypeHists)[leadBlobType].FillUniverse(&univ, util::GetNPlanesDSOfTarget(DSTgt,(*fVtxTest_DS_ByTgt)[DSTgt].GetRecoValue(univ)), weight);
 		}
+
+		(*fVtxTest2D_DS_ByTgt)[DSTgt].selectedMCReco->FillUniverse(&univ, (*fVtxTest2D_DS_ByTgt)[DSTgt].GetRecoValueX(univ), util::GetNPlanesDSOfTarget(DSTgt,(*fVtxTest2D_DS_ByTgt)[DSTgt].GetRecoValueY(univ)), weight); //"Fake data" for closure
+		(*fVtxTest2D_DS_ByTgt)[DSTgt].selectedSignalReco->FillUniverse(&univ, (*fVtxTest2D_DS_ByTgt)[DSTgt].GetRecoValueX(univ), util::GetNPlanesDSOfTarget(DSTgt,(*fVtxTest2D_DS_ByTgt)[DSTgt].GetRecoValueY(univ)), weight);
+		(*(*fVtxTest2D_DS_ByTgt)[DSTgt].m_SigIntTypeHists)[intType].FillUniverse(&univ, (*fVtxTest2D_DS_ByTgt)[DSTgt].GetRecoValueX(univ), util::GetNPlanesDSOfTarget(DSTgt,(*fVtxTest2D_DS_ByTgt)[DSTgt].GetRecoValueY(univ)), weight);
+		(*(*fVtxTest2D_DS_ByTgt)[DSTgt].m_SigTargetTypeHists)[tgtType].FillUniverse(&univ, (*fVtxTest2D_DS_ByTgt)[DSTgt].GetRecoValueX(univ), util::GetNPlanesDSOfTarget(DSTgt,(*fVtxTest2D_DS_ByTgt)[DSTgt].GetRecoValueY(univ)), weight);
+		//(*(*fVtxTest2D_DS_ByTgt)[DSTgt].m_SigLeadBlobTypeHists)[leadBlobType].FillUniverse(&univ, (*fVtxTest2D_DS_ByTgt)[DSTgt].GetRecoValueX(univ), util::GetNPlanesDSOfTarget(DSTgt,(*fVtxTest2D_DS_ByTgt)[DSTgt].GetRecoValueY(univ)), weight);
 	      }
 	    }
 	  }
@@ -809,6 +882,12 @@ class PreRecoil: public Study
 		(*(*fVtxTest_US_Post_ByTgt)[USTgt].m_SigTargetTypeHists)[tgtType].FillUniverse(&univ, util::GetNPlanesUSOfTarget(USTgt,(*fVtxTest_US_Post_ByTgt)[USTgt].GetRecoValue(univ)), weight);
 		//(*(*fVtxTest_US_Post_ByTgt)[USTgt].m_SigLeadBlobTypeHists)[leadBlobType].FillUniverse(&univ, util::GetNPlanesUSOfTarget(USTgt,(*fVtxTest_US_Post_ByTgt)[USTgt].GetRecoValue(univ)), weight);
 	      }
+
+	      (*fVtxTest2D_US_Post_ByTgt)[USTgt].selectedMCReco->FillUniverse(&univ, (*fVtxTest2D_US_Post_ByTgt)[USTgt].GetRecoValueX(univ), util::GetNPlanesUSOfTarget(USTgt,(*fVtxTest2D_US_Post_ByTgt)[USTgt].GetRecoValueY(univ)), weight); //"Fake data" for closure
+	      (*fVtxTest2D_US_Post_ByTgt)[USTgt].selectedSignalReco->FillUniverse(&univ, (*fVtxTest2D_US_Post_ByTgt)[USTgt].GetRecoValueX(univ), util::GetNPlanesUSOfTarget(USTgt,(*fVtxTest2D_US_Post_ByTgt)[USTgt].GetRecoValueY(univ)), weight);
+	      (*(*fVtxTest2D_US_Post_ByTgt)[USTgt].m_SigIntTypeHists)[intType].FillUniverse(&univ, (*fVtxTest2D_US_Post_ByTgt)[USTgt].GetRecoValueX(univ), util::GetNPlanesUSOfTarget(USTgt,(*fVtxTest2D_US_Post_ByTgt)[USTgt].GetRecoValueY(univ)), weight);
+	      (*(*fVtxTest2D_US_Post_ByTgt)[USTgt].m_SigTargetTypeHists)[tgtType].FillUniverse(&univ, (*fVtxTest2D_US_Post_ByTgt)[USTgt].GetRecoValueX(univ), util::GetNPlanesUSOfTarget(USTgt,(*fVtxTest2D_US_Post_ByTgt)[USTgt].GetRecoValueY(univ)), weight);
+	      //(*(*fVtxTest2D_US_Post_ByTgt)[USTgt].m_SigLeadBlobTypeHists)[leadBlobType].FillUniverse(&univ, (*fVtxTest2D_US_Post_ByTgt)[USTgt].GetRecoValueX(univ), util::GetNPlanesUSOfTarget(USTgt,(*fVtxTest2D_US_Post_ByTgt)[USTgt].GetRecoValueY(univ)), weight);
 
 	      /* Debugging removed
 		 std::cout << "IsSignal" << std::endl;
@@ -847,6 +926,12 @@ class PreRecoil: public Study
 		(*(*fVtxTest_DS_Post_ByTgt)[DSTgt].m_SigTargetTypeHists)[tgtType].FillUniverse(&univ, util::GetNPlanesDSOfTarget(DSTgt,(*fVtxTest_DS_Post_ByTgt)[DSTgt].GetRecoValue(univ)), weight);
 		//(*(*fVtxTest_DS_Post_ByTgt)[DSTgt].m_SigLeadBlobTypeHists)[leadBlobType].FillUniverse(&univ, util::GetNPlanesDSOfTarget(DSTgt,(*fVtxTest_DS_Post_ByTgt)[DSTgt].GetRecoValue(univ)), weight);
 	      }
+
+	      (*fVtxTest2D_DS_Post_ByTgt)[DSTgt].selectedMCReco->FillUniverse(&univ, (*fVtxTest2D_DS_Post_ByTgt)[DSTgt].GetRecoValueX(univ), util::GetNPlanesDSOfTarget(DSTgt,(*fVtxTest2D_DS_Post_ByTgt)[DSTgt].GetRecoValueY(univ)), weight); //"Fake data" for closure
+	      (*fVtxTest2D_DS_Post_ByTgt)[DSTgt].selectedSignalReco->FillUniverse(&univ, (*fVtxTest2D_DS_Post_ByTgt)[DSTgt].GetRecoValueX(univ), util::GetNPlanesDSOfTarget(DSTgt,(*fVtxTest2D_DS_Post_ByTgt)[DSTgt].GetRecoValueY(univ)), weight);
+	      (*(*fVtxTest2D_DS_Post_ByTgt)[DSTgt].m_SigIntTypeHists)[intType].FillUniverse(&univ, (*fVtxTest2D_DS_Post_ByTgt)[DSTgt].GetRecoValueX(univ), util::GetNPlanesDSOfTarget(DSTgt,(*fVtxTest2D_DS_Post_ByTgt)[DSTgt].GetRecoValueY(univ)), weight);
+	      (*(*fVtxTest2D_DS_Post_ByTgt)[DSTgt].m_SigTargetTypeHists)[tgtType].FillUniverse(&univ, (*fVtxTest2D_DS_Post_ByTgt)[DSTgt].GetRecoValueX(univ), util::GetNPlanesDSOfTarget(DSTgt,(*fVtxTest2D_DS_Post_ByTgt)[DSTgt].GetRecoValueY(univ)), weight);
+	      //(*(*fVtxTest2D_DS_Post_ByTgt)[DSTgt].m_SigLeadBlobTypeHists)[leadBlobType].FillUniverse(&univ, (*fVtxTest2D_DS_Post_ByTgt)[DSTgt].GetRecoValueX(univ), util::GetNPlanesDSOfTarget(DSTgt,(*fVtxTest2D_DS_Post_ByTgt)[DSTgt].GetRecoValueY(univ)), weight);
 
 	      /*Debugging removed
 		std::cout << "IsSignal" << std::endl;
@@ -1160,6 +1245,12 @@ class PreRecoil: public Study
 		  (*(*fVtxTest_US_ByTgt)[USTgt].m_BkgTargetTypeHists)[tgtType].FillUniverse(&univ, util::GetNPlanesUSOfTarget(USTgt,(*fVtxTest_US_ByTgt)[USTgt].GetRecoValue(univ)), weight);
 		  //(*(*fVtxTest_US_ByTgt)[USTgt].m_BkgLeadBlobTypeHists)[leadBlobType].FillUniverse(&univ, util::GetNPlanesUSOfTarget(USTgt,(*fVtxTest_US_ByTgt)[USTgt].GetRecoValue(univ)), weight);
 		}
+
+		(*fVtxTest2D_US_ByTgt)[USTgt].selectedMCReco->FillUniverse(&univ, (*fVtxTest2D_US_ByTgt)[USTgt].GetRecoValueX(univ), util::GetNPlanesUSOfTarget(USTgt,(*fVtxTest2D_US_ByTgt)[USTgt].GetRecoValueY(univ)), weight); //"Fake data" for closure
+		(*(*fVtxTest2D_US_ByTgt)[USTgt].m_backgroundHists)[bkgd_ID].FillUniverse(&univ, (*fVtxTest2D_US_ByTgt)[USTgt].GetRecoValueX(univ), util::GetNPlanesUSOfTarget(USTgt,(*fVtxTest2D_US_ByTgt)[USTgt].GetRecoValueY(univ)), weight);
+		(*(*fVtxTest2D_US_ByTgt)[USTgt].m_BkgIntTypeHists)[intType].FillUniverse(&univ, (*fVtxTest2D_US_ByTgt)[USTgt].GetRecoValueX(univ), util::GetNPlanesUSOfTarget(USTgt,(*fVtxTest2D_US_ByTgt)[USTgt].GetRecoValueY(univ)), weight);
+		(*(*fVtxTest2D_US_ByTgt)[USTgt].m_BkgTargetTypeHists)[tgtType].FillUniverse(&univ, (*fVtxTest2D_US_ByTgt)[USTgt].GetRecoValueX(univ), util::GetNPlanesUSOfTarget(USTgt,(*fVtxTest2D_US_ByTgt)[USTgt].GetRecoValueY(univ)), weight);
+		//(*(*fVtxTest2D_US_ByTgt)[USTgt].m_BkgLeadBlobTypeHists)[leadBlobType].FillUniverse(&univ, (*fVtxTest2D_US_ByTgt)[USTgt].GetRecoValueX(univ), util::GetNPlanesUSOfTarget(USTgt,(*fVtxTest2D_US_ByTgt)[USTgt].GetRecoValueY(univ)), weight);
 	      }
 
 	      if (DSTgt > 0){
@@ -1170,6 +1261,12 @@ class PreRecoil: public Study
 		  (*(*fVtxTest_DS_ByTgt)[DSTgt].m_BkgTargetTypeHists)[tgtType].FillUniverse(&univ, util::GetNPlanesDSOfTarget(DSTgt,(*fVtxTest_DS_ByTgt)[DSTgt].GetRecoValue(univ)), weight);
 		  //(*(*fVtxTest_DS_ByTgt)[DSTgt].m_BkgLeadBlobTypeHists)[leadBlobType].FillUniverse(&univ, util::GetNPlanesDSOfTarget(DSTgt,(*fVtxTest_DS_ByTgt)[DSTgt].GetRecoValue(univ)), weight);
 		}
+
+		(*fVtxTest2D_DS_ByTgt)[DSTgt].selectedMCReco->FillUniverse(&univ, (*fVtxTest2D_DS_ByTgt)[DSTgt].GetRecoValueX(univ), util::GetNPlanesDSOfTarget(DSTgt,(*fVtxTest2D_DS_ByTgt)[DSTgt].GetRecoValueY(univ)), weight); //"Fake data" for closure
+		(*(*fVtxTest2D_DS_ByTgt)[DSTgt].m_backgroundHists)[bkgd_ID].FillUniverse(&univ, (*fVtxTest2D_DS_ByTgt)[DSTgt].GetRecoValueX(univ), util::GetNPlanesDSOfTarget(DSTgt,(*fVtxTest2D_DS_ByTgt)[DSTgt].GetRecoValueY(univ)), weight);
+		(*(*fVtxTest2D_DS_ByTgt)[DSTgt].m_BkgIntTypeHists)[intType].FillUniverse(&univ, (*fVtxTest2D_DS_ByTgt)[DSTgt].GetRecoValueX(univ), util::GetNPlanesDSOfTarget(DSTgt,(*fVtxTest2D_DS_ByTgt)[DSTgt].GetRecoValueY(univ)), weight);
+		(*(*fVtxTest2D_DS_ByTgt)[DSTgt].m_BkgTargetTypeHists)[tgtType].FillUniverse(&univ, (*fVtxTest2D_DS_ByTgt)[DSTgt].GetRecoValueX(univ), util::GetNPlanesDSOfTarget(DSTgt,(*fVtxTest2D_DS_ByTgt)[DSTgt].GetRecoValueY(univ)), weight);
+		//(*(*fVtxTest2D_DS_ByTgt)[DSTgt].m_BkgLeadBlobTypeHists)[leadBlobType].FillUniverse(&univ, (*fVtxTest2D_DS_ByTgt)[DSTgt].GetRecoValueX(univ), util::GetNPlanesDSOfTarget(DSTgt,(*fVtxTest2D_DS_ByTgt)[DSTgt].GetRecoValueY(univ)), weight);
 	      }
 	    }
 	  }
@@ -1182,6 +1279,12 @@ class PreRecoil: public Study
 		(*(*fVtxTest_US_Post_ByTgt)[USTgt].m_BkgTargetTypeHists)[tgtType].FillUniverse(&univ, util::GetNPlanesUSOfTarget(USTgt,(*fVtxTest_US_Post_ByTgt)[USTgt].GetRecoValue(univ)), weight);
 		//(*(*fVtxTest_US_Post_ByTgt)[USTgt].m_BkgLeadBlobTypeHists)[leadBlobType].FillUniverse(&univ, util::GetNPlanesUSOfTarget(USTgt,(*fVtxTest_US_Post_ByTgt)[USTgt].GetRecoValue(univ)), weight);
 	      }
+
+	      (*fVtxTest2D_US_Post_ByTgt)[USTgt].selectedMCReco->FillUniverse(&univ, (*fVtxTest2D_US_Post_ByTgt)[USTgt].GetRecoValueX(univ), util::GetNPlanesUSOfTarget(USTgt,(*fVtxTest2D_US_Post_ByTgt)[USTgt].GetRecoValueY(univ)), weight); //"Fake data" for closure
+	      (*(*fVtxTest2D_US_Post_ByTgt)[USTgt].m_backgroundHists)[bkgd_ID].FillUniverse(&univ, (*fVtxTest2D_US_Post_ByTgt)[USTgt].GetRecoValueX(univ), util::GetNPlanesUSOfTarget(USTgt,(*fVtxTest2D_US_Post_ByTgt)[USTgt].GetRecoValueY(univ)), weight);
+	      (*(*fVtxTest2D_US_Post_ByTgt)[USTgt].m_BkgIntTypeHists)[intType].FillUniverse(&univ, (*fVtxTest2D_US_Post_ByTgt)[USTgt].GetRecoValueX(univ), util::GetNPlanesUSOfTarget(USTgt,(*fVtxTest2D_US_Post_ByTgt)[USTgt].GetRecoValueY(univ)), weight);
+	      (*(*fVtxTest2D_US_Post_ByTgt)[USTgt].m_BkgTargetTypeHists)[tgtType].FillUniverse(&univ, (*fVtxTest2D_US_Post_ByTgt)[USTgt].GetRecoValueX(univ), util::GetNPlanesUSOfTarget(USTgt,(*fVtxTest2D_US_Post_ByTgt)[USTgt].GetRecoValueY(univ)), weight);
+	      //(*(*fVtxTest2D_US_Post_ByTgt)[USTgt].m_BkgLeadBlobTypeHists)[leadBlobType].FillUniverse(&univ, (*fVtxTest2D_US_Post_ByTgt)[USTgt].GetRecoValueX(univ), util::GetNPlanesUSOfTarget(USTgt,(*fVtxTest2D_US_Post_ByTgt)[USTgt].GetRecoValueY(univ)), weight);
 
 	      /* Debugging removed
 		 std::cout << "IsBKG" << std::endl;
@@ -1219,6 +1322,12 @@ class PreRecoil: public Study
 		(*(*fVtxTest_DS_Post_ByTgt)[DSTgt].m_BkgTargetTypeHists)[tgtType].FillUniverse(&univ, util::GetNPlanesDSOfTarget(DSTgt,(*fVtxTest_DS_Post_ByTgt)[DSTgt].GetRecoValue(univ)), weight);
 		//(*(*fVtxTest_DS_Post_ByTgt)[DSTgt].m_BkgLeadBlobTypeHists)[leadBlobType].FillUniverse(&univ, util::GetNPlanesDSOfTarget(DSTgt,(*fVtxTest_DS_Post_ByTgt)[DSTgt].GetRecoValue(univ)), weight);
 	      }
+
+	      (*fVtxTest2D_DS_Post_ByTgt)[DSTgt].selectedMCReco->FillUniverse(&univ, (*fVtxTest2D_DS_Post_ByTgt)[DSTgt].GetRecoValueX(univ), util::GetNPlanesDSOfTarget(DSTgt,(*fVtxTest2D_DS_Post_ByTgt)[DSTgt].GetRecoValueY(univ)), weight); //"Fake data" for closure
+	      (*(*fVtxTest2D_DS_Post_ByTgt)[DSTgt].m_backgroundHists)[bkgd_ID].FillUniverse(&univ, (*fVtxTest2D_DS_Post_ByTgt)[DSTgt].GetRecoValueX(univ), util::GetNPlanesDSOfTarget(DSTgt,(*fVtxTest2D_DS_Post_ByTgt)[DSTgt].GetRecoValueY(univ)), weight);
+	      (*(*fVtxTest2D_DS_Post_ByTgt)[DSTgt].m_BkgIntTypeHists)[intType].FillUniverse(&univ, (*fVtxTest2D_DS_Post_ByTgt)[DSTgt].GetRecoValueX(univ), util::GetNPlanesDSOfTarget(DSTgt,(*fVtxTest2D_DS_Post_ByTgt)[DSTgt].GetRecoValueY(univ)), weight);
+	      (*(*fVtxTest2D_DS_Post_ByTgt)[DSTgt].m_BkgTargetTypeHists)[tgtType].FillUniverse(&univ, (*fVtxTest2D_DS_Post_ByTgt)[DSTgt].GetRecoValueX(univ), util::GetNPlanesDSOfTarget(DSTgt,(*fVtxTest2D_DS_Post_ByTgt)[DSTgt].GetRecoValueY(univ)), weight);
+	      //(*(*fVtxTest2D_DS_Post_ByTgt)[DSTgt].m_BkgLeadBlobTypeHists)[leadBlobType].FillUniverse(&univ, (*fVtxTest2D_DS_Post_ByTgt)[DSTgt].GetRecoValueX(univ), util::GetNPlanesDSOfTarget(DSTgt,(*fVtxTest2D_DS_Post_ByTgt)[DSTgt].GetRecoValueY(univ)), weight);
 
 	      /*Debugging removed
 		std::cout << "IsBKG" << std::endl;
@@ -1282,8 +1391,14 @@ class PreRecoil: public Study
 	  }
 	  
 	  else if (tgtCode == -1){
-	    if(USTgt > 0) (*fVtxTest_US_ByTgt)[USTgt].dataHist->FillUniverse(&univ, util::GetNPlanesUSOfTarget(USTgt,(*fVtxTest_US_ByTgt)[USTgt].GetRecoValue(univ)), 1);
-	    if(DSTgt > 0) (*fVtxTest_DS_ByTgt)[DSTgt].dataHist->FillUniverse(&univ, util::GetNPlanesDSOfTarget(DSTgt,(*fVtxTest_DS_ByTgt)[DSTgt].GetRecoValue(univ)), 1);
+	    if(USTgt > 0){
+	      (*fVtxTest_US_ByTgt)[USTgt].dataHist->FillUniverse(&univ, util::GetNPlanesUSOfTarget(USTgt,(*fVtxTest_US_ByTgt)[USTgt].GetRecoValue(univ)), 1);
+	      (*fVtxTest2D_US_ByTgt)[USTgt].dataHist->FillUniverse(&univ, (*fVtxTest2D_US_ByTgt)[USTgt].GetRecoValueX(univ), util::GetNPlanesUSOfTarget(USTgt,(*fVtxTest2D_US_ByTgt)[USTgt].GetRecoValueY(univ)), 1); //"Fake data" for closure
+	    }
+	    if(DSTgt > 0){
+	      (*fVtxTest_DS_ByTgt)[DSTgt].dataHist->FillUniverse(&univ, util::GetNPlanesDSOfTarget(DSTgt,(*fVtxTest_DS_ByTgt)[DSTgt].GetRecoValue(univ)), 1);
+	      (*fVtxTest2D_DS_ByTgt)[DSTgt].dataHist->FillUniverse(&univ, (*fVtxTest2D_DS_ByTgt)[DSTgt].GetRecoValueX(univ), util::GetNPlanesDSOfTarget(DSTgt,(*fVtxTest2D_DS_ByTgt)[DSTgt].GetRecoValueY(univ)), 1); //"Fake data" for closure
+	    }
 	  }
 	}
 
@@ -1291,6 +1406,8 @@ class PreRecoil: public Study
 	else if (tgtCode == -1){
 	  if(USTgt > 0){
 	    (*fVtxTest_US_Post_ByTgt)[USTgt].dataHist->FillUniverse(&univ, util::GetNPlanesUSOfTarget(USTgt,(*fVtxTest_US_Post_ByTgt)[USTgt].GetRecoValue(univ)), 1);
+
+	    (*fVtxTest2D_US_Post_ByTgt)[USTgt].dataHist->FillUniverse(&univ, (*fVtxTest2D_US_Post_ByTgt)[USTgt].GetRecoValueX(univ), util::GetNPlanesUSOfTarget(USTgt,(*fVtxTest2D_US_Post_ByTgt)[USTgt].GetRecoValueY(univ)), 1); //"Fake data" for closure
 
 	    /* removed debugging
 	       std::cout << "IsData" << std::endl;
@@ -1308,6 +1425,8 @@ class PreRecoil: public Study
 	  }
 	  if(DSTgt > 0){
 	    (*fVtxTest_DS_Post_ByTgt)[DSTgt].dataHist->FillUniverse(&univ, util::GetNPlanesDSOfTarget(DSTgt,(*fVtxTest_DS_Post_ByTgt)[DSTgt].GetRecoValue(univ)), 1);
+
+	    (*fVtxTest2D_DS_Post_ByTgt)[DSTgt].dataHist->FillUniverse(&univ, (*fVtxTest2D_DS_Post_ByTgt)[DSTgt].GetRecoValueX(univ), util::GetNPlanesDSOfTarget(DSTgt,(*fVtxTest2D_DS_Post_ByTgt)[DSTgt].GetRecoValueY(univ)), 1); //"Fake data" for closure
 
 	    /* removed debugging
 	       std::cout << "IsData" << std::endl;
