@@ -1152,7 +1152,7 @@ int main(int argc, char* argv[]) {
     unfitHists1A["USPlastic"]=(MnvH1D*)USHist->Clone();
     unfitHists1A["DSPlastic"]=(MnvH1D*)DSHist->Clone();
     //unfitHists1A["WrongNucleus"]=(MnvH1D*)wrongNuclHist->Clone();
-    nameKeys1A["BKG"]={"1chargePi","1neutPi","NPi","Other","Wrong_Nucleus"};
+    nameKeys1A["BKG"]={"1chargePi","1neutPi","NPi","Other"};//Removed since the tracker fit doesn't have any of the wrong nucleus in the tracker region and I don't want this scaled in the interstital regions for the targets ```,"Wrong_Nucleus"};```
     nameKeys1A["Signal"]={"sig","signal"};
 
     fitTEST1A["Piecewise"]["Signal"].push_back((MnvH1D*)sigHist->Clone());
