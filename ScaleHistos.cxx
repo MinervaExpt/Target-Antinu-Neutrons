@@ -51,6 +51,41 @@
 using namespace std;
 using namespace PlotUtils;
 
+MnvH2D* Make2DX(MnvH1D* h1D, MnvH2D* hToMatch){
+  TH1D* hCV = (TH1D*)(h1D->GetCVHistoWithStatError().Clone("hCV"));
+  MnvH2D* h2D = new MnvH2D("Scaler", "", hToMatch->GetNbinsX(), hToMatch->GetXaxis()->GetXbins()->GetArray(), hToMatch->GetNbinsY(), hToMatch->GetYaxis()->GetXbins()->GetArray());
+  int nBinsX = h2D->GetNbinsX();
+  int nBinsY = h2D->GetNbinsY();
+  for (int iBinX=0; iBinX<=nBinsX+1; ++iBinX){
+    double total = hToMatch->Integral(iBinX,iBinX,0,-1);
+    for (int iBinY=0; iBinY<=nBinsY+1; ++iBinY){
+      double content = hToMatch->GetBinContent(iBinX,iBinY);
+      double corr = (content > 0.0) ? TMath::Sqrt(total/content) : 0.0;//Correction factor needed so that the projection of the multiplied matrices matches the error from the fit, and not something a bit lower determined by having more information in the projection than in the fit. This should correctly distribute into the projections in nuisance variables too, though that might be a discussion to have.
+      h2D->SetBinContent(iBinX, iBinY, hCV->GetBinContent(iBinX));
+      h2D->SetBinError(iBinX, iBinY, (corr*hCV->GetBinError(iBinX)));
+    }
+  }
+  delete hCV;
+
+  h2D->AddMissingErrorBandsAndFillWithCV(*hToMatch);
+
+  const auto errorBandNames = h2D->GetErrorBandNames();
+  for (const auto& bandName: errorBandNames){
+    const auto univs = h2D->GetVertErrorBand(bandName)->GetHists();
+    for (size_t whichUniv=0; whichUniv < univs.size(); ++whichUniv){
+      TH1D* hUniv = (TH1D*)(h1D->GetVertErrorBand(bandName)->GetHist(whichUniv)->Clone("hUniv"));
+      for (int iBinY=0; iBinY<=nBinsY+1; ++iBinY){
+	for (int iBinX=0; iBinX<=nBinsX+1; ++iBinX){
+	  h2D->GetVertErrorBand(bandName)->GetHist(whichUniv)->SetBinContent(iBinX, iBinY, hUniv->GetBinContent(iBinX));
+	}
+      }
+      delete hUniv;
+    }
+  }
+
+  return h2D;
+}
+
 TString MashNames(TString tag, vector<TString> pieces){
   TString name;
   for(unsigned int i=0; i<pieces.size()-1; ++i){
@@ -170,7 +205,31 @@ int main(int argc, char* argv[]) {
         if (!(classNameInt.Contains("MnvH")) || nameObjInt.Contains("MYBins")) continue;
         else if (classNameInt.Contains("MnvH2")){
 	  //Could eventually be used as a way to check nuisance variables from a fit... for now just a direct copy over.
+	  bool scaled = false;
 	  MnvH2D* h2D = (MnvH2D*)(inFile->Get(nameObj+"/"+nameObjInt))->Clone(nameObjInt);
+	  for (auto varName: varTagsMap){
+	    if (scaled){
+	      continue;
+	    }
+	    for (auto tag: varName.second){
+	      if(!scaleSig && tag.Contains("sig")){
+		continue;
+	      }
+	      if(!nameObjInt.Contains(tag)){
+		continue;
+	      }
+	      cout << "Scaling: " << nameObjInt << endl;
+	      TString nameOfScale = varNameMap[varName.first+tag];
+	      cout << "With Scale: " << nameOfScale << endl;
+	      MnvH1D* hScale = (MnvH1D*)scaleFile->Get(nameOfScale);
+	      MnvH2D* hScale2D = Make2DX(hScale,h2D);//Assume x axis, not worth trying to specify otherwise right now. Plan is that one could change the directory to match the tag of what's scaling, but just need to get something going first.
+	      h2D->Multiply(h2D,hScale2D);
+	      delete hScale;
+	      delete hScale2D;
+	      scaled = true;
+	      break;
+	    }
+	  }
 	  newOutDir->cd();
 	  h2D->Write();
 	  delete h2D;
