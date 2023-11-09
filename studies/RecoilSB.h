@@ -780,34 +780,34 @@ class PreRecoil: public Study
 	    }
 	    else if (tgtCode == -1){
 	      if(USTgt > 0){
-		(*fVtxTest_US_ByTgt)[USTgt].selectedMCReco->FillUniverse(&univ, (*fVtxTest_US_ByTgt)[USTgt].GetRecoValue(univ), weight); //"Fake data" for closure
-		(*fVtxTest_US_ByTgt)[USTgt].selectedSignalReco->FillUniverse(&univ, (*fVtxTest_US_ByTgt)[USTgt].GetRecoValue(univ), weight);
+		(*fVtxTest_US_ByTgt)[USTgt].selectedMCReco->FillUniverse(&univ, util::GetNPlanesUSOfTarget(USTgt,(*fVtxTest_US_ByTgt)[USTgt].GetRecoValue(univ)), weight); //"Fake data" for closure
+		(*fVtxTest_US_ByTgt)[USTgt].selectedSignalReco->FillUniverse(&univ, util::GetNPlanesUSOfTarget(USTgt,(*fVtxTest_US_ByTgt)[USTgt].GetRecoValue(univ)), weight);
 		if ((*fVtxTest_US_ByTgt)[USTgt].IsBroken()){
-		  (*(*fVtxTest_US_ByTgt)[USTgt].m_SigIntTypeHists)[intType].FillUniverse(&univ, (*fVtxTest_US_ByTgt)[USTgt].GetRecoValue(univ), weight);
-		  (*(*fVtxTest_US_ByTgt)[USTgt].m_SigTargetTypeHists)[tgtType].FillUniverse(&univ, (*fVtxTest_US_ByTgt)[USTgt].GetRecoValue(univ), weight);
-		  //(*(*fVtxTest_US_ByTgt)[USTgt].m_SigLeadBlobTypeHists)[leadBlobType].FillUniverse(&univ, (*fVtxTest_US_ByTgt)[USTgt].GetRecoValue(univ), weight);
+		  (*(*fVtxTest_US_ByTgt)[USTgt].m_SigIntTypeHists)[intType].FillUniverse(&univ, util::GetNPlanesUSOfTarget(USTgt,(*fVtxTest_US_ByTgt)[USTgt].GetRecoValue(univ)), weight);
+		  (*(*fVtxTest_US_ByTgt)[USTgt].m_SigTargetTypeHists)[tgtType].FillUniverse(&univ, util::GetNPlanesUSOfTarget(USTgt,(*fVtxTest_US_ByTgt)[USTgt].GetRecoValue(univ)), weight);
+		  //(*(*fVtxTest_US_ByTgt)[USTgt].m_SigLeadBlobTypeHists)[leadBlobType].FillUniverse(&univ, util::GetNPlanesUSOfTarget(USTgt,(*fVtxTest_US_ByTgt)[USTgt].GetRecoValue(univ)), weight);
 		}
 	      }
 
 	      if(DSTgt > 0){
-		(*fVtxTest_DS_ByTgt)[DSTgt].selectedMCReco->FillUniverse(&univ, (*fVtxTest_DS_ByTgt)[DSTgt].GetRecoValue(univ), weight); //"Fake data" for closure
-		(*fVtxTest_DS_ByTgt)[DSTgt].selectedSignalReco->FillUniverse(&univ, (*fVtxTest_DS_ByTgt)[DSTgt].GetRecoValue(univ), weight);
+		(*fVtxTest_DS_ByTgt)[DSTgt].selectedMCReco->FillUniverse(&univ, util::GetNPlanesDSOfTarget(DSTgt,(*fVtxTest_DS_ByTgt)[DSTgt].GetRecoValue(univ)), weight); //"Fake data" for closure
+		(*fVtxTest_DS_ByTgt)[DSTgt].selectedSignalReco->FillUniverse(&univ, util::GetNPlanesDSOfTarget(DSTgt,(*fVtxTest_DS_ByTgt)[DSTgt].GetRecoValue(univ)), weight);
 		if ((*fVtxTest_DS_ByTgt)[DSTgt].IsBroken()){
-		  (*(*fVtxTest_DS_ByTgt)[DSTgt].m_SigIntTypeHists)[intType].FillUniverse(&univ, (*fVtxTest_DS_ByTgt)[DSTgt].GetRecoValue(univ), weight);
-		  (*(*fVtxTest_DS_ByTgt)[DSTgt].m_SigTargetTypeHists)[tgtType].FillUniverse(&univ, (*fVtxTest_DS_ByTgt)[DSTgt].GetRecoValue(univ), weight);
-		  //(*(*fVtxTest_DS_ByTgt)[DSTgt].m_SigLeadBlobTypeHists)[leadBlobType].FillUniverse(&univ, (*fVtxTest_DS_ByTgt)[DSTgt].GetRecoValue(univ), weight);
+		  (*(*fVtxTest_DS_ByTgt)[DSTgt].m_SigIntTypeHists)[intType].FillUniverse(&univ, util::GetNPlanesDSOfTarget(DSTgt,(*fVtxTest_DS_ByTgt)[DSTgt].GetRecoValue(univ)), weight);
+		  (*(*fVtxTest_DS_ByTgt)[DSTgt].m_SigTargetTypeHists)[tgtType].FillUniverse(&univ, util::GetNPlanesDSOfTarget(DSTgt,(*fVtxTest_DS_ByTgt)[DSTgt].GetRecoValue(univ)), weight);
+		  //(*(*fVtxTest_DS_ByTgt)[DSTgt].m_SigLeadBlobTypeHists)[leadBlobType].FillUniverse(&univ, util::GetNPlanesDSOfTarget(DSTgt,(*fVtxTest_DS_ByTgt)[DSTgt].GetRecoValue(univ)), weight);
 		}
 	      }
 	    }
 	  }
 	  else if (tgtCode == -1){
 	    if(USTgt > 0){
-	      (*fVtxTest_US_Post_ByTgt)[USTgt].selectedMCReco->FillUniverse(&univ, (*fVtxTest_US_Post_ByTgt)[USTgt].GetRecoValue(univ), weight); //"Fake data" for closure
-	      (*fVtxTest_US_Post_ByTgt)[USTgt].selectedSignalReco->FillUniverse(&univ, (*fVtxTest_US_Post_ByTgt)[USTgt].GetRecoValue(univ), weight);
+	      (*fVtxTest_US_Post_ByTgt)[USTgt].selectedMCReco->FillUniverse(&univ, util::GetNPlanesUSOfTarget(USTgt,(*fVtxTest_US_Post_ByTgt)[USTgt].GetRecoValue(univ)), weight); //"Fake data" for closure
+	      (*fVtxTest_US_Post_ByTgt)[USTgt].selectedSignalReco->FillUniverse(&univ, util::GetNPlanesUSOfTarget(USTgt,(*fVtxTest_US_Post_ByTgt)[USTgt].GetRecoValue(univ)), weight);
 	      if ((*fVtxTest_US_Post_ByTgt)[USTgt].IsBroken()){
-		(*(*fVtxTest_US_Post_ByTgt)[USTgt].m_SigIntTypeHists)[intType].FillUniverse(&univ, (*fVtxTest_US_Post_ByTgt)[USTgt].GetRecoValue(univ), weight);
-		(*(*fVtxTest_US_Post_ByTgt)[USTgt].m_SigTargetTypeHists)[tgtType].FillUniverse(&univ, (*fVtxTest_US_Post_ByTgt)[USTgt].GetRecoValue(univ), weight);
-		//(*(*fVtxTest_US_Post_ByTgt)[USTgt].m_SigLeadBlobTypeHists)[leadBlobType].FillUniverse(&univ, (*fVtxTest_US_Post_ByTgt)[USTgt].GetRecoValue(univ), weight);
+		(*(*fVtxTest_US_Post_ByTgt)[USTgt].m_SigIntTypeHists)[intType].FillUniverse(&univ, util::GetNPlanesUSOfTarget(USTgt,(*fVtxTest_US_Post_ByTgt)[USTgt].GetRecoValue(univ)), weight);
+		(*(*fVtxTest_US_Post_ByTgt)[USTgt].m_SigTargetTypeHists)[tgtType].FillUniverse(&univ, util::GetNPlanesUSOfTarget(USTgt,(*fVtxTest_US_Post_ByTgt)[USTgt].GetRecoValue(univ)), weight);
+		//(*(*fVtxTest_US_Post_ByTgt)[USTgt].m_SigLeadBlobTypeHists)[leadBlobType].FillUniverse(&univ, util::GetNPlanesUSOfTarget(USTgt,(*fVtxTest_US_Post_ByTgt)[USTgt].GetRecoValue(univ)), weight);
 	      }
 
 	      /* Debugging removed
@@ -840,12 +840,12 @@ class PreRecoil: public Study
 	    }
 
 	    if(DSTgt > 0){
-	      (*fVtxTest_DS_Post_ByTgt)[DSTgt].selectedMCReco->FillUniverse(&univ, (*fVtxTest_DS_Post_ByTgt)[DSTgt].GetRecoValue(univ), weight); //"Fake data" for closure
-	      (*fVtxTest_DS_Post_ByTgt)[DSTgt].selectedSignalReco->FillUniverse(&univ, (*fVtxTest_DS_Post_ByTgt)[DSTgt].GetRecoValue(univ), weight);
+	      (*fVtxTest_DS_Post_ByTgt)[DSTgt].selectedMCReco->FillUniverse(&univ, util::GetNPlanesDSOfTarget(DSTgt,(*fVtxTest_DS_Post_ByTgt)[DSTgt].GetRecoValue(univ)), weight); //"Fake data" for closure
+	      (*fVtxTest_DS_Post_ByTgt)[DSTgt].selectedSignalReco->FillUniverse(&univ, util::GetNPlanesDSOfTarget(DSTgt,(*fVtxTest_DS_Post_ByTgt)[DSTgt].GetRecoValue(univ)), weight);
 	      if ((*fVtxTest_DS_Post_ByTgt)[DSTgt].IsBroken()){
-		(*(*fVtxTest_DS_Post_ByTgt)[DSTgt].m_SigIntTypeHists)[intType].FillUniverse(&univ, (*fVtxTest_DS_Post_ByTgt)[DSTgt].GetRecoValue(univ), weight);
-		(*(*fVtxTest_DS_Post_ByTgt)[DSTgt].m_SigTargetTypeHists)[tgtType].FillUniverse(&univ, (*fVtxTest_DS_Post_ByTgt)[DSTgt].GetRecoValue(univ), weight);
-		//(*(*fVtxTest_DS_Post_ByTgt)[DSTgt].m_SigLeadBlobTypeHists)[leadBlobType].FillUniverse(&univ, (*fVtxTest_DS_Post_ByTgt)[DSTgt].GetRecoValue(univ), weight);
+		(*(*fVtxTest_DS_Post_ByTgt)[DSTgt].m_SigIntTypeHists)[intType].FillUniverse(&univ, util::GetNPlanesDSOfTarget(DSTgt,(*fVtxTest_DS_Post_ByTgt)[DSTgt].GetRecoValue(univ)), weight);
+		(*(*fVtxTest_DS_Post_ByTgt)[DSTgt].m_SigTargetTypeHists)[tgtType].FillUniverse(&univ, util::GetNPlanesDSOfTarget(DSTgt,(*fVtxTest_DS_Post_ByTgt)[DSTgt].GetRecoValue(univ)), weight);
+		//(*(*fVtxTest_DS_Post_ByTgt)[DSTgt].m_SigLeadBlobTypeHists)[leadBlobType].FillUniverse(&univ, util::GetNPlanesDSOfTarget(DSTgt,(*fVtxTest_DS_Post_ByTgt)[DSTgt].GetRecoValue(univ)), weight);
 	      }
 
 	      /*Debugging removed
@@ -1083,7 +1083,7 @@ class PreRecoil: public Study
 	      }
 	      bkgd_ID = intType;
 	    }
-	    else if (util::CorrectTargetMaterial(tgtCode,trueTgtCode) || tgtCode == -1) bkgd_ID = util::GetBackgroundID(univ);//Modify this line so that tgtCode == -1 has a wrong nucleus component.
+	    else if (util::CorrectTargetMaterial(tgtCode,trueTgtCode) || (tgtCode == -1 && tgtCode == trueTgtCode)) bkgd_ID = util::GetBackgroundID(univ);//Modify this line so that tgtCode == -1 has a wrong nucleus component.
 	    if (bkgd_ID == 44) intType = bkgd_ID;
 	  }
 	  else bkgd_ID = util::GetBackgroundID(univ);
@@ -1151,9 +1151,38 @@ class PreRecoil: public Study
 		//(*(*var)[tgtCode].m_BkgLeadBlobTypeHists)[leadBlobType].FillUniverse(&univ, (*var)[tgtCode].GetRecoValueX(univ), (*var)[tgtCode].GetRecoValueY(univ), weight);
 	      }
 	    }
+	    else if (tgtCode == -1){
+	      if (USTgt > 0){
+		(*fVtxTest_US_ByTgt)[USTgt].selectedMCReco->FillUniverse(&univ, util::GetNPlanesUSOfTarget(USTgt,(*fVtxTest_US_ByTgt)[USTgt].GetRecoValue(univ)), weight); //"Fake data" for closure
+		(*(*fVtxTest_US_ByTgt)[USTgt].m_backgroundHists)[bkgd_ID].FillUniverse(&univ, util::GetNPlanesUSOfTarget(USTgt,(*fVtxTest_US_ByTgt)[USTgt].GetRecoValue(univ)), weight);
+		(*(*fVtxTest_US_ByTgt)[USTgt].m_BkgIntTypeHists)[intType].FillUniverse(&univ, util::GetNPlanesUSOfTarget(USTgt,(*fVtxTest_US_ByTgt)[USTgt].GetRecoValue(univ)), weight);
+		if ((*fVtxTest_US_ByTgt)[USTgt].IsBroken()){
+		  (*(*fVtxTest_US_ByTgt)[USTgt].m_BkgTargetTypeHists)[tgtType].FillUniverse(&univ, util::GetNPlanesUSOfTarget(USTgt,(*fVtxTest_US_ByTgt)[USTgt].GetRecoValue(univ)), weight);
+		  //(*(*fVtxTest_US_ByTgt)[USTgt].m_BkgLeadBlobTypeHists)[leadBlobType].FillUniverse(&univ, util::GetNPlanesUSOfTarget(USTgt,(*fVtxTest_US_ByTgt)[USTgt].GetRecoValue(univ)), weight);
+		}
+	      }
+
+	      if (DSTgt > 0){
+		(*fVtxTest_DS_ByTgt)[DSTgt].selectedMCReco->FillUniverse(&univ, util::GetNPlanesDSOfTarget(DSTgt,(*fVtxTest_DS_ByTgt)[DSTgt].GetRecoValue(univ)), weight); //"Fake data" for closure
+		(*(*fVtxTest_DS_ByTgt)[DSTgt].m_backgroundHists)[bkgd_ID].FillUniverse(&univ, util::GetNPlanesDSOfTarget(DSTgt,(*fVtxTest_DS_ByTgt)[DSTgt].GetRecoValue(univ)), weight);
+		(*(*fVtxTest_DS_ByTgt)[DSTgt].m_BkgIntTypeHists)[intType].FillUniverse(&univ, util::GetNPlanesDSOfTarget(DSTgt,(*fVtxTest_DS_ByTgt)[DSTgt].GetRecoValue(univ)), weight);
+		if ((*fVtxTest_DS_ByTgt)[DSTgt].IsBroken()){
+		  (*(*fVtxTest_DS_ByTgt)[DSTgt].m_BkgTargetTypeHists)[tgtType].FillUniverse(&univ, util::GetNPlanesDSOfTarget(DSTgt,(*fVtxTest_DS_ByTgt)[DSTgt].GetRecoValue(univ)), weight);
+		  //(*(*fVtxTest_DS_ByTgt)[DSTgt].m_BkgLeadBlobTypeHists)[leadBlobType].FillUniverse(&univ, util::GetNPlanesDSOfTarget(DSTgt,(*fVtxTest_DS_ByTgt)[DSTgt].GetRecoValue(univ)), weight);
+		}
+	      }
+	    }
 	  }
 	  else if (tgtCode == -1){
 	    if(USTgt > 0){
+	      (*fVtxTest_US_Post_ByTgt)[USTgt].selectedMCReco->FillUniverse(&univ, util::GetNPlanesUSOfTarget(USTgt,(*fVtxTest_US_Post_ByTgt)[USTgt].GetRecoValue(univ)), weight); //"Fake data" for closure
+	      (*(*fVtxTest_US_Post_ByTgt)[USTgt].m_backgroundHists)[bkgd_ID].FillUniverse(&univ, util::GetNPlanesUSOfTarget(USTgt,(*fVtxTest_US_Post_ByTgt)[USTgt].GetRecoValue(univ)), weight);
+	      (*(*fVtxTest_US_Post_ByTgt)[USTgt].m_BkgIntTypeHists)[intType].FillUniverse(&univ, util::GetNPlanesUSOfTarget(USTgt,(*fVtxTest_US_Post_ByTgt)[USTgt].GetRecoValue(univ)), weight);
+	      if ((*fVtxTest_US_Post_ByTgt)[USTgt].IsBroken()){
+		(*(*fVtxTest_US_Post_ByTgt)[USTgt].m_BkgTargetTypeHists)[tgtType].FillUniverse(&univ, util::GetNPlanesUSOfTarget(USTgt,(*fVtxTest_US_Post_ByTgt)[USTgt].GetRecoValue(univ)), weight);
+		//(*(*fVtxTest_US_Post_ByTgt)[USTgt].m_BkgLeadBlobTypeHists)[leadBlobType].FillUniverse(&univ, util::GetNPlanesUSOfTarget(USTgt,(*fVtxTest_US_Post_ByTgt)[USTgt].GetRecoValue(univ)), weight);
+	      }
+
 	      /* Debugging removed
 		 std::cout << "IsBKG" << std::endl;
 		 std::cout << "Material: " << tgtType << std::endl;
@@ -1183,6 +1212,14 @@ class PreRecoil: public Study
 	      }
 	    }
 	    if(DSTgt > 0){
+	      (*fVtxTest_DS_Post_ByTgt)[DSTgt].selectedMCReco->FillUniverse(&univ, util::GetNPlanesDSOfTarget(DSTgt,(*fVtxTest_DS_Post_ByTgt)[DSTgt].GetRecoValue(univ)), weight); //"Fake data" for closure
+	      (*(*fVtxTest_DS_Post_ByTgt)[DSTgt].m_backgroundHists)[bkgd_ID].FillUniverse(&univ, util::GetNPlanesDSOfTarget(DSTgt,(*fVtxTest_DS_Post_ByTgt)[DSTgt].GetRecoValue(univ)), weight);
+	      (*(*fVtxTest_DS_Post_ByTgt)[DSTgt].m_BkgIntTypeHists)[intType].FillUniverse(&univ, util::GetNPlanesDSOfTarget(DSTgt,(*fVtxTest_DS_Post_ByTgt)[DSTgt].GetRecoValue(univ)), weight);
+	      if ((*fVtxTest_DS_Post_ByTgt)[DSTgt].IsBroken()){
+		(*(*fVtxTest_DS_Post_ByTgt)[DSTgt].m_BkgTargetTypeHists)[tgtType].FillUniverse(&univ, util::GetNPlanesDSOfTarget(DSTgt,(*fVtxTest_DS_Post_ByTgt)[DSTgt].GetRecoValue(univ)), weight);
+		//(*(*fVtxTest_DS_Post_ByTgt)[DSTgt].m_BkgLeadBlobTypeHists)[leadBlobType].FillUniverse(&univ, util::GetNPlanesDSOfTarget(DSTgt,(*fVtxTest_DS_Post_ByTgt)[DSTgt].GetRecoValue(univ)), weight);
+	      }
+
 	      /*Debugging removed
 		std::cout << "IsBKG" << std::endl;
 		std::cout << "Material: " << tgtType << std::endl;
@@ -1243,11 +1280,18 @@ class PreRecoil: public Study
 	      (*var)[tgtCode].dataHist->FillUniverse(&univ, (*var)[tgtCode].GetRecoValueX(univ), (*var)[tgtCode].GetRecoValueY(univ), 1);
 	    }
 	  }
+	  
+	  else if (tgtCode == -1){
+	    if(USTgt > 0) (*fVtxTest_US_ByTgt)[USTgt].dataHist->FillUniverse(&univ, util::GetNPlanesUSOfTarget(USTgt,(*fVtxTest_US_ByTgt)[USTgt].GetRecoValue(univ)), 1);
+	    if(DSTgt > 0) (*fVtxTest_DS_ByTgt)[DSTgt].dataHist->FillUniverse(&univ, util::GetNPlanesDSOfTarget(DSTgt,(*fVtxTest_DS_ByTgt)[DSTgt].GetRecoValue(univ)), 1);
+	  }
 	}
 
 	// REMOVE FILLING THE PLASTIC DATA. It's useless... except it's what I need to fit... wheeeeeeeeee.... so I un-removed... but this set me back a minute... oopsie...
 	else if (tgtCode == -1){
 	  if(USTgt > 0){
+	    (*fVtxTest_US_Post_ByTgt)[USTgt].dataHist->FillUniverse(&univ, util::GetNPlanesUSOfTarget(USTgt,(*fVtxTest_US_Post_ByTgt)[USTgt].GetRecoValue(univ)), 1);
+
 	    /* removed debugging
 	       std::cout << "IsData" << std::endl;
 	       std::cout << "Material: " << tgtType << std::endl;
@@ -1263,6 +1307,8 @@ class PreRecoil: public Study
 	    if (fSplitRecoil && fVtxBinned_US_ByTgt.size() > 0) (*(fVtxBinned_US_ByTgt[iBin][USTgt]))[tgtType].dataHist->FillUniverse(&univ, util::GetNPlanesUSOfTarget(USTgt,(*(fVtxBinned_US_ByTgt[iBin][USTgt]))[tgtType].GetRecoValue(univ)), 1);
 	  }
 	  if(DSTgt > 0){
+	    (*fVtxTest_DS_Post_ByTgt)[DSTgt].dataHist->FillUniverse(&univ, util::GetNPlanesDSOfTarget(DSTgt,(*fVtxTest_DS_Post_ByTgt)[DSTgt].GetRecoValue(univ)), 1);
+
 	    /* removed debugging
 	       std::cout << "IsData" << std::endl;
 	       std::cout << "Material: " << tgtType << std::endl;
