@@ -950,8 +950,8 @@ int main(const int argc, const char** argv)
     }
   }
 
-  std::vector<Variable2D*> vars2D = {new Variable2D(false,"recoil_v_pT",*vars[0],*vars[vars.size()-3])};
-  std::cout << "Checking N bins X: " << vars2D.at(0)->GetNBinsX() << "Y: " << vars2D.at(0)->GetNBinsY() << std::endl;
+  
+  std::vector<Variable2D*> vars2D = {};
   //recoil vs. pT for check on the background tuning in tracker (to start) be careful to change this if variables move around...
   //vars2D.push_back(new Variable2D(true,"pmu2D",*vars[1],*vars[0]));//Test to see if this runs just fine when the versus recoil had so many issues... AND how big it gets.
   /*
@@ -970,6 +970,14 @@ int main(const int argc, const char** argv)
     else{
       for (auto& var: vars) var->SetFillVar(false);
       vars2D.push_back(new Variable2D(true,"pmu2D",*vars[1],*vars[0]));
+    }
+  }
+  else {
+    if (FVregionName.Contains("Target")){
+    }
+    else{
+      vars2D.push_back(new Variable2D(false,"recoil_v_pT",*vars[0],*vars[vars.size()-3]));
+      std::cout << "Checking N bins X: " << vars2D.at(0)->GetNBinsX() << "Y: " << vars2D.at(0)->GetNBinsY() << std::endl;
     }
   }
 
