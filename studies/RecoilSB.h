@@ -281,57 +281,59 @@ class PreRecoil: public Study
 		   });
       }
 
-      fVtxTest_US_Post_ByTgt->visit([&mc_error_bands, &truth_error_bands](Variable& var){
-	  var.InitializeMCHists(mc_error_bands, truth_error_bands);
-	});
-      fVtxTest_US_Post_ByTgt->visit([&data_error_bands](Variable& var){
-	  var.InitializeDATAHists(data_error_bands);
-	});
-      fVtxTest2D_US_Post_ByTgt->visit([&mc_error_bands, &truth_error_bands](Variable2D& var){
-	  var.InitializeMCHists(mc_error_bands, truth_error_bands);
-	});
-      fVtxTest2D_US_Post_ByTgt->visit([&data_error_bands](Variable2D& var){
-	  var.InitializeDATAHists(data_error_bands);
-	});
-
-      fVtxTest_US_ByTgt->visit([&mc_error_bands, &truth_error_bands](Variable& var){
-	  var.InitializeMCHists(mc_error_bands, truth_error_bands);
-	});
-      fVtxTest_US_ByTgt->visit([&data_error_bands](Variable& var){
-	  var.InitializeDATAHists(data_error_bands);
-	});
-      fVtxTest2D_US_ByTgt->visit([&mc_error_bands, &truth_error_bands](Variable2D& var){
-	  var.InitializeMCHists(mc_error_bands, truth_error_bands);
-	});
-      fVtxTest2D_US_ByTgt->visit([&data_error_bands](Variable2D& var){
-	  var.InitializeDATAHists(data_error_bands);
-	});
-
-      fVtxTest_DS_Post_ByTgt->visit([&mc_error_bands, &truth_error_bands](Variable& var){
-	  var.InitializeMCHists(mc_error_bands, truth_error_bands);
-	});
-      fVtxTest_DS_Post_ByTgt->visit([&data_error_bands](Variable& var){
-	  var.InitializeDATAHists(data_error_bands);
-	});
-      fVtxTest2D_DS_Post_ByTgt->visit([&mc_error_bands, &truth_error_bands](Variable2D& var){
-	  var.InitializeMCHists(mc_error_bands, truth_error_bands);
-	});
-      fVtxTest2D_DS_Post_ByTgt->visit([&data_error_bands](Variable2D& var){
-	  var.InitializeDATAHists(data_error_bands);
-	});
-
-      fVtxTest_DS_ByTgt->visit([&mc_error_bands, &truth_error_bands](Variable& var){
-	  var.InitializeMCHists(mc_error_bands, truth_error_bands);
-	});
-      fVtxTest_DS_ByTgt->visit([&data_error_bands](Variable& var){
-	  var.InitializeDATAHists(data_error_bands);
-	});
-      fVtxTest2D_DS_ByTgt->visit([&mc_error_bands, &truth_error_bands](Variable2D& var){
-	  var.InitializeMCHists(mc_error_bands, truth_error_bands);
-	});
-      fVtxTest2D_DS_ByTgt->visit([&data_error_bands](Variable2D& var){
-	  var.InitializeDATAHists(data_error_bands);
-	});
+      if (fFVregionName.Contains("Target")){
+	fVtxTest_US_Post_ByTgt->visit([&mc_error_bands, &truth_error_bands](Variable& var){
+	    var.InitializeMCHists(mc_error_bands, truth_error_bands);
+	  });
+	fVtxTest_US_Post_ByTgt->visit([&data_error_bands](Variable& var){
+	    var.InitializeDATAHists(data_error_bands);
+	  });
+	fVtxTest2D_US_Post_ByTgt->visit([&mc_error_bands, &truth_error_bands](Variable2D& var){
+	    var.InitializeMCHists(mc_error_bands, truth_error_bands);
+	  });
+	fVtxTest2D_US_Post_ByTgt->visit([&data_error_bands](Variable2D& var){
+	    var.InitializeDATAHists(data_error_bands);
+	  });
+	
+	fVtxTest_US_ByTgt->visit([&mc_error_bands, &truth_error_bands](Variable& var){
+	    var.InitializeMCHists(mc_error_bands, truth_error_bands);
+	  });
+	fVtxTest_US_ByTgt->visit([&data_error_bands](Variable& var){
+	    var.InitializeDATAHists(data_error_bands);
+	  });
+	fVtxTest2D_US_ByTgt->visit([&mc_error_bands, &truth_error_bands](Variable2D& var){
+	    var.InitializeMCHists(mc_error_bands, truth_error_bands);
+	  });
+	fVtxTest2D_US_ByTgt->visit([&data_error_bands](Variable2D& var){
+	    var.InitializeDATAHists(data_error_bands);
+	  });
+	
+	fVtxTest_DS_Post_ByTgt->visit([&mc_error_bands, &truth_error_bands](Variable& var){
+	    var.InitializeMCHists(mc_error_bands, truth_error_bands);
+	  });
+	fVtxTest_DS_Post_ByTgt->visit([&data_error_bands](Variable& var){
+	    var.InitializeDATAHists(data_error_bands);
+	  });
+	fVtxTest2D_DS_Post_ByTgt->visit([&mc_error_bands, &truth_error_bands](Variable2D& var){
+	    var.InitializeMCHists(mc_error_bands, truth_error_bands);
+	  });
+	fVtxTest2D_DS_Post_ByTgt->visit([&data_error_bands](Variable2D& var){
+	    var.InitializeDATAHists(data_error_bands);
+	  });
+	
+	fVtxTest_DS_ByTgt->visit([&mc_error_bands, &truth_error_bands](Variable& var){
+	    var.InitializeMCHists(mc_error_bands, truth_error_bands);
+	  });
+	fVtxTest_DS_ByTgt->visit([&data_error_bands](Variable& var){
+	    var.InitializeDATAHists(data_error_bands);
+	  });
+	fVtxTest2D_DS_ByTgt->visit([&mc_error_bands, &truth_error_bands](Variable2D& var){
+	    var.InitializeMCHists(mc_error_bands, truth_error_bands);
+	  });
+	fVtxTest2D_DS_ByTgt->visit([&data_error_bands](Variable2D& var){
+	    var.InitializeDATAHists(data_error_bands);
+	  });
+      }
 
       for(auto& tgt: fVtx_US_ByTgt){
 	tgt.second->visit([&mc_error_bands, &truth_error_bands](Variable& var)
@@ -481,33 +483,35 @@ class PreRecoil: public Study
 		   });
       }
 
-      fVtxTest_US_Post_ByTgt->visit([&outFile](Variable& var){
-	  var.WriteMC(outFile);
-	});
-      fVtxTest2D_US_Post_ByTgt->visit([&outFile](Variable2D& var){
-	  var.WriteMC(outFile);
-	});
-
-      fVtxTest_US_ByTgt->visit([&outFile](Variable& var){
-	  var.WriteMC(outFile);
-	});
-      fVtxTest2D_US_ByTgt->visit([&outFile](Variable2D& var){
-	  var.WriteMC(outFile);
-	});
-
-      fVtxTest_DS_Post_ByTgt->visit([&outFile](Variable& var){
-	  var.WriteMC(outFile);
-	});
-      fVtxTest2D_DS_Post_ByTgt->visit([&outFile](Variable2D& var){
-	  var.WriteMC(outFile);
-	});
-
-      fVtxTest_DS_ByTgt->visit([&outFile](Variable& var){
-	  var.WriteMC(outFile);
-	});
-      fVtxTest2D_DS_ByTgt->visit([&outFile](Variable2D& var){
-	  var.WriteMC(outFile);
-	});
+      if (fFVregionName.Contains("Target")){
+	fVtxTest_US_Post_ByTgt->visit([&outFile](Variable& var){
+	    var.WriteMC(outFile);
+	  });
+	fVtxTest2D_US_Post_ByTgt->visit([&outFile](Variable2D& var){
+	    var.WriteMC(outFile);
+	  });
+	
+	fVtxTest_US_ByTgt->visit([&outFile](Variable& var){
+	    var.WriteMC(outFile);
+	  });
+	fVtxTest2D_US_ByTgt->visit([&outFile](Variable2D& var){
+	    var.WriteMC(outFile);
+	  });
+	
+	fVtxTest_DS_Post_ByTgt->visit([&outFile](Variable& var){
+	    var.WriteMC(outFile);
+	  });
+	fVtxTest2D_DS_Post_ByTgt->visit([&outFile](Variable2D& var){
+	    var.WriteMC(outFile);
+	  });
+	
+	fVtxTest_DS_ByTgt->visit([&outFile](Variable& var){
+	    var.WriteMC(outFile);
+	  });
+	fVtxTest2D_DS_ByTgt->visit([&outFile](Variable2D& var){
+	    var.WriteMC(outFile);
+	  });
+      }
 
       for(auto& tgt: fVtx_US_ByTgt){
 	tgt.second->visit([&outFile](Variable& var)
@@ -600,33 +604,35 @@ class PreRecoil: public Study
 		   });
       }
 
-      fVtxTest_US_Post_ByTgt->visit([&outFile](Variable& var){
+      if (fFVregionName.Contains("Target")){
+	fVtxTest_US_Post_ByTgt->visit([&outFile](Variable& var){
+	    var.WriteData(outFile);
+	  });
+	fVtxTest2D_US_Post_ByTgt->visit([&outFile](Variable2D& var){
+	    var.WriteData(outFile);
+	  });
+	
+	fVtxTest_US_ByTgt->visit([&outFile](Variable& var){
+	    var.WriteData(outFile);
+	  });
+	fVtxTest2D_US_ByTgt->visit([&outFile](Variable2D& var){
 	  var.WriteData(outFile);
-	});
-      fVtxTest2D_US_Post_ByTgt->visit([&outFile](Variable2D& var){
-	  var.WriteData(outFile);
-	});
-
-      fVtxTest_US_ByTgt->visit([&outFile](Variable& var){
-	  var.WriteData(outFile);
-	});
-      fVtxTest2D_US_ByTgt->visit([&outFile](Variable2D& var){
-	  var.WriteData(outFile);
-	});
-
-      fVtxTest_DS_Post_ByTgt->visit([&outFile](Variable& var){
-	  var.WriteData(outFile);
-	});
-      fVtxTest2D_DS_Post_ByTgt->visit([&outFile](Variable2D& var){
-	  var.WriteData(outFile);
-	});
-
-      fVtxTest_DS_ByTgt->visit([&outFile](Variable& var){
-	  var.WriteData(outFile);
-	});
-      fVtxTest2D_DS_ByTgt->visit([&outFile](Variable2D& var){
-	  var.WriteData(outFile);
-	});
+	  });
+	
+	fVtxTest_DS_Post_ByTgt->visit([&outFile](Variable& var){
+	    var.WriteData(outFile);
+	  });
+	fVtxTest2D_DS_Post_ByTgt->visit([&outFile](Variable2D& var){
+	    var.WriteData(outFile);
+	  });
+	
+	fVtxTest_DS_ByTgt->visit([&outFile](Variable& var){
+	    var.WriteData(outFile);
+	  });
+	fVtxTest2D_DS_ByTgt->visit([&outFile](Variable2D& var){
+	    var.WriteData(outFile);
+	  });
+      }
 
       for(auto& tgt: fVtx_US_ByTgt){
 	tgt.second->visit([&outFile](Variable& var)
