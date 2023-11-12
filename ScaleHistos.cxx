@@ -221,7 +221,8 @@ int main(int argc, char* argv[]) {
 	      cout << "Scaling: " << nameObjInt << endl;
 	      TString nameOfScale = varNameMap[varName.first+tag];
 	      cout << "With Scale: " << nameOfScale << endl;
-	      MnvH1D* hScale = (MnvH1D*)scaleFile->Get(nameOfScale);
+	      MnvH1D* hScale = (MnvH1D*)(scaleFile->Get(nameOfScale)->Clone());
+	      hScale->AddMissingErrorBandsAndFillWithCV(*h2D);
 	      MnvH2D* hScale2D = Make2DX(hScale,h2D);//Assume x axis, not worth trying to specify otherwise right now. Plan is that one could change the directory to match the tag of what's scaling, but just need to get something going first.
 	      h2D->Multiply(h2D,hScale2D);
 	      delete hScale;
@@ -245,7 +246,8 @@ int main(int argc, char* argv[]) {
 	      cout << "Scaling: " << nameObjInt << endl;
 	      TString nameOfScale = varNameMap[varName.first+tag];
 	      cout << "With Scale: " << nameOfScale << endl;
-	      MnvH1D* hScale = (MnvH1D*)scaleFile->Get(nameOfScale);
+	      MnvH1D* hScale = (MnvH1D*)(scaleFile->Get(nameOfScale)->Clone());
+	      hScale->AddMissingErrorBandsAndFillWithCV(*h1D);
 	      h1D->Multiply(h1D,hScale);
 	      delete hScale;
 	      scaled = true;
@@ -286,7 +288,8 @@ int main(int argc, char* argv[]) {
 	  cout << "Scaling: " << nameObj << endl;
 	  TString nameOfScale = varNameMap[varName.first+tag];
 	  cout << "With Scale: " << nameOfScale << endl;
-	  MnvH1D* hScale = (MnvH1D*)scaleFile->Get(nameOfScale);
+	  MnvH1D* hScale = (MnvH1D*)(scaleFile->Get(nameOfScale)->Clone());
+	  hScale->AddMissingErrorBandsAndFillWithCV(*h1D);
 	  h1D->Multiply(h1D,hScale);
 	  delete hScale;
 	  scaled = true;
