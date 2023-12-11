@@ -1,7 +1,7 @@
 //File: BKGFittingOverhaul.cxx
 //Info: This script is intended to fit recoil/pTmu plots using TMinuit primarily for the neutron selected sample.
 //
-//Usage: BKGFitting <mc_file> <data_file> <outdir> <outFileTag> <recoilE/pTmu/vtxZ> <doSyst (only 0 means no)> <Tgts> optional: <mainTagName> <lowFitBinNum> <hiFitBinNum> <do fits in bins of muon momentum (only 0 means no)> TODO: Save the information beyond just printing it out
+//Usage: BKGFitting <mc_file> <data_file> <outdir> <outFileTag> <recoilE/pTmu/vtxZ> <doSyst (only 0 means no)> <material> <breakdownInnerPlastic> optional: <mainTagName> <lowFitBinNum> <hiFitBinNum> <do fits in bins of muon momentum (only 0 means no)> TODO: Save the information beyond just printing it out
 //Author: David Last dlast@sas.upenn.edu/lastd44@gmail.com
 
 //TODO: Same SegFault Business From My Plotting Code... I'm assuming I just need to delete things carefully that I'm not yet.
@@ -227,8 +227,11 @@ void DrawFromMnvH1Ds(MnvH1D* h_data, map<TString, MnvH1D*> hFit, map<TString, Mn
 
   ratio->GetXaxis()->SetLabelSize(ratio->GetXaxis()->GetLabelSize()*areaScale);
   ratio->GetXaxis()->SetTitleSize(0.04*areaScale);
-  ratio->SetMinimum(0.5);
-  ratio->SetMaximum(1.5);
+  double ratmin = 0.0;
+  double ratmax = 0.0;
+  ratio->GetMinimumAndMaximum(ratmin,ratmax);
+  ratio->SetMinimum(0.9*ratmin);
+  ratio->SetMaximum(1.1*ratmax);
   ratio->Draw();
 
   mcRatio->SetLineColor(kRed);
@@ -868,7 +871,7 @@ int main(int argc, char* argv[]) {
   #endif
 
   //Pass an input file name to this script now
-  if (argc < 8 || argc > 12) {
+  if (argc < 9 || argc > 13) {
     cout << "Check usage..." << endl;
     return 2;
   }
@@ -879,7 +882,9 @@ int main(int argc, char* argv[]) {
   string outFileTag = string(argv[4]);
   TString varName= argv[5];
   bool doSyst = (bool)(atoi(argv[6]));
-  bool Tgts = (bool)(atoi(argv[7]));
+  TString material = argv[7];
+  material = (material != "") ? "_"+material : material;
+  bool breakInner = (bool)(atoi(argv[8]));
   int fitMuonBins = 0;
   
   //vector<TString> namesToSave = {"pTmu","recoilE"};
@@ -890,9 +895,9 @@ int main(int argc, char* argv[]) {
   int lowBin = 1;//Will be truncated later. Lowest allowed value for pT or recoil fits.
   int hiBin = 50;//Will be truncated later. Highest allowed value for pT or recoil fits.
   TString mainTag = "";
-  if (argc > 9) lowBin = max(atoi(argv[9]),1);//Not allowed lower than 1
-  if (argc > 10) hiBin = min(50, atoi(argv[10]));//Not allowed higher than 50
-  if (argc > 11) fitMuonBins = atoi(argv[11]);
+  if (argc > 10) lowBin = max(atoi(argv[10]),1);//Not allowed lower than 1
+  if (argc > 11) hiBin = min(50, atoi(argv[11]));//Not allowed higher than 50
+  if (argc > 12) fitMuonBins = atoi(argv[12]);
 
   string rootExt = ".root";
   string slash = "/";
@@ -960,7 +965,7 @@ int main(int argc, char* argv[]) {
     cout << "Not a valid variable name to fit." << endl;
     return 111;
   }
-  if (argc > 8) mainTag = argv[8];
+  if (argc > 8) mainTag = argv[9];
 
   //NEED TO CODE IN SOMETHING THAT HANDLES THE VERTEX PLOTS IN THE TARGETS.
 
@@ -976,6 +981,7 @@ int main(int argc, char* argv[]) {
 
   vector<TString> tags = {mainTag};
 
+  /*
   if (Tgts){
     tags.push_back(mainTag+"_Tgt1");
     tags.push_back(mainTag+"_Tgt2");
@@ -983,6 +989,7 @@ int main(int argc, char* argv[]) {
     tags.push_back(mainTag+"_Tgt4");
     tags.push_back(mainTag+"_Tgt5");
   }
+  */
 
   if (fitMuonBins){
     tags.push_back((TString)("_bin_lost"));
@@ -1001,7 +1008,7 @@ int main(int argc, char* argv[]) {
   for (int iTag=0; iTag < tags.size(); ++iTag){
 
     TString tag = tags.at(iTag);
-    TString name = varName+tag;
+    TString name = varName+tag+material;
     TString grabName, grabName_noTag;
     if (tag.Contains("_Tgt")){
       TObjArray* tagArr = tag.Tokenize("Tgt");
@@ -1010,13 +1017,12 @@ int main(int argc, char* argv[]) {
     }
     else{
       grabName = name;
-      grabName_noTag = varName;
+      grabName_noTag = varName+material;
     }
 
     cout << "Performing Fitting and Scaling for: " << name << endl;
     cout << "Grabbing: " << grabName << endl;
     cout << "TESTING NO TAG: " << grabName_noTag << endl;
-
 
     //TODO:
     // 
@@ -1045,19 +1051,30 @@ int main(int argc, char* argv[]) {
 	TString grabNameSave = "ByTgt_Tgt"+((TObjString*)(tagArr->At(tagArr->GetEntries()-1)))->String()+"/"+nameSave+tag;
 	varsToSave[nameSave+tag] = (MnvH1D*)(mcFile->Get(grabNameSave+"_selected_signal_reco"))->Clone();
       }
-      else varsToSave[nameSave+tag] = (MnvH1D*)(mcFile->Get(nameSave+tag+"_selected_signal_reco"))->Clone();
+      else varsToSave[nameSave+tag] = (MnvH1D*)(mcFile->Get(nameSave+tag+material+"_selected_signal_reco"))->Clone();
     }
 
+    cout << "DATA?" << endl;
+    cout << "Name w/ tag: " << grabName+"_data" << endl;
+
     MnvH1D* dataHist = (MnvH1D*)(dataFile->Get(grabName+"_data"))->Clone();
+
+    cout << "Name w/o tag: " << grabName_noTag+"_data" << endl;
     MnvH1D* dataHist_noTag = (MnvH1D*)(dataFile->Get(grabName_noTag+"_data"))->Clone();
     vector<MnvH1D*> dataHists;
+    cout << "HMMM 1" << endl;
     dataHists.push_back((MnvH1D*)dataHist->Clone());
+    cout << "HMMM 2" << endl;
     dataHists.push_back((MnvH1D*)dataHist_noTag->Clone());
+
+    cout << "Sig?" << endl;
 
     MnvH1D* sigHist = (MnvH1D*)(mcFile->Get(grabName+"_selected_signal_reco"))->Clone();
     MnvH1D* sigHist_noTag = (MnvH1D*)(mcFile->Get(grabName_noTag+"_selected_signal_reco"))->Clone();
     sigHist->Scale(POTscale);
     sigHist_noTag->Scale(POTscale);
+
+    cout << "Bkg?" << endl;
 
     //
     MnvH1D* chargePiHist = (MnvH1D*)(mcFile->Get(grabName+"_background_1chargePi"))->Clone();
@@ -1077,18 +1094,50 @@ int main(int argc, char* argv[]) {
     otherHist->Scale(POTscale);
     otherHist_noTag->Scale(POTscale);
 
+    cout << "Wrong Nucl?" << endl;
+
     MnvH1D* wrongNuclHist = (MnvH1D*)(mcFile->Get(grabName+"_background_Wrong_Nucleus"))->Clone();
     MnvH1D* wrongNuclHist_noTag = (MnvH1D*)(mcFile->Get(grabName_noTag+"_background_Wrong_Nucleus"))->Clone();
     wrongNuclHist->Scale(POTscale);
     wrongNuclHist_noTag->Scale(POTscale);
 
+    cout << "Material : " << material << endl;
+
     MnvH1D* USHist = (MnvH1D*)(mcFile->Get(grabName+"_background_USPlastic"))->Clone();
     MnvH1D* USHist_noTag = (MnvH1D*)(mcFile->Get(grabName_noTag+"_background_USPlastic"))->Clone();
+    if (breakInner){
+      cout << "Entering check!" << endl;
+      USHist = (MnvH1D*)(mcFile->Get(varName+"_InnerUSPlastic"+tag+material+"_selected_signal_reco"))->Clone();
+      USHist->Add((MnvH1D*)(mcFile->Get(varName+"_InnerUSPlastic"+tag+material+"_background_1chargePi")));
+      USHist->Add((MnvH1D*)(mcFile->Get(varName+"_InnerUSPlastic"+tag+material+"_background_1neutPi")));
+      USHist->Add((MnvH1D*)(mcFile->Get(varName+"_InnerUSPlastic"+tag+material+"_background_NPi")));
+      USHist->Add((MnvH1D*)(mcFile->Get(varName+"_InnerUSPlastic"+tag+material+"_background_Other")));
+      USHist_noTag = (MnvH1D*)(mcFile->Get(varName+"_InnerUSPlastic"+material+"_selected_signal_reco"))->Clone();
+      USHist_noTag->Add((MnvH1D*)(mcFile->Get(varName+"_InnerUSPlastic"+material+"_background_1chargePi")));
+      USHist_noTag->Add((MnvH1D*)(mcFile->Get(varName+"_InnerUSPlastic"+material+"_background_1neutPi")));
+      USHist_noTag->Add((MnvH1D*)(mcFile->Get(varName+"_InnerUSPlastic"+material+"_background_NPi")));
+      USHist_noTag->Add((MnvH1D*)(mcFile->Get(varName+"_InnerUSPlastic"+material+"_background_Other")));
+    }
     USHist->Scale(POTscale);
     USHist_noTag->Scale(POTscale);
 
+    cout << "Material : " << material << endl;
+
     MnvH1D* DSHist = (MnvH1D*)(mcFile->Get(grabName+"_background_DSPlastic"))->Clone();
     MnvH1D* DSHist_noTag = (MnvH1D*)(mcFile->Get(grabName_noTag+"_background_DSPlastic"))->Clone();
+    if (breakInner){
+      cout << "Entering Check!" << endl;
+      DSHist = (MnvH1D*)(mcFile->Get(varName+"_InnerDSPlastic"+tag+material+"_selected_signal_reco"))->Clone();
+      DSHist->Add((MnvH1D*)(mcFile->Get(varName+"_InnerDSPlastic"+tag+material+"_background_1chargePi")));
+      DSHist->Add((MnvH1D*)(mcFile->Get(varName+"_InnerDSPlastic"+tag+material+"_background_1neutPi")));
+      DSHist->Add((MnvH1D*)(mcFile->Get(varName+"_InnerDSPlastic"+tag+material+"_background_NPi")));
+      DSHist->Add((MnvH1D*)(mcFile->Get(varName+"_InnerDSPlastic"+tag+material+"_background_Other")));
+      DSHist_noTag = (MnvH1D*)(mcFile->Get(varName+"_InnerDSPlastic"+material+"_selected_signal_reco"))->Clone();
+      DSHist_noTag->Add((MnvH1D*)(mcFile->Get(varName+"_InnerDSPlastic"+material+"_background_1chargePi")));
+      DSHist_noTag->Add((MnvH1D*)(mcFile->Get(varName+"_InnerDSPlastic"+material+"_background_1neutPi")));
+      DSHist_noTag->Add((MnvH1D*)(mcFile->Get(varName+"_InnerDSPlastic"+material+"_background_NPi")));
+      DSHist_noTag->Add((MnvH1D*)(mcFile->Get(varName+"_InnerDSPlastic"+material+"_background_Other")));
+    }
     DSHist->Scale(POTscale);
     DSHist_noTag->Scale(POTscale);
 
@@ -1133,12 +1182,20 @@ int main(int argc, char* argv[]) {
     bkgNonRESHist_noTag->Add(MECHist_noTag);
     bkgNonRESHist_noTag->Add(OtherIntTypeHist_noTag);
 
-    MnvH1D* bkgTotHist = bkgNonRESHist->Clone();
-    bkgTotHist->Add(RESHist);
-    bkgTotHist->Add(wrongNuclHist);
-    MnvH1D* bkgTotHist_noTag = bkgNonRESHist_noTag->Clone();
-    bkgTotHist_noTag->Add(RESHist_noTag);
-    bkgTotHist_noTag->Add(wrongNuclHist_noTag);
+    //Modifying so that the tuned backgrounds are what is grabbed...
+    //MnvH1D* bkgTotHist_Int = bkgNonRESHist->Clone();
+    //bkgTotHist_Int->Add(RESHist);
+    //bkgTotHist->Add(wrongNuclHist);
+    //MnvH1D* bkgTotHist_Int_noTag = bkgNonRESHist_noTag->Clone();
+    //bkgTotHist_Int_noTag->Add(RESHist_noTag);
+    //bkgTotHist_noTag->Add(wrongNuclHist_noTag);
+
+    MnvH1D* bkgTotHist = bkg1PiHist->Clone();
+    bkgTotHist->Add(NPiHist);
+    bkgTotHist->Add(otherHist);
+    MnvH1D* bkgTotHist_noTag = bkg1PiHist_noTag->Clone();
+    bkgTotHist_noTag->Add(NPiHist_noTag);
+    bkgTotHist_noTag->Add(otherHist_noTag);
 
     map<TString, MnvH1D*> fitHists1A, unfitHists1A;
     map<TString, map<TString, vector<MnvH1D*>>> fitTEST1A;
@@ -1151,6 +1208,7 @@ int main(int argc, char* argv[]) {
     fitHists1A["Signal"]=(MnvH1D*)sigHist->Clone();
     unfitHists1A["USPlastic"]=(MnvH1D*)USHist->Clone();
     unfitHists1A["DSPlastic"]=(MnvH1D*)DSHist->Clone();
+    unfitHists1A["WrongNucleus"]=(MnvH1D*)wrongNuclHist->Clone();//Decided to not fit this anymore as there should be no contamination in the main tracker region, and this is an unfit background for the interstitial plastics.
     //unfitHists1A["WrongNucleus"]=(MnvH1D*)wrongNuclHist->Clone();
     nameKeys1A["BKG"]={"1chargePi","1neutPi","NPi","Other"};//Removed since the tracker fit doesn't have any of the wrong nucleus in the tracker region and I don't want this scaled in the interstital regions for the targets ```,"Wrong_Nucleus"};```
     nameKeys1A["Signal"]={"sig","signal"};
@@ -1163,14 +1221,85 @@ int main(int argc, char* argv[]) {
     fitTEST1A["NonFit"]["USPlastic"].push_back((MnvH1D*)USHist_noTag->Clone());
     fitTEST1A["NonFit"]["DSPlastic"].push_back((MnvH1D*)DSHist->Clone());
     fitTEST1A["NonFit"]["DSPlastic"].push_back((MnvH1D*)DSHist_noTag->Clone());
+    fitTEST1A["NonFit"]["WrongNucleus"].push_back((MnvH1D*)wrongNuclHist->Clone());
+    fitTEST1A["NonFit"]["WrongNucleus"].push_back((MnvH1D*)wrongNuclHist_noTag->Clone());
 
+    /*Temp change to fit just lines
     fitPieces1A["Signal"].push_back(make_tuple("Line",5,999));
     fitPieces1A["Signal"].push_back(make_tuple("ScaleFactor",3,4));
     fitPieces1A["Signal"].push_back(make_tuple("ScaleFactor",1,2));
+    */
+
+    /*Change to now do the fit for the different targets one by one.
+    fitPieces1A["Signal"].push_back(make_tuple("Line",1,999));
+    */
+
+    //Carbon, need to simplify and not accommodate the first bin so much.
+    /*
+    fitPieces1A["Signal"].push_back(make_tuple("ScaleFactor",1,2));
+    fitPieces1A["Signal"].push_back(make_tuple("Line",2,4));
+    fitPieces1A["Signal"].push_back(make_tuple("ScaleFactor",5,7));
+    fitPieces1A["Signal"].push_back(make_tuple("ScaleFactor",8,999));
+    */
+
+    //Iron
+    /*
+    fitPieces1A["Signal"].push_back(make_tuple("ScaleFactor",1,2));
+    fitPieces1A["Signal"].push_back(make_tuple("Line",2,4));
+    fitPieces1A["Signal"].push_back(make_tuple("Line",4,999));
+    */
+
+    //Lead
+    //fitPieces1A["Signal"].push_back(make_tuple("ScaleFactor",1,2)); Actually made it worse. Overall trend seems to be a line, so a smoothed function might accomodate better, or alternatively this might be driven by the plastic not being fit so well. Question for later.
+    fitPieces1A["Signal"].push_back(make_tuple("Line",1,6));
+    fitPieces1A["Signal"].push_back(make_tuple("Line",7,999));
+
+    //Water
+    /*
+    fitPieces1A["Signal"].push_back(make_tuple("ScaleFactor",1,3));
+    fitPieces1A["Signal"].push_back(make_tuple("ScaleFactor",4,6));
+    fitPieces1A["Signal"].push_back(make_tuple("Line",6,999));
+    */
 
     //fitPieces1A["BKG"].push_back(make_tuple("ScaleFactor",11,999));
+    /*Temp change to fit just lines
     fitPieces1A["BKG"].push_back(make_tuple("Line",6,999));
     fitPieces1A["BKG"].push_back(make_tuple("Line",1,6));
+    */
+
+    /*
+    fitPieces1A["BKG"].push_back(make_tuple("Line",1,999));
+    */
+
+    //Change to now do the fit for the different targets one by one.
+    //Carbon, need to simplify and not accomodate the first bin so much
+    /*
+    fitPieces1A["BKG"].push_back(make_tuple("Line",1,4));
+    fitPieces1A["BKG"].push_back(make_tuple("ScaleFactor",4,5));
+    fitPieces1A["BKG"].push_back(make_tuple("Line",5,8));
+    fitPieces1A["BKG"].push_back(make_tuple("ScaleFactor",8,999));
+    */
+
+    //Iron
+    /*
+    fitPieces1A["BKG"].push_back(make_tuple("Line",1,5));
+    fitPieces1A["BKG"].push_back(make_tuple("ScaleFactor",5,6));
+    fitPieces1A["BKG"].push_back(make_tuple("Line",6,8));
+    fitPieces1A["BKG"].push_back(make_tuple("ScaleFactor",8,999));
+    */
+    
+    //Lead
+    fitPieces1A["BKG"].push_back(make_tuple("Line",1,7));
+    fitPieces1A["BKG"].push_back(make_tuple("ScaleFactor",7,999));
+
+    //Water
+    /*
+    fitPieces1A["BKG"].push_back(make_tuple("Line",1,3));
+    fitPieces1A["BKG"].push_back(make_tuple("Line",4,6));
+    fitPieces1A["BKG"].push_back(make_tuple("Line",6,8));
+    //fitPieces1A["BKG"].push_back(make_tuple("ScaleFactor",7,8));
+    fitPieces1A["BKG"].push_back(make_tuple("Line",8,999));
+    */
 
     nameKeysTEST1A["BKG"]=nameKeys1A["BKG"];
     nameKeysTEST1A["Signal"]=nameKeys1A["Signal"];
@@ -1196,7 +1325,7 @@ int main(int argc, char* argv[]) {
     result.clear();
 
     cout << "Fitting NEW TEST" << endl;
-    map<TString, MnvH1D*> TESTresult = PerformFit(fitTEST1A, fitPieces1A, dataHists, name, outDir, "_fitTEST", lowBin, hiBin, doSyst, true, nameKeysTEST1A);
+    map<TString, MnvH1D*> TESTresult = PerformFit(fitTEST1A, fitPieces1A, dataHists, name, outDir, "_fitTEST_"+to_string(breakInner), lowBin, hiBin, doSyst, true, nameKeysTEST1A);
 
     map<TString, MnvH1D*> tmpMap;
     vector<map<TString, MnvH1D*>> scaledHistsAndNamesTEST(dataHists.size(),map<TString,MnvH1D*>(tmpMap));
@@ -1216,8 +1345,8 @@ int main(int argc, char* argv[]) {
     }
 
     for (unsigned int iRegion=0; iRegion<dataHists.size(); ++iRegion){
-      if (!PathExists((string)(outDir+name+"_fitTEST_Region_"+(TString)(to_string(iRegion))+"_postFit.pdf"))){
-	DrawFromMnvH1Ds(dataHists.at(iRegion),scaledHistsAndNamesTEST.at(iRegion),unfitHistsAndNamesTEST.at(iRegion),true,outDir+name+"_fitTEST_Region_"+(TString)(to_string(iRegion))+"_postFit");
+      if (!PathExists((string)(outDir+name+"_fitTEST_"+to_string(breakInner)+"_Region_"+(TString)(to_string(iRegion))+"_postFit.pdf"))){
+	DrawFromMnvH1Ds(dataHists.at(iRegion),scaledHistsAndNamesTEST.at(iRegion),unfitHistsAndNamesTEST.at(iRegion),true,outDir+name+"_fitTEST_"+to_string(breakInner)+"_Region_"+(TString)(to_string(iRegion))+"_postFit");
       }
     }
 
