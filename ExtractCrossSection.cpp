@@ -55,6 +55,18 @@ namespace std
   };
 }
 
+//Check if the object is meant to be subtracted as the background inner plastic.
+//This is forcing the variable to be pTmu... could change but don't need to yet.
+bool isInnerPlastic(std::string name, std::string bkgName){
+  bool isGood = false;
+  bool isInnerPlastic = (name.find("pTmu_InnerUSPlastic") != std::string::npos || name.find("pTmu_InnerDSPlastic") != std::string::npos);
+  bool isNotSB = (name.find("_PreRecoilCut_") == std::string::npos);
+  bool isSignal = (name.find("_selected_signal_reco") != std::string::npos);
+  bool isCorrectBKG = (name.find(bkgName+"_") != std::string::npos);
+  isGood = (isInnerPlastic && isNotSB && (isSignal || isCorrectBKG));
+  return isGood;
+}
+
 //Plot a step in cross section extraction.
 void Plot(PlotUtils::MnvH1D& hist, const std::string& stepName, const std::string& prefix)
 {
@@ -203,6 +215,20 @@ int main(const int argc, const char** argv)
   }
 
   const int nIterations = std::stoi(argv[1]);
+  TString dataFileName = argv[2];
+  bool isMC = false;
+  if (dataFileName.Contains("runEventLoopData")){
+    std::cout << "Data file is a data file" << std::endl;
+  }
+  else if (dataFileName.Contains("runEventLoopMC")){
+    std::cout << "Data file is an MC file. Setting isMC to true" << std::endl;
+    isMC = true;
+  }
+  else {
+    std::cout << "Data file is not a proper input. Exiting now" << std::endl;
+    return 304123;
+  }
+
   auto dataFile = TFile::Open(argv[2], "READ");
   if(!dataFile)
   {
@@ -267,12 +293,19 @@ int main(const int argc, const char** argv)
 
       //Look for backgrounds with <prefix>_<analysis>_Background_<name>
       std::vector<PlotUtils::MnvH1D*> backgrounds;
+      bool skipCH = true;//Testflag to compare doing the old subtraction with the new.
       for(auto key: *mcFile->GetListOfKeys())
       {
         if(std::string(key->GetName()).find(prefix + "_" + background_naming + "_") != std::string::npos)
         {
-          backgrounds.push_back(util::GetIngredient<PlotUtils::MnvH1D>(*mcFile, key->GetName()));
+	  if((std::string(key->GetName()).find(background_naming + "_USPlastic") == std::string::npos && std::string(key->GetName()).find(background_naming + "_DSPlastic") == std::string::npos) || !skipCH){
+	    backgrounds.push_back(util::GetIngredient<PlotUtils::MnvH1D>(*mcFile, key->GetName()));
+	  }
         }
+	//This assumes the tuned backgrounds from the plastic are the same as those from the material.
+	else if (isInnerPlastic(std::string(key->GetName()), background_naming) && skipCH){
+	  backgrounds.push_back(util::GetIngredient<PlotUtils::MnvH1D>(*mcFile, key->GetName()));
+	}
       }
 
       //There are no error bands in the data, but I need somewhere to put error bands on the results I derive from it.
@@ -364,11 +397,14 @@ int main(const int argc, const char** argv)
 	double nNuke = nNucleons->GetVal();
 	*/
 	double nNuke=1.0;
+	double nNukeMC = 1.0;
 	if (tgtZ != -1){
-	  nNuke = GetTotalScatteringCenters(tgtZ,true);
+	  nNukeMC = GetTotalScatteringCenters(tgtZ,true);
+	  nNuke = GetTotalScatteringCenters(tgtZ, isMC);
 	}
 	else{
-	  nNuke = GetTotalScatteringCenters(99,true);
+	  nNukeMC = GetTotalScatteringCenters(99,true);
+	  nNuke = GetTotalScatteringCenters(99, isMC);
 	}
 
 	auto crossSection = normalize(unfolded, flux, nNuke, dataPOT);
@@ -380,7 +416,7 @@ int main(const int argc, const char** argv)
 	//Write a "simulated cross section" to compare to the data I just extracted.
 	//If this analysis passed its closure test, this should be the same cross section as
 	//what GENIEXSecExtract would produce.
-	normalize(simEventRate, flux, nNuke, mcPOT);
+	normalize(simEventRate, flux, nNukeMC, mcPOT);
 	if (multPOT) simEventRate->Scale(dataPOT);  
 
 	Plot(*simEventRate, "simulatedCrossSection", prefix);
