@@ -131,14 +131,41 @@ void DrawBKGCateg(string name, TFile* mcFile, TFile* dataFile, TString sample, T
   h_NPi_Bkg->SetLineColor(TColor::GetColor("#CC6677"));
   h_NPi_Bkg->SetFillColor(TColor::GetColor("#CC6677"));
 
-  MnvH1D* h_USPlastic_Bkg_Top = (MnvH1D*)mcFile->Get((TString)name_bkg+"_background_USPlastic");
+  cout << "TEST" << endl;
+
+  //Experimental which will break for tracker region!!!
+  MnvH1D* h_USPlastic_Bkg_Top = nullptr;
+  if (((TString)(name_bkg)).Contains("pTmu") && !((TString)(name_bkg)).Contains("Outer")){
+    string nametag = name_bkg;
+    nametag.erase(0,4);
+    cout << name_bkg+"InnerUSPlastic"+nametag+"_selected_signal_reco" << endl;
+    h_USPlastic_Bkg_Top = (MnvH1D*)mcFile->Get("pTmu_InnerUSPlastic"+(TString)nametag+"_selected_signal_reco");
+    h_USPlastic_Bkg_Top->Add((MnvH1D*)mcFile->Get("pTmu_InnerUSPlastic"+(TString)nametag+"_background_1chargePi"));
+    h_USPlastic_Bkg_Top->Add((MnvH1D*)mcFile->Get("pTmu_InnerUSPlastic"+(TString)nametag+"_background_1neutPi"));
+    h_USPlastic_Bkg_Top->Add((MnvH1D*)mcFile->Get("pTmu_InnerUSPlastic"+(TString)nametag+"_background_NPi"));
+    h_USPlastic_Bkg_Top->Add((MnvH1D*)mcFile->Get("pTmu_InnerUSPlastic"+(TString)nametag+"_background_Other"));
+  }
+  else h_USPlastic_Bkg_Top = (MnvH1D*)mcFile->Get((TString)name_bkg+"_background_USPlastic");  
   MnvH1D* h_USPlastic_Bkg = new MnvH1D(h_USPlastic_Bkg_Top->GetBinNormalizedCopy());
   h_USPlastic_Bkg->Scale(scale);
   mcSum->Add(h_USPlastic_Bkg);
   h_USPlastic_Bkg->SetLineColor(TColor::GetColor("#A26E1C"));
   h_USPlastic_Bkg->SetFillColor(TColor::GetColor("#A26E1C"));
 
-  MnvH1D* h_DSPlastic_Bkg_Top = (MnvH1D*)mcFile->Get((TString)name_bkg+"_background_DSPlastic");
+  cout << "TEST" << endl;
+
+  MnvH1D* h_DSPlastic_Bkg_Top = nullptr;
+  if (((TString)(name_bkg)).Contains("pTmu") && !((TString)(name_bkg)).Contains("Outer")){
+    string nametag = name_bkg;
+    nametag.erase(0,4);
+    cout << name_bkg+"InnerDSPlastic"+nametag+"_selected_signal_reco" << endl;
+    h_DSPlastic_Bkg_Top = (MnvH1D*)mcFile->Get("pTmu_InnerDSPlastic"+(TString)nametag+"_selected_signal_reco");
+    h_DSPlastic_Bkg_Top->Add((MnvH1D*)mcFile->Get("pTmu_InnerDSPlastic"+(TString)nametag+"_background_1chargePi"));
+    h_DSPlastic_Bkg_Top->Add((MnvH1D*)mcFile->Get("pTmu_InnerDSPlastic"+(TString)nametag+"_background_1neutPi"));
+    h_DSPlastic_Bkg_Top->Add((MnvH1D*)mcFile->Get("pTmu_InnerDSPlastic"+(TString)nametag+"_background_NPi"));
+    h_DSPlastic_Bkg_Top->Add((MnvH1D*)mcFile->Get("pTmu_InnerDSPlastic"+(TString)nametag+"_background_Other"));
+  }
+  else h_DSPlastic_Bkg_Top = (MnvH1D*)mcFile->Get((TString)name_bkg+"_background_DSPlastic");  
   MnvH1D* h_DSPlastic_Bkg = new MnvH1D(h_DSPlastic_Bkg_Top->GetBinNormalizedCopy());
   h_DSPlastic_Bkg->Scale(scale);
   mcSum->Add(h_DSPlastic_Bkg);
@@ -303,7 +330,7 @@ void DrawBKGCateg(string name, TFile* mcFile, TFile* dataFile, TString sample, T
 
   ratio->GetXaxis()->SetLabelSize(ratio->GetXaxis()->GetLabelSize()*areaScale);
   ratio->GetXaxis()->SetTitleSize(0.04*areaScale);
-  ratio->SetMinimum(0.5);
+  ratio->SetMinimum(0.3);
   ratio->SetMaximum(1.5);
 
   pos=0;
@@ -1991,7 +2018,7 @@ int main(int argc, char* argv[]) {
     pos=0;
     string name=(string)key->GetName();
     if((pos=name.find("TwoD")) != string::npos || (pos=name.find("vtxZ")) != string::npos || (pos=name.find("Inner")) != string::npos) continue;
-    else if((pos = name.find("_sig_IntType_QE")) != string::npos){
+    else if((pos = name.find("_sig_IntType_QE")) != string::npos && (pos=name.find("OuterUSPlastic")) == string::npos && (pos=name.find("OuterDSPlastic")) == string::npos){
       cout << "Entering base IntType" << endl;
       string nameToSave = name;
       nameToSave.erase(nameToSave.length()-15,nameToSave.length());
@@ -1999,7 +2026,7 @@ int main(int argc, char* argv[]) {
       DrawIntTypeTEST(name,mcFile,dataFile,label,pTaxis,scale,(TString)outDir+(TString)nameToSave+"_TEST");
       cout << "" << endl;
     }
-    else if ((pos = name.find("_sig_TargetType_Plastic")) != string::npos){
+    else if ((pos = name.find("_sig_TargetType_Plastic")) != string::npos && (pos=name.find("OuterUSPlastic")) == string::npos && (pos=name.find("OuterDSPlastic")) == string::npos){
       cout << "Entering base Tgt" << endl;
       string nameToSave = name;
       nameToSave.erase(nameToSave.length()-23,nameToSave.length());
@@ -2007,7 +2034,7 @@ int main(int argc, char* argv[]) {
       DrawTargetTypeTEST(name,mcFile,dataFile,label,pTaxis,scale,(TString)outDir+(TString)nameToSave+"_TEST");
       cout << "" << endl;
     }
-    else if ((pos = name.find("_sig_LeadBlobType_neut")) != string::npos){
+    else if ((pos = name.find("_sig_LeadBlobType_neut")) != string::npos && (pos=name.find("OuterUSPlastic")) == string::npos && (pos=name.find("OuterDSPlastic")) == string::npos){
       cout << "Entering base Blob" << endl;
       string nameToSave = name;
       nameToSave.erase(nameToSave.length()-22,nameToSave.length());
@@ -2027,8 +2054,13 @@ int main(int argc, char* argv[]) {
       nameToSave.erase(nameToSave.length()-21,nameToSave.length());
       DrawBKGCateg(name,mcFile,dataFile,label,pTaxis,scale,(TString)outDir+(TString)nameToSave);
       DrawBKGCategTEST(name,mcFile,dataFile,label,pTaxis,scale,(TString)outDir+(TString)nameToSave+"_TEST");
-      DrawIntTypeBKG(name,mcFile,dataFile,label,pTaxis,scale,(TString)outDir+(TString)nameToSave);
+      if ((pos = name.find("OuterUSPlastic")) == string::npos && (pos = name.find("OuterDSPlastic")) == string::npos) DrawIntTypeBKG(name,mcFile,dataFile,label,pTaxis,scale,(TString)outDir+(TString)nameToSave);
       DrawBKGSubtracted(name,mcFile,dataFile,label,pTaxis,scale,(TString)outDir+(TString)nameToSave);
+      if (!label.Contains("Tracker")){
+	cout << "Drawing Only The Plastic Subtracted." << endl;
+	DrawPlasticBKGSubtracted(name,mcFile,dataFile,label,pTaxis,scale,(TString)outDir+(TString)nameToSave);
+	DrawPlasticBKGSubtracted(name,mcFile,dataFile,label,pTaxis,scale,(TString)outDir+(TString)nameToSave,true);
+      }
       cout << "" << endl;
     }
     /*
