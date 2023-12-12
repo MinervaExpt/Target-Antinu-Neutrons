@@ -110,6 +110,10 @@ add_executable(ScaleMCToData ScaleMCToData.cxx)
 target_link_libraries(ScaleMCToData ${ROOT_LIBRARIES} MAT MAT-MINERvA)
 install(TARGETS ScaleMCToData DESTINATION bin)
 
+add_executable(ProjectOuterPlastic ProjectOuterPlastic.cxx)
+target_link_libraries(ProjectOuterPlastic ${ROOT_LIBRARIES} MAT MAT-MINERvA)
+install(TARGETS ProjectOuterPlastic DESTINATION bin)
+
 add_executable(AddUpPOT AddUpPOT.cxx)
 target_link_libraries(AddUpPOT ${ROOT_LIBRARIES} MAT MAT-MINERvA)
 install(TARGETS AddUpPOT DESTINATION bin)
