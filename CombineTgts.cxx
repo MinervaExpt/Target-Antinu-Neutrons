@@ -261,11 +261,46 @@ int main(int argc, char* argv[]) {
 	}
 
 	else if (classNameInt.Contains("2")){
-	  MnvH2D* h2D = (MnvH2D*)(files[firstName]->Get(dirBase+firstName+matName+"/"+nameObj+"/"+nameObjInt))->Clone(matNameObjInt);
-	  for(auto file : files){
-	    if (file.first == firstName) continue;
-	    TString newNameObjInt = MashNames(file.first+matName,nameObjIntPieces);
-	    h2D->Add((MnvH2D*)(file.second->Get(dirBase+file.first+matName+"/"+nameObj+"/"+newNameObjInt)));
+	  MnvH2D* h2D = nullptr;
+	  bool first = true;
+
+	  if (nameObjInt.Contains("OuterUSPlastic")){
+	    for (auto tgt : UStgtsByMat[material]){
+	      TString newNameObjInt = MashNames(tgt+matName,nameObjIntPieces);
+	      cout << "US of Tgt: " << tgt << endl;
+	      if (first){
+		h2D = (MnvH2D*)(files[tgt]->Get(dirBase+tgt+matName+"/"+nameObj+"/"+newNameObjInt))->Clone(matNameObjInt);
+		first = false;
+	      }
+	      else{
+		h2D->Add((MnvH2D*)(files[tgt]->Get(dirBase+tgt+matName+"/"+nameObj+"/"+newNameObjInt)));
+	      }
+	    }
+	  }
+	  else if (nameObjInt.Contains("OuterDSPlastic")){
+	    for (auto tgt : DStgtsByMat[material]){
+	      TString newNameObjInt = MashNames(tgt+matName,nameObjIntPieces);
+	      cout << "DS of Tgt: " << tgt << endl;
+	      if (first){
+		h2D = (MnvH2D*)(files[tgt]->Get(dirBase+tgt+matName+"/"+nameObj+"/"+newNameObjInt))->Clone(matNameObjInt);
+		first = false;
+	      }
+	      else{
+		h2D->Add((MnvH2D*)(files[tgt]->Get(dirBase+tgt+matName+"/"+nameObj+"/"+newNameObjInt)));
+	      }
+	    }
+	  }
+	  else{
+	    for(auto file : files){
+	      TString newNameObjInt = MashNames(file.first+matName,nameObjIntPieces);
+	      if (first){
+		h2D = (MnvH2D*)(files[firstName]->Get(dirBase+file.first+matName+"/"+nameObj+"/"+newNameObjInt))->Clone(matNameObjInt);
+		first = false;
+	      }
+	      else{
+		h2D->Add((MnvH2D*)(file.second->Get(dirBase+file.first+matName+"/"+nameObj+"/"+newNameObjInt)));
+	      }
+	    }
 	  }
 
 	  newOutDir->cd();
@@ -308,6 +343,46 @@ int main(int argc, char* argv[]) {
       outFile->cd();
       h2D->Write();
       delete h2D;
+    }
+    else if (nameObj.Contains("OuterUSPlastic")){
+      MnvH1D* h1D = nullptr;
+      bool first = true;
+      for (auto tgt : UStgtsByMat[material]){
+	cout << "US of Tgt: " << tgt << endl;
+	if (first){
+	  TString newNameObj = MashNames(tgt+matName,nameObjPieces);
+	  h1D = (MnvH1D*)(files[tgt]->Get(dirBase+tgt+matName+"/"+newNameObj))->Clone(matNameObj);
+	  first = false;
+	}
+	else{
+	  TString newNameObj = MashNames(tgt+matName,nameObjPieces);
+	  h1D->Add((MnvH1D*)(files[tgt]->Get(dirBase+tgt+matName+"/"+newNameObj)));
+	}
+      }
+      //h1D->SetDirectory(outFile);
+      outFile->cd();
+      h1D->Write();
+      delete h1D;
+    }
+    else if (nameObj.Contains("OuterDSPlastic")){
+      MnvH1D* h1D = nullptr;
+      bool first = true;
+      for (auto tgt : DStgtsByMat[material]){
+	cout << "DS of Tgt: " << tgt << endl;
+	if (first){
+	  TString newNameObj = MashNames(tgt+matName,nameObjPieces);
+	  h1D = (MnvH1D*)(files[tgt]->Get(dirBase+tgt+matName+"/"+newNameObj))->Clone(matNameObj);
+	  first = false;
+	}
+	else{
+	  TString newNameObj = MashNames(tgt+matName,nameObjPieces);
+	  h1D->Add((MnvH1D*)(files[tgt]->Get(dirBase+tgt+matName+"/"+newNameObj)));
+	}
+      }
+      //h1D->SetDirectory(outFile);
+      outFile->cd();
+      h1D->Write();
+      delete h1D;
     }
     else{
       MnvH1D* h1D = (MnvH1D*)(files[firstName]->Get(dirBase+firstName+matName+"/"+nameObj))->Clone(matNameObj);
