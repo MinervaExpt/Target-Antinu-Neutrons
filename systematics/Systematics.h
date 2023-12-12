@@ -18,7 +18,19 @@
 
 typedef std::map<std::string, std::vector<CVUniverse*>> UniverseMap;
 
-UniverseMap GetStandardSystematics(PlotUtils::ChainWrapper* chain, std::string response_name_tag = "", bool doMona = true)
+UniverseMap removeElasticBand(UniverseMap unprunedBands){
+  UniverseMap prunedBands;
+  for (const auto& band: unprunedBands){
+    size_t pos=0;
+    std::cout << "Systematic band from GENIE: " << band.first << std::endl;
+    std::cout << "Not Found? " << ((pos=(band.first).find("FrElas_N"))==std::string::npos) << std::endl;
+    if ((pos=(band.first).find("FrElas_N")) == std::string::npos) prunedBands[band.first] = band.second;
+    else std::cout << "Skipping band broken by FSI bug fix" << std::endl;
+  }
+  return prunedBands;
+}
+
+UniverseMap GetStandardSystematics(PlotUtils::ChainWrapper* chain, std::string response_name_tag = "", bool doMona = true, bool pruneElasN = false)
 {
   // return map
   UniverseMap error_bands;
@@ -39,6 +51,11 @@ UniverseMap GetStandardSystematics(PlotUtils::ChainWrapper* chain, std::string r
   // Standard
   UniverseMap bands_genie =
       PlotUtils::GetGenieSystematicsMap<CVUniverse>(chain); //PlotUtils::GetStandardGenieSystematicsMap<CVUniverse>(chain);
+  if (pruneElasN){
+    std::cout << "Entering pruning" << std::endl;
+    bands_genie = removeElasticBand(bands_genie);
+    std::cout << "After pruning" << std::endl;
+  }
   error_bands.insert(bands_genie.begin(), bands_genie.end());
 
   //========================================================================

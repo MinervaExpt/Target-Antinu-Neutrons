@@ -90,6 +90,7 @@ enum ErrorCodes
 #include "PlotUtils/Cutter.h"
 #include "PlotUtils/Model.h"
 #include "PlotUtils/FluxAndCVReweighter.h"
+#include "PlotUtils/FSIReweighter.h"//Testing different implementations until there is a useful discussion on appropriate choices/whether this is necessary for my thesis or not... Good news is that it seems to solely affect the tracker as the weights have not been derived for larger targets. I think this justifies sticking with the current as long as there's not so significant an effect in the tracker... so I'm going to explore the different effects it could have in the tracker and if I need to be worried about them. Uncertain about the effect the FSI reweighter has on closure as well.
 #include "PlotUtils/GENIEReweighter.h"
 #include "PlotUtils/GeantNeutronCVReweighter.h"
 #include "PlotUtils/LowRecoil2p2hReweighter.h"
@@ -693,7 +694,16 @@ int main(const int argc, const char** argv)
   bool doNeutronCuts = true;
   bool splitRecoil = false;
   double neutKESig = 10.0;
+  
+  bool elFSI=false;
+  bool piFSI=false;
 
+  if (argc > nArgsMandatory + 1){
+    elFSI = (atoi(argv[nArgsMandatory+1]) != 0);
+    if (argc == (nArgsTotal + 1)) piFSI = (atoi(argv[nArgsTotal]) != 0);
+  }
+
+  /*Temporary removal of the code which leads to labeling of the files and modification to the neutron KE cut.
   if (argc > nArgsMandatory + 1){
     if ((TString)(argv[nArgsMandatory+1]) != "" && (TString)(argv[nArgsMandatory+1]) != "NONE") nameExt = "_"+(TString)(argv[nArgsMandatory+1])+nameExt;
     if (argc == nArgsTotal + 1){
@@ -701,10 +711,13 @@ int main(const int argc, const char** argv)
       doNeutronCuts = (neutKESig > 0);
     }
   }
+  */
 
   if (doNeutronCuts) nameExt = "_wNeutCuts_neutKE_"+std::to_string(neutKESig)+nameExt;
   else splitRecoil = true;
  
+  nameExt = "_elasticFix_"+std::to_string(elFSI)+"_piFix_"+std::to_string(piFSI)+nameExt;
+
   if (tuneVer != "1" && tuneVer != "1_noRPA" && tuneVer != "1_no2p2h" && tuneVer != "2" && tuneVer != "1_SuSA" && tuneVer != "1_BodekRitchie" && tuneVer != "None"){
     std::cerr << "Must choose between 1 and 2 for the <MnvTune_v> argument. Check usage printed below. \n" << USAGE << "\n";
     return badCmdLine;
@@ -823,6 +836,7 @@ int main(const int argc, const char** argv)
   }
   //TODO: Other Warps just need to see if these even work...
   MnvTune.emplace_back(new PlotUtils::GeantNeutronCVReweighter<CVUniverse, NeutronEvent>());
+  if (elFSI || piFSI) MnvTune.emplace_back(new PlotUtils::FSIReweighter<CVUniverse, NeutronEvent>(elFSI, piFSI));
 
   PlotUtils::Model<CVUniverse, NeutronEvent> model(std::move(MnvTune));
 
@@ -839,14 +853,15 @@ int main(const int argc, const char** argv)
   std::cout << nameExt << std::endl;
 
   std::map< std::string, std::vector<CVUniverse*> > error_bands;
-  if(doSystematics) error_bands = GetStandardSystematics(options.m_mc,"dispr_id_and_blobbed_energy_wNuclTargs");
+  if(doSystematics) error_bands = GetStandardSystematics(options.m_mc,"dispr_id_and_blobbed_energy_wNuclTargs",true,(elFSI || piFSI));
+  //if(doSystematics) error_bands = GetStandardSystematics(options.m_mc,"dispr_id_and_blobbed_energy_wNuclTargs",true,true);
   else{
     std::map<std::string, std::vector<CVUniverse*> > band_flux = PlotUtils::GetFluxSystematicsMap<CVUniverse>(options.m_mc, CVUniverse::GetNFluxUniverses());
     error_bands.insert(band_flux.begin(), band_flux.end()); //Necessary to get flux integral later...
   }
   error_bands["cv"] = {new CVUniverse(options.m_mc)};
   std::map< std::string, std::vector<CVUniverse*> > truth_bands;
-  if(doSystematics) truth_bands = GetStandardSystematics(options.m_truth,"dispr_id_and_blobbed_energy_wNuclTargs");
+  if(doSystematics) truth_bands = GetStandardSystematics(options.m_truth,"dispr_id_and_blobbed_energy_wNuclTargs",true, (elFSI || piFSI));
   truth_bands["cv"] = {new CVUniverse(options.m_truth)};
   
   //Same as Amit's seemingly. Bin normalized these are smoother.
