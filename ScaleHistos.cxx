@@ -1,7 +1,7 @@
 //File: ScaleHistos.cxx
 //Info: This script takes an input MC file and a scale factors file to produce a copy with the right histos scaled
 //
-//Usage: ScaleHistos <inFile> <scaleFile> <fitName> <outFile> <scaleSig yes if anything other than 0>
+//Usage: ScaleHistos <inFile> <scaleFile> <fitName> <outFile> <scaleSig yes if anything other than 0> optional: <enforceTag>
 //Author: David Last dlast@sas.upenn.edu/lastd44@gmail.com
 
 //C++ includes
@@ -135,7 +135,7 @@ int main(int argc, char* argv[]) {
   //Worth combining the different scalings together?
 
   //Pass an input file name to this script now
-  if (argc != 6) {
+  if (argc < 6 || argc > 7) {
     cout << "Check usage..." << endl;
     return 2;
   }
@@ -145,6 +145,7 @@ int main(int argc, char* argv[]) {
   TString fitName = argv[3];
   TString outFileName = argv[4];
   bool scaleSig = (bool)atoi(argv[5]);
+  TString forceTag = (argc == 7) ? argv[6] : "";
 
   TFile* inFile = new TFile(inFileName,"READ");
   TFile* scaleFile = new TFile(scaleFileName,"READ");
@@ -215,7 +216,7 @@ int main(int argc, char* argv[]) {
 	      if(!scaleSig && tag.Contains("sig")){
 		continue;
 	      }
-	      if(!nameObjInt.Contains(tag)){
+	      if(!nameObjInt.Contains(tag) || !nameObjInt.Contains(forceTag)){
 		continue;
 	      }
 	      cout << "Scaling: " << nameObjInt << endl;
@@ -242,7 +243,7 @@ int main(int argc, char* argv[]) {
 	    if (!nameObjInt.Contains(varName.first) || scaled) continue;
 	    for (auto tag: varName.second){
 	      if(!scaleSig && tag.Contains("sig")) continue;
-	      if(!nameObjInt.Contains(tag)) continue;
+	      if(!nameObjInt.Contains(tag) || !nameObjInt.Contains(forceTag)) continue;
 	      cout << "Scaling: " << nameObjInt << endl;
 	      TString nameOfScale = varNameMap[varName.first+tag];
 	      cout << "With Scale: " << nameOfScale << endl;
@@ -284,7 +285,7 @@ int main(int argc, char* argv[]) {
 	if (!nameObj.Contains(varName.first) || scaled) continue;
 	for (auto tag: varName.second){
 	  if(!scaleSig && tag.Contains("sig")) continue;
-	  if(!nameObj.Contains(tag)) continue;
+	  if(!nameObj.Contains(tag) || !nameObj.Contains(forceTag)) continue;
 	  cout << "Scaling: " << nameObj << endl;
 	  TString nameOfScale = varNameMap[varName.first+tag];
 	  cout << "With Scale: " << nameOfScale << endl;
