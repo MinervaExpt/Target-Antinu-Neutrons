@@ -135,7 +135,7 @@ void DrawBKGCateg(string name, TFile* mcFile, TFile* dataFile, TString sample, T
 
   //Experimental which will break for tracker region!!!
   MnvH1D* h_USPlastic_Bkg_Top = nullptr;
-  if (((TString)(name_bkg)).Contains("pTmu") && !((TString)(name_bkg)).Contains("Outer")){
+  if (((TString)(name_bkg)).Contains("pTmu") && !((TString)(name_bkg)).Contains("Outer") && (TString)(name_bkg) != "pTmu" && (TString)(name_bkg) != "pTmu_PreRecoilCut"){
     string nametag = name_bkg;
     nametag.erase(0,4);
     cout << name_bkg+"InnerUSPlastic"+nametag+"_selected_signal_reco" << endl;
@@ -155,7 +155,7 @@ void DrawBKGCateg(string name, TFile* mcFile, TFile* dataFile, TString sample, T
   cout << "TEST" << endl;
 
   MnvH1D* h_DSPlastic_Bkg_Top = nullptr;
-  if (((TString)(name_bkg)).Contains("pTmu") && !((TString)(name_bkg)).Contains("Outer")){
+  if (((TString)(name_bkg)).Contains("pTmu") && !((TString)(name_bkg)).Contains("Outer") && (TString)(name_bkg) != "pTmu" && (TString)(name_bkg) != "pTmu_PreRecoilCut"){
     string nametag = name_bkg;
     nametag.erase(0,4);
     cout << name_bkg+"InnerDSPlastic"+nametag+"_selected_signal_reco" << endl;
