@@ -1224,11 +1224,12 @@ int main(int argc, char* argv[]) {
     fitTEST1A["NonFit"]["WrongNucleus"].push_back((MnvH1D*)wrongNuclHist->Clone());
     fitTEST1A["NonFit"]["WrongNucleus"].push_back((MnvH1D*)wrongNuclHist_noTag->Clone());
 
-    /*Temp change to fit just lines
+
+    //Tracker
     fitPieces1A["Signal"].push_back(make_tuple("Line",5,999));
     fitPieces1A["Signal"].push_back(make_tuple("ScaleFactor",3,4));
     fitPieces1A["Signal"].push_back(make_tuple("ScaleFactor",1,2));
-    */
+    /*Temp change to fit just lines    */
 
     /*Change to now do the fit for the different targets one by one.
     fitPieces1A["Signal"].push_back(make_tuple("Line",1,999));
@@ -1251,8 +1252,10 @@ int main(int argc, char* argv[]) {
 
     //Lead
     //fitPieces1A["Signal"].push_back(make_tuple("ScaleFactor",1,2)); Actually made it worse. Overall trend seems to be a line, so a smoothed function might accomodate better, or alternatively this might be driven by the plastic not being fit so well. Question for later.
+    /*
     fitPieces1A["Signal"].push_back(make_tuple("Line",1,6));
     fitPieces1A["Signal"].push_back(make_tuple("Line",7,999));
+    */
 
     //Water
     /*
@@ -1262,10 +1265,9 @@ int main(int argc, char* argv[]) {
     */
 
     //fitPieces1A["BKG"].push_back(make_tuple("ScaleFactor",11,999));
-    /*Temp change to fit just lines
     fitPieces1A["BKG"].push_back(make_tuple("Line",6,999));
     fitPieces1A["BKG"].push_back(make_tuple("Line",1,6));
-    */
+    /*Temp change to fit just lines    */
 
     /*
     fitPieces1A["BKG"].push_back(make_tuple("Line",1,999));
@@ -1289,8 +1291,10 @@ int main(int argc, char* argv[]) {
     */
     
     //Lead
+    /*
     fitPieces1A["BKG"].push_back(make_tuple("Line",1,7));
     fitPieces1A["BKG"].push_back(make_tuple("ScaleFactor",7,999));
+    */
 
     //Water
     /*
