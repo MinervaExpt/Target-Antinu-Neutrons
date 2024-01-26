@@ -7,6 +7,7 @@
 #include "util/Variable.h"
 #include "util/GetBackgroundID.h"
 #include "event/CVUniverse.h"
+#include "TString.h"
 
 //TODO: ONLY FILL THESE VARIABLES WHEN THE EVENT IS SELECTED?
 
@@ -19,13 +20,15 @@ class NeutronVariables: public Study
     std::vector<NeutronVariable*> fTrackVars;
     double fBound;
     double fMinZ;
+    bool fAllCuts;
 
   public:
     NeutronVariables(double tgtBoundary,
 		     double minZ,
+		     bool allCuts,
 		     std::map<std::string, std::vector<CVUniverse*>>& mc_error_bands,
 		     std::map<std::string, std::vector<CVUniverse*>>& truth_error_bands,
-		     std::vector<CVUniverse*>& data_error_bands): Study(), fBound(tgtBoundary), fMinZ(minZ)
+		     std::vector<CVUniverse*>& data_error_bands): Study(), fBound(tgtBoundary), fMinZ(minZ), fAllCuts(allCuts)
     {
       std::vector<double> myBlobEBins;
       const double myBlobEBinWidth = 3.;
@@ -55,39 +58,41 @@ class NeutronVariables: public Study
       const double myZPosBinWidth = 10.;
       for (int whichBin=0; whichBin < ((9300-fMinZ)/10)+1; ++whichBin) myZPosBins.push_back(myZPosBinWidth * whichBin + fMinZ);
 
+      std::string nameTag = (fAllCuts) ? "" : "_PreRecoilCut" ;
+
       fLeadVars = {
-	new NeutronVariable("leadBlob_blobE","E [MeV]", myBlobEBins,&NeutronCandidates::NeutCand::GetTotalE),
-	new NeutronVariable("leadBlob_SelfAngle","Angle [rad]", mySelfAngleBins,&NeutronCandidates::NeutCand::GetAngleToFP),
-	new NeutronVariable("leadBlob_primary_parent","", myPDGBins,&NeutronCandidates::NeutCand::GetPDGBin),
-	new NeutronVariable("leadBlob_length","len. [mm]", myLenBins,&NeutronCandidates::NeutCand::GetLength),
-	new NeutronVariable("leadBlob_avg_dEdx","dE/dx [MeV/mm]", myDEDXBins,&NeutronCandidates::NeutCand::GetDEDX),
-	new NeutronVariable("leadBlob_dist","dist. [mm]", myVtxDistBins,&NeutronCandidates::NeutCand::GetVtxDist),
-	new NeutronVariable("leadBlob_Zdist","Z dist. [mm]", myVtxDistBins,&NeutronCandidates::NeutCand::GetVtxZDist),
-	new NeutronVariable("leadBlob_ZPos","Z [mm]", myZPosBins,&NeutronCandidates::NeutCand::GetZPos),
+	new NeutronVariable(("leadBlob"+nameTag+"_blobE").c_str(),"E [MeV]", myBlobEBins,&NeutronCandidates::NeutCand::GetTotalE),
+	new NeutronVariable(("leadBlob"+nameTag+"_SelfAngle").c_str(),"Angle [rad]", mySelfAngleBins,&NeutronCandidates::NeutCand::GetAngleToFP),
+	new NeutronVariable(("leadBlob"+nameTag+"_primary_parent").c_str(),"", myPDGBins,&NeutronCandidates::NeutCand::GetPDGBin),
+	new NeutronVariable(("leadBlob"+nameTag+"_length").c_str(),"len. [mm]", myLenBins,&NeutronCandidates::NeutCand::GetLength),
+	new NeutronVariable(("leadBlob"+nameTag+"_avg_dEdx").c_str(),"dE/dx [MeV/mm]", myDEDXBins,&NeutronCandidates::NeutCand::GetDEDX),
+	new NeutronVariable(("leadBlob"+nameTag+"_dist").c_str(),"dist. [mm]", myVtxDistBins,&NeutronCandidates::NeutCand::GetVtxDist),
+	new NeutronVariable(("leadBlob"+nameTag+"_Zdist").c_str(),"Z dist. [mm]", myVtxDistBins,&NeutronCandidates::NeutCand::GetVtxZDist),
+	new NeutronVariable(("leadBlob"+nameTag+"_ZPos").c_str(),"Z [mm]", myZPosBins,&NeutronCandidates::NeutCand::GetZPos),
       };
       fAllVars = {
-	new NeutronVariable("All_blobE","E [MeV]", myBlobEBins,&NeutronCandidates::NeutCand::GetTotalE),
-	new NeutronVariable("All_primary_parent","", myPDGBins,&NeutronCandidates::NeutCand::GetPDGBin),
-	new NeutronVariable("All_length","len. [mm]", myLenBins,&NeutronCandidates::NeutCand::GetLength),
-	new NeutronVariable("All_avg_dEdx","dE/dx [MeV/mm]", myDEDXBins,&NeutronCandidates::NeutCand::GetDEDX),
-	new NeutronVariable("All_dist","dist. [mm]", myVtxDistBins,&NeutronCandidates::NeutCand::GetVtxDist),
-	new NeutronVariable("All_Zdist","Z dist. [mm]", myVtxDistBins,&NeutronCandidates::NeutCand::GetVtxZDist),
+	new NeutronVariable(("All"+nameTag+"_blobE").c_str(),"E [MeV]", myBlobEBins,&NeutronCandidates::NeutCand::GetTotalE),
+	new NeutronVariable(("All"+nameTag+"_primary_parent").c_str(),"", myPDGBins,&NeutronCandidates::NeutCand::GetPDGBin),
+	new NeutronVariable(("All"+nameTag+"_length").c_str(),"len. [mm]", myLenBins,&NeutronCandidates::NeutCand::GetLength),
+	new NeutronVariable(("All"+nameTag+"_avg_dEdx").c_str(),"dE/dx [MeV/mm]", myDEDXBins,&NeutronCandidates::NeutCand::GetDEDX),
+	new NeutronVariable(("All"+nameTag+"_dist").c_str(),"dist. [mm]", myVtxDistBins,&NeutronCandidates::NeutCand::GetVtxDist),
+	new NeutronVariable(("All"+nameTag+"_Zdist").c_str(),"Z dist. [mm]", myVtxDistBins,&NeutronCandidates::NeutCand::GetVtxZDist),
       };
       fTgtVars = {
-	new NeutronVariable("target_blobE","E [MeV]", myBlobEBins,&NeutronCandidates::NeutCand::GetTotalE),
-	new NeutronVariable("target_primary_parent","", myPDGBins,&NeutronCandidates::NeutCand::GetPDGBin),
-	new NeutronVariable("target_length","len. [mm]", myLenBins,&NeutronCandidates::NeutCand::GetLength),
-	new NeutronVariable("target_avg_dEdx","dE/dx [MeV/mm]", myDEDXBins,&NeutronCandidates::NeutCand::GetDEDX),
-	new NeutronVariable("target_dist","dist. [mm]", myVtxDistBins,&NeutronCandidates::NeutCand::GetVtxDist),
-	new NeutronVariable("target_Zdist","Z dist. [mm]", myVtxDistBins,&NeutronCandidates::NeutCand::GetVtxZDist),
+	new NeutronVariable(("target"+nameTag+"_blobE").c_str(),"E [MeV]", myBlobEBins,&NeutronCandidates::NeutCand::GetTotalE),
+	new NeutronVariable(("target"+nameTag+"_primary_parent").c_str(),"", myPDGBins,&NeutronCandidates::NeutCand::GetPDGBin),
+	new NeutronVariable(("target"+nameTag+"_length").c_str(),"len. [mm]", myLenBins,&NeutronCandidates::NeutCand::GetLength),
+	new NeutronVariable(("target"+nameTag+"_avg_dEdx").c_str(),"dE/dx [MeV/mm]", myDEDXBins,&NeutronCandidates::NeutCand::GetDEDX),
+	new NeutronVariable(("target"+nameTag+"_dist").c_str(),"dist. [mm]", myVtxDistBins,&NeutronCandidates::NeutCand::GetVtxDist),
+	new NeutronVariable(("target"+nameTag+"_Zdist").c_str(),"Z dist. [mm]", myVtxDistBins,&NeutronCandidates::NeutCand::GetVtxZDist),
       };
       fTrackVars = {
-	new NeutronVariable("tracker_blobE","E [MeV]", myBlobEBins,&NeutronCandidates::NeutCand::GetTotalE),
-	new NeutronVariable("tracker_primary_parent","", myPDGBins,&NeutronCandidates::NeutCand::GetPDGBin),
-	new NeutronVariable("tracker_length","len. [mm]", myLenBins,&NeutronCandidates::NeutCand::GetLength),
-	new NeutronVariable("tracker_avg_dEdx","dE/dx [MeV/mm]", myDEDXBins,&NeutronCandidates::NeutCand::GetDEDX),
-	new NeutronVariable("tracker_dist","dist. [mm]", myVtxDistBins,&NeutronCandidates::NeutCand::GetVtxDist),
-	new NeutronVariable("tracker_Zdist","Z dist. [mm]", myVtxDistBins,&NeutronCandidates::NeutCand::GetVtxZDist),
+	new NeutronVariable(("tracker"+nameTag+"_blobE").c_str(),"E [MeV]", myBlobEBins,&NeutronCandidates::NeutCand::GetTotalE),
+	new NeutronVariable(("tracker"+nameTag+"_primary_parent").c_str(),"", myPDGBins,&NeutronCandidates::NeutCand::GetPDGBin),
+	new NeutronVariable(("tracker"+nameTag+"_length").c_str(),"len. [mm]", myLenBins,&NeutronCandidates::NeutCand::GetLength),
+	new NeutronVariable(("tracker"+nameTag+"_avg_dEdx").c_str(),"dE/dx [MeV/mm]", myDEDXBins,&NeutronCandidates::NeutCand::GetDEDX),
+	new NeutronVariable(("tracker"+nameTag+"_dist").c_str(),"dist. [mm]", myVtxDistBins,&NeutronCandidates::NeutCand::GetVtxDist),
+	new NeutronVariable(("tracker"+nameTag+"_Zdist").c_str(),"Z dist. [mm]", myVtxDistBins,&NeutronCandidates::NeutCand::GetVtxZDist),
       };
 
       for(auto& var: fLeadVars) var->InitializeMCHists(mc_error_bands, truth_error_bands);
@@ -129,6 +134,10 @@ class NeutronVariables: public Study
       int intType = evt.GetIntType();
       int tgtType = evt.GetTgtZ();
       int leadBlobType = leadCand.GetPDGBin();
+
+      std::bitset<64> SBStat = evt.GetSideBandStat();
+
+      if (fAllCuts && !SBStat.all()) return;
 
       if (evt.IsMC()){
 	if (evt.IsSignal()){

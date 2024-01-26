@@ -793,8 +793,8 @@ int main(const int argc, const char** argv)
   preCuts.emplace_back(new MyCCQECuts::PMuRange<CVUniverse, NeutronEvent>("1.5 <= Pmu <= 20",1.5,20.0));
   preCuts.emplace_back(new MyCCQECuts::IsAntiNu<CVUniverse, NeutronEvent>());
   preCuts.emplace_back(new MyCCQECuts::IsSingleTrack<CVUniverse, NeutronEvent>());
-  preCuts.emplace_back(new MyCCQECuts::LooseRecoilCut<CVUniverse, NeutronEvent>(sbUpper));
-  preCuts.emplace_back(new MyCCQECuts::RemoveRecoilBand<CVUniverse, NeutronEvent>(sbLower));
+  //preCuts.emplace_back(new MyCCQECuts::LooseRecoilCut<CVUniverse, NeutronEvent>(sbUpper)); Removed for neutron study with no recoil cut
+  //preCuts.emplace_back(new MyCCQECuts::RemoveRecoilBand<CVUniverse, NeutronEvent>(sbLower)); Removed for neutron study with no recoil cut
   //preCuts.emplace_back(new MyCCQECuts::RecoilCut<CVUniverse, NeutronEvent>());
   if (doNeutronCuts){
     preCuts.emplace_back(new MyNeutCuts::LeadNeutIs3D<CVUniverse, NeutronEvent>());
@@ -1028,7 +1028,8 @@ int main(const int argc, const char** argv)
   std::vector<Study*> studies = {
     //new EMSideBands(vars, error_bands, truth_bands, data_band),
     //new MichelAndNBlobSB(vars, error_bands, truth_bands, data_band),
-    //new NeutronVariables(maxZ, minZ, error_bands, truth_bands, data_band),
+    new NeutronVariables(maxZ, minZ, true, error_bands, truth_bands, data_band),
+    new NeutronVariables(maxZ, minZ, false, error_bands, truth_bands, data_band),
     //new RecoilSB(vars, error_bands, truth_bands, data_band, splitRecoil),
     new PreRecoil(vars, error_bands, truth_bands, data_band, splitRecoil, doNeutronCuts, FVregionName, TgtNum, doVtx),
   };
