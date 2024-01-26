@@ -288,6 +288,7 @@ class Variable: public PlotUtils::VariableBase<CVUniverse>
 
     void SetDirectoryName(std::string name){fDirName = name;}
     void SetFillVar(bool fill){fFillVar = fill;}
+    void SetIsBroken(bool broken){fAllBreakdowns =  broken;}
     bool IsAnaVar(){return fAnaVar;}
     bool IsFill(){return fFillVar;}
     bool IsBroken(){return fAllBreakdowns;}

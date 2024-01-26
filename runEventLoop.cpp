@@ -938,6 +938,8 @@ int main(const int argc, const char** argv)
     //new Variable("recQ2Bin","No.",myRecoilQ2Bins, &CVUniverse::GetRecoilQ2Bin),
   };
 
+  vars.at(vars.size()-1)->SetIsBroken(true);//Just for the neutron variable studies.
+
   /*
   std::map<int, std::string> TgtList = {{1,"Tgt1"},
 					{2,"Tgt2"},
