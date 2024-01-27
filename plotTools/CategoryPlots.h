@@ -70,6 +70,7 @@ void Draw2DPlotInGridStatOnly(MnvH2D* hist, TString nameToSave, string xtitle, s
   gc->Remax();
   gc->Print(nameToSave+".pdf");
   gc->Print(nameToSave+".png");
+  gc->Print(nameToSave+".C");
 }
 
 void Draw2DBKGCategLines(string name, TFile* mcFile, TFile* dataFile, TString sample, double scale, TString nameToSave){
@@ -228,6 +229,7 @@ void Draw2DBKGCategLines(string name, TFile* mcFile, TFile* dataFile, TString sa
 
   gc->Print(nameToSave+"_BKG_stacked.pdf");
   gc->Print(nameToSave+"_BKG_stacked.png");
+  gc->Print(nameToSave+"_BKG_stacked.C");
   
   delete mcSum;
   delete mcHist;
@@ -417,6 +419,7 @@ void Draw2DBKGCategStack(string name, TFile* mcFile, TFile* dataFile, TString sa
 
   gcY->Print(nameToSave+"_pT_as_x_BKG_stacked.pdf");
   gcY->Print(nameToSave+"_pT_as_x_BKG_stacked.png");
+  gcY->Print(nameToSave+"_pT_as_x_BKG_stacked.C");
 
   gcX->cd();
 
@@ -424,6 +427,7 @@ void Draw2DBKGCategStack(string name, TFile* mcFile, TFile* dataFile, TString sa
 
   gcX->Print(nameToSave+"_pz_as_x_BKG_stacked.pdf");
   gcX->Print(nameToSave+"_pz_as_x_BKG_stacked.png");
+  gcX->Print(nameToSave+"_pz_as_x_BKG_stacked.C");
 
   TH2D* ratio = (TH2D*)dataHist->Clone();
   ratio->Divide(mcHist);
@@ -460,12 +464,14 @@ void Draw2DBKGCategStack(string name, TFile* mcFile, TFile* dataFile, TString sa
 
   gcY2->Print(nameToSave+"_pT_as_x_BKG_stacked_ratio.pdf");
   gcY2->Print(nameToSave+"_pT_as_x_BKG_stacked_ratio.png");
+  gcY2->Print(nameToSave+"_pT_as_x_BKG_stacked_ratio.C");
 
   GridCanvas* gcX2=plotXAxis1D(hVec2, "Muon Longitudinal Momentum [GeV/c]","Data/MC", "p_{T}", multipliers);
   gcX2->Remax();
 
   gcX2->Print(nameToSave+"_pz_as_x_BKG_stacked_ratio.pdf");
   gcX2->Print(nameToSave+"_pz_as_x_BKG_stacked_ratio.png");
+  gcX2->Print(nameToSave+"_pz_as_x_BKG_stacked_ratio.C");
 
   delete mcSum;
   delete mcHist;
@@ -757,6 +763,7 @@ void Draw2DIntTypeStack(string name, TFile* mcFile, TFile* dataFile, TString sam
 
   gcY->Print(nameToSave+"_pT_as_x_IntType_stacked.pdf");
   gcY->Print(nameToSave+"_pT_as_x_IntType_stacked.png");
+  gcY->Print(nameToSave+"_pT_as_x_IntType_stacked.C");
 
   gcX->cd();
 
@@ -764,6 +771,7 @@ void Draw2DIntTypeStack(string name, TFile* mcFile, TFile* dataFile, TString sam
 
   gcX->Print(nameToSave+"_pz_as_x_IntType_stacked.pdf");
   gcX->Print(nameToSave+"_pz_as_x_IntType_stacked.png");
+  gcX->Print(nameToSave+"_pz_as_x_IntType_stacked.C");
 
   TH2D* ratio = (TH2D*)dataHist->Clone();
   ratio->Divide(mcHist);
@@ -800,12 +808,14 @@ void Draw2DIntTypeStack(string name, TFile* mcFile, TFile* dataFile, TString sam
 
   gcY2->Print(nameToSave+"_pT_as_x_IntType_stacked_ratio.pdf");
   gcY2->Print(nameToSave+"_pT_as_x_IntType_stacked_ratio.png");
+  gcY2->Print(nameToSave+"_pT_as_x_IntType_stacked_ratio.C");
 
   GridCanvas* gcX2=plotXAxis1D(hVec2, "Muon Longitudinal Momentum [GeV/c]","Data/MC", "p_{T}", multipliers);
   gcX2->Remax();
 
   gcX2->Print(nameToSave+"_pz_as_x_IntType_stacked_ratio.pdf");
   gcX2->Print(nameToSave+"_pz_as_x_IntType_stacked_ratio.png");
+  gcX2->Print(nameToSave+"_pz_as_x_IntType_stacked_ratio.C");
 
   delete mcSum;
   delete mcHist;
@@ -1016,6 +1026,7 @@ void Draw2DBKGCategStackWithBKGScale(string name, TFile* mcFile, TFile* dataFile
 
   gcY->Print(nameToSave+"_pT_as_x_BKG_stacked.pdf");
   gcY->Print(nameToSave+"_pT_as_x_BKG_stacked.png");
+  gcY->Print(nameToSave+"_pT_as_x_BKG_stacked.C");
 
   gcX->cd();
 
@@ -1023,6 +1034,7 @@ void Draw2DBKGCategStackWithBKGScale(string name, TFile* mcFile, TFile* dataFile
 
   gcX->Print(nameToSave+"_pz_as_x_BKG_stacked.pdf");
   gcX->Print(nameToSave+"_pz_as_x_BKG_stacked.png");
+  gcX->Print(nameToSave+"_pz_as_x_BKG_stacked.C");
 
   TH2D* ratio = (TH2D*)dataHist->Clone();
   ratio->Divide(mcHist);
@@ -1059,12 +1071,14 @@ void Draw2DBKGCategStackWithBKGScale(string name, TFile* mcFile, TFile* dataFile
 
   gcY2->Print(nameToSave+"_pT_as_x_BKG_stacked_ratio.pdf");
   gcY2->Print(nameToSave+"_pT_as_x_BKG_stacked_ratio.png");
+  gcY2->Print(nameToSave+"_pT_as_x_BKG_stacked_ratio.C");
 
   GridCanvas* gcX2=plotXAxis1D(hVec2, "Muon Transverse Momentum [GeV/c]","Data/MC", "p_{//}", multipliers);
   gcX2->Remax();
 
   gcX2->Print(nameToSave+"_pz_as_x_BKG_stacked_ratio.pdf");
   gcX2->Print(nameToSave+"_pz_as_x_BKG_stacked_ratio.png");
+  gcX2->Print(nameToSave+"_pz_as_x_BKG_stacked_ratio.C");
 
   delete mcSum;
   delete mcHist;
@@ -1155,25 +1169,40 @@ void DrawBKGCategTEST(string name, TFile* mcFile, TFile* dataFile, TString sampl
   h_NPi_Bkg->SetFillColor(TColor::GetColor("#CC6677"));
 
   MnvH1D* h_USPlastic_Bkg_Top = (MnvH1D*)mcFile->Get((TString)name_bkg+"_background_USPlastic");
-  MnvH1D* h_USPlastic_Bkg = new MnvH1D(h_USPlastic_Bkg_Top->GetBinNormalizedCopy());
-  h_USPlastic_Bkg->Scale(scale);
-  mcSum->Add(h_USPlastic_Bkg);
-  h_USPlastic_Bkg->SetLineColor(TColor::GetColor("#A26E1C"));
-  h_USPlastic_Bkg->SetFillColor(TColor::GetColor("#A26E1C"));
+  bool hasUSPlastic = (h_USPlastic_Bkg_Top) ? true : false;
+  MnvH1D* h_USPlastic_Bkg = nullptr;
+  if (hasUSPlastic){
+    h_USPlastic_Bkg =  new MnvH1D(h_USPlastic_Bkg_Top->GetBinNormalizedCopy());
+    h_USPlastic_Bkg->Scale(scale);
+    mcSum->Add(h_USPlastic_Bkg);
+    h_USPlastic_Bkg->SetLineColor(TColor::GetColor("#A26E1C"));
+    h_USPlastic_Bkg->SetFillColor(TColor::GetColor("#A26E1C"));
+    h_USPlastic_Bkg->SetFillStyle(3003);
+  }
 
   MnvH1D* h_DSPlastic_Bkg_Top = (MnvH1D*)mcFile->Get((TString)name_bkg+"_background_DSPlastic");
-  MnvH1D* h_DSPlastic_Bkg = new MnvH1D(h_DSPlastic_Bkg_Top->GetBinNormalizedCopy());
-  h_DSPlastic_Bkg->Scale(scale);
-  mcSum->Add(h_DSPlastic_Bkg);
-  h_DSPlastic_Bkg->SetLineColor(TColor::GetColor("#C1B185"));
-  h_DSPlastic_Bkg->SetFillColor(TColor::GetColor("#C1B185"));
+  bool hasDSPlastic = (h_DSPlastic_Bkg_Top) ? true : false;
+  MnvH1D* h_DSPlastic_Bkg = nullptr;
+  if (hasDSPlastic){
+    h_DSPlastic_Bkg =  new MnvH1D(h_DSPlastic_Bkg_Top->GetBinNormalizedCopy());
+    h_DSPlastic_Bkg->Scale(scale);
+    mcSum->Add(h_DSPlastic_Bkg);
+    h_DSPlastic_Bkg->SetLineColor(TColor::GetColor("#C1B185"));
+    h_DSPlastic_Bkg->SetFillColor(TColor::GetColor("#C1B185"));
+    h_DSPlastic_Bkg->SetFillStyle(3003);
+  }
 
   MnvH1D* h_Wrong_Nucleus_Bkg_Top = (MnvH1D*)mcFile->Get((TString)name_bkg+"_background_Wrong_Nucleus");
-  MnvH1D* h_Wrong_Nucleus_Bkg = new MnvH1D(h_Wrong_Nucleus_Bkg_Top->GetBinNormalizedCopy());
-  h_Wrong_Nucleus_Bkg->Scale(scale);
-  mcSum->Add(h_Wrong_Nucleus_Bkg);
-  h_Wrong_Nucleus_Bkg->SetLineColor(TColor::GetColor("#909497"));
-  h_Wrong_Nucleus_Bkg->SetFillColor(TColor::GetColor("#909497"));
+  bool hasWrongNucl = (h_Wrong_Nucleus_Bkg_Top) ? true : false;
+  MnvH1D* h_Wrong_Nucleus_Bkg = nullptr;
+  if (hasWrongNucl){
+    h_Wrong_Nucleus_Bkg = new MnvH1D(h_Wrong_Nucleus_Bkg_Top->GetBinNormalizedCopy());
+    h_Wrong_Nucleus_Bkg->Scale(scale);
+    mcSum->Add(h_Wrong_Nucleus_Bkg);
+    h_Wrong_Nucleus_Bkg->SetLineColor(TColor::GetColor("#909497"));
+    h_Wrong_Nucleus_Bkg->SetFillColor(TColor::GetColor("#909497"));
+    h_Wrong_Nucleus_Bkg->SetFillStyle(3003);
+  }
 
   MnvH1D* h_Other_Bkg_Top = (MnvH1D*)mcFile->Get((TString)name_bkg+"_background_Other");
   MnvH1D* h_Other_Bkg = new MnvH1D(h_Other_Bkg_Top->GetBinNormalizedCopy());
@@ -1190,9 +1219,9 @@ void DrawBKGCategTEST(string name, TFile* mcFile, TFile* dataFile, TString sampl
   h_data->AddMissingErrorBandsAndFillWithCV(*h_Sig);
 
   THStack* h = new THStack();
-  h->Add((TH1D*)h_Wrong_Nucleus_Bkg->GetCVHistoWithError().Clone());
-  h->Add((TH1D*)h_USPlastic_Bkg->GetCVHistoWithError().Clone());
-  h->Add((TH1D*)h_DSPlastic_Bkg->GetCVHistoWithError().Clone());
+  if (hasWrongNucl) h->Add((TH1D*)h_Wrong_Nucleus_Bkg->GetCVHistoWithError().Clone());
+  if (hasUSPlastic) h->Add((TH1D*)h_USPlastic_Bkg->GetCVHistoWithError().Clone());
+  if (hasDSPlastic) h->Add((TH1D*)h_DSPlastic_Bkg->GetCVHistoWithError().Clone());
   h->Add((TH1D*)h_Other_Bkg->GetCVHistoWithError().Clone());
   h->Add((TH1D*)h_NPi_Bkg->GetCVHistoWithError().Clone());
   h->Add((TH1D*)h_1Pi0_Bkg->GetCVHistoWithError().Clone());
@@ -1306,9 +1335,9 @@ void DrawBKGCategTEST(string name, TFile* mcFile, TFile* dataFile, TString sampl
   leg->AddEntry(h_1Pi0_Bkg,"single #pi^{0}");
   leg->AddEntry(h_NPi_Bkg,"N#pi");
   leg->AddEntry(h_Other_Bkg,"Other");
-  if (!isTracker) leg->AddEntry(h_DSPlastic_Bkg,"DS Plastic");
-  if (!isTracker) leg->AddEntry(h_USPlastic_Bkg,"US Plastic");
-  if (!isTracker) leg->AddEntry(h_Wrong_Nucleus_Bkg,"Wrong Nucleus");
+  if (!isTracker && hasDSPlastic) leg->AddEntry(h_DSPlastic_Bkg,"DS Plastic");
+  if (!isTracker && hasUSPlastic) leg->AddEntry(h_USPlastic_Bkg,"US Plastic");
+  if (!isTracker && hasWrongNucl) leg->AddEntry(h_Wrong_Nucleus_Bkg,"Wrong Nucleus");
 
   leg->Draw();
   c1->Update();
@@ -1366,11 +1395,13 @@ void DrawBKGCategTEST(string name, TFile* mcFile, TFile* dataFile, TString sampl
 
   c1->Print(nameToSave+"_BKG_stacked.pdf");
   c1->Print(nameToSave+"_BKG_stacked.png");
+  c1->Print(nameToSave+"_BKG_stacked.C");
   //c1->SetLogy();
   top->SetLogy();
   c1->Update();
   c1->Print(nameToSave+"_BKG_stacked_log.pdf");
   c1->Print(nameToSave+"_BKG_stacked_log.png");         
+  c1->Print(nameToSave+"_BKG_stacked_log.C");         
   
   delete mcSum;
   delete dataHist;
@@ -1439,16 +1470,28 @@ void DrawBKGSubtracted(string name, TFile* mcFile, TFile* dataFile, TString samp
   h_NPi_Bkg->Scale(scale);
 
   MnvH1D* h_USPlastic_Bkg_Top = (MnvH1D*)mcFile->Get((TString)name_bkg+"_background_USPlastic");
-  MnvH1D* h_USPlastic_Bkg = new MnvH1D(h_USPlastic_Bkg_Top->GetBinNormalizedCopy());
-  h_USPlastic_Bkg->Scale(scale);
+  bool hasUSPlastic = (h_USPlastic_Bkg_Top) ? true: false;
+  MnvH1D* h_USPlastic_Bkg = nullptr;
+  if(hasUSPlastic){
+    h_USPlastic_Bkg = new MnvH1D(h_USPlastic_Bkg_Top->GetBinNormalizedCopy());
+    h_USPlastic_Bkg->Scale(scale);
+  }
 
   MnvH1D* h_DSPlastic_Bkg_Top = (MnvH1D*)mcFile->Get((TString)name_bkg+"_background_DSPlastic");
-  MnvH1D* h_DSPlastic_Bkg = new MnvH1D(h_DSPlastic_Bkg_Top->GetBinNormalizedCopy());
-  h_DSPlastic_Bkg->Scale(scale);
+  bool hasDSPlastic = (h_DSPlastic_Bkg_Top) ? true: false;
+  MnvH1D* h_DSPlastic_Bkg = nullptr;
+  if(hasDSPlastic){
+    h_DSPlastic_Bkg = new MnvH1D(h_DSPlastic_Bkg_Top->GetBinNormalizedCopy());
+    h_DSPlastic_Bkg->Scale(scale);
+  }
 
   MnvH1D* h_Wrong_Nucleus_Bkg_Top = (MnvH1D*)mcFile->Get((TString)name_bkg+"_background_Wrong_Nucleus");
-  MnvH1D* h_Wrong_Nucleus_Bkg = new MnvH1D(h_Wrong_Nucleus_Bkg_Top->GetBinNormalizedCopy());
-  h_Wrong_Nucleus_Bkg->Scale(scale);
+  bool hasWrongNucl = (h_Wrong_Nucleus_Bkg_Top) ? true: false;
+  MnvH1D* h_Wrong_Nucleus_Bkg = nullptr;
+  if (hasWrongNucl){
+    h_Wrong_Nucleus_Bkg = new MnvH1D(h_Wrong_Nucleus_Bkg_Top->GetBinNormalizedCopy());
+    h_Wrong_Nucleus_Bkg->Scale(scale);
+  }
 
   MnvH1D* h_Other_Bkg_Top = (MnvH1D*)mcFile->Get((TString)name_bkg+"_background_Other");
   MnvH1D* h_Other_Bkg = new MnvH1D(h_Other_Bkg_Top->GetBinNormalizedCopy());
@@ -1457,13 +1500,14 @@ void DrawBKGSubtracted(string name, TFile* mcFile, TFile* dataFile, TString samp
   MnvH1D* h_data_Top = (MnvH1D*)dataFile->Get((TString)name_bkg+"_data");
   MnvH1D* h_data = new MnvH1D(h_data_Top->GetBinNormalizedCopy());
   h_data->AddMissingErrorBandsAndFillWithCV(*h_Sig);
-  h_data->Add(h_Wrong_Nucleus_Bkg,-1.0);
-  h_data->Add(h_USPlastic_Bkg,-1.0);
-  h_data->Add(h_DSPlastic_Bkg,-1.0);
+  if (hasWrongNucl) h_data->Add(h_Wrong_Nucleus_Bkg,-1.0);
+  if (hasUSPlastic) h_data->Add(h_USPlastic_Bkg,-1.0);
+  if (hasDSPlastic) h_data->Add(h_DSPlastic_Bkg,-1.0);
   h_data->Add(h_Other_Bkg,-1.0);
   h_data->Add(h_NPi_Bkg,-1.0);
   h_data->Add(h_1Pi0_Bkg,-1.0);
   h_data->Add(h_1PiC_Bkg,-1.0);
+
   TH1D* dataHist = (TH1D*)h_data->GetCVHistoWithError().Clone();
   dataHist->SetLineColor(kBlack);
   dataHist->SetLineWidth(3);
@@ -1561,10 +1605,12 @@ void DrawBKGSubtracted(string name, TFile* mcFile, TFile* dataFile, TString samp
 
   c1->Print(nameToSave+"_BKG_subtracted.pdf");
   c1->Print(nameToSave+"_BKG_subtracted.png");
+  c1->Print(nameToSave+"_BKG_subtracted.C");
   top->SetLogy();
   c1->Update();
   c1->Print(nameToSave+"_BKG_subtracted_log.pdf");
   c1->Print(nameToSave+"_BKG_subtracted_log.png");         
+  c1->Print(nameToSave+"_BKG_subtracted_log.C");         
   
   delete dataHist;
   delete errHist;
@@ -1651,8 +1697,12 @@ void DrawPlasticBKGSubtracted(string name, TFile* mcFile, TFile* dataFile, TStri
     h_USPlastic_Bkg_Top = (MnvH1D*)mcFile->Get((TString)name_bkg+"_background_USPlastic");
   }
 
-  MnvH1D* h_USPlastic_Bkg = new MnvH1D(h_USPlastic_Bkg_Top->GetBinNormalizedCopy());
-  h_USPlastic_Bkg->Scale(scale);
+  MnvH1D* h_USPlastic_Bkg = nullptr;
+  bool hasUSPlastic = (h_USPlastic_Bkg_Top) ? true : false;
+  if (hasUSPlastic){
+    h_USPlastic_Bkg = new MnvH1D(h_USPlastic_Bkg_Top->GetBinNormalizedCopy());
+    h_USPlastic_Bkg->Scale(scale);
+  }
 
   MnvH1D* h_DSPlastic_Bkg_Top = nullptr;
   //This was necessary for the file to get the right thing... I'm worried that it's because of the same name... I should fix that to avoid any possible issues down the line........
@@ -1673,12 +1723,20 @@ void DrawPlasticBKGSubtracted(string name, TFile* mcFile, TFile* dataFile, TStri
     h_DSPlastic_Bkg_Top = (MnvH1D*)mcFile->Get((TString)name_bkg+"_background_DSPlastic");
   }
 
-  MnvH1D* h_DSPlastic_Bkg = new MnvH1D(h_DSPlastic_Bkg_Top->GetBinNormalizedCopy());
-  h_DSPlastic_Bkg->Scale(scale);
+  MnvH1D* h_DSPlastic_Bkg = nullptr;
+  bool hasDSPlastic = (h_DSPlastic_Bkg_Top) ? true : false;
+  if (hasDSPlastic){
+    h_DSPlastic_Bkg = new MnvH1D(h_DSPlastic_Bkg_Top->GetBinNormalizedCopy());
+    h_DSPlastic_Bkg->Scale(scale);
+  }
 
   MnvH1D* h_Wrong_Nucleus_Bkg_Top = (MnvH1D*)mcFile->Get((TString)name_bkg+"_background_Wrong_Nucleus");
-  MnvH1D* h_Wrong_Nucleus_Bkg = new MnvH1D(h_Wrong_Nucleus_Bkg_Top->GetBinNormalizedCopy());
-  h_Wrong_Nucleus_Bkg->Scale(scale);
+  bool hasWrongNucl = (h_Wrong_Nucleus_Bkg_Top) ? true: false;
+  MnvH1D* h_Wrong_Nucleus_Bkg = nullptr;
+  if (hasWrongNucl){
+    h_Wrong_Nucleus_Bkg = new MnvH1D(h_Wrong_Nucleus_Bkg_Top->GetBinNormalizedCopy());
+    h_Wrong_Nucleus_Bkg->Scale(scale);
+  }
 
   MnvH1D* h_Other_Bkg_Top = (MnvH1D*)mcFile->Get((TString)name_bkg+"_background_Other");
   MnvH1D* h_Other_Bkg = new MnvH1D(h_Other_Bkg_Top->GetBinNormalizedCopy());
@@ -1686,12 +1744,11 @@ void DrawPlasticBKGSubtracted(string name, TFile* mcFile, TFile* dataFile, TStri
 
   MnvH1D* h_data_Top = (MnvH1D*)dataFile->Get((TString)name_bkg+"_data");
   MnvH1D* h_data = new MnvH1D(h_data_Top->GetBinNormalizedCopy());
-
   h_data->AddMissingErrorBandsAndFillWithCV(*h_Sig);
-  h_data->Add(h_USPlastic_Bkg,-1.0);
-  h_data->Add(h_DSPlastic_Bkg,-1.0);
+  if (hasUSPlastic) h_data->Add(h_USPlastic_Bkg,-1.0);
+  if (hasDSPlastic) h_data->Add(h_DSPlastic_Bkg,-1.0);
 
-  h_Sig->Add(h_Wrong_Nucleus_Bkg);
+  if (hasWrongNucl) h_Sig->Add(h_Wrong_Nucleus_Bkg);
   h_Sig->Add(h_Other_Bkg);
   h_Sig->Add(h_NPi_Bkg);
   h_Sig->Add(h_1Pi0_Bkg);
@@ -1801,10 +1858,12 @@ void DrawPlasticBKGSubtracted(string name, TFile* mcFile, TFile* dataFile, TStri
     if (testInner){
       c1->Print(nameToSave+"_BKGPlasticInner_subtracted.pdf");
       c1->Print(nameToSave+"_BKGPlasticInner_subtracted.png");
+      c1->Print(nameToSave+"_BKGPlasticInner_subtracted.C");
       top->SetLogy();
       c1->Update();
       c1->Print(nameToSave+"_BKGPlasticInner_subtracted_log.pdf");
       c1->Print(nameToSave+"_BKGPlasticInner_subtracted_log.png");         
+      c1->Print(nameToSave+"_BKGPlasticInner_subtracted_log.C");         
 
       cout << "TESTING WRITING THIS..." << endl;
       TFile* dataMCOutFile = new TFile(nameToSave+"_BKGPlasticInner_subtracted.root","RECREATE");
@@ -1823,10 +1882,12 @@ void DrawPlasticBKGSubtracted(string name, TFile* mcFile, TFile* dataFile, TStri
   else {
     c1->Print(nameToSave+"_BKGPlastic_subtracted.pdf");
     c1->Print(nameToSave+"_BKGPlastic_subtracted.png");
+    c1->Print(nameToSave+"_BKGPlastic_subtracted.C");
     top->SetLogy();
     c1->Update();
     c1->Print(nameToSave+"_BKGPlastic_subtracted_log.pdf");
     c1->Print(nameToSave+"_BKGPlastic_subtracted_log.png");             
+    c1->Print(nameToSave+"_BKGPlastic_subtracted_log.C");             
   }  
 
   delete dataHist;
@@ -1953,28 +2014,40 @@ void DrawIntTypeTEST(string name_QE, TFile* mcFile, TFile* dataFile, TString sam
   h_2p2h_Bkg->SetFillStyle(3003);
 
   MnvH1D* h_USPlastic_Bkg_Top = (MnvH1D*)mcFile->Get((TString)name_bkg+"_bkg_IntType_USPlastic");
-  MnvH1D* h_USPlastic_Bkg = new MnvH1D(h_USPlastic_Bkg_Top->GetBinNormalizedCopy());
-  h_USPlastic_Bkg->Scale(scale);
-  mcSum->Add(h_USPlastic_Bkg);
-  h_USPlastic_Bkg->SetLineColor(TColor::GetColor("#A26E1C"));
-  h_USPlastic_Bkg->SetFillColor(TColor::GetColor("#A26E1C"));
-  h_USPlastic_Bkg->SetFillStyle(3003);
+  bool hasUSPlastic = (h_USPlastic_Bkg_Top) ? true : false;
+  MnvH1D* h_USPlastic_Bkg = nullptr;
+  if (hasUSPlastic){
+    h_USPlastic_Bkg =  new MnvH1D(h_USPlastic_Bkg_Top->GetBinNormalizedCopy());
+    h_USPlastic_Bkg->Scale(scale);
+    mcSum->Add(h_USPlastic_Bkg);
+    h_USPlastic_Bkg->SetLineColor(TColor::GetColor("#A26E1C"));
+    h_USPlastic_Bkg->SetFillColor(TColor::GetColor("#A26E1C"));
+    h_USPlastic_Bkg->SetFillStyle(3003);
+  }
 
   MnvH1D* h_DSPlastic_Bkg_Top = (MnvH1D*)mcFile->Get((TString)name_bkg+"_bkg_IntType_DSPlastic");
-  MnvH1D* h_DSPlastic_Bkg = new MnvH1D(h_DSPlastic_Bkg_Top->GetBinNormalizedCopy());
-  h_DSPlastic_Bkg->Scale(scale);
-  mcSum->Add(h_DSPlastic_Bkg);
-  h_DSPlastic_Bkg->SetLineColor(TColor::GetColor("#C1B185"));
-  h_DSPlastic_Bkg->SetFillColor(TColor::GetColor("#C1B185"));
-  h_DSPlastic_Bkg->SetFillStyle(3003);
+  bool hasDSPlastic = (h_DSPlastic_Bkg_Top) ? true : false;
+  MnvH1D* h_DSPlastic_Bkg = nullptr;
+  if (hasDSPlastic){
+    h_DSPlastic_Bkg =  new MnvH1D(h_DSPlastic_Bkg_Top->GetBinNormalizedCopy());
+    h_DSPlastic_Bkg->Scale(scale);
+    mcSum->Add(h_DSPlastic_Bkg);
+    h_DSPlastic_Bkg->SetLineColor(TColor::GetColor("#C1B185"));
+    h_DSPlastic_Bkg->SetFillColor(TColor::GetColor("#C1B185"));
+    h_DSPlastic_Bkg->SetFillStyle(3003);
+  }
 
   MnvH1D* h_Wrong_Nucleus_Bkg_Top = (MnvH1D*)mcFile->Get((TString)name_bkg+"_bkg_IntType_Wrong_Nucleus");
-  MnvH1D* h_Wrong_Nucleus_Bkg = new MnvH1D(h_Wrong_Nucleus_Bkg_Top->GetBinNormalizedCopy());
-  h_Wrong_Nucleus_Bkg->Scale(scale);
-  mcSum->Add(h_Wrong_Nucleus_Bkg);
-  h_Wrong_Nucleus_Bkg->SetLineColor(TColor::GetColor("#909497"));
-  h_Wrong_Nucleus_Bkg->SetFillColor(TColor::GetColor("#909497"));
-  h_Wrong_Nucleus_Bkg->SetFillStyle(3003);
+  bool hasWrongNucl = (h_Wrong_Nucleus_Bkg_Top) ? true : false;
+  MnvH1D* h_Wrong_Nucleus_Bkg = nullptr;
+  if (hasWrongNucl){
+    h_Wrong_Nucleus_Bkg = new MnvH1D(h_Wrong_Nucleus_Bkg_Top->GetBinNormalizedCopy());
+    h_Wrong_Nucleus_Bkg->Scale(scale);
+    mcSum->Add(h_Wrong_Nucleus_Bkg);
+    h_Wrong_Nucleus_Bkg->SetLineColor(TColor::GetColor("#909497"));
+    h_Wrong_Nucleus_Bkg->SetFillColor(TColor::GetColor("#909497"));
+    h_Wrong_Nucleus_Bkg->SetFillStyle(3003);
+  }
 
   MnvH1D* h_Other_Bkg_Top = (MnvH1D*)mcFile->Get((TString)name_bkg+"_bkg_IntType_Other");
   MnvH1D* h_Other_Bkg = new MnvH1D(h_Other_Bkg_Top->GetBinNormalizedCopy());
@@ -1992,9 +2065,9 @@ void DrawIntTypeTEST(string name_QE, TFile* mcFile, TFile* dataFile, TString sam
   h_data->AddMissingErrorBandsAndFillWithCV(*h_QE_Sig);
 
   THStack* h = new THStack();
-  h->Add((TH1D*)h_Wrong_Nucleus_Bkg->GetCVHistoWithError().Clone());
-  h->Add((TH1D*)h_USPlastic_Bkg->GetCVHistoWithError().Clone());
-  h->Add((TH1D*)h_DSPlastic_Bkg->GetCVHistoWithError().Clone());
+  if(hasWrongNucl) h->Add((TH1D*)h_Wrong_Nucleus_Bkg->GetCVHistoWithError().Clone());
+  if(hasUSPlastic) h->Add((TH1D*)h_USPlastic_Bkg->GetCVHistoWithError().Clone());
+  if(hasDSPlastic) h->Add((TH1D*)h_DSPlastic_Bkg->GetCVHistoWithError().Clone());
   h->Add((TH1D*)h_Other_Bkg->GetCVHistoWithError().Clone());
   h->Add((TH1D*)h_2p2h_Bkg->GetCVHistoWithError().Clone());
   h->Add((TH1D*)h_DIS_Bkg->GetCVHistoWithError().Clone());
@@ -2139,14 +2212,18 @@ void DrawIntTypeTEST(string name_QE, TFile* mcFile, TFile* dataFile, TString sam
   leg->AddEntry(h_Other_Bkg,"Bkg. + Other");
 
   if (!isTracker){
-    leg->AddEntry(hTmp,"","f");
-    leg->AddEntry(h_DSPlastic_Bkg,"DS Plastic");
-
-    leg->AddEntry(hTmp,"","f");
-    leg->AddEntry(h_USPlastic_Bkg,"US Plastic");
-
-    leg->AddEntry(hTmp,"","f");
-    leg->AddEntry(h_Wrong_Nucleus_Bkg,"Another Target");
+    if (hasDSPlastic){
+      leg->AddEntry(hTmp,"","f");
+      leg->AddEntry(h_DSPlastic_Bkg,"DS Plastic");
+    }
+    if (hasUSPlastic){
+      leg->AddEntry(hTmp,"","f");
+      leg->AddEntry(h_USPlastic_Bkg,"US Plastic");
+    }
+    if (hasWrongNucl){
+      leg->AddEntry(hTmp,"","f");
+      leg->AddEntry(h_Wrong_Nucleus_Bkg,"Another Target");
+    }
   }
 
   leg->Draw();
@@ -2203,11 +2280,13 @@ void DrawIntTypeTEST(string name_QE, TFile* mcFile, TFile* dataFile, TString sam
   */
   c1->Print(nameToSave+"_IntType_stacked.pdf");
   c1->Print(nameToSave+"_IntType_stacked.png");
+  c1->Print(nameToSave+"_IntType_stacked.C");
   //  top->SetLogy();
   c1->SetLogy();
   c1->Update();
   c1->Print(nameToSave+"_IntType_stacked_log.pdf");
   c1->Print(nameToSave+"_IntType_stacked_log.png");     
+  c1->Print(nameToSave+"_IntType_stacked_log.C");     
 
   delete mcSum;
   delete dataHist;
@@ -2601,11 +2680,13 @@ void DrawTargetTypeTEST(string name_Plastic, TFile* mcFile, TFile* dataFile, TSt
 
   c1->Print(nameToSave+"_TargetType_stacked.pdf");
   c1->Print(nameToSave+"_TargetType_stacked.png");
+  c1->Print(nameToSave+"_TargetType_stacked.C");
   //top->SetLogy();
   c1->SetLogy();
   c1->Update();
   c1->Print(nameToSave+"_TargetType_stacked_log.pdf");
   c1->Print(nameToSave+"_TargetType_stacked_log.png");  
+  c1->Print(nameToSave+"_TargetType_stacked_log.C");  
 
   delete mcSum;
   delete dataHist;
@@ -2999,11 +3080,13 @@ void DrawLeadBlobTypeTEST(string name_Neut, TFile* mcFile, TFile* dataFile, TStr
 
   c1->Print(nameToSave+"_LeadBlobType_stacked.pdf");
   c1->Print(nameToSave+"_LeadBlobType_stacked.png");
+  c1->Print(nameToSave+"_LeadBlobType_stacked.C");
   //top->SetLogy();
   c1->SetLogy();
   c1->Update();
   c1->Print(nameToSave+"_LeadBlobType_stacked_log.pdf");
   c1->Print(nameToSave+"_LeadBlobType_stacked_log.png");
+  c1->Print(nameToSave+"_LeadBlobType_stacked_log.C");
 
   delete mcSum;
   delete dataHist;
