@@ -41,6 +41,8 @@ for fileName in sys.argv[2:]:
   spread.SetTitleSize(0.05,"XY")
   spread.Draw("colz")
   can.Print(outName + "_fullRange.png")
+  can.Print(outName + "_fullRange.pdf")
+  can.Print(outName + "_fullRange.C")
   spread.GetXaxis().SetRangeUser(1.0,30.0)
   spread.GetYaxis().SetRangeUser(0.0,100.0)
   spread.Draw("colz")
@@ -89,6 +91,8 @@ for fileName in sys.argv[2:]:
   leg.Draw()
 
   can.Print(outName + "_ZoomedIn.png")
+  can.Print(outName + "_ZoomedIn.pdf")
+  can.Print(outName + "_ZoomedIn.C")
   
   iterations = [str(it) for it in range(1,11)]+[str(10*it) for it in range(2,3)]+[str(50*it) for it in range(1,3)]
   colorsList = [ROOT.kBlack,ROOT.kRed,ROOT.kRed-6,ROOT.kGreen,ROOT.kGreen-6,ROOT.kBlue,ROOT.kBlue-6,ROOT.kOrange,ROOT.kOrange-6,ROOT.kTeal,ROOT.kTeal-6,ROOT.kViolet,ROOT.kViolet-6]
@@ -114,3 +118,5 @@ for fileName in sys.argv[2:]:
     counter+=1
   leg2.Draw()
   can.Print(outName+"_Ratio_Stat_0.png")
+  can.Print(outName+"_Ratio_Stat_0.pdf")
+  can.Print(outName+"_Ratio_Stat_0.C")
