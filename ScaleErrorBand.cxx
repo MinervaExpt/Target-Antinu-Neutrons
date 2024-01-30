@@ -84,9 +84,10 @@ MnvH1D* AdjustData(MnvH1D* hData, MnvH1D* hSig_PreScale, MnvH1D* hSig_PostScale,
   const auto univsPostScale = hSig_PostScale->GetVertErrorBand(name)->GetHists();
   const auto univsPreScale = (preHasBand) ? hSig_PreScale->GetVertErrorBand(name)->GetHists() : hSig_PostScale->GetVertErrorBand(name)->GetHists();
   for (unsigned int i=0; i<univsData.size(); ++i){
-    TH1D* hTmp = (preHasBand) ? univsPreScale.at(i) : (TH1D*)(hSig_PreScale->GetCVHistoWithStatError().Clone("hTmp")); 
+    TH1D* hTmp = (preHasBand) ? new TH1D(*univsPreScale.at(i)) : new TH1D(hSig_PreScale->GetCVHistoWithStatError());
     univsData.at(i)->Add(hTmp,-1.0);
     univsData.at(i)->Add(univsPostScale.at(i),1.0);
+    delete hTmp;
   }
 
   return hOut;
@@ -106,9 +107,10 @@ MnvH2D* AdjustData(MnvH2D* hData, MnvH2D* hSig_PreScale, MnvH2D* hSig_PostScale,
   const auto univsPostScale = hSig_PostScale->GetVertErrorBand(name)->GetHists();
   const auto univsPreScale = (preHasBand) ? hSig_PreScale->GetVertErrorBand(name)->GetHists() : hSig_PostScale->GetVertErrorBand(name)->GetHists();
   for (unsigned int i=0; i<univsData.size(); ++i){
-    TH2D* hTmp = (preHasBand) ? univsPreScale.at(i) : (TH2D*)(hSig_PreScale->GetCVHistoWithStatError().Clone("hTmp")); 
+    TH2D* hTmp = (preHasBand) ? new TH2D(*univsPreScale.at(i)) : new TH2D (hSig_PreScale->GetCVHistoWithStatError());
     univsData.at(i)->Add(hTmp,-1.0);
     univsData.at(i)->Add(univsPostScale.at(i),1.0);
+    delete hTmp;
   }
 
   return hOut;
@@ -121,24 +123,28 @@ MnvH1D* ScaleErrorBand(MnvH1D* h1D, std::string name, double scale, bool doScale
   if (!hasBand){
     if (!doScale) scale = 0.0;
     std::vector<TH1D*> univs;
-    TH1D* hUp = (TH1D*)(hOut->GetCVHistoWithStatError().Clone());
+    TH1D* hUp = new TH1D(hOut->GetCVHistoWithStatError());
     hUp->SetDirectory(nullptr);
-    TH1D* hDown = (TH1D*)(hUp->Clone());
+    TH1D* hDown = new TH1D(*hUp);
     hUp->Scale(1+scale);
     univs.push_back(hUp);
     hDown->Scale(1-scale);
     univs.push_back(hDown);
     hOut->AddVertErrorBand(name, univs);
+    delete hUp;
+    delete hDown;
+    univs.clear();
   }
   else{
     if (!doScale) scale = 1.0;
-    TH1D* hCV = (TH1D*)(hOut->GetCVHistoWithStatError().Clone());
+    TH1D* hCV = new TH1D(hOut->GetCVHistoWithStatError());
     const auto univs = hOut->GetVertErrorBand(name)->GetHists();
     for (auto hist:univs){
       hist->Add(hCV,-1.0);
       hist->Scale(scale);
       hist->Add(hCV,1.0);
     }
+    delete hCV;
   }
   return hOut;
 }
@@ -150,24 +156,28 @@ MnvH2D* ScaleErrorBand(MnvH2D* h2D, std::string name, double scale, bool doScale
   if (!hasBand){
     if (!doScale) scale=0.0;
     std::vector<TH2D*> univs;
-    TH2D* hUp = (TH2D*)(hOut->GetCVHistoWithStatError().Clone());
+    TH2D* hUp = new TH2D(hOut->GetCVHistoWithStatError());
     hUp->SetDirectory(nullptr);
-    TH2D* hDown = (TH2D*)(hUp->Clone());
+    TH2D* hDown = new TH2D (*hUp);
     hUp->Scale(1+scale);
     univs.push_back(hUp);
     hDown->Scale(1-scale);
     univs.push_back(hDown);
     hOut->AddVertErrorBand(name, univs);
+    delete hUp;
+    delete hDown;
+    univs.clear();
   }
   else{
     if (!doScale) scale=1.0;
-    TH2D* hCV = (TH2D*)(hOut->GetCVHistoWithStatError().Clone());
+    TH2D* hCV = new TH2D(hOut->GetCVHistoWithStatError());
     const auto univs = hOut->GetVertErrorBand(name)->GetHists();
     for (auto hist:univs){
       hist->Add(hCV,-1.0);
       hist->Scale(scale);
       hist->Add(hCV,1.0);
     }
+    delete hCV;
   }
   return hOut;
 }
@@ -192,6 +202,7 @@ void RecursePerform(TList* keyList, TFile* inFile, TDirectory* outFile, TString 
     TString className = (TString)key->GetClassName();
     TString nameObj = (TString)key->GetName();
     TString nameDirFixed = (nameDir != "") ? nameDir+"/" : "";
+    if (nameObj.Contains("ByTgt") && (nameObj.Contains("_Buffer") || nameObj.Contains("_Other"))) continue;//Removing these to save time. Shouldn't be needed by next steps.
     if (className == "TDirectoryFile"){
       cout << "Directory File!" << endl;
       TString nameDirInt = nameDirFixed+nameObj;
@@ -203,7 +214,7 @@ void RecursePerform(TList* keyList, TFile* inFile, TDirectory* outFile, TString 
     }
     else if (!(className.Contains("MnvH") || className == "TParameter<double>") || nameObj.Contains("MYBins")) continue;
     else if (className == "TParameter<double>"){
-      TParameter<double>* tPar = (TParameter<double>*)(inFile->Get(nameDirFixed+nameObj))->Clone(nameDirFixed+nameObj);
+      TParameter<double>* tPar = (TParameter<double>*)(inFile->Get(nameDirFixed+nameObj)->Clone(nameObj));
       outFile->cd(nameDirFixed);
       tPar->Write();
       delete tPar;
@@ -211,14 +222,14 @@ void RecursePerform(TList* keyList, TFile* inFile, TDirectory* outFile, TString 
     else if (className.Contains("MnvH2")){
       if (selSigOnly && nameObj.Contains("_data")) continue;
       bool scaleThisObj = (selSigOnly) ? IsSelSig(nameObj) : true;
-      MnvH2D* h2D = (MnvH2D*)(inFile->Get(nameDirFixed+nameObj))->Clone(nameObj);
+      MnvH2D* h2D = (MnvH2D*)(inFile->Get(nameDirFixed+nameObj)->Clone(nameObj));
       MnvH2D* h2D2 = ScaleErrorBand(h2D,bandName,scale,scaleThisObj);
       outFile->cd(nameDirFixed);
       h2D2->Write();
       if (selSigOnly && nameObj.Contains("selected_signal_reco")){
 	TString nameBase = BreakName("_selected_signal_reco", nameObj)[0];
 	cout << nameBase << endl;
-	MnvH2D* h2D_Data = (MnvH2D*)(inFile->Get(nameDirFixed+nameBase+"_data"))->Clone(nameBase+"_data");
+	MnvH2D* h2D_Data = (MnvH2D*)(inFile->Get(nameDirFixed+nameBase+"_data")->Clone(nameBase+"_data"));
 	MnvH2D* h2D2_Data = ScaleErrorBand(h2D_Data,bandName,scale,false);
 	MnvH2D* h2D3_Data = AdjustData(h2D2_Data,h2D,h2D2,bandName);
 	cout << "Writing: " << nameDirFixed+nameBase+"_data" << endl;
@@ -234,7 +245,7 @@ void RecursePerform(TList* keyList, TFile* inFile, TDirectory* outFile, TString 
     else if (className.Contains("MnvH1")){
       if (selSigOnly && nameObj.Contains("_data")) continue;
       bool scaleThisObj = (selSigOnly) ? IsSelSig(nameObj) : true;
-      MnvH1D* h1D = (MnvH1D*)(inFile->Get(nameDirFixed+nameObj))->Clone(nameObj);
+      MnvH1D* h1D = (MnvH1D*)(inFile->Get(nameDirFixed+nameObj)->Clone(nameObj));
       MnvH1D* h1D2 = ScaleErrorBand(h1D,bandName,scale,scaleThisObj);
       outFile->cd(nameDirFixed);
       cout << "Writing: " << nameDirFixed+nameObj << endl;
@@ -242,7 +253,7 @@ void RecursePerform(TList* keyList, TFile* inFile, TDirectory* outFile, TString 
       if (selSigOnly && nameObj.Contains("selected_signal_reco")){
 	TString nameBase = BreakName("_selected_signal_reco", nameObj)[0];
 	cout << nameBase << endl;
-	MnvH1D* h1D_Data = (MnvH1D*)(inFile->Get(nameDirFixed+nameBase+"_data"))->Clone(nameBase+"_data");
+	MnvH1D* h1D_Data = (MnvH1D*)(inFile->Get(nameDirFixed+nameBase+"_data")->Clone(nameBase+"_data"));
 	MnvH1D* h1D2_Data = ScaleErrorBand(h1D_Data,bandName,scale,false);
 	MnvH1D* h1D3_Data = AdjustData(h1D2_Data,h1D,h1D2,bandName);
 	cout << "Writing: " << nameDirFixed+nameBase+"_data" << endl;
