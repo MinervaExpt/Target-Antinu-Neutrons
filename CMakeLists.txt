@@ -106,6 +106,10 @@ add_executable(ScaleHistos ScaleHistos.cxx)
 target_link_libraries(ScaleHistos ${ROOT_LIBRARIES} MAT MAT-MINERvA)
 install(TARGETS ScaleHistos DESTINATION bin)
 
+add_executable(ScaleErrorBand ScaleErrorBand.cxx)
+target_link_libraries(ScaleErrorBand ${ROOT_LIBRARIES} MAT MAT-MINERvA)
+install(TARGETS ScaleErrorBand DESTINATION bin)
+
 add_executable(ScaleMCToData ScaleMCToData.cxx)
 target_link_libraries(ScaleMCToData ${ROOT_LIBRARIES} MAT MAT-MINERvA)
 install(TARGETS ScaleMCToData DESTINATION bin)
