@@ -207,7 +207,7 @@ int main(const int argc, const char** argv)
 
   TH1::AddDirectory(kFALSE); //Needed so that MnvH1D gets to clean up its own MnvLatErrorBands (which are TH1Ds).
 
-  if(!(argc == 11 || argc == 13))
+  if(!(argc == 12 || argc == 13))
   {
     std::cerr << "Expected 10 or 12 arguments, but I got " << argc-1 << ".\n"
               << "USAGE: ExtractCrossSection <unfolding iterations> <data.root> <mc.root> <stop at eff. corr.> <varName> ...\n";
@@ -260,11 +260,14 @@ int main(const int argc, const char** argv)
   auto& frw5A = PlotUtils::flux_reweighter("minervame5A", nuPDG, true, numFluxUniv);//playlist hard-coded to 6A for all anti-nu. Anezka says conclusion was flux consistent enough that this is fine.
 
   double frac5A = atof(argv[10]);
+  double unfoldingFactor = atof(argv[11]);
 
+  /*TMP TEST OF EXTRA UNFOLDING FACTOR ON CARBON xSEC
   if (argc == 13){
     fluxFile = TFile::Open(argv[11],"READ");
     fluxVarName =std::string(argv[12]);
   }
+  */
 
   std::vector<std::string> crossSectionPrefixes;
   for(auto key: *dataFile->GetListOfKeys())
@@ -343,6 +346,8 @@ int main(const int argc, const char** argv)
       //d'Aogstini unfolding
       auto unfolded = UnfoldHist(bkgSubtracted, migration, nIterations);
       if(!unfolded) throw std::runtime_error(std::string("Failed to unfold ") + folded->GetName() + " using " + migration->GetName());
+      unfolded->ModifyStatisticalUnc(unfoldingFactor,"unfoldingCov");
+      std::cout << "Survived asjuting the unfolded histogram.\n" << std::flush;
       Plot(*unfolded, "unfolded", prefix);
       unfolded->Clone()->Write("unfolded"); //TODO: Seg fault first appears when I uncomment this line
       std::cout << "Survived writing the unfolded histogram.\n" << std::flush; //This is evidence that the problem is on the final file Write() and not unfolded->Clone()->Write().
