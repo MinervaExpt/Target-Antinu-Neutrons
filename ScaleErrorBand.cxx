@@ -54,11 +54,72 @@
 using namespace std;
 using namespace PlotUtils;
 
-MnvH1D* ScaleErrorBand(MnvH1D* h1D, std::string name, double scale){
+vector<TString> BreakName(TString tag, TString name){
+  vector<TString> namePieces;
+  string search = tag.Data();
+  string nameStub = name.Data();
+  string token;
+  size_t pos = 0;
+  while ((pos = nameStub.find(search)) != string::npos){
+    token = nameStub.substr(0,pos);
+    namePieces.push_back(token.c_str());
+    nameStub.erase(0,pos+search.length());
+  }
+  namePieces.push_back(nameStub.c_str());
+  return namePieces;
+}
+
+MnvH1D* AdjustData(MnvH1D* hData, MnvH1D* hSig_PreScale, MnvH1D* hSig_PostScale, std::string name){
+  MnvH1D* hOut = new MnvH1D(*hData);
+  bool dataHasBand = hOut->HasErrorBand(name);
+  bool preHasBand = hSig_PreScale->HasErrorBand(name);
+  bool postHasBand =  hSig_PostScale->HasErrorBand(name);
+  bool hasBand = dataHasBand && postHasBand;
+  if (!hasBand){
+    cout << "This should have this error band at this point..." << endl;
+    cout << dataHasBand << ", " << preHasBand << ", " << postHasBand << endl;
+    return hOut;
+  }
+  const auto univsData = hOut->GetVertErrorBand(name)->GetHists();
+  const auto univsPostScale = hSig_PostScale->GetVertErrorBand(name)->GetHists();
+  const auto univsPreScale = (preHasBand) ? hSig_PreScale->GetVertErrorBand(name)->GetHists() : hSig_PostScale->GetVertErrorBand(name)->GetHists();
+  for (unsigned int i=0; i<univsData.size(); ++i){
+    TH1D* hTmp = (preHasBand) ? univsPreScale.at(i) : (TH1D*)(hSig_PreScale->GetCVHistoWithStatError().Clone("hTmp")); 
+    univsData.at(i)->Add(hTmp,-1.0);
+    univsData.at(i)->Add(univsPostScale.at(i),1.0);
+  }
+
+  return hOut;
+}
+
+MnvH2D* AdjustData(MnvH2D* hData, MnvH2D* hSig_PreScale, MnvH2D* hSig_PostScale, std::string name){
+  MnvH2D* hOut = new MnvH2D(*hData);
+  bool dataHasBand = hOut->HasErrorBand(name);
+  bool postHasBand =  hSig_PostScale->HasErrorBand(name);
+  bool preHasBand = hSig_PreScale->HasErrorBand(name);
+  bool hasBand = dataHasBand && postHasBand;
+  if (!hasBand){
+    cout << "These should all have this error band at this point..." << endl;
+    return hOut;
+  }
+  const auto univsData = hOut->GetVertErrorBand(name)->GetHists();
+  const auto univsPostScale = hSig_PostScale->GetVertErrorBand(name)->GetHists();
+  const auto univsPreScale = (preHasBand) ? hSig_PreScale->GetVertErrorBand(name)->GetHists() : hSig_PostScale->GetVertErrorBand(name)->GetHists();
+  for (unsigned int i=0; i<univsData.size(); ++i){
+    TH2D* hTmp = (preHasBand) ? univsPreScale.at(i) : (TH2D*)(hSig_PreScale->GetCVHistoWithStatError().Clone("hTmp")); 
+    univsData.at(i)->Add(hTmp,-1.0);
+    univsData.at(i)->Add(univsPostScale.at(i),1.0);
+  }
+
+  return hOut;
+}
+
+MnvH1D* ScaleErrorBand(MnvH1D* h1D, std::string name, double scale, bool doScale=true){
   MnvH1D* hOut = new MnvH1D(*h1D);
   bool hasBand = hOut->HasErrorBand(name);
 
   if (!hasBand){
+    if (!doScale) scale = 0.0;
     std::vector<TH1D*> univs;
     TH1D* hUp = (TH1D*)(hOut->GetCVHistoWithStatError().Clone());
     hUp->SetDirectory(nullptr);
@@ -70,6 +131,7 @@ MnvH1D* ScaleErrorBand(MnvH1D* h1D, std::string name, double scale){
     hOut->AddVertErrorBand(name, univs);
   }
   else{
+    if (!doScale) scale = 1.0;
     TH1D* hCV = (TH1D*)(hOut->GetCVHistoWithStatError().Clone());
     const auto univs = hOut->GetVertErrorBand(name)->GetHists();
     for (auto hist:univs){
@@ -81,11 +143,12 @@ MnvH1D* ScaleErrorBand(MnvH1D* h1D, std::string name, double scale){
   return hOut;
 }
 
-MnvH2D* ScaleErrorBand(MnvH2D* h2D, std::string name, double scale){
+MnvH2D* ScaleErrorBand(MnvH2D* h2D, std::string name, double scale, bool doScale=true){
   MnvH2D* hOut = new MnvH2D(*h2D);
   bool hasBand = hOut->HasErrorBand(name);
 
   if (!hasBand){
+    if (!doScale) scale=0.0;
     std::vector<TH2D*> univs;
     TH2D* hUp = (TH2D*)(hOut->GetCVHistoWithStatError().Clone());
     hUp->SetDirectory(nullptr);
@@ -97,6 +160,7 @@ MnvH2D* ScaleErrorBand(MnvH2D* h2D, std::string name, double scale){
     hOut->AddVertErrorBand(name, univs);
   }
   else{
+    if (!doScale) scale=1.0;
     TH2D* hCV = (TH2D*)(hOut->GetCVHistoWithStatError().Clone());
     const auto univs = hOut->GetVertErrorBand(name)->GetHists();
     for (auto hist:univs){
@@ -106,6 +170,95 @@ MnvH2D* ScaleErrorBand(MnvH2D* h2D, std::string name, double scale){
     }
   }
   return hOut;
+}
+
+vector<TString> selSigNames = {"_sig_","_selected_signal_reco","_efficiency_numerator","_migration"};
+
+bool IsSelSig(TString nameObj){
+  bool isSelSig = false;
+  for(auto name:selSigNames){
+    if(nameObj.Contains(name)){
+      isSelSig = true;
+      break;
+    }
+  }
+  return isSelSig;
+}
+
+void RecursePerform(TList* keyList, TFile* inFile, TDirectory* outFile, TString nameDir, std::string bandName, double scale, bool selSigOnly){
+  TIter next(keyList);
+  TKey* key;
+  while ( key = (TKey*)next() ){
+    TString className = (TString)key->GetClassName();
+    TString nameObj = (TString)key->GetName();
+    TString nameDirFixed = (nameDir != "") ? nameDir+"/" : "";
+    if (className == "TDirectoryFile"){
+      cout << "Directory File!" << endl;
+      TString nameDirInt = nameDirFixed+nameObj;
+      TDirectory* newOutDir = outFile->mkdir(nameDirInt);
+      TDirectoryFile* dirInt = (TDirectoryFile*)inFile->Get(nameDirInt);
+      TList*  keyListInt = dirInt->GetListOfKeys();
+      cout << "Entering New Recursion" << endl;
+      RecursePerform(keyListInt, inFile, outFile, nameDirInt, bandName, scale, selSigOnly);
+    }
+    else if (!(className.Contains("MnvH") || className == "TParameter<double>") || nameObj.Contains("MYBins")) continue;
+    else if (className == "TParameter<double>"){
+      TParameter<double>* tPar = (TParameter<double>*)(inFile->Get(nameDirFixed+nameObj))->Clone(nameDirFixed+nameObj);
+      outFile->cd(nameDirFixed);
+      tPar->Write();
+      delete tPar;
+    }
+    else if (className.Contains("MnvH2")){
+      if (selSigOnly && nameObj.Contains("_data")) continue;
+      bool scaleThisObj = (selSigOnly) ? IsSelSig(nameObj) : true;
+      MnvH2D* h2D = (MnvH2D*)(inFile->Get(nameDirFixed+nameObj))->Clone(nameObj);
+      MnvH2D* h2D2 = ScaleErrorBand(h2D,bandName,scale,scaleThisObj);
+      outFile->cd(nameDirFixed);
+      h2D2->Write();
+      if (selSigOnly && nameObj.Contains("selected_signal_reco")){
+	TString nameBase = BreakName("_selected_signal_reco", nameObj)[0];
+	cout << nameBase << endl;
+	MnvH2D* h2D_Data = (MnvH2D*)(inFile->Get(nameDirFixed+nameBase+"_data"))->Clone(nameBase+"_data");
+	MnvH2D* h2D2_Data = ScaleErrorBand(h2D_Data,bandName,scale,false);
+	MnvH2D* h2D3_Data = AdjustData(h2D2_Data,h2D,h2D2,bandName);
+	cout << "Writing: " << nameDirFixed+nameBase+"_data" << endl;
+	outFile->cd(nameDirFixed);
+	h2D3_Data->Write();
+	delete h2D_Data;
+	delete h2D2_Data;
+	delete h2D3_Data;
+      }
+      delete h2D;
+      delete h2D2;
+    }
+    else if (className.Contains("MnvH1")){
+      if (selSigOnly && nameObj.Contains("_data")) continue;
+      bool scaleThisObj = (selSigOnly) ? IsSelSig(nameObj) : true;
+      MnvH1D* h1D = (MnvH1D*)(inFile->Get(nameDirFixed+nameObj))->Clone(nameObj);
+      MnvH1D* h1D2 = ScaleErrorBand(h1D,bandName,scale,scaleThisObj);
+      outFile->cd(nameDirFixed);
+      cout << "Writing: " << nameDirFixed+nameObj << endl;
+      h1D2->Write();
+      if (selSigOnly && nameObj.Contains("selected_signal_reco")){
+	TString nameBase = BreakName("_selected_signal_reco", nameObj)[0];
+	cout << nameBase << endl;
+	MnvH1D* h1D_Data = (MnvH1D*)(inFile->Get(nameDirFixed+nameBase+"_data"))->Clone(nameBase+"_data");
+	MnvH1D* h1D2_Data = ScaleErrorBand(h1D_Data,bandName,scale,false);
+	MnvH1D* h1D3_Data = AdjustData(h1D2_Data,h1D,h1D2,bandName);
+	cout << "Writing: " << nameDirFixed+nameBase+"_data" << endl;
+	outFile->cd(nameDirFixed);
+	h1D3_Data->Write();
+	delete h1D_Data;
+	delete h1D2_Data;
+	delete h1D3_Data;
+      }
+      delete h1D;
+      delete h1D2;
+    }
+    else{
+      cout << "HUH?" << endl;
+    }
+  }
 }
 
 int main(int argc, char* argv[]) {
@@ -128,7 +281,7 @@ int main(int argc, char* argv[]) {
   //Worth combining the different scalings together?
 
   //Pass an input file name to this script now
-  if (argc != 5) {
+  if (argc != 6) {
     cout << "Check usage..." << endl;
     return 2;
   }
@@ -137,6 +290,7 @@ int main(int argc, char* argv[]) {
   std::string bandName = argv[2];
   double scale = atof(argv[3]);
   TString outFileName = argv[4];
+  bool selSigOnly = (bool)(atoi(argv[5]));
 
   TFile* inFile = new TFile(inFileName,"READ");
   TFile* outFile = new TFile(outFileName,"RECREATE");
@@ -147,114 +301,8 @@ int main(int argc, char* argv[]) {
     return 4;
   }
 
-  TIter next(keyList);
-  TKey* key;
-  while ( key = (TKey*)next() ){
-    TString className = (TString)key->GetClassName();
-    TString nameObj = (TString)key->GetName();
-    /*
-    if (className == "TDirectoryFile"){
-      TDirectory* newOutDir = outFile->mkdir(nameObj);
-      TDirectoryFile* dirInt = (TDirectoryFile*)inFile->Get(nameObj);
-      TList*  keyIntList = dirInt->GetListOfKeys();
-      if(!keyIntList){
-        cout << "List of keys failed to get inside second directory" << endl;
-        return 20;
-      }
-      TIter nextKeyInt(keyIntList);
-      TKey* keyInt;
-      while ( keyInt = (TKey*)nextKeyInt() ){
-	TString classNameInt = (TString)keyInt->GetClassName();
-        TString nameObjInt = (TString)keyInt->GetName();
-        if (!(classNameInt.Contains("MnvH")) || nameObjInt.Contains("MYBins")) continue;
-        else if (classNameInt.Contains("MnvH2")){
-	  //Could eventually be used as a way to check nuisance variables from a fit... for now just a direct copy over.
-	  bool scaled = false;
-	  MnvH2D* h2D = (MnvH2D*)(inFile->Get(nameObj+"/"+nameObjInt))->Clone(nameObjInt);
-	  for (auto varName: varTagsMap){
-	    if (scaled){
-	      continue;
-	    }
-	    for (auto tag: varName.second){
-	      if(!scaleSig && tag.Contains("sig")){
-		continue;
-	      }
-	      if(!nameObjInt.Contains(tag) || !nameObjInt.Contains(forceTag)){
-		continue;
-	      }
-	      cout << "Scaling: " << nameObjInt << endl;
-	      TString nameOfScale = varNameMap[varName.first+tag];
-	      cout << "With Scale: " << nameOfScale << endl;
-	      MnvH1D* hScale = (MnvH1D*)(scaleFile->Get(nameOfScale)->Clone());
-	      hScale->AddMissingErrorBandsAndFillWithCV(*h2D);
-	      MnvH2D* hScale2D = Make2DX(hScale,h2D);//Assume x axis, not worth trying to specify otherwise right now. Plan is that one could change the directory to match the tag of what's scaling, but just need to get something going first.
-	      h2D->Multiply(h2D,hScale2D);
-	      delete hScale;
-	      delete hScale2D;
-	      scaled = true;
-	      break;
-	    }
-	  }
-	  newOutDir->cd();
-	  h2D->Write();
-	  delete h2D;
-	}
-	else if (classNameInt.Contains("MnvH1")){
-	  bool scaled = false;
-	  MnvH1D* h1D = (MnvH1D*)(inFile->Get(nameObj+"/"+nameObjInt))->Clone(nameObjInt);
-	  for (auto varName: varTagsMap){
-	    if (!nameObjInt.Contains(varName.first) || scaled) continue;
-	    for (auto tag: varName.second){
-	      if(!scaleSig && tag.Contains("sig")) continue;
-	      if(!nameObjInt.Contains(tag) || !nameObjInt.Contains(forceTag)) continue;
-	      cout << "Scaling: " << nameObjInt << endl;
-	      TString nameOfScale = varNameMap[varName.first+tag];
-	      cout << "With Scale: " << nameOfScale << endl;
-	      MnvH1D* hScale = (MnvH1D*)(scaleFile->Get(nameOfScale)->Clone());
-	      hScale->AddMissingErrorBandsAndFillWithCV(*h1D);
-	      h1D->Multiply(h1D,hScale);
-	      delete hScale;
-	      scaled = true;
-	      break;
-	    }
-	  }
-	  newOutDir->cd();
-	  h1D->Write();
-	  delete h1D;
-	}
-	else {
-	  cout << "HUH Inside?" << endl;
-	}
-      }
-      }*/
-
-    if (!(className.Contains("MnvH") || className == "TParameter<double>") || nameObj.Contains("MYBins")) continue;
-    else if (className == "TParameter<double>"){
-      TParameter<double>* tPar = (TParameter<double>*)(inFile->Get(nameObj))->Clone(nameObj);
-      outFile->cd();
-      tPar->Write();
-      delete tPar;
-    }
-    else if (className.Contains("MnvH2")){
-      MnvH2D* h2D = (MnvH2D*)(inFile->Get(nameObj))->Clone(nameObj);
-      MnvH2D* h2D2 = ScaleErrorBand(h2D,bandName,scale);
-      outFile->cd();
-      h2D2->Write();
-      delete h2D2;
-      delete h2D;
-    }
-    else if (className.Contains("MnvH1")){
-      MnvH1D* h1D = (MnvH1D*)(inFile->Get(nameObj))->Clone(nameObj);
-      MnvH1D* h1D2 = ScaleErrorBand(h1D,bandName,scale);
-      outFile->cd();
-      h1D2->Write();
-      delete h1D2;
-      delete h1D;
-    }
-    else{
-      cout << "HUH?" << endl;
-    }
-  }
+  TString nameDir = "";
+  RecursePerform(keyList, inFile, outFile, nameDir, bandName, scale, selSigOnly);
 
   outFile->cd();
 
