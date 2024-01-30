@@ -73,6 +73,8 @@ void Plot(PlotUtils::MnvH1D& hist, const std::string& stepName, const std::strin
   TCanvas can(stepName.c_str());
   hist.GetCVHistoWithError().Clone()->Draw();
   can.Print((prefix + "_" + stepName + ".png").c_str());
+  can.Print((prefix + "_" + stepName + ".pdf").c_str());
+  can.Print((prefix + "_" + stepName + ".C").c_str());
 
   //Uncertainty summary
   PlotUtils::MnvPlotter plotter;
@@ -81,24 +83,38 @@ void Plot(PlotUtils::MnvH1D& hist, const std::string& stepName, const std::strin
 
   plotter.DrawErrorSummary(&hist);
   can.Print((prefix + "_" + stepName + "_uncertaintySummary.png").c_str());
+  can.Print((prefix + "_" + stepName + "_uncertaintySummary.pdf").c_str());
+  can.Print((prefix + "_" + stepName + "_uncertaintySummary.C").c_str());
 
   plotter.DrawErrorSummary(&hist, "TR", true, true, 1e-5, false, "Other");
   can.Print((prefix + "_" + stepName + "_otherUncertainties.png").c_str());
+  can.Print((prefix + "_" + stepName + "_otherUncertainties.pdf").c_str());
+  can.Print((prefix + "_" + stepName + "_otherUncertainties.C").c_str());
 
   plotter.DrawErrorSummary(&hist, "TR", true, true, 1e-2, false, "Cross Section Models");
   can.Print((prefix + "_" + stepName + "_xSecUncertainties.png").c_str());
+  can.Print((prefix + "_" + stepName + "_xSecUncertainties.pdf").c_str());
+  can.Print((prefix + "_" + stepName + "_xSecUncertainties.C").c_str());
 
   plotter.DrawErrorSummary(&hist, "TR", true, true, 1e-2, false, "Recoil Reconstruction");
   can.Print((prefix + "_" + stepName + "_RecoilUncertainties.png").c_str());
+  can.Print((prefix + "_" + stepName + "_RecoilUncertainties.pdf").c_str());
+  can.Print((prefix + "_" + stepName + "_RecoilUncertainties.C").c_str());
 
   plotter.DrawErrorSummary(&hist, "TR", true, true, 1e-2, false, "FSI Models");
   can.Print((prefix + "_" + stepName + "_FSIUncertainties.png").c_str());
+  can.Print((prefix + "_" + stepName + "_FSIUncertainties.pdf").c_str());
+  can.Print((prefix + "_" + stepName + "_FSIUncertainties.C").c_str());
 
   plotter.DrawErrorSummary(&hist, "TR", true, true, 1e-2, false, "Muon Reconstruction");
   can.Print((prefix + "_" + stepName + "_MuonUncertainties.png").c_str());
+  can.Print((prefix + "_" + stepName + "_MuonUncertainties.pdf").c_str());
+  can.Print((prefix + "_" + stepName + "_MuonUncertainties.C").c_str());
 
   plotter.DrawErrorSummary(&hist, "TR", true, true, 1e-2, false, "GEANT4");
   can.Print((prefix + "_" + stepName + "_GEANTUncertainties.png").c_str());
+  can.Print((prefix + "_" + stepName + "_GEANTUncertainties.pdf").c_str());
+  can.Print((prefix + "_" + stepName + "_GEANTUncertainties.C").c_str());
 }
 
 //Unfolding function from Aaron Bercelle

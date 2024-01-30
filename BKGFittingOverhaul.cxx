@@ -248,10 +248,12 @@ void DrawFromMnvH1Ds(MnvH1D* h_data, map<TString, MnvH1D*> hFit, map<TString, Mn
   c1->Update();
   c1->Print(nameToSave+".pdf");
   c1->Print(nameToSave+".png");
+  c1->Print(nameToSave+".C");
   top->SetLogy();
   c1->Update();
   c1->Print(nameToSave+"_log.pdf");
   c1->Print(nameToSave+"_log.png");  
+  c1->Print(nameToSave+"_log.C");  
 
   delete c1;
 
@@ -845,6 +847,7 @@ map<TString,map<TString,MnvH1D*>> FitScaleFactorsAndDraw(MnvH1D* dataHist, map<T
       hist.second->Draw("hist");
       c1->Print(outDir+hist.second->GetName()+".pdf");
       c1->Print(outDir+hist.second->GetName()+".png");
+      c1->Print(outDir+hist.second->GetName()+".C");
     }
     delete c1;
   }
