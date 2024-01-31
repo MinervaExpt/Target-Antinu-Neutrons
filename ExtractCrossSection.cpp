@@ -21,6 +21,7 @@
 #include "PlotUtils/MnvPlotter.h"
 #include "PlotUtils/TargetUtils.h"
 #include "PlotUtils/FluxReweighter.h"
+#include "PlotUtils/TargetMassSystematics.h"
 #pragma GCC diagnostic pop
 
 //ROOT includes
@@ -53,6 +54,16 @@ namespace std
     using reference = TObject&;
     using iterator_category = forward_iterator_tag;
   };
+}
+
+PlotUtils::MnvH1D* GetTargetMassSystHist(PlotUtils::MnvH1D* hTemp, int tgtZ){
+  PlotUtils::MnvH1D* hOut = nullptr;
+  if (tgtZ == -1) hOut = PlotUtils::GetNTargetsScintillatorHist<PlotUtils::MnvH1D>(1.0,hTemp);
+  else if (tgtZ == 6) hOut = PlotUtils::GetNTargetsCarbonHist<PlotUtils::MnvH1D>(1.0,hTemp);
+  else if (tgtZ == 26) hOut = PlotUtils::GetNTargetsIronHist<PlotUtils::MnvH1D>(1.0,hTemp);
+  else if (tgtZ == 82) hOut = PlotUtils::GetNTargetsLeadHist<PlotUtils::MnvH1D>(1.0,hTemp);
+  else if (tgtZ == 8) hOut = PlotUtils::GetNTargetsWaterHist<PlotUtils::MnvH1D>(1.0,hTemp);
+  return hOut;
 }
 
 //Check if the object is meant to be subtracted as the background inner plastic.
@@ -223,9 +234,9 @@ int main(const int argc, const char** argv)
 
   TH1::AddDirectory(kFALSE); //Needed so that MnvH1D gets to clean up its own MnvLatErrorBands (which are TH1Ds).
 
-  if(!(argc == 12 || argc == 13))
+  if(!(argc == 12 || argc == 14))
   {
-    std::cerr << "Expected 10 or 12 arguments, but I got " << argc-1 << ".\n"
+    std::cerr << "Expected 11 or 13 arguments, but I got " << argc-1 << ".\n"
               << "USAGE: ExtractCrossSection <unfolding iterations> <data.root> <mc.root> <stop at eff. corr.> <varName> ...\n";
     return 1;
   }
@@ -278,12 +289,10 @@ int main(const int argc, const char** argv)
   double frac5A = atof(argv[10]);
   double unfoldingFactor = atof(argv[11]);
 
-  /*TMP TEST OF EXTRA UNFOLDING FACTOR ON CARBON xSEC
-  if (argc == 13){
-    fluxFile = TFile::Open(argv[11],"READ");
-    fluxVarName =std::string(argv[12]);
+  if (argc == 14){
+    fluxFile = TFile::Open(argv[12],"READ");
+    fluxVarName =std::string(argv[13]);
   }
-  */
 
   std::vector<std::string> crossSectionPrefixes;
   for(auto key: *dataFile->GetListOfKeys())
@@ -386,14 +395,14 @@ int main(const int argc, const char** argv)
 	else if (tgtZ == 82) material = "lead";
 	else if (tgtZ == 8){
 	  material = ""; //Not sure this is correct... Going to ignore for now... cause water issues... also I'm not doing the nucleon division correctly for water, so really ignoring it for now...
-	  if (argc != 13){
+	  if (argc != 14){
 	    std::cout << "Returning random value for code since water requires a tracker flux to be provided." << std::endl;
 	    return -12039;
 	  }
 	}
 	else material = "badTarget";
 
-	if (argc == 13) flux = util::GetIngredient<PlotUtils::MnvH1D>(*fluxFile,"reweightedflux_integrated",fluxVarName);
+	if (argc == 14) flux = util::GetIngredient<PlotUtils::MnvH1D>(*fluxFile,"reweightedflux_integrated",fluxVarName);
 	else if (tgtZ == -1) flux = util::GetIngredient<PlotUtils::MnvH1D>(*mcFile, "reweightedflux_integrated", prefix);
 	else{ 
 	  flux = frw6A.GetIntegratedTargetFlux(nuPDG, material, unfolded, 0, 100, project_dir);
@@ -430,6 +439,11 @@ int main(const int argc, const char** argv)
 
 	auto crossSection = normalize(unfolded, flux, nNuke, dataPOT);
 	if (multPOT) crossSection->Scale(dataPOT);
+	if (!isMC){
+	  auto MassSyst = GetTargetMassSystHist(crossSection, tgtZ);
+	  crossSection->AddMissingErrorBandsAndFillWithCV(*MassSyst);
+	  crossSection->Multiply(crossSection,MassSyst);
+	}
 	Plot(*crossSection, "crossSection", prefix);
 	outFile->cd();
 	crossSection->Clone()->Write("crossSection");
