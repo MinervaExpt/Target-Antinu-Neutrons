@@ -886,6 +886,22 @@ int main(int argc, char* argv[]) {
   TString varName= argv[5];
   bool doSyst = (bool)(atoi(argv[6]));
   TString material = argv[7];
+  TString materialTag = material;
+  if (materialTag.Contains("LINE")){
+    if (materialTag.Contains("Carbon")){
+      material="C";
+    }
+    else if (materialTag.Contains("Iron")){
+      material="Fe";
+    }
+    else if (materialTag.Contains("Lead")){
+      material="Pb";
+    }
+    else if (materialTag.Contains("Water")){
+      material="Water";
+    }
+    else material = "";
+  }
   material = (material != "") ? "_"+material : material;
   bool breakInner = (bool)(atoi(argv[8]));
   int fitMuonBins = 0;
@@ -1227,86 +1243,68 @@ int main(int argc, char* argv[]) {
     fitTEST1A["NonFit"]["WrongNucleus"].push_back((MnvH1D*)wrongNuclHist->Clone());
     fitTEST1A["NonFit"]["WrongNucleus"].push_back((MnvH1D*)wrongNuclHist_noTag->Clone());
 
+    if (materialTag == ""){
+      cout << "Fitting Tracker" << endl;
+      fitPieces1A["Signal"].push_back(make_tuple("Line",5,999));
+      fitPieces1A["Signal"].push_back(make_tuple("ScaleFactor",3,4));
+      fitPieces1A["Signal"].push_back(make_tuple("ScaleFactor",1,2));
+      fitPieces1A["BKG"].push_back(make_tuple("Line",6,999));
+      fitPieces1A["BKG"].push_back(make_tuple("Line",1,6));
+    }
 
-    //Tracker
-    fitPieces1A["Signal"].push_back(make_tuple("Line",5,999));
-    fitPieces1A["Signal"].push_back(make_tuple("ScaleFactor",3,4));
-    fitPieces1A["Signal"].push_back(make_tuple("ScaleFactor",1,2));
-    /*Temp change to fit just lines    */
+    else if (materialTag.Contains("LINE")){
+      cout << "Fitting Line" << endl;
+      fitPieces1A["Signal"].push_back(make_tuple("Line",1,999));
+      fitPieces1A["BKG"].push_back(make_tuple("Line",1,999));
+    }
 
-    /*Change to now do the fit for the different targets one by one.
-    fitPieces1A["Signal"].push_back(make_tuple("Line",1,999));
-    */
+    else if (materialTag == "C"){ 
+      cout << "Fitting Carbon" << endl;
+      fitPieces1A["Signal"].push_back(make_tuple("ScaleFactor",1,2));
+      fitPieces1A["Signal"].push_back(make_tuple("Line",2,4));
+      fitPieces1A["Signal"].push_back(make_tuple("ScaleFactor",5,7));
+      fitPieces1A["Signal"].push_back(make_tuple("ScaleFactor",8,999));
+      fitPieces1A["BKG"].push_back(make_tuple("Line",1,4));
+      fitPieces1A["BKG"].push_back(make_tuple("ScaleFactor",4,5));
+      fitPieces1A["BKG"].push_back(make_tuple("Line",5,8));
+      fitPieces1A["BKG"].push_back(make_tuple("ScaleFactor",8,999));
+    }
 
-    //Carbon, need to simplify and not accommodate the first bin so much.
-    /*
-    fitPieces1A["Signal"].push_back(make_tuple("ScaleFactor",1,2));
-    fitPieces1A["Signal"].push_back(make_tuple("Line",2,4));
-    fitPieces1A["Signal"].push_back(make_tuple("ScaleFactor",5,7));
-    fitPieces1A["Signal"].push_back(make_tuple("ScaleFactor",8,999));
-    */
+    else if (materialTag == "Fe"){
+      cout << "Fitting Iron" << endl;
+      fitPieces1A["Signal"].push_back(make_tuple("ScaleFactor",1,2));
+      fitPieces1A["Signal"].push_back(make_tuple("Line",2,4));
+      fitPieces1A["Signal"].push_back(make_tuple("Line",4,999));
+      fitPieces1A["BKG"].push_back(make_tuple("Line",1,5));
+      fitPieces1A["BKG"].push_back(make_tuple("ScaleFactor",5,6));
+      fitPieces1A["BKG"].push_back(make_tuple("Line",6,8));
+      fitPieces1A["BKG"].push_back(make_tuple("ScaleFactor",8,999));
+    }
 
-    //Iron
-    /*
-    fitPieces1A["Signal"].push_back(make_tuple("ScaleFactor",1,2));
-    fitPieces1A["Signal"].push_back(make_tuple("Line",2,4));
-    fitPieces1A["Signal"].push_back(make_tuple("Line",4,999));
-    */
+    else if (materialTag == "Pb"){
+      cout << "Fitting Lead" << endl;
+      fitPieces1A["Signal"].push_back(make_tuple("Line",1,6));
+      fitPieces1A["Signal"].push_back(make_tuple("Line",7,999));
+      fitPieces1A["BKG"].push_back(make_tuple("Line",1,7));
+      fitPieces1A["BKG"].push_back(make_tuple("ScaleFactor",7,999));
+    }
 
-    //Lead
-    //fitPieces1A["Signal"].push_back(make_tuple("ScaleFactor",1,2)); Actually made it worse. Overall trend seems to be a line, so a smoothed function might accomodate better, or alternatively this might be driven by the plastic not being fit so well. Question for later.
-    /*
-    fitPieces1A["Signal"].push_back(make_tuple("Line",1,6));
-    fitPieces1A["Signal"].push_back(make_tuple("Line",7,999));
-    */
+    else if (materialTag == "Water"){
+      cout << "Fitting Water" << endl;
+      fitPieces1A["Signal"].push_back(make_tuple("ScaleFactor",1,3));
+      fitPieces1A["Signal"].push_back(make_tuple("ScaleFactor",4,6));
+      fitPieces1A["Signal"].push_back(make_tuple("Line",6,999));
+      fitPieces1A["BKG"].push_back(make_tuple("Line",1,3));
+      fitPieces1A["BKG"].push_back(make_tuple("Line",4,6));
+      fitPieces1A["BKG"].push_back(make_tuple("Line",6,8));
+      //fitPieces1A["BKG"].push_back(make_tuple("ScaleFactor",7,8));
+      fitPieces1A["BKG"].push_back(make_tuple("Line",8,999));
+    }
 
-    //Water
-    /*
-    fitPieces1A["Signal"].push_back(make_tuple("ScaleFactor",1,3));
-    fitPieces1A["Signal"].push_back(make_tuple("ScaleFactor",4,6));
-    fitPieces1A["Signal"].push_back(make_tuple("Line",6,999));
-    */
-
-    //fitPieces1A["BKG"].push_back(make_tuple("ScaleFactor",11,999));
-    fitPieces1A["BKG"].push_back(make_tuple("Line",6,999));
-    fitPieces1A["BKG"].push_back(make_tuple("Line",1,6));
-    /*Temp change to fit just lines    */
-
-    /*
-    fitPieces1A["BKG"].push_back(make_tuple("Line",1,999));
-    */
-
-    //Change to now do the fit for the different targets one by one.
-    //Carbon, need to simplify and not accomodate the first bin so much
-    /*
-    fitPieces1A["BKG"].push_back(make_tuple("Line",1,4));
-    fitPieces1A["BKG"].push_back(make_tuple("ScaleFactor",4,5));
-    fitPieces1A["BKG"].push_back(make_tuple("Line",5,8));
-    fitPieces1A["BKG"].push_back(make_tuple("ScaleFactor",8,999));
-    */
-
-    //Iron
-    /*
-    fitPieces1A["BKG"].push_back(make_tuple("Line",1,5));
-    fitPieces1A["BKG"].push_back(make_tuple("ScaleFactor",5,6));
-    fitPieces1A["BKG"].push_back(make_tuple("Line",6,8));
-    fitPieces1A["BKG"].push_back(make_tuple("ScaleFactor",8,999));
-    */
-    
-    //Lead
-    /*
-    fitPieces1A["BKG"].push_back(make_tuple("Line",1,7));
-    fitPieces1A["BKG"].push_back(make_tuple("ScaleFactor",7,999));
-    */
-
-    //Water
-    /*
-    fitPieces1A["BKG"].push_back(make_tuple("Line",1,3));
-    fitPieces1A["BKG"].push_back(make_tuple("Line",4,6));
-    fitPieces1A["BKG"].push_back(make_tuple("Line",6,8));
-    //fitPieces1A["BKG"].push_back(make_tuple("ScaleFactor",7,8));
-    fitPieces1A["BKG"].push_back(make_tuple("Line",8,999));
-    */
+    else{
+      cout << "Broken! There is no option for this material tag." << endl;
+      return -999;
+    }
 
     nameKeysTEST1A["BKG"]=nameKeys1A["BKG"];
     nameKeysTEST1A["Signal"]=nameKeys1A["Signal"];
