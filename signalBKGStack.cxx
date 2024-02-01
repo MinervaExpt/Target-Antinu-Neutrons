@@ -340,6 +340,14 @@ void DrawBKGCateg(string name, TFile* mcFile, TFile* dataFile, TString sample, T
   dataHist->Draw("same");
   c1->Update();
 
+  TLatex* latex = new TLatex( 0.2, 0.83, "MINER#nuA Work in Progress" );
+  latex->SetTextFont(43);
+  latex->SetTextSize(32);
+  latex->SetNDC();
+  latex->Draw();
+  latex->SetTextColor(kRed);
+  c1->Update();
+
   //TLegend* leg = new TLegend(1.0-0.6,1.0-0.5,1.0-0.9,1.0-0.9);
   //TLegend* leg = new TLegend(0.1,0.5,0.4,0.9);
   TLegend* leg = new TLegend(0.6,0.5,0.9,0.9);
@@ -770,6 +778,14 @@ void DrawIntType(string name_QE, TFile* mcFile, TFile* dataFile, TString sample,
   hTmp->SetFillColor(kWhite);
   hTmp->SetLineColor(kWhite);
 
+  TLatex* latex = new TLatex( 0.2, 0.83, "MINER#nuA Work in Progress" );
+  latex->SetTextFont(43);
+  latex->SetTextSize(32);
+  latex->SetNDC();
+  latex->Draw();
+  latex->SetTextColor(kRed);
+  c1->Update();
+
   //egend* leg = new TLegend(0.6,0.5,0.9,0.9);
   TLegend* leg = new TLegend(0.6,0.5,0.9,0.9);
 
@@ -1163,6 +1179,14 @@ void DrawIntTypeBKG(string name, TFile* mcFile, TFile* dataFile, TString sample,
   TH1D* hTmp = new TH1D();
   hTmp->SetFillColor(kWhite);
   hTmp->SetLineColor(kWhite);
+
+  TLatex* latex = new TLatex( 0.2, 0.83, "MINER#nuA Work in Progress" );
+  latex->SetTextFont(43);
+  latex->SetTextSize(32);
+  latex->SetNDC();
+  latex->Draw();
+  latex->SetTextColor(kRed);
+  c1->Update();
 
   //egend* leg = new TLegend(0.6,0.5,0.9,0.9);
   TLegend* leg = new TLegend(0.6,0.5,0.9,0.9);
@@ -1592,6 +1616,14 @@ void DrawTargetType(string name_Plastic, TFile* mcFile, TFile* dataFile, TString
   dataHist->Draw("same");
   c1->Update();
 
+  TLatex* latex = new TLatex( 0.2, 0.83, "MINER#nuA Work in Progress" );
+  latex->SetTextFont(43);
+  latex->SetTextSize(32);
+  latex->SetNDC();
+  latex->Draw();
+  latex->SetTextColor(kRed);
+  c1->Update();
+
   //TLegend* leg = new TLegend(0.6,0.5,0.9,0.9);
   TLegend* leg = new TLegend(0.1,0.5,0.4,0.9);
 
@@ -2018,6 +2050,14 @@ void DrawLeadBlobType(string name_Neut, TFile* mcFile, TFile* dataFile, TString 
   h_Tot->Draw("E2 SAME");
   */
   dataHist->Draw("same");
+  c1->Update();
+
+  TLatex* latex = new TLatex( 0.2, 0.83, "MINER#nuA Work in Progress" );
+  latex->SetTextFont(43);
+  latex->SetTextSize(32);
+  latex->SetNDC();
+  latex->Draw();
+  latex->SetTextColor(kRed);
   c1->Update();
 
   //TLegend* leg = new TLegend(0.6,0.5,0.9,0.9);
