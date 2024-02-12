@@ -46,8 +46,10 @@ def colNormalize(hist):
 
 ROOT.gStyle.SetOptStat(0)
 ROOT.gStyle.SetPaintTextFormat("4.2g")
+ROOT.gStyle.SetTitleTextColor(2)
 
 histToPlot = fileToRead.Get(histName)
+histToPlot.SetTitle("#it{"+sys.argv[5]+"}");
 histToPlot.GetXaxis().SetRangeUser(minX, maxX)
 histToPlot.GetYaxis().SetRangeUser(minY, maxY)
 can = ROOT.TCanvas("normalized")
