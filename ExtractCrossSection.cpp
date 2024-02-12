@@ -30,6 +30,8 @@
 #include "TKey.h"
 #include "TParameter.h"
 #include "TCanvas.h"
+#include "TLatex.h"
+#include "TColor.h"
 
 //Cintex is only needed for older ROOT versions like the GPVMs.
 ////Let CMake decide whether it's needed.
@@ -56,6 +58,8 @@ namespace std
   };
 }
 
+std::map<int,TString> matTag={{-1, "#it{Tracker (CH)}"},{6, "#it{Carbon (C)}"},{8, "#it{Water (H_{2}O)}"},{26, "#it{Iron (Fe)}"},{82,"#it{Lead (Pb)}"}};
+
 PlotUtils::MnvH1D* GetTargetMassSystHist(PlotUtils::MnvH1D* hTemp, int tgtZ){
   PlotUtils::MnvH1D* hOut = nullptr;
   if (tgtZ == -1) hOut = PlotUtils::GetNTargetsScintillatorHist<PlotUtils::MnvH1D>(1.0,hTemp);
@@ -79,7 +83,7 @@ bool isInnerPlastic(std::string name, std::string bkgName){
 }
 
 //Plot a step in cross section extraction.
-void Plot(PlotUtils::MnvH1D& hist, const std::string& stepName, const std::string& prefix)
+void Plot(PlotUtils::MnvH1D& hist, const std::string& stepName, const std::string& prefix, const int tgtZ)
 {
   TCanvas can(stepName.c_str());
   hist.GetCVHistoWithError().Clone()->Draw();
@@ -91,41 +95,65 @@ void Plot(PlotUtils::MnvH1D& hist, const std::string& stepName, const std::strin
   PlotUtils::MnvPlotter plotter;
   plotter.ApplyStyle(PlotUtils::kCCQEAntiNuStyle);
   plotter.axis_maximum = 0.4;
+  TLatex* tex = new TLatex(0.7375,0.6,matTag[tgtZ]);
+  tex->SetNDC();
+  tex->SetTextColor(TColor::GetColor("#ff0000"));
+  tex->SetTextFont(43);
+  tex->SetTextSize(40);
+  tex->SetLineWidth(3);
+  tex->Draw();
 
   plotter.DrawErrorSummary(&hist);
   can.Print((prefix + "_" + stepName + "_uncertaintySummary.png").c_str());
   can.Print((prefix + "_" + stepName + "_uncertaintySummary.pdf").c_str());
   can.Print((prefix + "_" + stepName + "_uncertaintySummary.C").c_str());
 
+  /*
   plotter.DrawErrorSummary(&hist, "TR", true, true, 1e-5, false, "Other");
   can.Print((prefix + "_" + stepName + "_otherUncertainties.png").c_str());
   can.Print((prefix + "_" + stepName + "_otherUncertainties.pdf").c_str());
   can.Print((prefix + "_" + stepName + "_otherUncertainties.C").c_str());
+  */
 
-  plotter.DrawErrorSummary(&hist, "TR", true, true, 1e-2, false, "Cross Section Models");
+  plotter.DrawErrorSummary(&hist, "TR", true, true, 1e-5, false, "Neutron Detection");
+  can.Print((prefix + "_" + stepName + "_neutronUncertainties.png").c_str());
+  can.Print((prefix + "_" + stepName + "_neutronUncertainties.pdf").c_str());
+  can.Print((prefix + "_" + stepName + "_neutronUncertainties.C").c_str());
+
+  plotter.DrawErrorSummary(&hist, "TR", true, true, 1e-5, false, "Cross Section Models");
   can.Print((prefix + "_" + stepName + "_xSecUncertainties.png").c_str());
   can.Print((prefix + "_" + stepName + "_xSecUncertainties.pdf").c_str());
   can.Print((prefix + "_" + stepName + "_xSecUncertainties.C").c_str());
 
-  plotter.DrawErrorSummary(&hist, "TR", true, true, 1e-2, false, "Recoil Reconstruction");
+  plotter.DrawErrorSummary(&hist, "TR", true, true, 1e-5, false, "Calorimetric Response");
   can.Print((prefix + "_" + stepName + "_RecoilUncertainties.png").c_str());
   can.Print((prefix + "_" + stepName + "_RecoilUncertainties.pdf").c_str());
   can.Print((prefix + "_" + stepName + "_RecoilUncertainties.C").c_str());
 
-  plotter.DrawErrorSummary(&hist, "TR", true, true, 1e-2, false, "FSI Models");
+  plotter.DrawErrorSummary(&hist, "TR", true, true, 1e-5, false, "FSI Models");
   can.Print((prefix + "_" + stepName + "_FSIUncertainties.png").c_str());
   can.Print((prefix + "_" + stepName + "_FSIUncertainties.pdf").c_str());
   can.Print((prefix + "_" + stepName + "_FSIUncertainties.C").c_str());
 
-  plotter.DrawErrorSummary(&hist, "TR", true, true, 1e-2, false, "Muon Reconstruction");
+  plotter.DrawErrorSummary(&hist, "TR", true, true, 1e-5, false, "Muon Reconstruction");
   can.Print((prefix + "_" + stepName + "_MuonUncertainties.png").c_str());
   can.Print((prefix + "_" + stepName + "_MuonUncertainties.pdf").c_str());
   can.Print((prefix + "_" + stepName + "_MuonUncertainties.C").c_str());
 
-  plotter.DrawErrorSummary(&hist, "TR", true, true, 1e-2, false, "GEANT4");
+  plotter.DrawErrorSummary(&hist, "TR", true, true, 1e-5, false, "GEANT4");
   can.Print((prefix + "_" + stepName + "_GEANTUncertainties.png").c_str());
   can.Print((prefix + "_" + stepName + "_GEANTUncertainties.pdf").c_str());
   can.Print((prefix + "_" + stepName + "_GEANTUncertainties.C").c_str());
+
+  plotter.DrawErrorSummary(&hist, "TR", true, true, 1e-5, false, "Normalization");
+  can.Print((prefix + "_" + stepName + "_NormalizationUncertainties.png").c_str());
+  can.Print((prefix + "_" + stepName + "_NormalizationUncertainties.pdf").c_str());
+  can.Print((prefix + "_" + stepName + "_NormalizationUncertainties.C").c_str());
+
+  plotter.DrawErrorSummary(&hist, "TR", true, true, 1e-5, false, "MnvTune V1");
+  can.Print((prefix + "_" + stepName + "_MnvTuneUncertainties.png").c_str());
+  can.Print((prefix + "_" + stepName + "_MnvTuneUncertainties.pdf").c_str());
+  can.Print((prefix + "_" + stepName + "_MnvTuneUncertainties.C").c_str());
 }
 
 //Unfolding function from Aaron Bercelle
@@ -313,7 +341,7 @@ int main(const int argc, const char** argv)
     try
     {
       auto folded = util::GetIngredient<PlotUtils::MnvH1D>(*dataFile, "data", prefix);
-      Plot(*folded, "data", prefix);
+      Plot(*folded, "data", prefix, tgtZ);
       auto migration = util::GetIngredient<PlotUtils::MnvH2D>(*mcFile, "migration", prefix);
       auto effNum = util::GetIngredient<PlotUtils::MnvH1D>(*mcFile, "efficiency_numerator", prefix);
       auto effDenom = util::GetIngredient<PlotUtils::MnvH1D>(*mcFile, "efficiency_denominator", prefix);
@@ -348,7 +376,7 @@ int main(const int argc, const char** argv)
                                           sum->Add(hist);
                                           return sum;
                                         });
-      Plot(*toSubtract, "BackgroundSum", prefix);
+      Plot(*toSubtract, "BackgroundSum", prefix, tgtZ);
 
       auto bkgSubtracted = std::accumulate(backgrounds.begin(), backgrounds.end(), folded->Clone(),
                                            [mcPOT, dataPOT](auto sum, const auto hist)
@@ -357,7 +385,7 @@ int main(const int argc, const char** argv)
                                              sum->Add(hist, -dataPOT/mcPOT);
                                              return sum;
                                            });
-      Plot(*bkgSubtracted, "backgroundSubtracted", prefix);
+      Plot(*bkgSubtracted, "backgroundSubtracted", prefix, tgtZ);
 
       auto outFile = TFile::Open((prefix + "_crossSection.root").c_str(), "CREATE");
       if(!outFile)
@@ -373,16 +401,17 @@ int main(const int argc, const char** argv)
       if(!unfolded) throw std::runtime_error(std::string("Failed to unfold ") + folded->GetName() + " using " + migration->GetName());
       unfolded->ModifyStatisticalUnc(unfoldingFactor,"unfoldingCov");
       std::cout << "Survived asjuting the unfolded histogram.\n" << std::flush;
-      Plot(*unfolded, "unfolded", prefix);
+      Plot(*unfolded, "unfolded", prefix, tgtZ);
       unfolded->Clone()->Write("unfolded"); //TODO: Seg fault first appears when I uncomment this line
       std::cout << "Survived writing the unfolded histogram.\n" << std::flush; //This is evidence that the problem is on the final file Write() and not unfolded->Clone()->Write().
 
       effNum->Divide(effNum, effDenom); //Only the 2 parameter version of MnvH1D::Divide()
                                         //handles systematics correctly.
-      Plot(*effNum, "efficiency", prefix);
+      Plot(*effNum, "efficiency", prefix, tgtZ);
+      effNum->Clone()->Write("efficiency");
 
       unfolded->Divide(unfolded, effNum);
-      Plot(*unfolded, "efficiencyCorrected", prefix);
+      Plot(*unfolded, "efficiencyCorrected", prefix, tgtZ);
 
       unfolded->Clone()->Write("efficiencyCorrected");
 
@@ -444,7 +473,7 @@ int main(const int argc, const char** argv)
 	  crossSection->AddMissingErrorBandsAndFillWithCV(*MassSyst);
 	  crossSection->Multiply(crossSection,MassSyst);
 	}
-	Plot(*crossSection, "crossSection", prefix);
+	Plot(*crossSection, "crossSection", prefix, tgtZ);
 	outFile->cd();
 	crossSection->Clone()->Write("crossSection");
       
@@ -454,7 +483,7 @@ int main(const int argc, const char** argv)
 	normalize(simEventRate, flux, nNukeMC, mcPOT);
 	if (multPOT) simEventRate->Scale(dataPOT);  
 
-	Plot(*simEventRate, "simulatedCrossSection", prefix);
+	Plot(*simEventRate, "simulatedCrossSection", prefix, tgtZ);
 	simEventRate->Write("simulatedCrossSection");
       }
     }
