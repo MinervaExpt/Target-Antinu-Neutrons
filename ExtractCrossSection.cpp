@@ -466,6 +466,9 @@ int main(const int argc, const char** argv)
 	  nNuke = GetTotalScatteringCenters(99, isMC);
 	}
 
+	std::cout << "No. of nucleons: " << nNuke << std::endl;
+	std::cout << "No. of antineutrinos: " << flux->GetBinContent(1) << std::endl;
+	std::cout << "No. of antineutrinos multiplied: " << flux->GetBinContent(1)*dataPOT << std::endl;
 	auto crossSection = normalize(unfolded, flux, nNuke, dataPOT);
 	if (multPOT) crossSection->Scale(dataPOT);
 	if (!isMC){
