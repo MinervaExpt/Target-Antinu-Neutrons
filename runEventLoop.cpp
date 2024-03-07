@@ -168,7 +168,8 @@ void LoopAndFillEventSelection(
         const double weight = model.GetWeight(*universe, myevent); //Only calculate the per-universe weight for events that will actually use it.
         //const double weight = 1.0; //Dummy weight for testing/validation pre-weight
         const bool isFSSignal = michelcuts.isSignal(*universe, weight);
-	const bool isTgts = (vars_ByTgt.size() > 0 || vars2D_ByTgt.size()) ? true : false; 
+	const bool isTgts = (vars_ByTgt.size() > 0 || vars2D_ByTgt.size()) ? true : false;
+
 	bool tmpIsSignal = isFSSignal;
 	int intType = universe->GetInteractionType();
 	int tgtZ = universe->GetTargetZ();
@@ -681,6 +682,9 @@ int main(const int argc, const char** argv)
   if (FVregionNameTmp == "Targets" && TgtNum != -1){
     FVregionNameTmp = ("SingleTarget_"+util::TgtList[TgtNum]).c_str();
   }
+  if (FVregionNameTmp == "Tracker" && TgtNum != -1){
+    FVregionNameTmp = ("Tracker_DaisyPetal_"+std::to_string(TgtNum)).c_str();
+  }
   
   const TString FVregionName = (TString)FVregionNameTmp;
 
@@ -723,11 +727,15 @@ int main(const int argc, const char** argv)
     return badCmdLine;
   }
 
-  if (FVregionName != "Tracker" && !FVregionName.Contains("Target")){
+  if (!FVregionName.Contains("Tracker") && !FVregionName.Contains("Target")){
     std::cerr << "<FV> argument invalid. Check usage printed below. \n" << USAGE << "\n";
     return badCmdLine;
   }
   if (FVregionName.Contains("SingleTarget") && (TgtNum < 1 || TgtNum > 6)){
+    std::cerr << "<TgtNum> argument invalid. Check usage printed below. \n" << USAGE << "\n";
+    return badCmdLine;
+  }
+  if (FVregionName.Contains("DaisyPetal") && (TgtNum < 0 || TgtNum > 11)){
     std::cerr << "<TgtNum> argument invalid. Check usage printed below. \n" << USAGE << "\n";
     return badCmdLine;
   }
@@ -766,7 +774,7 @@ int main(const int argc, const char** argv)
   PlotUtils::Cutter<CVUniverse, NeutronEvent>::truth_t signalDefinition, phaseSpace;
 
   double minZtmp=-1, maxZtmp=-1;
-  if (FVregionName == "Tracker"){
+  if (FVregionName.Contains("Tracker")){
     minZtmp = 5980;
     maxZtmp = 8422;
   }
@@ -786,6 +794,7 @@ int main(const int argc, const char** argv)
   const double minZ = minZtmp, maxZ = maxZtmp, apothem = 850; //All in mm
   preCuts.emplace_back(new reco::ZRange<CVUniverse, NeutronEvent>(FVregion, minZ, maxZ));
   preCuts.emplace_back(new reco::Apothem<CVUniverse, NeutronEvent>(apothem));
+  if(FVregionName.Contains("Daisy")) preCuts.emplace_back(new MyCCQECuts::CorrectDaisy<CVUniverse, NeutronEvent>(("Daisy Petal "+std::to_string(TgtNum)).c_str(), TgtNum));
   preCuts.emplace_back(new reco::MaxMuonAngle<CVUniverse, NeutronEvent>(17.0));
   //preCuts.emplace_back(new reco::MaxMuonAngle<CVUniverse, NeutronEvent>(20.0));
   preCuts.emplace_back(new reco::HasMINOSMatch<CVUniverse, NeutronEvent>());
@@ -817,6 +826,7 @@ int main(const int argc, const char** argv)
 
   phaseSpace.emplace_back(new truth::ZRange<CVUniverse>(FVregion, minZ, maxZ));
   phaseSpace.emplace_back(new truth::Apothem<CVUniverse>(apothem));
+  if(FVregionName.Contains("Daisy")) phaseSpace.emplace_back(new MySignal::CorrectDaisy<CVUniverse>(TgtNum));
   //phaseSpace.emplace_back(new truth::MuonAngle<CVUniverse>(20.0));
   phaseSpace.emplace_back(new truth::MuonAngle<CVUniverse>(17.0));
   phaseSpace.emplace_back(new MySignal::TrueMuonPRange<CVUniverse>(1.5,20.));
@@ -879,9 +889,12 @@ int main(const int argc, const char** argv)
 		      robsRecoilBins,
 		      nBlobsBins,
 		      n5Bins,
+		      n12Bins,
 		      myRecoilBins,
 		      myRecoilQ2Bins,
 		      myPmuBins,
+		      myVtxXBins,
+		      myVtxYBins,
 		      myVtxZBins,
 		      finePTBins//,
 		      //myBlobEBins
@@ -910,11 +923,20 @@ int main(const int argc, const char** argv)
   const double myPmuBinWidth = 0.5;
   for(int whichBin = 0; whichBin < 41; ++whichBin) myPmuBins.push_back(myPmuBinWidth * whichBin);
 
+
+  const int nVtxXBins = 200;
+  const double myVtxXBinWidth = 2000.0/(1.0*nVtxXBins);
+  for (int whichBin = 0; whichBin < nVtxXBins; ++whichBin) myVtxXBins.push_back(-1000.0 + myVtxXBinWidth * whichBin);
+  
+  myVtxYBins = myVtxXBins;
+
   const double myVtxZBinWidth = 1.;
   //const double myVtxZBase = 5800.; //Tracker for plot testing
   const double myVtxZBase = minZ; //Targets for later!!!
   const int nVtxZBins = ceil((maxZ-minZ)/myVtxZBinWidth);
   for(int whichBin = 0; whichBin < nVtxZBins; ++whichBin) myVtxZBins.push_back(myVtxZBinWidth * whichBin + myVtxZBase);
+
+  for(int whichBin = 0; whichBin < 12; ++whichBin) n12Bins.push_back(n5BinWidth * whichBin);
 
   //const double myBlobEBinWdith = 3.;
   //for(int whichBin = 0; whichBin < 51; ++whichBin) myBlobEBins.push_back(myBlobEBinWidth * whichBin);
@@ -934,8 +956,11 @@ int main(const int argc, const char** argv)
     //new Variable("nMichel","No.", n5Bins, &CVUniverse::GetNImprovedMichel),
     //new Variable("nTrack","No.", n5Bins, &CVUniverse::GetNTracks),
     //new Variable("pmu", "p_{#mu} [GeV/c]", myPmuBins, &CVUniverse::GetMuonP, &CVUniverse::GetMuonPTrue),//Don't need GetDummyTrue perhaps...
+    new Variable(false,"vtxX", "X [mm]", myVtxXBins, &CVUniverse::GetVtxX, &CVUniverse::GetTrueVtxX),//Don't need GetDummyTrue perhaps...    
+    new Variable(false,"vtxY", "Y [mm]", myVtxYBins, &CVUniverse::GetVtxY, &CVUniverse::GetTrueVtxY),//Don't need GetDummyTrue perhaps...
     new Variable(false,"vtxZ", "Z [mm]", myVtxZBins, &CVUniverse::GetVtxZ, &CVUniverse::GetTrueVtxZ),//Don't need GetDummyTrue perhaps...
-    //new Variable("recQ2Bin","No.",myRecoilQ2Bins, &CVUniverse::GetRecoilQ2Bin),
+    new Variable(false,"DaisyPetal", "Petal", n12Bins, &CVUniverse::GetRecoDaisyPetal, &CVUniverse::GetTrueDaisyPetal),
+//new Variable("recQ2Bin","No.",myRecoilQ2Bins, &CVUniverse::GetRecoilQ2Bin),
   };
 
   //vars.at(vars.size()-1)->SetIsBroken(true);//Just for the neutron variable studies.
@@ -967,8 +992,12 @@ int main(const int argc, const char** argv)
     }
   }
 
-  
-  std::vector<Variable2D*> vars2D = {};
+  std::vector<Variable2D*> vars2D = {
+    new Variable2D(false,"recoil_v_pT",*vars[0],*vars[vars.size()-6]),
+    new Variable2D(false,"vtxXY",*vars[vars.size()-4],*vars[vars.size()-3]),
+  };
+  //With systematics these two might get a little hairy having both. But for now without, it's fine.
+  std::cout << "Checking N bins X: " << vars2D.at(0)->GetNBinsX() << "Y: " << vars2D.at(0)->GetNBinsY() << std::endl;
   //recoil vs. pT for check on the background tuning in tracker (to start) be careful to change this if variables move around...
   //vars2D.push_back(new Variable2D(true,"pmu2D",*vars[1],*vars[0]));//Test to see if this runs just fine when the versus recoil had so many issues... AND how big it gets.
   /*

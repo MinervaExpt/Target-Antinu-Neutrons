@@ -33,6 +33,29 @@ namespace MyCCQECuts{
   };
 
   template <class UNIVERSE, class EVENT = PlotUtils::detail::empty>
+  class CorrectDaisy: public PlotUtils::Cut<UNIVERSE, EVENT>
+  {
+  public:
+    // Constructor                                                          
+    CorrectDaisy(const std::string& name, const int petal):
+    PlotUtils::Cut<UNIVERSE, EVENT>(name), fPetal(petal)
+    {
+    }
+
+  private:
+  // THE cut function                                                     
+    bool checkCut(const UNIVERSE& univ, EVENT& /*evt*/) const override
+    {
+      // Call a CVUniverse member function to make the cut                
+      int petal = univ.GetRecoDaisyPetal();
+      return (petal == fPetal);
+    }
+    
+    const int fPetal;
+
+  };
+
+  template <class UNIVERSE, class EVENT = PlotUtils::detail::empty>
   class IsAntiNu: public PlotUtils::Cut<UNIVERSE, EVENT>
   {
   public:

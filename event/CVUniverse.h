@@ -289,6 +289,14 @@ class CVUniverse : public PlotUtils::MinervaUniverse {
 
   virtual std::vector<double> GetTrueVtx() const { return GetVec<double>("mc_vtx"); }
 
+  virtual double GetVtxX() const { return GetVtx().at(0); }
+
+  virtual double GetTrueVtxX() const { return GetTrueVtx().at(0); }
+
+  virtual double GetVtxY() const { return GetVtx().at(1); }
+
+  virtual double GetTrueVtxY() const { return GetTrueVtx().at(1); }
+
   virtual double GetVtxZ() const { return GetVtx().at(2); }
 
   virtual double GetTrueVtxZ() const { return GetTrueVtx().at(2); }
@@ -364,6 +372,26 @@ class CVUniverse : public PlotUtils::MinervaUniverse {
       else bin = 13;
     }
     return bin;
+  }
+
+  virtual int GetDaisyPetal(double vtxX, double vtxY) const{
+    int petal = -999;
+    double angleInRad = TMath::Pi()+atan2(-vtxY,-vtxX); //signs are for 0 to 2Pi
+    double angleInDeg = (angleInRad*180.0)/TMath::Pi();
+    petal = (angleInDeg >= 0.0 && angleInDeg < 360.0) ? (int)(angleInDeg)/30 : petal; //12 daisy petals starting from 0 at x=1, y=0 on the unit circle. hence division by 30 degrees.
+    return petal;
+  }
+
+  virtual double GetTrueDaisyPetal()const{
+    double vtxX = GetTrueVtxX();
+    double vtxY = GetTrueVtxY();
+    return GetDaisyPetal(vtxX, vtxY);
+  }
+
+  virtual double GetRecoDaisyPetal() const{
+    double vtxX = GetVtxX();
+    double vtxY = GetVtxY();
+    return GetDaisyPetal(vtxX, vtxY);
   }
 
   virtual double GetRecoilQ2Bin() const{

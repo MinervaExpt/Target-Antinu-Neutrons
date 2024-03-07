@@ -87,5 +87,21 @@ namespace MySignal{
     double fMax;
   };
 
+  template <class UNIVERSE>
+  class CorrectDaisy: public PlotUtils::SignalConstraint<UNIVERSE>
+  {
+  public:
+  CorrectDaisy(int petal): PlotUtils::SignalConstraint<UNIVERSE>("Correct Daisy Petal"), fPetal(petal) {}
+
+  private:
+    bool checkConstraint(const UNIVERSE& univ) const //override
+    {
+      int petal = univ.GetTrueDaisyPetal();
+      return (petal == fPetal);
+    }
+
+    int fPetal;
+  };
+
 }
 #endif //David_CCQESigDef_H
