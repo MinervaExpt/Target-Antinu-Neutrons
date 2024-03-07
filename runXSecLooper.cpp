@@ -62,8 +62,8 @@ std::map<TString,int> IntTypeMap = {{"QE",1},{"RES",2},{"DIS",3},{"2p2h",8},{"Ot
 class MinModDepCCQEXSec : public XSec
 {
 public:
-  MinModDepCCQEXSec(const char* name, const int tgtZ, const TString intType = "")
-    :XSec(name), fTgtZ(tgtZ), fIntType(intType), fApothem(850.0)
+  MinModDepCCQEXSec(const char* name, const int tgtZ, const double neutKE = 10.0, const TString intType = "")
+    :XSec(name), fTgtZ(tgtZ), fIntType(intType), fNeutKE(neutKE), fApothem(850.0)
   {
   };
 
@@ -157,7 +157,7 @@ public:
       int pdg = (int)chw.GetValue("mc_FSPartPDG",entry,i);
       double energy = (double)chw.GetValue("mc_FSPartE",entry,i);
       double proton_E = 1058.272;
-      double neutron_E = 939.57+10.0;//Hard-coded neutKE for now.
+      double neutron_E = 939.57+fNeutKE;//Testing not hard coded neut KE
       if (abs(pdg) == 13) genie_n_muons++;
       else if ( pdg == 22  && energy > 10) genie_n_photons++;
       else if ( abs(pdg) == 211 || abs(pdg) == 321 || abs(pdg) == 323 || pdg == 111 || pdg == 130 || pdg == 310 || pdg == 311 || pdg == 313 ){
@@ -196,6 +196,8 @@ public:
 
   const TString fIntType;
 
+  const double fNeutKE;
+
   const double fApothem;
 
 };
@@ -209,10 +211,10 @@ int main(const int argc, const char** argv)
   */
 
   //Read a playlist file from the command line
-  if(argc < 4)
+  if(argc < 5)
   {
-    std::cerr << "Expected at least 3 command line argument, but got " << argc - 1 << ".\n\n"
-              << "USAGE: runXSecLooper <outName> <playlist> <MCPlaylists.txt>\n\n"
+    std::cerr << "Expected at least 4 command line argument, but got " << argc - 1 << ".\n\n"
+              << "USAGE: runXSecLooper <outName> <playlist> <neutKE> <MCPlaylists.txt>\n\n"
               << "MCPlaylists.txt are a list of files which shall contain one .root file per line that has a Truth tree in it.\n"
               << "This program returns 0 when it suceeds.  It produces a .root file with GENIEXSECEXTRACT in its name.\n";
     return 1;
@@ -220,8 +222,9 @@ int main(const int argc, const char** argv)
 
   string outName = argv[1];
   TString pList = argv[2];
+  double neutKE = atof(argv[3]);
 
-  std::vector<const char*> fileNames(argv+3,argv+argc);
+  std::vector<const char*> fileNames(argv+4,argv+argc);
 
   // Create the XSecLooper and tell it the input files
   // Inputs should be the merged ntuples:
@@ -275,7 +278,7 @@ int main(const int argc, const char** argv)
   double pt_edges[] = {0, 0.125, 0.25, 0.38, 0.515, 0.64, 0.78, 0.94, 1.15, 1.5};
   int pt_nbins = 9;
 
-  MinModDepCCQEXSec* ds_dpT = new MinModDepCCQEXSec("pTmu_Tracker", -1);
+  MinModDepCCQEXSec* ds_dpT = new MinModDepCCQEXSec("pTmu_Tracker", -1, neutKE);
   ds_dpT->setBinEdges(pt_nbins, pt_edges);
   ds_dpT->setVariable(XSec::kPTLep);
   ds_dpT->setIsFluxIntegrated(true);
@@ -286,7 +289,7 @@ int main(const int argc, const char** argv)
   ds_dpT->setUniverses(0); //default value, put 0 if you do not want universes to be included.
   loop.addXSec(ds_dpT);
 
-  MinModDepCCQEXSec* ds_dpT_QE = new MinModDepCCQEXSec("pTmu_Tracker_QE", -1, "QE");
+  MinModDepCCQEXSec* ds_dpT_QE = new MinModDepCCQEXSec("pTmu_Tracker_QE", -1, neutKE, "QE");
   ds_dpT_QE->setBinEdges(pt_nbins, pt_edges);
   ds_dpT_QE->setVariable(XSec::kPTLep);
   ds_dpT_QE->setIsFluxIntegrated(true);
@@ -297,7 +300,7 @@ int main(const int argc, const char** argv)
   ds_dpT_QE->setUniverses(0); //default value, put 0 if you do not want universes to be included.
   loop.addXSec(ds_dpT_QE);
 
-  MinModDepCCQEXSec* ds_dpT_RES = new MinModDepCCQEXSec("pTmu_Tracker_RES", -1, "RES");
+  MinModDepCCQEXSec* ds_dpT_RES = new MinModDepCCQEXSec("pTmu_Tracker_RES", -1, neutKE, "RES");
   ds_dpT_RES->setBinEdges(pt_nbins, pt_edges);
   ds_dpT_RES->setVariable(XSec::kPTLep);
   ds_dpT_RES->setIsFluxIntegrated(true);
@@ -308,7 +311,7 @@ int main(const int argc, const char** argv)
   ds_dpT_RES->setUniverses(0); //default value, put 0 if you do not want universes to be included.
   loop.addXSec(ds_dpT_RES);
 
-  MinModDepCCQEXSec* ds_dpT_DIS = new MinModDepCCQEXSec("pTmu_Tracker_DIS", -1, "DIS");
+  MinModDepCCQEXSec* ds_dpT_DIS = new MinModDepCCQEXSec("pTmu_Tracker_DIS", -1, neutKE, "DIS");
   ds_dpT_DIS->setBinEdges(pt_nbins, pt_edges);
   ds_dpT_DIS->setVariable(XSec::kPTLep);
   ds_dpT_DIS->setIsFluxIntegrated(true);
@@ -319,7 +322,7 @@ int main(const int argc, const char** argv)
   ds_dpT_DIS->setUniverses(0); //default value, put 0 if you do not want universes to be included.
   loop.addXSec(ds_dpT_DIS);
 
-  MinModDepCCQEXSec* ds_dpT_2p2h = new MinModDepCCQEXSec("pTmu_Tracker_2p2h", -1, "2p2h");
+  MinModDepCCQEXSec* ds_dpT_2p2h = new MinModDepCCQEXSec("pTmu_Tracker_2p2h", -1, neutKE, "2p2h");
   ds_dpT_2p2h->setBinEdges(pt_nbins, pt_edges);
   ds_dpT_2p2h->setVariable(XSec::kPTLep);
   ds_dpT_2p2h->setIsFluxIntegrated(true);
@@ -330,7 +333,7 @@ int main(const int argc, const char** argv)
   ds_dpT_2p2h->setUniverses(0); //default value, put 0 if you do not want universes to be included.
   loop.addXSec(ds_dpT_2p2h);
 
-  MinModDepCCQEXSec* ds_dpT_Other = new MinModDepCCQEXSec("pTmu_Tracker_Other", -1, "Other");
+  MinModDepCCQEXSec* ds_dpT_Other = new MinModDepCCQEXSec("pTmu_Tracker_Other", -1, neutKE, "Other");
   ds_dpT_Other->setBinEdges(pt_nbins, pt_edges);
   ds_dpT_Other->setVariable(XSec::kPTLep);
   ds_dpT_Other->setIsFluxIntegrated(true);
@@ -341,7 +344,7 @@ int main(const int argc, const char** argv)
   ds_dpT_Other->setUniverses(0); //default value, put 0 if you do not want universes to be included.
   loop.addXSec(ds_dpT_Other);
 
-  MinModDepCCQEXSec* ds_dpT_C = new MinModDepCCQEXSec("pTmu_C", 6);
+  MinModDepCCQEXSec* ds_dpT_C = new MinModDepCCQEXSec("pTmu_C", 6, neutKE);
   ds_dpT_C->setBinEdges(pt_nbins, pt_edges);
   ds_dpT_C->setVariable(XSec::kPTLep);
   ds_dpT_C->setIsFluxIntegrated(true);
@@ -352,7 +355,7 @@ int main(const int argc, const char** argv)
   ds_dpT_C->setUniverses(0); //default value, put 0 if you do not want universes to be included.
   loop.addXSec(ds_dpT_C);
 
-  MinModDepCCQEXSec* ds_dpT_C_QE = new MinModDepCCQEXSec("pTmu_C_QE", 6,"QE");
+  MinModDepCCQEXSec* ds_dpT_C_QE = new MinModDepCCQEXSec("pTmu_C_QE", 6, neutKE,"QE");
   ds_dpT_C_QE->setBinEdges(pt_nbins, pt_edges);
   ds_dpT_C_QE->setVariable(XSec::kPTLep);
   ds_dpT_C_QE->setIsFluxIntegrated(true);
@@ -363,7 +366,7 @@ int main(const int argc, const char** argv)
   ds_dpT_C_QE->setUniverses(0); //default value, put 0 if you do not want universes to be included.
   loop.addXSec(ds_dpT_C_QE);
 
-  MinModDepCCQEXSec* ds_dpT_C_RES = new MinModDepCCQEXSec("pTmu_C_RES", 6,"RES");
+  MinModDepCCQEXSec* ds_dpT_C_RES = new MinModDepCCQEXSec("pTmu_C_RES", 6, neutKE,"RES");
   ds_dpT_C_RES->setBinEdges(pt_nbins, pt_edges);
   ds_dpT_C_RES->setVariable(XSec::kPTLep);
   ds_dpT_C_RES->setIsFluxIntegrated(true);
@@ -374,7 +377,7 @@ int main(const int argc, const char** argv)
   ds_dpT_C_RES->setUniverses(0); //default value, put 0 if you do not want universes to be included.
   loop.addXSec(ds_dpT_C_RES);
 
-  MinModDepCCQEXSec* ds_dpT_C_DIS = new MinModDepCCQEXSec("pTmu_C_DIS", 6,"DIS");
+  MinModDepCCQEXSec* ds_dpT_C_DIS = new MinModDepCCQEXSec("pTmu_C_DIS", 6, neutKE,"DIS");
   ds_dpT_C_DIS->setBinEdges(pt_nbins, pt_edges);
   ds_dpT_C_DIS->setVariable(XSec::kPTLep);
   ds_dpT_C_DIS->setIsFluxIntegrated(true);
@@ -385,7 +388,7 @@ int main(const int argc, const char** argv)
   ds_dpT_C_DIS->setUniverses(0); //default value, put 0 if you do not want universes to be included.
   loop.addXSec(ds_dpT_C_DIS);
 
-  MinModDepCCQEXSec* ds_dpT_C_2p2h = new MinModDepCCQEXSec("pTmu_C_2p2h", 6,"2p2h");
+  MinModDepCCQEXSec* ds_dpT_C_2p2h = new MinModDepCCQEXSec("pTmu_C_2p2h", 6, neutKE,"2p2h");
   ds_dpT_C_2p2h->setBinEdges(pt_nbins, pt_edges);
   ds_dpT_C_2p2h->setVariable(XSec::kPTLep);
   ds_dpT_C_2p2h->setIsFluxIntegrated(true);
@@ -396,7 +399,7 @@ int main(const int argc, const char** argv)
   ds_dpT_C_2p2h->setUniverses(0); //default value, put 0 if you do not want universes to be included.
   loop.addXSec(ds_dpT_C_2p2h);
 
-  MinModDepCCQEXSec* ds_dpT_C_Other = new MinModDepCCQEXSec("pTmu_C_Other", 6,"Other");
+  MinModDepCCQEXSec* ds_dpT_C_Other = new MinModDepCCQEXSec("pTmu_C_Other", 6, neutKE,"Other");
   ds_dpT_C_Other->setBinEdges(pt_nbins, pt_edges);
   ds_dpT_C_Other->setVariable(XSec::kPTLep);
   ds_dpT_C_Other->setIsFluxIntegrated(true);
@@ -407,7 +410,7 @@ int main(const int argc, const char** argv)
   ds_dpT_C_Other->setUniverses(0); //default value, put 0 if you do not want universes to be included.
   loop.addXSec(ds_dpT_C_Other);
 
-  MinModDepCCQEXSec* ds_dpT_Fe = new MinModDepCCQEXSec("pTmu_Iron", 26);
+  MinModDepCCQEXSec* ds_dpT_Fe = new MinModDepCCQEXSec("pTmu_Iron", 26, neutKE);
   ds_dpT_Fe->setBinEdges(pt_nbins, pt_edges);
   ds_dpT_Fe->setVariable(XSec::kPTLep);
   ds_dpT_Fe->setIsFluxIntegrated(true);
@@ -418,7 +421,7 @@ int main(const int argc, const char** argv)
   ds_dpT_Fe->setUniverses(0); //default value, put 0 if you do not want universes to be included.
   loop.addXSec(ds_dpT_Fe);
 
-  MinModDepCCQEXSec* ds_dpT_Fe_QE = new MinModDepCCQEXSec("pTmu_Iron_QE", 26, "QE");
+  MinModDepCCQEXSec* ds_dpT_Fe_QE = new MinModDepCCQEXSec("pTmu_Iron_QE", 26, neutKE, "QE");
   ds_dpT_Fe_QE->setBinEdges(pt_nbins, pt_edges);
   ds_dpT_Fe_QE->setVariable(XSec::kPTLep);
   ds_dpT_Fe_QE->setIsFluxIntegrated(true);
@@ -429,7 +432,7 @@ int main(const int argc, const char** argv)
   ds_dpT_Fe_QE->setUniverses(0); //default value, put 0 if you do not want universes to be included.
   loop.addXSec(ds_dpT_Fe_QE);
 
-  MinModDepCCQEXSec* ds_dpT_Fe_RES = new MinModDepCCQEXSec("pTmu_Iron_RES", 26, "RES");
+  MinModDepCCQEXSec* ds_dpT_Fe_RES = new MinModDepCCQEXSec("pTmu_Iron_RES", 26, neutKE, "RES");
   ds_dpT_Fe_RES->setBinEdges(pt_nbins, pt_edges);
   ds_dpT_Fe_RES->setVariable(XSec::kPTLep);
   ds_dpT_Fe_RES->setIsFluxIntegrated(true);
@@ -440,7 +443,7 @@ int main(const int argc, const char** argv)
   ds_dpT_Fe_RES->setUniverses(0); //default value, put 0 if you do not want universes to be included.
   loop.addXSec(ds_dpT_Fe_RES);
 
-  MinModDepCCQEXSec* ds_dpT_Fe_DIS = new MinModDepCCQEXSec("pTmu_Iron_DIS", 26, "DIS");
+  MinModDepCCQEXSec* ds_dpT_Fe_DIS = new MinModDepCCQEXSec("pTmu_Iron_DIS", 26, neutKE, "DIS");
   ds_dpT_Fe_DIS->setBinEdges(pt_nbins, pt_edges);
   ds_dpT_Fe_DIS->setVariable(XSec::kPTLep);
   ds_dpT_Fe_DIS->setIsFluxIntegrated(true);
@@ -451,7 +454,7 @@ int main(const int argc, const char** argv)
   ds_dpT_Fe_DIS->setUniverses(0); //default value, put 0 if you do not want universes to be included.
   loop.addXSec(ds_dpT_Fe_DIS);
 
-  MinModDepCCQEXSec* ds_dpT_Fe_2p2h = new MinModDepCCQEXSec("pTmu_Iron_2p2h", 26, "2p2h");
+  MinModDepCCQEXSec* ds_dpT_Fe_2p2h = new MinModDepCCQEXSec("pTmu_Iron_2p2h", 26, neutKE, "2p2h");
   ds_dpT_Fe_2p2h->setBinEdges(pt_nbins, pt_edges);
   ds_dpT_Fe_2p2h->setVariable(XSec::kPTLep);
   ds_dpT_Fe_2p2h->setIsFluxIntegrated(true);
@@ -462,7 +465,7 @@ int main(const int argc, const char** argv)
   ds_dpT_Fe_2p2h->setUniverses(0); //default value, put 0 if you do not want universes to be included.
   loop.addXSec(ds_dpT_Fe_2p2h);
 
-  MinModDepCCQEXSec* ds_dpT_Fe_Other = new MinModDepCCQEXSec("pTmu_Iron_Other", 26, "Other");
+  MinModDepCCQEXSec* ds_dpT_Fe_Other = new MinModDepCCQEXSec("pTmu_Iron_Other", 26, neutKE, "Other");
   ds_dpT_Fe_Other->setBinEdges(pt_nbins, pt_edges);
   ds_dpT_Fe_Other->setVariable(XSec::kPTLep);
   ds_dpT_Fe_Other->setIsFluxIntegrated(true);
@@ -473,7 +476,7 @@ int main(const int argc, const char** argv)
   ds_dpT_Fe_Other->setUniverses(0); //default value, put 0 if you do not want universes to be included.
   loop.addXSec(ds_dpT_Fe_Other);
 
-  MinModDepCCQEXSec* ds_dpT_Pb = new MinModDepCCQEXSec("pTmu_Lead", 82);
+  MinModDepCCQEXSec* ds_dpT_Pb = new MinModDepCCQEXSec("pTmu_Lead", 82, neutKE);
   ds_dpT_Pb->setBinEdges(pt_nbins, pt_edges);
   ds_dpT_Pb->setVariable(XSec::kPTLep);
   ds_dpT_Pb->setIsFluxIntegrated(true);
@@ -484,7 +487,7 @@ int main(const int argc, const char** argv)
   ds_dpT_Pb->setUniverses(0); //default value, put 0 if you do not want universes to be included.
   loop.addXSec(ds_dpT_Pb);
 
-  MinModDepCCQEXSec* ds_dpT_Pb_QE = new MinModDepCCQEXSec("pTmu_Lead_QE", 82, "QE");
+  MinModDepCCQEXSec* ds_dpT_Pb_QE = new MinModDepCCQEXSec("pTmu_Lead_QE", 82, neutKE, "QE");
   ds_dpT_Pb_QE->setBinEdges(pt_nbins, pt_edges);
   ds_dpT_Pb_QE->setVariable(XSec::kPTLep);
   ds_dpT_Pb_QE->setIsFluxIntegrated(true);
@@ -495,7 +498,7 @@ int main(const int argc, const char** argv)
   ds_dpT_Pb_QE->setUniverses(0); //default value, put 0 if you do not want universes to be included.
   loop.addXSec(ds_dpT_Pb_QE);
 
-  MinModDepCCQEXSec* ds_dpT_Pb_RES = new MinModDepCCQEXSec("pTmu_Lead_RES", 82, "RES");
+  MinModDepCCQEXSec* ds_dpT_Pb_RES = new MinModDepCCQEXSec("pTmu_Lead_RES", 82, neutKE, "RES");
   ds_dpT_Pb_RES->setBinEdges(pt_nbins, pt_edges);
   ds_dpT_Pb_RES->setVariable(XSec::kPTLep);
   ds_dpT_Pb_RES->setIsFluxIntegrated(true);
@@ -506,7 +509,7 @@ int main(const int argc, const char** argv)
   ds_dpT_Pb_RES->setUniverses(0); //default value, put 0 if you do not want universes to be included.
   loop.addXSec(ds_dpT_Pb_RES);
 
-  MinModDepCCQEXSec* ds_dpT_Pb_DIS = new MinModDepCCQEXSec("pTmu_Lead_DIS", 82, "DIS");
+  MinModDepCCQEXSec* ds_dpT_Pb_DIS = new MinModDepCCQEXSec("pTmu_Lead_DIS", 82, neutKE, "DIS");
   ds_dpT_Pb_DIS->setBinEdges(pt_nbins, pt_edges);
   ds_dpT_Pb_DIS->setVariable(XSec::kPTLep);
   ds_dpT_Pb_DIS->setIsFluxIntegrated(true);
@@ -517,7 +520,7 @@ int main(const int argc, const char** argv)
   ds_dpT_Pb_DIS->setUniverses(0); //default value, put 0 if you do not want universes to be included.
   loop.addXSec(ds_dpT_Pb_DIS);
 
-  MinModDepCCQEXSec* ds_dpT_Pb_2p2h = new MinModDepCCQEXSec("pTmu_Lead_2p2h", 82, "2p2h");
+  MinModDepCCQEXSec* ds_dpT_Pb_2p2h = new MinModDepCCQEXSec("pTmu_Lead_2p2h", 82, neutKE, "2p2h");
   ds_dpT_Pb_2p2h->setBinEdges(pt_nbins, pt_edges);
   ds_dpT_Pb_2p2h->setVariable(XSec::kPTLep);
   ds_dpT_Pb_2p2h->setIsFluxIntegrated(true);
@@ -528,7 +531,7 @@ int main(const int argc, const char** argv)
   ds_dpT_Pb_2p2h->setUniverses(0); //default value, put 0 if you do not want universes to be included.
   loop.addXSec(ds_dpT_Pb_2p2h);
 
-  MinModDepCCQEXSec* ds_dpT_Pb_Other = new MinModDepCCQEXSec("pTmu_Lead_Other", 82, "Other");
+  MinModDepCCQEXSec* ds_dpT_Pb_Other = new MinModDepCCQEXSec("pTmu_Lead_Other", 82, neutKE, "Other");
   ds_dpT_Pb_Other->setBinEdges(pt_nbins, pt_edges);
   ds_dpT_Pb_Other->setVariable(XSec::kPTLep);
   ds_dpT_Pb_Other->setIsFluxIntegrated(true);
@@ -539,7 +542,7 @@ int main(const int argc, const char** argv)
   ds_dpT_Pb_Other->setUniverses(0); //default value, put 0 if you do not want universes to be included.
   loop.addXSec(ds_dpT_Pb_Other);
 
-  MinModDepCCQEXSec* ds_dpT_Water = new MinModDepCCQEXSec("pTmu_Water", 8);
+  MinModDepCCQEXSec* ds_dpT_Water = new MinModDepCCQEXSec("pTmu_Water", 8, neutKE);
   ds_dpT_Water->setBinEdges(pt_nbins, pt_edges);
   ds_dpT_Water->setVariable(XSec::kPTLep);
   ds_dpT_Water->setIsFluxIntegrated(true);
@@ -550,7 +553,7 @@ int main(const int argc, const char** argv)
   ds_dpT_Water->setUniverses(0); //default value, put 0 if you do not want universes to be included.
   loop.addXSec(ds_dpT_Water);
 
-  MinModDepCCQEXSec* ds_dpT_Water_QE = new MinModDepCCQEXSec("pTmu_Water_QE", 8, "QE");
+  MinModDepCCQEXSec* ds_dpT_Water_QE = new MinModDepCCQEXSec("pTmu_Water_QE", 8, neutKE, "QE");
   ds_dpT_Water_QE->setBinEdges(pt_nbins, pt_edges);
   ds_dpT_Water_QE->setVariable(XSec::kPTLep);
   ds_dpT_Water_QE->setIsFluxIntegrated(true);
@@ -561,7 +564,7 @@ int main(const int argc, const char** argv)
   ds_dpT_Water_QE->setUniverses(0); //default value, put 0 if you do not want universes to be included.
   loop.addXSec(ds_dpT_Water_QE);
 
-  MinModDepCCQEXSec* ds_dpT_Water_RES = new MinModDepCCQEXSec("pTmu_Water_RES", 8, "RES");
+  MinModDepCCQEXSec* ds_dpT_Water_RES = new MinModDepCCQEXSec("pTmu_Water_RES", 8, neutKE, "RES");
   ds_dpT_Water_RES->setBinEdges(pt_nbins, pt_edges);
   ds_dpT_Water_RES->setVariable(XSec::kPTLep);
   ds_dpT_Water_RES->setIsFluxIntegrated(true);
@@ -572,7 +575,7 @@ int main(const int argc, const char** argv)
   ds_dpT_Water_RES->setUniverses(0); //default value, put 0 if you do not want universes to be included.
   loop.addXSec(ds_dpT_Water_RES);
 
-  MinModDepCCQEXSec* ds_dpT_Water_DIS = new MinModDepCCQEXSec("pTmu_Water_DIS", 8, "DIS");
+  MinModDepCCQEXSec* ds_dpT_Water_DIS = new MinModDepCCQEXSec("pTmu_Water_DIS", 8, neutKE, "DIS");
   ds_dpT_Water_DIS->setBinEdges(pt_nbins, pt_edges);
   ds_dpT_Water_DIS->setVariable(XSec::kPTLep);
   ds_dpT_Water_DIS->setIsFluxIntegrated(true);
@@ -583,7 +586,7 @@ int main(const int argc, const char** argv)
   ds_dpT_Water_DIS->setUniverses(0); //default value, put 0 if you do not want universes to be included.
   loop.addXSec(ds_dpT_Water_DIS);
 
-  MinModDepCCQEXSec* ds_dpT_Water_2p2h = new MinModDepCCQEXSec("pTmu_Water_2p2h", 8, "2p2h");
+  MinModDepCCQEXSec* ds_dpT_Water_2p2h = new MinModDepCCQEXSec("pTmu_Water_2p2h", 8, neutKE, "2p2h");
   ds_dpT_Water_2p2h->setBinEdges(pt_nbins, pt_edges);
   ds_dpT_Water_2p2h->setVariable(XSec::kPTLep);
   ds_dpT_Water_2p2h->setIsFluxIntegrated(true);
@@ -594,7 +597,7 @@ int main(const int argc, const char** argv)
   ds_dpT_Water_2p2h->setUniverses(0); //default value, put 0 if you do not want universes to be included.
   loop.addXSec(ds_dpT_Water_2p2h);
 
-  MinModDepCCQEXSec* ds_dpT_Water_Other = new MinModDepCCQEXSec("pTmu_Water_Other", 8, "Other");
+  MinModDepCCQEXSec* ds_dpT_Water_Other = new MinModDepCCQEXSec("pTmu_Water_Other", 8, neutKE, "Other");
   ds_dpT_Water_Other->setBinEdges(pt_nbins, pt_edges);
   ds_dpT_Water_Other->setVariable(XSec::kPTLep);
   ds_dpT_Water_Other->setIsFluxIntegrated(true);
@@ -608,7 +611,7 @@ int main(const int argc, const char** argv)
   loop.runLoop();
 
   // Get the output histograms and save them to file
-  string geniefilename =  "GENIEXSECEXTRACT_" + outName + ".root";
+  string geniefilename =  "GENIEXSECEXTRACT_" + outName + "_neutronKE_" + to_string(neutKE) + ".root";
   TFile fout(geniefilename.c_str(), "RECREATE");
   for(uint i=0; i<loop.getXSecs().size(); ++i)
   {
