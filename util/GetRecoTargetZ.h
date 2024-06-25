@@ -28,7 +28,7 @@ namespace util
   double step_big = 23.57;
   double step_small = 20.64;
 
-  int GetRecoTargetZ(const double vtx_x, const double vtx_y, const double vtx_z){
+  int GetRecoTargetZ(const double vtx_x, const double vtx_y, const double vtx_z, bool reqInApothem = true){
     //Thickness different for different materials, so fix this later...
     double Tgt1Lo = PlotUtils::TargetUtils::Get().GetTarget1CenterZMC() - PlotUtils::TargetProp::ThicknessMC::Tgt1::Pb/2;
     double Tgt2Lo = PlotUtils::TargetUtils::Get().GetTarget2CenterZMC() - PlotUtils::TargetProp::ThicknessMC::Tgt2::Pb/2;
@@ -37,7 +37,7 @@ namespace util
     double Tgt5Lo = PlotUtils::TargetUtils::Get().GetTarget5CenterZMC() - PlotUtils::TargetProp::ThicknessMC::Tgt5::Pb/2;
     double TgtWLo = PlotUtils::TargetProp::WaterTarget::Face;
 
-    if (!PlotUtils::TargetUtils::Get().IsInHexagon(vtx_x,vtx_y)) return -1;
+    if (!PlotUtils::TargetUtils::Get().IsInHexagon(vtx_x,vtx_y) && reqInApothem) return -1;
     else if (vtx_z < Tgt1Lo) return 10;
     else if (vtx_z < TgtDSCut[1]) return 1;
     else if (vtx_z < Tgt2Lo) return 21;
