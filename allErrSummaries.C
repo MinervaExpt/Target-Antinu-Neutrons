@@ -61,6 +61,68 @@ void allErrSummaries(TString fileName, TString outDir) {
   TKey* key;
   while ( key = (TKey*)next() ){
     //cout << key->GetName() << endl;
+    if ((TString)(key->GetClassName()) == "TDirectoryFile"){
+      TDirectoryFile* dirInt = (TDirectoryFile*)inFile->Get(key->GetName());
+      TList* keyListInt = dirInt->GetListOfKeys();
+      if (!keyListInt){
+	cout << "List of keys failed to get inside directory." << endl;
+	return;
+      }
+      
+      TIter nextInt(keyListInt);
+      TKey* keyInt;
+      size_t pos=0;
+      string name=(string)key->GetName();
+      if ((pos = name.find("TwoD")) != string::npos ) continue;
+
+      while ( keyInt = (TKey*)nextInt() ){
+	string nameInt = (string)keyInt->GetName();
+	name = (string)key->GetName() + "/"+nameInt;
+	if((pos = nameInt.find("_data")) != string::npos){
+	  pos=0;
+	  if ((pos = nameInt.find("SB")) != string::npos || (pos = nameInt.find("vtxZ")) != string::npos ) continue;
+	  cout << "Plotting error summary for: " << nameInt << endl;      
+	  TCanvas* c1 = new TCanvas("c1","c1",1200,800);
+	  MnvH1D* h_mc_data = (MnvH1D*)inFile->Get((TString)name);      
+	  name.erase(name.length()-5,name.length());      
+	  nameInt.erase(nameInt.length()-5,nameInt.length());
+	  plotter->DrawErrorSummary(h_mc_data);
+	  //plotter->DrawErrorSummary(h_mc_data, "TR", true, true, 1e-5, false, "Neutron Detection");
+	  c1->Print((TString)outDir+(TString)nameInt+"_err_summary.pdf");
+	  c1->Print((TString)outDir+(TString)nameInt+"_err_summary.png");
+	  cout << "" << endl;
+	  delete c1;
+	}
+	else if ((pos = nameInt.find("_efficiency_numerator")) != string::npos){
+	  pos=0;
+	  if ((pos = nameInt.find("SB")) != string::npos || (pos = nameInt.find("vtxZ")) != string::npos ) continue;
+	  cout << "Plotting error summary for: " << nameInt << endl;
+	  TCanvas* c1 = new TCanvas("c1","c1",1200,800);
+	  MnvH1D* h_mc_eff_num = (MnvH1D*)inFile->Get((TString)name);
+	  plotter->DrawErrorSummary(h_mc_eff_num);
+	  //plotter->DrawErrorSummary(h_mc_eff_num, "TR", true, true, 1e-5, false, "Neutron Detection");
+	  c1->Print((TString)outDir+(TString)nameInt+"_err_summary.pdf");
+	  c1->Print((TString)outDir+(TString)nameInt+"_err_summary.png");
+	  name.erase(name.length()-10,name.length());
+	  string nameDen = name+"_denominator";
+	  nameInt.erase(nameInt.length()-10,nameInt.length());
+	  string nameIntDen = nameInt+"_denominator";
+	  MnvH1D* h_mc_eff_den = (MnvH1D*)inFile->Get((TString)nameDen);
+	  h_mc_eff_den->AddMissingErrorBandsAndFillWithCV(*h_mc_eff_num);
+	  plotter->DrawErrorSummary(h_mc_eff_den);
+	  //plotter->DrawErrorSummary(h_mc_eff_den, "TR", true, true, 1e-5, false, "Neutron Detection");
+	  c1->Print((TString)outDir+(TString)nameIntDen+"_err_summary.pdf");
+	  c1->Print((TString)outDir+(TString)nameIntDen+"_err_summary.png");
+	  h_mc_eff_num->Divide(h_mc_eff_num,h_mc_eff_den);
+	  plotter->DrawErrorSummary(h_mc_eff_num);
+	  //plotter->DrawErrorSummary(h_mc_eff_num, "TR", true, true, 1e-5, false, "Neutron Detection");
+	  c1->Print((TString)outDir+(TString)nameInt+"_err_summary.pdf");
+	  c1->Print((TString)outDir+(TString)nameInt+"_err_summary.png");      
+	  cout << "" << endl;
+	}	
+      }
+    }
+
     size_t pos=0;
     string name=(string)key->GetName();
     if((pos = name.find("_data")) != string::npos){
@@ -71,10 +133,36 @@ void allErrSummaries(TString fileName, TString outDir) {
       MnvH1D* h_mc_data = (MnvH1D*)inFile->Get((TString)name);      
       name.erase(name.length()-5,name.length());      
       plotter->DrawErrorSummary(h_mc_data);
+      //plotter->DrawErrorSummary(h_mc_data, "TR", true, true, 1e-5, false, "Neutron Detection");
       c1->Print((TString)outDir+(TString)name+"_err_summary.pdf");
       c1->Print((TString)outDir+(TString)name+"_err_summary.png");
       cout << "" << endl;
       delete c1;
+    }
+    else if ((pos = name.find("_efficiency_numerator")) != string::npos){
+      pos=0;
+      if ((pos = name.find("SB")) != string::npos || (pos = name.find("vtxZ")) != string::npos ) continue;
+      cout << "Plotting error summary for: " << name << endl;
+      TCanvas* c1 = new TCanvas("c1","c1",1200,800);
+      MnvH1D* h_mc_eff_num = (MnvH1D*)inFile->Get((TString)name);
+      plotter->DrawErrorSummary(h_mc_eff_num);
+      //plotter->DrawErrorSummary(h_mc_eff_num, "TR", true, true, 1e-5, false, "Neutron Detection");
+      c1->Print((TString)outDir+(TString)name+"_err_summary.pdf");
+      c1->Print((TString)outDir+(TString)name+"_err_summary.png");
+      name.erase(name.length()-10,name.length());
+      string nameDen = name+"_denominator";
+      MnvH1D* h_mc_eff_den = (MnvH1D*)inFile->Get((TString)nameDen);
+      h_mc_eff_den->AddMissingErrorBandsAndFillWithCV(*h_mc_eff_num);
+      plotter->DrawErrorSummary(h_mc_eff_den);
+      //plotter->DrawErrorSummary(h_mc_eff_den, "TR", true, true, 1e-5, false, "Neutron Detection");
+      c1->Print((TString)outDir+(TString)nameDen+"_err_summary.pdf");
+      c1->Print((TString)outDir+(TString)nameDen+"_err_summary.png");
+      h_mc_eff_num->Divide(h_mc_eff_num,h_mc_eff_den);
+      plotter->DrawErrorSummary(h_mc_eff_num);
+      //plotter->DrawErrorSummary(h_mc_eff_num, "TR", true, true, 1e-5, false, "Neutron Detection");
+      c1->Print((TString)outDir+(TString)name+"_err_summary.pdf");
+      c1->Print((TString)outDir+(TString)name+"_err_summary.png");      
+      cout << "" << endl;
     }
   }
 
