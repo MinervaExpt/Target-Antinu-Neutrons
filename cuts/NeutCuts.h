@@ -6,6 +6,7 @@
 #define David_NeutCuts_H
 
 #include "PlotUtils/Cut.h"
+#include "util/GetRecoTargetZ.h"
 
 namespace MyNeutCuts{
 
@@ -75,6 +76,25 @@ namespace MyNeutCuts{
     {
       return evt.GetLeadingNeutCand().GetVtxDist() >= 100;
     }
+  };
+
+  template <class UNIVERSE, class EVENT>
+  class LeadNeutOutsideTgt: public PlotUtils::Cut<UNIVERSE, EVENT>
+  {
+  public:
+    // Constructor
+    LeadNeutOutsideTgt(): PlotUtils::Cut<UNIVERSE, EVENT>("Lead Neut. Cand. Outside Tgt.") {}
+
+  private:
+    bool checkCut(const UNIVERSE& /*univ*/, EVENT& evt) const override
+    {
+      int TgtByZ = util::GetRecoTargetZ(evt.GetLeadingNeutCand().GetXPos(),
+					evt.GetLeadingNeutCand().GetYPos(),
+					evt.GetLeadingNeutCand().GetZPos(),
+					false);
+      return TgtByZ < 1 || TgtByZ > 6;
+    }
+
   };
 
   template <class UNIVERSE, class EVENT>
