@@ -58,6 +58,7 @@ enum ErrorCodes
 #include "event/MichelEvent.h"
 #include "event/NeutCands.h"
 #include "systematics/Systematics.h"
+#include "systematics/MonaSystematic.h"
 #include "cuts/MaxPzMu.h"
 #include "cuts/CCQECuts.h"
 #include "cuts/NeutCuts.h"
@@ -163,10 +164,23 @@ void LoopAndFillEventSelection(
 
 	if (SBStat.none()) continue;
 
+
+	if (((TString)(universe->ShortName())).Contains("NeutronInelasticExclusives")){
+	  std::cout << "" << std::endl;
+	  std::cout << "#################################" << std::endl;
+	  std::cout << "Event no.: " << i << std::endl;
+	  std::cout << "In MoNA Universe!" << std::endl;
+	}
+
         //weight is ignored in isMCSelected() for all but the CV Universe.
         //if (!michelcuts.isMCSelected(*universe, myevent, cvWeight).all()) continue; //all is another function that will later help me with sidebands
         const double weight = model.GetWeight(*universe, myevent); //Only calculate the per-universe weight for events that will actually use it.
         //const double weight = 1.0; //Dummy weight for testing/validation pre-weight
+
+	if ((TString)(universe->ShortName()) == "NeutronInelasticExclusives"){
+	  std::cout << "Event Weight Ratio To CV: " << weight/cvWeight << std::endl;
+	}
+
         const bool isFSSignal = michelcuts.isSignal(*universe, weight);
 	const bool isTgts = (vars_ByTgt.size() > 0 || vars2D_ByTgt.size()) ? true : false;
 
@@ -809,6 +823,7 @@ int main(const int argc, const char** argv)
     preCuts.emplace_back(new MyNeutCuts::LeadNeutIs3D<CVUniverse, NeutronEvent>());
     preCuts.emplace_back(new MyNeutCuts::LeadNeutIsFarFromMuon<CVUniverse, NeutronEvent>());
     preCuts.emplace_back(new MyNeutCuts::LeadNeutZDistMin<CVUniverse, NeutronEvent>()); //Removed for neutron study without z dist cut
+    //preCuts.emplace_back(new MyNeutCuts::LeadNeutOutsideTgt<CVUniverse, NeutronEvent>());
   }
   //preCuts.emplace_back(new MyNeutCuts::LeadNeutInTracker<CVUniverse, NeutronEvent>(maxZ));
   //preCuts.emplace_back(new reco::IsNeutrino<CVUniverse, NeutronEvent>());
@@ -845,7 +860,7 @@ int main(const int argc, const char** argv)
     if (tuneVer == "1_BodekRitchie") MnvTune.emplace_back(new PlotUtils::BodekRitchieReweighter<CVUniverse, NeutronEvent>(1));
   }
   //TODO: Other Warps just need to see if these even work...
-  MnvTune.emplace_back(new PlotUtils::GeantNeutronCVReweighter<CVUniverse, NeutronEvent>());
+  MnvTune.emplace_back(new PlotUtils::GeantNeutronCVReweighter<CVUniverse, NeutronEvent>()); //Removed 06/11/2024 for check with neutron systematics... shouldn't matter really. Replaced the following day for validation with new Oscar tuples.
   if (elFSI || piFSI) MnvTune.emplace_back(new PlotUtils::FSIReweighter<CVUniverse, NeutronEvent>(elFSI, piFSI));
 
   PlotUtils::Model<CVUniverse, NeutronEvent> model(std::move(MnvTune));
@@ -863,15 +878,23 @@ int main(const int argc, const char** argv)
   std::cout << nameExt << std::endl;
 
   std::map< std::string, std::vector<CVUniverse*> > error_bands;
-  if(doSystematics) error_bands = GetStandardSystematics(options.m_mc,"dispr_id_and_blobbed_energy_wNuclTargs",true,(elFSI || piFSI));
+  if(doSystematics) error_bands = GetStandardSystematics(options.m_mc,"nonMuonNonVtx100mm_wNuclTargs",true,(elFSI || piFSI));
   //if(doSystematics) error_bands = GetStandardSystematics(options.m_mc,"dispr_id_and_blobbed_energy_wNuclTargs",true,true);
   else{
     std::map<std::string, std::vector<CVUniverse*> > band_flux = PlotUtils::GetFluxSystematicsMap<CVUniverse>(options.m_mc, CVUniverse::GetNFluxUniverses());
     error_bands.insert(band_flux.begin(), band_flux.end()); //Necessary to get flux integral later...
+    //TEMPORARY NEUTRON SYSTEMATIC ONLY ADDED INTO THE FOLD. Turn back on for testing. Turned off for validation with new Oscar 6J tuples.
+    std::map<std::string, std::vector<CVUniverse*> > bands_mona = GetMonaSystematicMap(options.m_mc);
+    error_bands.insert(bands_mona.begin(), bands_mona.end());
   }
   error_bands["cv"] = {new CVUniverse(options.m_mc)};
   std::map< std::string, std::vector<CVUniverse*> > truth_bands;
-  if(doSystematics) truth_bands = GetStandardSystematics(options.m_truth,"dispr_id_and_blobbed_energy_wNuclTargs",true, (elFSI || piFSI));
+  if(doSystematics) truth_bands = GetStandardSystematics(options.m_truth,"nonMuonNonVtx100mm_wNuclTargs",true, (elFSI || piFSI));
+  else{
+    std::map<std::string, std::vector<CVUniverse*> > bands_mona = GetMonaSystematicMap(options.m_truth);
+    truth_bands.insert(bands_mona.begin(), bands_mona.end());
+  }
+  /**/
   truth_bands["cv"] = {new CVUniverse(options.m_truth)};
   
   //Same as Amit's seemingly. Bin normalized these are smoother.
@@ -994,7 +1017,7 @@ int main(const int argc, const char** argv)
 
   std::vector<Variable2D*> vars2D = {
     new Variable2D(false,"recoil_v_pT",*vars[0],*vars[vars.size()-6]),
-    new Variable2D(false,"vtxXY",*vars[vars.size()-4],*vars[vars.size()-3]),
+    //new Variable2D(false,"vtxXY",*vars[vars.size()-4],*vars[vars.size()-3]),
   };
   //With systematics these two might get a little hairy having both. But for now without, it's fine.
   std::cout << "Checking N bins X: " << vars2D.at(0)->GetNBinsX() << "Y: " << vars2D.at(0)->GetNBinsY() << std::endl;
