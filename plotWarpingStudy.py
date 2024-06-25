@@ -29,7 +29,7 @@ for fileName in sys.argv[5:]:
   #if fileName.find("SuSA") != -1: #The SuSA warp is a stand-alone CV, so it needs special treatment
     #univName = "SuSA"
 
-  outName = baseName+"_"+univName
+  outName = baseName+"_Warp"+univName
 
   spread = myFile.Get(chi2SummaryDir).Get(chi2SummaryName)
 
@@ -47,7 +47,7 @@ for fileName in sys.argv[5:]:
   can.Print(outName + "_fullRange.png")
   can.Print(outName + "_fullRange.pdf")
   can.Print(outName + "_fullRange.C")
-  spread.GetXaxis().SetRangeUser(1.0,30.0)
+  spread.GetXaxis().SetRangeUser(0.0,30.0)
   spread.GetYaxis().SetRangeUser(0.0,70.0)
   spread.Draw("colz")
 
