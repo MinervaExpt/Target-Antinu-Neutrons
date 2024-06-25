@@ -99,7 +99,9 @@ ptbins = [0, 0.125, 0.25, 0.38, 0.515, 0.64, 0.78, 0.94, 1.15, 1.5]
 mypt = ROOT.TH1D("pt","pt",len(ptbins)-1,array.array("d",ptbins))
 
 for e in mytree:
+    #print "E"
     if not (isInclusiveRHC(e) and isGoodMuon(e) and isFSSignal(e)): continue
+    #print "Got an event! YAYYYYYY!"
     coslep = e.CosLep
     elep= e.ELep
     fScaleFactor = e.fScaleFactor
