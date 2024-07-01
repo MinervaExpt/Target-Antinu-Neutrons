@@ -164,22 +164,25 @@ void LoopAndFillEventSelection(
 
 	if (SBStat.none()) continue;
 
-
+	/*
 	if (((TString)(universe->ShortName())).Contains("NeutronInelasticExclusives")){
 	  std::cout << "" << std::endl;
 	  std::cout << "#################################" << std::endl;
 	  std::cout << "Event no.: " << i << std::endl;
 	  std::cout << "In MoNA Universe!" << std::endl;
 	}
+	*/
 
         //weight is ignored in isMCSelected() for all but the CV Universe.
         //if (!michelcuts.isMCSelected(*universe, myevent, cvWeight).all()) continue; //all is another function that will later help me with sidebands
         const double weight = model.GetWeight(*universe, myevent); //Only calculate the per-universe weight for events that will actually use it.
         //const double weight = 1.0; //Dummy weight for testing/validation pre-weight
 
+	/*
 	if ((TString)(universe->ShortName()) == "NeutronInelasticExclusives"){
 	  std::cout << "Event Weight Ratio To CV: " << weight/cvWeight << std::endl;
 	}
+	*/
 
         const bool isFSSignal = michelcuts.isSignal(*universe, weight);
 	const bool isTgts = (vars_ByTgt.size() > 0 || vars2D_ByTgt.size()) ? true : false;
@@ -884,16 +887,16 @@ int main(const int argc, const char** argv)
     std::map<std::string, std::vector<CVUniverse*> > band_flux = PlotUtils::GetFluxSystematicsMap<CVUniverse>(options.m_mc, CVUniverse::GetNFluxUniverses());
     error_bands.insert(band_flux.begin(), band_flux.end()); //Necessary to get flux integral later...
     //TEMPORARY NEUTRON SYSTEMATIC ONLY ADDED INTO THE FOLD. Turn back on for testing. Turned off for validation with new Oscar 6J tuples.
-    std::map<std::string, std::vector<CVUniverse*> > bands_mona = GetMonaSystematicMap(options.m_mc);
-    error_bands.insert(bands_mona.begin(), bands_mona.end());
+    ////std::map<std::string, std::vector<CVUniverse*> > bands_mona = GetMonaSystematicMap(options.m_mc);
+    ////error_bands.insert(bands_mona.begin(), bands_mona.end());
   }
   error_bands["cv"] = {new CVUniverse(options.m_mc)};
   std::map< std::string, std::vector<CVUniverse*> > truth_bands;
   if(doSystematics) truth_bands = GetStandardSystematics(options.m_truth,"nonMuonNonVtx100mm_wNuclTargs",true, (elFSI || piFSI));
-  else{
-    std::map<std::string, std::vector<CVUniverse*> > bands_mona = GetMonaSystematicMap(options.m_truth);
-    truth_bands.insert(bands_mona.begin(), bands_mona.end());
-  }
+  ////else{
+  ////std::map<std::string, std::vector<CVUniverse*> > bands_mona = GetMonaSystematicMap(options.m_truth);
+  ////truth_bands.insert(bands_mona.begin(), bands_mona.end());
+  ////}
   /**/
   truth_bands["cv"] = {new CVUniverse(options.m_truth)};
   
