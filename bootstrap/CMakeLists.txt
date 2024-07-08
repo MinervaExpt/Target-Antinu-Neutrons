@@ -46,7 +46,7 @@ ExternalProject_Add(MAT
 ExternalProject_Add(MAT-MINERvA
 		    "${DISABLE_GIT_DOWNLOAD}"
                     GIT_REPOSITORY ${GIT_CHECKOUT_PREFIX}MinervaExpt/MAT-MINERvA.git
-                    GIT_TAG ${MY_GIT_TAG}
+                    GIT_TAG "feature/dlast_develop"
                     SOURCE_DIR "${SOURCE_CODE_DIR}/MAT-MINERvA"
                     CMAKE_ARGS -DCMAKE_INSTALL_PREFIX:PATH=${CMAKE_INSTALL_PREFIX} -DCMAKE_BUILD_TYPE:STRING=${CMAKE_BUILD_TYPE}
 		    STEP_TARGETS update
