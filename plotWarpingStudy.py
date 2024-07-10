@@ -16,7 +16,7 @@ matTag = sys.argv[3]+" "+sys.argv[4]
 baseName = sys.argv[1]
 
 if baseName.find(".root") != -1:
-  print "GOTTA NAME YOUR OUTPUT FILE"
+  print ("GOTTA NAME YOUR OUTPUT FILE")
   exit
 
 can = ROOT.TCanvas("chi2")
@@ -47,7 +47,7 @@ for fileName in sys.argv[5:]:
   can.Print(outName + "_fullRange.png")
   can.Print(outName + "_fullRange.pdf")
   can.Print(outName + "_fullRange.C")
-  spread.GetXaxis().SetRangeUser(0.0,30.0)
+  spread.GetXaxis().SetRangeUser(1.0,30.0)
   spread.GetYaxis().SetRangeUser(0.0,70.0)
   spread.Draw("colz")
 
