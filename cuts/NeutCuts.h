@@ -86,12 +86,12 @@ namespace MyNeutCuts{
     LeadNeutOutsideTgt(): PlotUtils::Cut<UNIVERSE, EVENT>("Lead Neut. Cand. Outside Tgt.") {}
 
   private:
-    bool checkCut(const UNIVERSE& /*univ*/, EVENT& evt) const override
+    bool checkCut(const UNIVERSE& univ, EVENT& evt) const override
     {
-      int TgtByZ = util::GetRecoTargetZ(evt.GetLeadingNeutCand().GetXPos(),
-					evt.GetLeadingNeutCand().GetYPos(),
-					evt.GetLeadingNeutCand().GetZPos(),
-					false);
+      double x = evt.GetLeadingNeutCand().GetXPos();
+      double y = evt.GetLeadingNeutCand().GetYPos();
+      double z = evt.GetLeadingNeutCand().GetZPos();
+      int TgtByZ = util::GetRecoTargetZWide(x, y, z, false);
       return TgtByZ < 1 || TgtByZ > 6;
     }
 

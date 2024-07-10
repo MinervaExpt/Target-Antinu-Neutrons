@@ -52,6 +52,24 @@ namespace util
     else if (vtx_z < TgtDSCut[5]) return 5;
     else return 0;
   }
+
+  int GetRecoTargetZWide(const double vtx_x, const double vtx_y, const double vtx_z, bool reqInApothem = true){
+    
+    if (!PlotUtils::TargetUtils::Get().IsInHexagon(vtx_x,vtx_y) && reqInApothem) return -1;
+    else if (vtx_z < TgtUSPlaneBack[1]) return 10;
+    else if (vtx_z < TgtDSCut[1]) return 1;
+    else if (vtx_z < TgtUSPlaneBack[2]) return 21;
+    else if (vtx_z < TgtDSCut[2]) return 2;
+    else if (vtx_z < TgtUSPlaneBack[3]) return 32;
+    else if (vtx_z < TgtDSCut[3]) return 3;
+    else if (vtx_z < TgtUSPlaneBack[6]) return 63;
+    else if (vtx_z < TgtDSCut[6]) return 6;
+    else if (vtx_z < TgtUSPlaneBack[4]) return 46;
+    else if (vtx_z < TgtDSCut[4]) return 4;
+    else if (vtx_z < TgtUSPlaneBack[5]) return 54;
+    else if (vtx_z < TgtDSCut[5]) return 5;
+    else return 0;
+  }
   
   /*
   int GetTightTargetZ(double vtx_x, double vtx_y, double vtx_z){
