@@ -30,7 +30,7 @@ UniverseMap removeElasticBand(UniverseMap unprunedBands){
   return prunedBands;
 }
 
-UniverseMap GetStandardSystematics(PlotUtils::ChainWrapper* chain, std::string response_name_tag = "", bool doMona = true, bool pruneElasN = false)
+UniverseMap GetStandardSystematics(PlotUtils::ChainWrapper* chain, TString tuneVer, std::string response_name_tag = "", bool doMona = true, bool pruneElasN = false)
 {
   // return map
   UniverseMap error_bands;
@@ -62,13 +62,20 @@ UniverseMap GetStandardSystematics(PlotUtils::ChainWrapper* chain, std::string r
   // MnvTunes
   //========================================================================
   // RPA
-  UniverseMap bands_rpa = PlotUtils::GetRPASystematicsMap<CVUniverse>(chain);
-  error_bands.insert(bands_rpa.begin(), bands_rpa.end());
-
+  if (!tuneVer.Contains("_noRPA")){
+      UniverseMap bands_rpa = PlotUtils::GetRPASystematicsMap<CVUniverse>(chain);
+      error_bands.insert(bands_rpa.begin(), bands_rpa.end());
+  }
+      
   // 2P2H
-  UniverseMap bands_2p2h = PlotUtils::Get2p2hSystematicsMap<CVUniverse>(chain);
-  error_bands.insert(bands_2p2h.begin(), bands_2p2h.end());
+  if (!tuneVer.Contains("_no2p2h")){
+    UniverseMap bands_2p2h = PlotUtils::Get2p2hSystematicsMap<CVUniverse>(chain);
+    error_bands.insert(bands_2p2h.begin(), bands_2p2h.end());
+  }
 
+  if (tuneVer.Contains("2")){
+    //Fill this in accordingly for MnvTune V2... maybe V4 eventually?
+  }
   //========================================================================
   // Muons
   //========================================================================
