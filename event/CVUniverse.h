@@ -262,7 +262,7 @@ class CVUniverse : public PlotUtils::MinervaUniverse {
     }
     return max_KE;
   }
-
+  
   virtual int GetNImprovedMichel() const { return GetInt("improved_michel_vertex_type_sz"); }
 
   virtual int GetNuHelicity() const { return GetInt((GetAnaToolName()+"_nuHelicity").c_str()); }
@@ -442,6 +442,37 @@ class CVUniverse : public PlotUtils::MinervaUniverse {
     return EvtCands;
   };
 
+  //Returns the total energy of the candidate to fill a variable that is reco when just trying to make efficiency as function of true neutron energy :)
+  virtual double GetLeadNeutCandE() const{
+    int nBlobs = GetNNeutBlobs();
+
+    if (nBlobs > 0){
+      std::vector<double> Es = GetNeutCandEs();
+      return std::max(Es.begin(),Es.end()) - Es.begin();
+    }
+
+    return -999;
+  };
+
+  virtual double GetMATCHEDLeadNeutCandE() const{
+    //std::cout << "Entering get MATCHED" << std::endl;
+    int nblobs = GetNNeutBlobs();
+    
+    std::string toolName = GetAnaToolName();
+
+    std::string branchName = "_BlobMCTopTrackE";
+    
+    if (nblobs > 0){
+      std::vector<double> Es = GetNeutCandEs();
+      int leadNeutEIndex = std::max_element(Es.begin(),Es.end()) - Es.begin();
+
+      //std::cout << "Trying to return the matched value as I should be able to..." << std::endl;
+      
+      return (GetVecElem((toolName+branchName).c_str(), leadNeutEIndex)-M_n);//Consistent calculation for KE from other comparisons.
+    }
+    return -999;
+  }
+  
   virtual NeutronCandidates::NeutCand GetNeutCand(int index){
     std::vector<double> vtx = GetVtx();
     TVector3 EvtVtx;
