@@ -69,6 +69,20 @@ namespace MyCCQECuts{
     }
   };
 
+  template <class UNIVERSE, class EVENT = PlotUtils::detail::empty>
+  class IsNu: public PlotUtils::Cut<UNIVERSE, EVENT>
+  {
+  public:
+    // Constructor
+    IsNu(): PlotUtils::Cut<UNIVERSE, EVENT>("Helicity == 1") {}
+
+  private:
+    bool checkCut(const UNIVERSE& univ, EVENT& /*evt*/) const override
+    {
+      return univ.GetNuHelicity() == 1;
+    }
+  };
+
   //May want to at some point make this a maximum so that it could
   //be tested or a sideband...
   template <class UNIVERSE, class EVENT = PlotUtils::detail::empty>
