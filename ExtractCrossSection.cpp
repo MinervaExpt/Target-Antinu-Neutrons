@@ -373,7 +373,7 @@ int main(const int argc, const char** argv)
       auto toSubtract = std::accumulate(std::next(backgrounds.begin()), backgrounds.end(), (*backgrounds.begin())->Clone(),
                                         [](auto sum, const auto hist)
                                         {
-                                          sum->Add(hist);
+					  if (hist->GetEntries() > 0) sum->Add(hist);
                                           return sum;
                                         });
       Plot(*toSubtract, "BackgroundSum", prefix, tgtZ);
@@ -407,13 +407,22 @@ int main(const int argc, const char** argv)
 
       effNum->Divide(effNum, effDenom); //Only the 2 parameter version of MnvH1D::Divide()
                                         //handles systematics correctly.
+      std::cout << "Survived making efficiency" << std::endl;
       Plot(*effNum, "efficiency", prefix, tgtZ);
+
+      std::cout << "Survived plotting efficiency" << std::endl;
       effNum->Clone()->Write("efficiency");
 
+      std::cout << "Survived writing efficiency" << std::endl;
       unfolded->Divide(unfolded, effNum);
+
+      std::cout << "Survived dividing by efficiency" << std::endl;
       Plot(*unfolded, "efficiencyCorrected", prefix, tgtZ);
 
+      std::cout << "Survived plotting eff Corr" << std::endl;
       unfolded->Clone()->Write("efficiencyCorrected");
+
+      std::cout << "Survived writing effCorr" << std::endl;
 
       if (!stopAtEffCorr){
 	PlotUtils::MnvH1D* flux;//Hard-coded for 1D. Might break... but currently necessary...
@@ -489,6 +498,7 @@ int main(const int argc, const char** argv)
 	Plot(*simEventRate, "simulatedCrossSection", prefix, tgtZ);
 	simEventRate->Write("simulatedCrossSection");
       }
+      outFile->Close();
     }
     catch(const std::runtime_error& e)
     {
@@ -496,6 +506,6 @@ int main(const int argc, const char** argv)
       return 4;
     }
   }
-
+  
   return 0;
 }
