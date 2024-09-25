@@ -128,7 +128,7 @@ void DrawFromMnvH1Ds(MnvH1D* h_data, map<TString, MnvH1D*> hFit, map<TString, Mn
 
   int iHist = 0;
   for (auto hist:hUnfit){
-    if (hist.first != "Signal"){
+    if (hist.first != "Signal" && hist.second->GetEntries()>0){
       mcSum->Add(hist.second);
       if (iHist!=0)unfitSum->Add(hist.second);
       else unfitSum = hist.second->Clone();
@@ -136,6 +136,8 @@ void DrawFromMnvH1Ds(MnvH1D* h_data, map<TString, MnvH1D*> hFit, map<TString, Mn
     }
   }
 
+  if (iHist==0) allFit = true;
+  
   //cout << "Coloring hists." << endl;  
   h_sig->SetLineColor(TColor::GetColor("#999933"));
   h_sig->SetFillColor(TColor::GetColor("#999933"));
@@ -156,12 +158,19 @@ void DrawFromMnvH1Ds(MnvH1D* h_data, map<TString, MnvH1D*> hFit, map<TString, Mn
   //cout << "Stacking hists." << endl;
 
   THStack* h = new THStack();
+
+  //if(!allFit)cout << "Unfit..." << endl;
+
   if(!allFit) h->Add((TH1D*)(unfitSum->GetBinNormalizedCopy().GetCVHistoWithError().Clone()));
+  //cout << "Fit..." << endl;
   for (auto hist:hFit){
     if(hist.first != "Signal") h->Add((TH1D*)(hist.second->GetBinNormalizedCopy().GetCVHistoWithError().Clone()));
   }
+  //cout << "Signal..." << endl;
   h->Add((TH1D*)(h_sig->GetBinNormalizedCopy().GetCVHistoWithError().Clone()));
 
+  //cout << "Stacked hists..." << endl;
+  
   MnvH1D* hDataClone = new MnvH1D(h_data->GetBinNormalizedCopy());
   TH1D* dataHist = (TH1D*)hDataClone->GetCVHistoWithError().Clone();
   dataHist->SetLineColor(kBlack);
@@ -181,7 +190,7 @@ void DrawFromMnvH1Ds(MnvH1D* h_data, map<TString, MnvH1D*> hFit, map<TString, Mn
 
   double areaScale = topArea/bottomArea;
 
-  //cout << "areaScale: " << areaScale << endl;
+  cout << "areaScale: " << areaScale << endl;
 
   h->Draw("hist");
   h->SetMaximum((dataHist->GetMaximum())*1.05);
