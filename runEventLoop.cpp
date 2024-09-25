@@ -668,6 +668,7 @@ bool inferRecoTreeNameAndCheckTreeNames(const std::string& mcPlaylistName, const
 //==============================================================================
 int main(const int argc, const char** argv)
 {
+  
   TH1::AddDirectory(false);
 
   //Validate input.
@@ -739,11 +740,22 @@ int main(const int argc, const char** argv)
  
   nameExt = "_elasticFix_"+std::to_string(elFSI)+"_piFix_"+std::to_string(piFSI)+nameExt;
 
-  if (tuneVer != "1" && tuneVer != "1_noRPA" && tuneVer != "1_no2p2h" && tuneVer != "2" && tuneVer != "1_SuSA" && tuneVer != "1_BodekRitchie" && tuneVer != "None"){
-    std::cerr << "Must choose between 1 and 2 for the <MnvTune_v> argument. Check usage printed below. \n" << USAGE << "\n";
+  if (!tuneVer.Contains("1") && !tuneVer.Contains("2") && !tuneVer.Contains("4") && tuneVer != "None"){
+    std::cerr << "Must choose between 1, 2, 4 or None as the base the <MnvTune_v> argument. Check usage printed below. \n" << USAGE << "\n";
+    return badCmdLine;
+  }
+  
+  if (tuneVer != "1" && tuneVer != "2" && tuneVer != "4" && !tuneVer.Contains("_noRPA") && !tuneVer.Contains("_no2p2h") && !tuneVer.Contains("_SuSA") && !tuneVer.Contains("_BodekRitchie") && !tuneVer.Contains("_Aaron") && tuneVer != "None"){
+    //if (tuneVer != "1" && tuneVer != "1_noRPA" && tuneVer != "1_no2p2h" && tuneVer != "2" && tuneVer != "1_SuSA" && tuneVer != "1_BodekRitchie" && tuneVer != "None"){
+    std::cerr << "Model provided not supported. \n" << USAGE << "\n";
     return badCmdLine;
   }
 
+  if (tuneVer.Contains("_Aaron") && !tuneVer.Contains("4")){
+    std::cerr << "Model provided not supported. Aaron Bercellie tune needs to be used with v4. \n" << USAGE << "\n";
+    return badCmdLine;
+  }
+  
   if (!FVregionName.Contains("Tracker") && !FVregionName.Contains("Target")){
     std::cerr << "<FV> argument invalid. Check usage printed below. \n" << USAGE << "\n";
     return badCmdLine;
@@ -777,13 +789,20 @@ int main(const int argc, const char** argv)
   //const bool is_grid = false;
   PlotUtils::MacroUtil options(reco_tree_name, mc_file_list, data_file_list, "minervame1A", true);
   options.m_plist_string = util::GetPlaylist(*options.m_mc, true); //TODO: Put GetPlaylist into PlotUtils::MacroUtil
+  ////options.m_plist_string = "minervame6J"; //GET RID OF THIS AS SOON AS YOU ARE DONE BUILDING THE VALIDATION CODE YOU DINGUS
+  ////std::cout << "The playlist I'm using is: " << options.m_plist_string << std::endl;
 
   // You're required to make some decisions
   PlotUtils::MinervaUniverse::SetNuEConstraint(true);
   PlotUtils::MinervaUniverse::SetPlaylist(options.m_plist_string); //TODO: Infer this from the files somehow?
   PlotUtils::MinervaUniverse::SetAnalysisNuPDG(-14);
+  ////PlotUtils::MinervaUniverse::SetAnalysisNuPDG(14);//Changed for Zubair...
   PlotUtils::MinervaUniverse::SetNFluxUniverses(100);
   PlotUtils::MinervaUniverse::SetZExpansionFaReweight(false);
+
+  //ADDING IN RPAMATERIALS and getting hadron systematics extended to the target region
+  PlotUtils::MinervaUniverse::RPAMaterials(true);
+  PlotUtils::MinervaUniverse::SetReadoutVolume("Nuke");
 
   //Now that we've defined what a cross section is, decide which sample and model
   //we're extracting a cross section for.
@@ -812,11 +831,13 @@ int main(const int argc, const char** argv)
   preCuts.emplace_back(new reco::ZRange<CVUniverse, NeutronEvent>(FVregion, minZ, maxZ));
   preCuts.emplace_back(new reco::Apothem<CVUniverse, NeutronEvent>(apothem));
   if(FVregionName.Contains("Daisy")) preCuts.emplace_back(new MyCCQECuts::CorrectDaisy<CVUniverse, NeutronEvent>(("Daisy Petal "+std::to_string(TgtNum)).c_str(), TgtNum));
+  
   preCuts.emplace_back(new reco::MaxMuonAngle<CVUniverse, NeutronEvent>(17.0));
   //preCuts.emplace_back(new reco::MaxMuonAngle<CVUniverse, NeutronEvent>(20.0));
   preCuts.emplace_back(new reco::HasMINOSMatch<CVUniverse, NeutronEvent>());
   preCuts.emplace_back(new reco::NoDeadtime<CVUniverse, NeutronEvent>(1, "Deadtime"));
   preCuts.emplace_back(new MyCCQECuts::PMuRange<CVUniverse, NeutronEvent>("1.5 <= Pmu <= 20",1.5,20.0));
+  //preCuts.emplace_back(new MyCCQECuts::IsNu<CVUniverse, NeutronEvent>());
   preCuts.emplace_back(new MyCCQECuts::IsAntiNu<CVUniverse, NeutronEvent>());
   preCuts.emplace_back(new MyCCQECuts::IsSingleTrack<CVUniverse, NeutronEvent>());
   preCuts.emplace_back(new MyCCQECuts::LooseRecoilCut<CVUniverse, NeutronEvent>(sbUpper)); //Removed for neutron study with no recoil cut
@@ -832,6 +853,7 @@ int main(const int argc, const char** argv)
   //preCuts.emplace_back(new reco::IsNeutrino<CVUniverse, NeutronEvent>());
 
   sidebands.emplace_back(new MyCCQECuts::RecoilCut<CVUniverse, NeutronEvent>());
+  
   //sidebands.emplace_back(new MyCCQECuts::AllEMBlobsCuts<CVUniverse, NeutronEvent>(true));
   //sidebands.emplace_back(new MyCCQECuts::NoMichels<CVUniverse, NeutronEvent>());
   //sidebands.emplace_back(new MyCCQECuts::EMNBlobsCut<CVUniverse, NeutronEvent>(true));
@@ -840,6 +862,7 @@ int main(const int argc, const char** argv)
   //signalDefinition.emplace_back(new truth::IsNeutrino<CVUniverse>());
   signalDefinition.emplace_back(new MySignal::IsAntiNu<CVUniverse>());
   signalDefinition.emplace_back(new truth::IsCC<CVUniverse>());
+  
   signalDefinition.emplace_back(new MySignal::IsCorrectFS<CVUniverse>(doNeutronCuts,neutKESig));
 
   phaseSpace.emplace_back(new truth::ZRange<CVUniverse>(FVregion, minZ, maxZ));
@@ -852,18 +875,21 @@ int main(const int argc, const char** argv)
   PlotUtils::Cutter<CVUniverse, NeutronEvent> mycuts(std::move(preCuts), std::move(sidebands) , std::move(signalDefinition),std::move(phaseSpace));
 
   std::vector<std::unique_ptr<PlotUtils::Reweighter<CVUniverse, NeutronEvent>>> MnvTune;
-  MnvTune.emplace_back(new PlotUtils::FluxAndCVReweighter<CVUniverse, NeutronEvent>());
-  MnvTune.emplace_back(new PlotUtils::GENIEReweighter<CVUniverse, NeutronEvent>(true, false));
-  MnvTune.emplace_back(new PlotUtils::MINOSEfficiencyReweighter<CVUniverse, NeutronEvent>());
   if (tuneVer != "None"){
-    if (tuneVer != "1_no2p2h" && tuneVer != "1_SuSA") MnvTune.emplace_back(new PlotUtils::LowRecoil2p2hReweighter<CVUniverse, NeutronEvent>());
-    if (tuneVer != "1_noRPA") MnvTune.emplace_back(new PlotUtils::RPAReweighter<CVUniverse, NeutronEvent>());
-    if (tuneVer == "2") MnvTune.emplace_back(new PlotUtils::LowQ2PiReweighter<CVUniverse, NeutronEvent>("JOINT"));
-    if (tuneVer == "1_SuSA") MnvTune.emplace_back(new PlotUtils::SuSAFromValencia2p2hReweighter<CVUniverse, NeutronEvent>());
-    if (tuneVer == "1_BodekRitchie") MnvTune.emplace_back(new PlotUtils::BodekRitchieReweighter<CVUniverse, NeutronEvent>(1));
+    MnvTune.emplace_back(new PlotUtils::FluxAndCVReweighter<CVUniverse, NeutronEvent>());
+    MnvTune.emplace_back(new PlotUtils::MINOSEfficiencyReweighter<CVUniverse, NeutronEvent>());
+    if (!tuneVer.Contains("4")) MnvTune.emplace_back(new PlotUtils::GENIEReweighter<CVUniverse, NeutronEvent>(true, false));
+    else MnvTune.emplace_back(new PlotUtils::GENIEReweighter<CVUniverse, NeutronEvent>(true, true));
+    if (!tuneVer.Contains("_no2p2h") && !tuneVer.Contains("_SuSA")) MnvTune.emplace_back(new PlotUtils::LowRecoil2p2hReweighter<CVUniverse, NeutronEvent>());
+    if (!tuneVer.Contains("_noRPA")) MnvTune.emplace_back(new PlotUtils::RPAReweighter<CVUniverse, NeutronEvent>());
+    if (tuneVer.Contains("2_") || tuneVer == "2") MnvTune.emplace_back(new PlotUtils::LowQ2PiReweighter<CVUniverse, NeutronEvent>("JOINT"));
+    else if (tuneVer.Contains("_Aaron")) MnvTune.emplace_back(new PlotUtils::LowQ2PiReweighter<CVUniverse, NeutronEvent>("MENU1PI"));
+    if (tuneVer.Contains("_SuSA")) MnvTune.emplace_back(new PlotUtils::SuSAFromValencia2p2hReweighter<CVUniverse, NeutronEvent>());
+    if (tuneVer.Contains("_BodekRitchie")) MnvTune.emplace_back(new PlotUtils::BodekRitchieReweighter<CVUniverse, NeutronEvent>(1));
+    MnvTune.emplace_back(new PlotUtils::GeantNeutronCVReweighter<CVUniverse, NeutronEvent>()); //Removed 06/11/2024 for check with neutron systematics... shouldn't matter really. Replaced the following day for validation with new Oscar tuples.
   }
   //TODO: Other Warps just need to see if these even work...
-  MnvTune.emplace_back(new PlotUtils::GeantNeutronCVReweighter<CVUniverse, NeutronEvent>()); //Removed 06/11/2024 for check with neutron systematics... shouldn't matter really. Replaced the following day for validation with new Oscar tuples.
+
   if (elFSI || piFSI) MnvTune.emplace_back(new PlotUtils::FSIReweighter<CVUniverse, NeutronEvent>(elFSI, piFSI));
 
   PlotUtils::Model<CVUniverse, NeutronEvent> model(std::move(MnvTune));
@@ -881,7 +907,7 @@ int main(const int argc, const char** argv)
   std::cout << nameExt << std::endl;
 
   std::map< std::string, std::vector<CVUniverse*> > error_bands;
-  if(doSystematics) error_bands = GetStandardSystematics(options.m_mc,"nonMuonNonVtx100mm_wNuclTargs",true,(elFSI || piFSI));
+  if(doSystematics) error_bands = GetStandardSystematics(options.m_mc, tuneVer,"nonMuonNonVtx100mm_wNuclTargs", true, (elFSI || piFSI));
   //if(doSystematics) error_bands = GetStandardSystematics(options.m_mc,"dispr_id_and_blobbed_energy_wNuclTargs",true,true);
   else{
     std::map<std::string, std::vector<CVUniverse*> > band_flux = PlotUtils::GetFluxSystematicsMap<CVUniverse>(options.m_mc, CVUniverse::GetNFluxUniverses());
@@ -892,12 +918,12 @@ int main(const int argc, const char** argv)
   }
   error_bands["cv"] = {new CVUniverse(options.m_mc)};
   std::map< std::string, std::vector<CVUniverse*> > truth_bands;
-  if(doSystematics) truth_bands = GetStandardSystematics(options.m_truth,"nonMuonNonVtx100mm_wNuclTargs",true, (elFSI || piFSI));
+  if(doSystematics) truth_bands = GetStandardSystematics(options.m_truth, tuneVer,"nonMuonNonVtx100mm_wNuclTargs", true, (elFSI || piFSI));
   ////else{
   ////std::map<std::string, std::vector<CVUniverse*> > bands_mona = GetMonaSystematicMap(options.m_truth);
   ////truth_bands.insert(bands_mona.begin(), bands_mona.end());
   ////}
-  /**/
+  ////
   truth_bands["cv"] = {new CVUniverse(options.m_truth)};
   
   //Same as Amit's seemingly. Bin normalized these are smoother.
@@ -912,7 +938,8 @@ int main(const int argc, const char** argv)
 		      dansPzBins = {1.5, 2, 2.5, 3, 3.5, 4, 4.5, 5, 6, 7, 8, 9, 10, 15},
                       robsEmuBins = {0,1,2,3,4,5,7,9,12,15,18,22,36,50,75,100,120},
 		      tejinPmuBins = {1.5, 2, 2.5, 3, 3.5, 4, 4.5, 5, 5.5, 6, 7, 8, 9, 10, 15, 20}, //include 0, can probably handle with plotting...
-		      robsRecoilBins,
+		      neutronBins,
+    		      robsRecoilBins,
 		      nBlobsBins,
 		      n5Bins,
 		      n12Bins,
@@ -926,6 +953,9 @@ int main(const int argc, const char** argv)
 		      //myBlobEBins
 		      ;
 
+  const double neutronBinWidth = 5; //MeV
+  for(int whichBin = 0; whichBin < 100 + 1; ++whichBin) neutronBins.push_back(neutronBinWidth * whichBin);
+  
   const double robsRecoilBinWidth = 50; //MeV
   for(int whichBin = 0; whichBin < 100 + 1; ++whichBin) robsRecoilBins.push_back(robsRecoilBinWidth * whichBin);
 
@@ -985,7 +1015,8 @@ int main(const int argc, const char** argv)
     new Variable(false,"vtxX", "X [mm]", myVtxXBins, &CVUniverse::GetVtxX, &CVUniverse::GetTrueVtxX),//Don't need GetDummyTrue perhaps...    
     new Variable(false,"vtxY", "Y [mm]", myVtxYBins, &CVUniverse::GetVtxY, &CVUniverse::GetTrueVtxY),//Don't need GetDummyTrue perhaps...
     new Variable(false,"vtxZ", "Z [mm]", myVtxZBins, &CVUniverse::GetVtxZ, &CVUniverse::GetTrueVtxZ),//Don't need GetDummyTrue perhaps...
-    new Variable(false,"DaisyPetal", "Petal", n12Bins, &CVUniverse::GetRecoDaisyPetal, &CVUniverse::GetTrueDaisyPetal),
+    new Variable(false, "DaisyPetal", "Petal", n12Bins, &CVUniverse::GetRecoDaisyPetal, &CVUniverse::GetTrueDaisyPetal),
+    new Variable(true, "MatchedNeutCandE", "Neutron KE [MeV]", neutronBins, &CVUniverse::GetMATCHEDLeadNeutCandE, &CVUniverse::GetMaxFSNeutronKE),//Truth only variable, but should be able to see the migration!!!
 //new Variable("recQ2Bin","No.",myRecoilQ2Bins, &CVUniverse::GetRecoilQ2Bin),
   };
 
@@ -1019,11 +1050,11 @@ int main(const int argc, const char** argv)
   }
 
   std::vector<Variable2D*> vars2D = {
-    new Variable2D(false,"recoil_v_pT",*vars[0],*vars[vars.size()-6]),
+    //new Variable2D(false,"recoil_v_pT",*vars[0],*vars[vars.size()-6]),//This is broken by new variables added just now... probably correct for the Daisy petal addition though...
     //new Variable2D(false,"vtxXY",*vars[vars.size()-4],*vars[vars.size()-3]),
   };
   //With systematics these two might get a little hairy having both. But for now without, it's fine.
-  std::cout << "Checking N bins X: " << vars2D.at(0)->GetNBinsX() << "Y: " << vars2D.at(0)->GetNBinsY() << std::endl;
+  //std::cout << "Checking N bins X: " << vars2D.at(0)->GetNBinsX() << "Y: " << vars2D.at(0)->GetNBinsY() << std::endl;
   //recoil vs. pT for check on the background tuning in tracker (to start) be careful to change this if variables move around...
   //vars2D.push_back(new Variable2D(true,"pmu2D",*vars[1],*vars[0]));//Test to see if this runs just fine when the versus recoil had so many issues... AND how big it gets.
   /*
@@ -1048,8 +1079,8 @@ int main(const int argc, const char** argv)
     if (FVregionName.Contains("Target")){
     }
     else{
-      vars2D.push_back(new Variable2D(false,"recoil_v_pT",*vars[0],*vars[vars.size()-3]));
-      std::cout << "Checking N bins X: " << vars2D.at(0)->GetNBinsX() << "Y: " << vars2D.at(0)->GetNBinsY() << std::endl;
+      //vars2D.push_back(new Variable2D(false,"recoil_v_pT",*vars[0],*vars[vars.size()-3])); This is also not right... not sure how this and the other thing ended up being there... Does it just not make the next variable... or did it used to overwrite with something else but save the original... odd...
+      //std::cout << "Checking N bins X: " << vars2D.at(0)->GetNBinsX() << "Y: " << vars2D.at(0)->GetNBinsY() << std::endl;
     }
   }
 
@@ -1122,7 +1153,7 @@ int main(const int argc, const char** argv)
 		 if (var.IsFill()) var.InitializeDATAHists(data_band);
 	       });
   }
-
+  
   // Loop entries and fill
   try
   {
