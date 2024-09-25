@@ -61,6 +61,10 @@ double Chi2(MnvH1D* m1, MnvH1D* m2){
     cout << "Histos to compare don't have the same number of bins! Returning -999!!!" << endl;
     return -999.0;
   }
+  if (m1->GetEntries() == 0 || m2->GetEntries() == 0){
+    cout << "No entries in one of the input histograms. Assume this is faulty." << endl;
+    return -99.0;
+  }
   TH1D* h1 = (TH1D*)m1->GetCVHistoWithError().Clone();
   TH1D* h2 = (TH1D*)m2->GetCVHistoWithError().Clone();
   double chi2 = 0.0;
@@ -231,9 +235,9 @@ void DrawBKGCateg(string name, TFile* mcFile, TFile* dataFile, TString sample, T
 
   THStack* h = new THStack();
   if (!isVtx){
-    if (hasUSPlastic) h->Add((TH1D*)h_USPlastic_Bkg->GetCVHistoWithError().Clone());
-    if (hasDSPlastic) h->Add((TH1D*)h_DSPlastic_Bkg->GetCVHistoWithError().Clone());
-    if (hasWrongNucl) h->Add((TH1D*)h_Wrong_Nucleus_Bkg->GetCVHistoWithError().Clone());
+    if (hasUSPlastic && h_USPlastic_Bkg->GetEntries() > 0) h->Add((TH1D*)h_USPlastic_Bkg->GetCVHistoWithError().Clone());
+    if (hasDSPlastic && h_DSPlastic_Bkg->GetEntries() > 0) h->Add((TH1D*)h_DSPlastic_Bkg->GetCVHistoWithError().Clone());
+    if (hasWrongNucl && h_Wrong_Nucleus_Bkg->GetEntries() > 0) h->Add((TH1D*)h_Wrong_Nucleus_Bkg->GetCVHistoWithError().Clone());
     h->Add((TH1D*)h_Other_Bkg->GetCVHistoWithError().Clone());
     h->Add((TH1D*)h_NPi_Bkg->GetCVHistoWithError().Clone());
     h->Add((TH1D*)h_1Pi0_Bkg->GetCVHistoWithError().Clone());
@@ -650,16 +654,16 @@ void DrawIntType(string name_QE, TFile* mcFile, TFile* dataFile, TString sample,
 
   THStack* h = new THStack();
   if (!isVtx){
-    if(hasWrongNucl) h->Add((TH1D*)h_Wrong_Nucleus_Bkg->GetCVHistoWithError().Clone());
-    if(hasUSPlastic) h->Add((TH1D*)h_USPlastic_Bkg->GetCVHistoWithError().Clone());
-    if(hasDSPlastic) h->Add((TH1D*)h_DSPlastic_Bkg->GetCVHistoWithError().Clone());
+    if(hasWrongNucl && h_Wrong_Nucleus_Bkg->GetEntries() > 0) h->Add((TH1D*)h_Wrong_Nucleus_Bkg->GetCVHistoWithError().Clone());
+    if(hasUSPlastic && h_USPlastic_Bkg->GetEntries() > 0) h->Add((TH1D*)h_USPlastic_Bkg->GetCVHistoWithError().Clone());
+    if(hasDSPlastic && h_DSPlastic_Bkg->GetEntries() > 0) h->Add((TH1D*)h_DSPlastic_Bkg->GetCVHistoWithError().Clone());
     h->Add((TH1D*)h_Other_Bkg->GetCVHistoWithError().Clone());
     h->Add((TH1D*)h_2p2h_Bkg->GetCVHistoWithError().Clone());
     h->Add((TH1D*)h_DIS_Bkg->GetCVHistoWithError().Clone());
     h->Add((TH1D*)h_RES_Bkg->GetCVHistoWithError().Clone());
     h->Add((TH1D*)h_QE_Bkg->GetCVHistoWithError().Clone());
 
-    h->Add((TH1D*)h_Other_Sig->GetCVHistoWithError().Clone());
+    if (h_Other_Sig->GetEntries() > 0) h->Add((TH1D*)h_Other_Sig->GetCVHistoWithError().Clone());
     h->Add((TH1D*)h_2p2h_Sig->GetCVHistoWithError().Clone());
     h->Add((TH1D*)h_DIS_Sig->GetCVHistoWithError().Clone());
     h->Add((TH1D*)h_RES_Sig->GetCVHistoWithError().Clone());
@@ -1060,9 +1064,9 @@ void DrawIntTypeBKG(string name, TFile* mcFile, TFile* dataFile, TString sample,
 
   THStack* h = new THStack();
   if (!isVtx){
-    if (hasWrongNucl) h->Add((TH1D*)h_Wrong_Nucleus_Bkg->GetCVHistoWithError().Clone());
-    if (hasUSPlastic) h->Add((TH1D*)h_USPlastic_Bkg->GetCVHistoWithError().Clone());
-    if (hasDSPlastic) h->Add((TH1D*)h_DSPlastic_Bkg->GetCVHistoWithError().Clone());
+    if (hasWrongNucl && h_Wrong_Nucleus_Bkg->GetEntries() > 0) h->Add((TH1D*)h_Wrong_Nucleus_Bkg->GetCVHistoWithError().Clone());
+    if (hasUSPlastic && h_USPlastic_Bkg->GetEntries() > 0) h->Add((TH1D*)h_USPlastic_Bkg->GetCVHistoWithError().Clone());
+    if (hasDSPlastic && h_DSPlastic_Bkg->GetEntries() > 0) h->Add((TH1D*)h_DSPlastic_Bkg->GetCVHistoWithError().Clone());
     h->Add((TH1D*)h_Other_Bkg->GetCVHistoWithError().Clone());
     h->Add((TH1D*)h_2p2h_Bkg->GetCVHistoWithError().Clone());
     h->Add((TH1D*)h_DIS_Bkg->GetCVHistoWithError().Clone());
@@ -1486,23 +1490,23 @@ void DrawTargetType(string name_Plastic, TFile* mcFile, TFile* dataFile, TString
 
   THStack* h = new THStack();
   if (!isVtx){
-    h->Add((TH1D*)h_Other_Bkg->GetCVHistoWithError().Clone());
-    h->Add((TH1D*)h_C_Bkg->GetCVHistoWithError().Clone());
-    h->Add((TH1D*)h_Water_Bkg->GetCVHistoWithError().Clone());
-    h->Add((TH1D*)h_Pb_Bkg->GetCVHistoWithError().Clone());
-    h->Add((TH1D*)h_Fe_Bkg->GetCVHistoWithError().Clone());
-    h->Add((TH1D*)h_DS_Bkg->GetCVHistoWithError().Clone());
-    h->Add((TH1D*)h_US_Bkg->GetCVHistoWithError().Clone());
-    h->Add((TH1D*)h_Plastic_Bkg->GetCVHistoWithError().Clone());
+    if (h_Other_Bkg->GetEntries() > 0) h->Add((TH1D*)h_Other_Bkg->GetCVHistoWithError().Clone());
+    if (h_C_Bkg->GetEntries() > 0) h->Add((TH1D*)h_C_Bkg->GetCVHistoWithError().Clone());
+    if (h_Water_Bkg->GetEntries() > 0) h->Add((TH1D*)h_Water_Bkg->GetCVHistoWithError().Clone());
+    if (h_Pb_Bkg->GetEntries() > 0) h->Add((TH1D*)h_Pb_Bkg->GetCVHistoWithError().Clone());
+    if (h_Fe_Bkg->GetEntries() > 0) h->Add((TH1D*)h_Fe_Bkg->GetCVHistoWithError().Clone());
+    if (h_DS_Bkg->GetEntries() > 0) h->Add((TH1D*)h_DS_Bkg->GetCVHistoWithError().Clone());
+    if (h_US_Bkg->GetEntries() > 0) h->Add((TH1D*)h_US_Bkg->GetCVHistoWithError().Clone());
+    if (h_Plastic_Bkg->GetEntries() > 0) h->Add((TH1D*)h_Plastic_Bkg->GetCVHistoWithError().Clone());
     
-    h->Add((TH1D*)h_Other_Sig->GetCVHistoWithError().Clone());
-    h->Add((TH1D*)h_C_Sig->GetCVHistoWithError().Clone());
-    h->Add((TH1D*)h_Water_Sig->GetCVHistoWithError().Clone());
-    h->Add((TH1D*)h_Pb_Sig->GetCVHistoWithError().Clone());
-    h->Add((TH1D*)h_Fe_Sig->GetCVHistoWithError().Clone());
-    h->Add((TH1D*)h_DS_Sig->GetCVHistoWithError().Clone());
-    h->Add((TH1D*)h_US_Sig->GetCVHistoWithError().Clone());
-    h->Add((TH1D*)h_Plastic_Sig->GetCVHistoWithError().Clone());
+    if (h_Other_Sig->GetEntries() > 0) h->Add((TH1D*)h_Other_Sig->GetCVHistoWithError().Clone());
+    if (h_C_Sig->GetEntries() > 0) h->Add((TH1D*)h_C_Sig->GetCVHistoWithError().Clone());
+    if (h_Water_Sig->GetEntries() > 0) h->Add((TH1D*)h_Water_Sig->GetCVHistoWithError().Clone());
+    if (h_Pb_Sig->GetEntries() > 0) h->Add((TH1D*)h_Pb_Sig->GetCVHistoWithError().Clone());
+    if (h_Fe_Sig->GetEntries() > 0) h->Add((TH1D*)h_Fe_Sig->GetCVHistoWithError().Clone());
+    if (h_DS_Sig->GetEntries() > 0) h->Add((TH1D*)h_DS_Sig->GetCVHistoWithError().Clone());
+    if (h_US_Sig->GetEntries() > 0) h->Add((TH1D*)h_US_Sig->GetCVHistoWithError().Clone());
+    if (h_Plastic_Sig->GetEntries() > 0) h->Add((TH1D*)h_Plastic_Sig->GetCVHistoWithError().Clone());
   }
   else{
     h->Add((TH1D*)h_Other_Bkg->GetCVHistoWithStatError().Clone());
@@ -2267,6 +2271,8 @@ int main(int argc, char* argv[]) {
   TFile* mcFile = new TFile(MCfileName.c_str(),"READ");
   TFile* dataFile = new TFile(DATAfileName.c_str(),"READ");
 
+  std::cout << "GET POT NOW" << std::endl;
+  
   double mcPOT = ((TParameter<double>*)mcFile->Get("POTUsed"))->GetVal();
   double dataPOT = ((TParameter<double>*)dataFile->Get("POTUsed"))->GetVal();
 
@@ -2342,7 +2348,7 @@ int main(int argc, char* argv[]) {
       string nameToSave = name;
       nameToSave.erase(nameToSave.length()-15,nameToSave.length());
       DrawIntType(name,mcFile,dataFile,label,pTaxis,scale,(TString)outDir+(TString)nameToSave);
-      if (!isVtx) DrawIntTypeTEST(name,mcFile,dataFile,label,pTaxis,scale,(TString)outDir+(TString)nameToSave+"_TEST");
+      //if (!isVtx) DrawIntTypeTEST(name,mcFile,dataFile,label,pTaxis,scale,(TString)outDir+(TString)nameToSave+"_TEST");
       cout << "" << endl;
     }
     else if ((pos = name.find("_sig_TargetType_Plastic")) != string::npos && (pos=name.find("OuterUSPlastic")) == string::npos && (pos=name.find("OuterDSPlastic")) == string::npos){
@@ -2350,7 +2356,7 @@ int main(int argc, char* argv[]) {
       string nameToSave = name;
       nameToSave.erase(nameToSave.length()-23,nameToSave.length());
       DrawTargetType(name,mcFile,dataFile,label,pTaxis,scale,(TString)outDir+(TString)nameToSave);
-      if (!isVtx) DrawTargetTypeTEST(name,mcFile,dataFile,label,pTaxis,scale,(TString)outDir+(TString)nameToSave+"_TEST");
+      //if (!isVtx) DrawTargetTypeTEST(name,mcFile,dataFile,label,pTaxis,scale,(TString)outDir+(TString)nameToSave+"_TEST");
       cout << "" << endl;
     }
     else if ((pos = name.find("_sig_LeadBlobType_neut")) != string::npos && (pos=name.find("OuterUSPlastic")) == string::npos && (pos=name.find("OuterDSPlastic")) == string::npos){
@@ -2358,7 +2364,7 @@ int main(int argc, char* argv[]) {
       string nameToSave = name;
       nameToSave.erase(nameToSave.length()-22,nameToSave.length());
       DrawLeadBlobType(name,mcFile,dataFile,label,pTaxis,scale,(TString)outDir+(TString)nameToSave);
-      if (!isVtx) DrawLeadBlobTypeTEST(name,mcFile,dataFile,label,pTaxis,scale,(TString)outDir+(TString)nameToSave+"_TEST");
+      //if (!isVtx) DrawLeadBlobTypeTEST(name,mcFile,dataFile,label,pTaxis,scale,(TString)outDir+(TString)nameToSave+"_TEST");
       cout << "" << endl;
     }
     else if ((pos = name.find("_selected_signal_reco")) != string::npos){
@@ -2372,7 +2378,7 @@ int main(int argc, char* argv[]) {
       string nameToSave = name;
       nameToSave.erase(nameToSave.length()-21,nameToSave.length());
       DrawBKGCateg(name,mcFile,dataFile,label,pTaxis,scale,(TString)outDir+(TString)nameToSave);
-      if (!isVtx) DrawBKGCategTEST(name,mcFile,dataFile,label,pTaxis,scale,(TString)outDir+(TString)nameToSave+"_TEST");
+      //if (!isVtx) DrawBKGCategTEST(name,mcFile,dataFile,label,pTaxis,scale,(TString)outDir+(TString)nameToSave+"_TEST");
       if ((pos = name.find("OuterUSPlastic")) == string::npos && (pos = name.find("OuterDSPlastic")) == string::npos) DrawIntTypeBKG(name,mcFile,dataFile,label,pTaxis,scale,(TString)outDir+(TString)nameToSave);
       if (!isVtx) DrawBKGSubtracted(name,mcFile,dataFile,label,pTaxis,scale,(TString)outDir+(TString)nameToSave);
       if (!label.Contains("Tracker") && !isVtx){
