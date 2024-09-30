@@ -391,10 +391,12 @@ void LoopAndFillEventSelection(
 	    if (tgtType == 200 || tgtType == 300){ //Separating out the plastic backgrounds
 	      bkgd_ID = intType;
 	    }
-	    else if (util::CorrectTargetMaterial(tgtCode,trueTgtCode) || tgtCode == -1) bkgd_ID = util::GetBackgroundID(*universe);
+	    /**/else if (util::CorrectTargetMaterial(tgtCode,trueTgtCode) || tgtCode == -1) bkgd_ID = util::GetBackgroundID(*universe);
+	    ////else if (util::CorrectTargetMaterial(tgtCode,trueTgtCode) || tgtCode == -1) bkgd_ID = util::GetBackgroundIDNeutron(*universe);
 	    if (bkgd_ID == 44) intType = bkgd_ID;
 	  }
-	  else bkgd_ID = util::GetBackgroundID(*universe);
+	  /**/else bkgd_ID = util::GetBackgroundID(*universe);
+	  ////else bkgd_ID = util::GetBackgroundIDNeutron(*universe);
           //for(auto& study: studies) study->SelectedSignal(*universe, myevent, weight);
 
           for(auto& var: vars){
@@ -745,7 +747,7 @@ int main(const int argc, const char** argv)
     return badCmdLine;
   }
   
-  if (tuneVer != "1" && tuneVer != "2" && tuneVer != "4" && !tuneVer.Contains("_noRPA") && !tuneVer.Contains("_no2p2h") && !tuneVer.Contains("_SuSA") && !tuneVer.Contains("_BodekRitchie") && !tuneVer.Contains("_Aaron") && tuneVer != "None"){
+  if (tuneVer != "1" && tuneVer != "2" && tuneVer != "4" && !tuneVer.Contains("_noRPA") && !tuneVer.Contains("_no2p2h") && !tuneVer.Contains("_SuSA") && !tuneVer.Contains("_BodekRitchie") && !tuneVer.Contains("_Aaron") && !tuneVer.Contains("") && !tuneVer.Contains("NU1PI") && !tuneVer.Contains("NUNPI") && !tuneVer.Contains("NUPI0") && !tuneVer.Contains("NUBARPI0") && tuneVer != "None"){
     //if (tuneVer != "1" && tuneVer != "1_noRPA" && tuneVer != "1_no2p2h" && tuneVer != "2" && tuneVer != "1_SuSA" && tuneVer != "1_BodekRitchie" && tuneVer != "None"){
     std::cerr << "Model provided not supported. \n" << USAGE << "\n";
     return badCmdLine;
@@ -882,7 +884,13 @@ int main(const int argc, const char** argv)
     else MnvTune.emplace_back(new PlotUtils::GENIEReweighter<CVUniverse, NeutronEvent>(true, true));
     if (!tuneVer.Contains("_no2p2h") && !tuneVer.Contains("_SuSA")) MnvTune.emplace_back(new PlotUtils::LowRecoil2p2hReweighter<CVUniverse, NeutronEvent>());
     if (!tuneVer.Contains("_noRPA")) MnvTune.emplace_back(new PlotUtils::RPAReweighter<CVUniverse, NeutronEvent>());
-    if (tuneVer.Contains("2_") || tuneVer == "2") MnvTune.emplace_back(new PlotUtils::LowQ2PiReweighter<CVUniverse, NeutronEvent>("JOINT"));
+    if (tuneVer.Contains("2_") || tuneVer == "2"){
+      if (tuneVer.Contains("NUBARPI0")) MnvTune.emplace_back(new PlotUtils::LowQ2PiReweighter<CVUniverse, NeutronEvent>("NUBARPI0"));
+      else if (tuneVer.Contains("NUPI0")) MnvTune.emplace_back(new PlotUtils::LowQ2PiReweighter<CVUniverse, NeutronEvent>("NUPI0"));
+      else if (tuneVer.Contains("NU1PI")) MnvTune.emplace_back(new PlotUtils::LowQ2PiReweighter<CVUniverse, NeutronEvent>("NU1PI"));
+      else if (tuneVer.Contains("NUNPI")) MnvTune.emplace_back(new PlotUtils::LowQ2PiReweighter<CVUniverse, NeutronEvent>("NUNPI"));
+      else MnvTune.emplace_back(new PlotUtils::LowQ2PiReweighter<CVUniverse, NeutronEvent>("JOINT"));
+    }
     else if (tuneVer.Contains("_Aaron")) MnvTune.emplace_back(new PlotUtils::LowQ2PiReweighter<CVUniverse, NeutronEvent>("MENU1PI"));
     if (tuneVer.Contains("_SuSA")) MnvTune.emplace_back(new PlotUtils::SuSAFromValencia2p2hReweighter<CVUniverse, NeutronEvent>());
     if (tuneVer.Contains("_BodekRitchie")) MnvTune.emplace_back(new PlotUtils::BodekRitchieReweighter<CVUniverse, NeutronEvent>(1));

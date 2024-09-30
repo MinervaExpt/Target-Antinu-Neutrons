@@ -124,7 +124,8 @@ class PreRecoil: public Study
       fVtx_US_ByTgt = {};
       fVtx_DS_ByTgt = {};
       for (auto& var : vars){
-	fVars.push_back(new Variable(false, (var->GetName()+"_PreRecoilCut").c_str(), var->GetAxisLabel(), var->GetBinVec(),var->GetRecoFunc(),var->GetTrueFunc()));
+	////fVars.push_back(new Variable(false, (var->GetName()+"_PreRecoilCut").c_str(), var->GetAxisLabel(), var->GetBinVec(),var->GetRecoFunc(),var->GetTrueFunc()));
+	/**/fVars.push_back(new Variable(var->IsAnaVar(), (var->GetName()+"_PreRecoilCut").c_str(), var->GetAxisLabel(), var->GetBinVec(),var->GetRecoFunc(),var->GetTrueFunc()));
 	if (fFVregionName.Contains("Target")){
 	  fVars.back()->SetFillVar(false);
 	  TString nameCheck = var->GetName();
@@ -1074,7 +1075,8 @@ class PreRecoil: public Study
 		}
 	      }
 	      else{
-		bkgd_ID = util::GetBackgroundID(univ);
+		/**/bkgd_ID = util::GetBackgroundID(univ);
+		////bkgd_ID = util::GetBackgroundIDNeutron(univ);
 		if(tgtCode != -1){
 		  if (tgtType == 200){
 		    if (isSideband){
@@ -1174,10 +1176,12 @@ class PreRecoil: public Study
 	      }
 	      bkgd_ID = intType;
 	    }
-	    else if (util::CorrectTargetMaterial(tgtCode,trueTgtCode) || (tgtCode == -1 && tgtCode == trueTgtCode)) bkgd_ID = util::GetBackgroundID(univ);//Modify this line so that tgtCode == -1 has a wrong nucleus component.
+	    /**/else if (util::CorrectTargetMaterial(tgtCode,trueTgtCode) || (tgtCode == -1 && tgtCode == trueTgtCode)) bkgd_ID = util::GetBackgroundID(univ);//Modify this line so that tgtCode == -1 has a wrong nucleus component.
+	    ////else if (util::CorrectTargetMaterial(tgtCode,trueTgtCode) || (tgtCode == -1 && tgtCode == trueTgtCode)) bkgd_ID = util::GetBackgroundIDNeutron(univ);//Modify this line so that tgtCode == -1 has a wrong nucleus component.
 	    if (bkgd_ID == 44) intType = bkgd_ID;
 	  }
-	  else bkgd_ID = util::GetBackgroundID(univ);
+	  /**/else bkgd_ID = util::GetBackgroundID(univ);
+	  ////else bkgd_ID = util::GetBackgroundIDNeutron(univ);
 
 	  if (fSplitRecoil){
 	    if (fRecoilBinned.size() > 0){
