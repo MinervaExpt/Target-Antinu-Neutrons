@@ -162,6 +162,10 @@ add_executable(BKGFittingTFrac BKGFittingTFrac.cxx)
 target_link_libraries(BKGFittingTFrac ${ROOT_LIBRARIES} MAT MAT-MINERvA)
 install(TARGETS BKGFittingTFrac DESTINATION bin)
 
+add_executable(BKGFittingExact BKGFittingExact.cxx)
+target_link_libraries(BKGFittingExact ${ROOT_LIBRARIES} fits MAT MAT-MINERvA yaml-cpp)
+install(TARGETS BKGFittingExact DESTINATION bin)
+
 add_executable(TMinFitting TMinFitting.cxx)
 target_link_libraries(TMinFitting ${ROOT_LIBRARIES} fits MAT MAT-MINERvA)
 install(TARGETS TMinFitting DESTINATION bin)
