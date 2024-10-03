@@ -77,6 +77,7 @@ enum ErrorCodes
 #include "studies/EMSideBands.h"
 #include "studies/MichelAndNBlobSB.h"
 #include "studies/RecoilSB.h"
+#include "reweighter/Turn2p2hOffReweighter.h"
 //#include "Binning.h" //TODO: Fix me
 
 //PlotUtils includes
@@ -133,8 +134,9 @@ void LoopAndFillEventSelection(
   for (int i=0; i<nEntries; ++i)
   {
     if(i%1000==0) std::cout << i << " / " << nEntries << "\r" << std::endl;
-
+    
     cvUniv->SetEntry(i);
+
     //NeutronEvent cvEvent(cvUniv->GetLeadNeutCandOnly());
     NeutronEvent cvEvent = doNeutron ? NeutronEvent(cvUniv->GetLeadNeutCandOnly()) : NeutronEvent();
     model.SetEntry(*cvUniv, cvEvent);
@@ -747,7 +749,7 @@ int main(const int argc, const char** argv)
     return badCmdLine;
   }
   
-  if (tuneVer != "1" && tuneVer != "2" && tuneVer != "4" && !tuneVer.Contains("_noRPA") && !tuneVer.Contains("_no2p2h") && !tuneVer.Contains("_SuSA") && !tuneVer.Contains("_BodekRitchie") && !tuneVer.Contains("_Aaron") && !tuneVer.Contains("") && !tuneVer.Contains("NU1PI") && !tuneVer.Contains("NUNPI") && !tuneVer.Contains("NUPI0") && !tuneVer.Contains("NUBARPI0") && tuneVer != "None"){
+  if (tuneVer != "1" && tuneVer != "2" && tuneVer != "4" && !tuneVer.Contains("_noRPA") && !tuneVer.Contains("_zero2p2h") && !tuneVer.Contains("_no2p2h") && !tuneVer.Contains("_SuSA") && !tuneVer.Contains("_BodekRitchie") && !tuneVer.Contains("_Aaron") && !tuneVer.Contains("") && !tuneVer.Contains("NU1PI") && !tuneVer.Contains("NUNPI") && !tuneVer.Contains("NUPI0") && !tuneVer.Contains("NUBARPI0") && tuneVer != "None"){
     //if (tuneVer != "1" && tuneVer != "1_noRPA" && tuneVer != "1_no2p2h" && tuneVer != "2" && tuneVer != "1_SuSA" && tuneVer != "1_BodekRitchie" && tuneVer != "None"){
     std::cerr << "Model provided not supported. \n" << USAGE << "\n";
     return badCmdLine;
@@ -882,7 +884,8 @@ int main(const int argc, const char** argv)
     MnvTune.emplace_back(new PlotUtils::MINOSEfficiencyReweighter<CVUniverse, NeutronEvent>());
     if (!tuneVer.Contains("4")) MnvTune.emplace_back(new PlotUtils::GENIEReweighter<CVUniverse, NeutronEvent>(true, false));
     else MnvTune.emplace_back(new PlotUtils::GENIEReweighter<CVUniverse, NeutronEvent>(true, true));
-    if (!tuneVer.Contains("_no2p2h") && !tuneVer.Contains("_SuSA")) MnvTune.emplace_back(new PlotUtils::LowRecoil2p2hReweighter<CVUniverse, NeutronEvent>());
+    if (!tuneVer.Contains("_no2p2h") && !tuneVer.Contains("_SuSA") && !tuneVer.Contains("_zero2p2h")) MnvTune.emplace_back(new PlotUtils::LowRecoil2p2hReweighter<CVUniverse, NeutronEvent>());
+    if (tuneVer.Contains("_zero2p2h")) MnvTune.emplace_back(new Turn2p2hOffReweighter<CVUniverse, NeutronEvent>());
     if (!tuneVer.Contains("_noRPA")) MnvTune.emplace_back(new PlotUtils::RPAReweighter<CVUniverse, NeutronEvent>());
     if (tuneVer.Contains("2_") || tuneVer == "2"){
       if (tuneVer.Contains("NUBARPI0")) MnvTune.emplace_back(new PlotUtils::LowQ2PiReweighter<CVUniverse, NeutronEvent>("NUBARPI0"));
