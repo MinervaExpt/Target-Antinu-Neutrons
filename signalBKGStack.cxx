@@ -2204,7 +2204,7 @@ int main(int argc, char* argv[]) {
   #endif
 
   //Pass an input file name to this script now
-  if (argc != 6) {
+  if (argc < 6 || argc > 7) {
     cout << "Check usage..." << endl;
     return 2;
   }
@@ -2214,6 +2214,7 @@ int main(int argc, char* argv[]) {
   string outDir=string(argv[3]);
   TString label=argv[4];
   TString pTaxis=argv[5];
+  bool doPOT = (argc==6) ? true:(atoi(argv[6]) > 0);
 
   if (PathExists(outDir)){
     cout << "Thank you for choosing a path for output files that exists." << endl;
@@ -2276,7 +2277,7 @@ int main(int argc, char* argv[]) {
   double mcPOT = ((TParameter<double>*)mcFile->Get("POTUsed"))->GetVal();
   double dataPOT = ((TParameter<double>*)dataFile->Get("POTUsed"))->GetVal();
 
-  double scale = dataPOT/mcPOT;
+  double scale = (doPOT) ? dataPOT/mcPOT : 1.0;
   cout << "POT scale factor: " << scale << endl;
 
   TList* keyList = mcFile->GetListOfKeys();
