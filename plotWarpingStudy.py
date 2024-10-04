@@ -22,6 +22,9 @@ if baseName.find(".root") != -1:
 can = ROOT.TCanvas("chi2")
 
 for fileName in sys.argv[5:]:
+
+  ROOT.gROOT.SetBatch(True)
+  
   myFile = ROOT.TFile.Open(fileName)
 
   #Try to infer a useful universe name from the file name
