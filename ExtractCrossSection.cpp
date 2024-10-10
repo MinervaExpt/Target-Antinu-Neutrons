@@ -163,6 +163,8 @@ PlotUtils::MnvH1D* UnfoldHist( PlotUtils::MnvH1D* h_folded, PlotUtils::MnvH2D* h
   static MinervaUnfold::MnvUnfold unfold;
   PlotUtils::MnvH1D* h_unfolded = nullptr;
 
+  if (num_iter==0) return h_folded;
+  
   //bool bUnfolded = false;
 
   TMatrixD dummyCovMatrix;
@@ -191,13 +193,14 @@ PlotUtils::MnvH1D* UnfoldHist( PlotUtils::MnvH1D* h_folded, PlotUtils::MnvH2D* h
     // It looks like this, since the extra last two bins don't have any content
     unfoldingCovMatrixOrig.ResizeTo(correctNbins, correctNbins);
   }
-
+  
   for(int i=0; i<unfoldingCovMatrixOrig.GetNrows(); ++i) unfoldingCovMatrixOrig(i,i)=0;
   delete hUnfoldedDummy;
   delete hMigrationDummy;
   delete hRecoDummy;
   delete hTruthDummy;
   delete hBGSubDataDummy;
+  
   h_unfolded->PushCovMatrix("unfoldingCov",unfoldingCovMatrixOrig);
 
   /////////////////////////////////////////////////////////////////////////////////////////  
@@ -399,7 +402,7 @@ int main(const int argc, const char** argv)
       //d'Aogstini unfolding
       auto unfolded = UnfoldHist(bkgSubtracted, migration, nIterations);
       if(!unfolded) throw std::runtime_error(std::string("Failed to unfold ") + folded->GetName() + " using " + migration->GetName());
-      unfolded->ModifyStatisticalUnc(unfoldingFactor,"unfoldingCov");
+      if (nIterations != 0) unfolded->ModifyStatisticalUnc(unfoldingFactor,"unfoldingCov");
       std::cout << "Survived asjuting the unfolded histogram.\n" << std::flush;
       Plot(*unfolded, "unfolded", prefix, tgtZ);
       unfolded->Clone()->Write("unfolded"); //TODO: Seg fault first appears when I uncomment this line
