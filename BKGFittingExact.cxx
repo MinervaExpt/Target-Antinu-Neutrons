@@ -60,6 +60,57 @@ bool PathExists(string path){
   return (stat (path.c_str(), &buffer) == 0);
 }
 
+void syncCVHistos1D(MnvH1D* hist){
+  TH1D theCVHisto(*hist);
+  theCVHisto.SetDirectory(0);
+  auto bandNames = hist->GetErrorBandNames();
+
+  for (auto bandName : bandNames){
+    auto band = hist->GetVertErrorBand(bandName);
+    theCVHisto.Copy(*band);
+  }
+}
+
+double calcVarianceSig(double Ds, double Db, double Ss, double Sb, double Bs, double Bb, double errDs, double errDb, double errSs, double errSb, double errBs, double errBb){
+  if (errDs==0 && errDb==0 && errSs==0 && errSb==0 && errBs==0 && errBb==0) return 0.0;
+  
+  double num=Ds*Bb-Db*Bs;
+  double den=Ss*Bb-Sb*Bs;
+  double varDs=errDs*Bb/den;
+  varDs *= varDs;
+  double varDb=-errDb*Bs/den;
+  varDb *= varDb;
+  double varSs=(-errSs*Bb*num)/(den*den);
+  varSs *= varSs;
+  double varSb=(errSb*Bs*num)/(den*den);
+  varSb *= varSb;
+  double varBs=((-Db/den)+((Sb*num)/(den*den)))*errBs;
+  varBs *= varBs;
+  double varBb=((Ds/den)+((-Ss*num)/(den*den)))*errBb;
+  varBb *= varBb;
+  return varDs+varDb+varSs+varSb+varBs+varBb;
+}
+
+double calcVarianceBKG(double Ds, double Db, double Ss, double Sb, double Bs, double Bb, double errDs, double errDb, double errSs, double errSb, double errBs, double errBb){
+  if (errDs==0 && errDb==0 && errSs==0 && errSb==0 && errBs==0 && errBb==0) return 0.0;
+
+  double num=Db*Ss-Ds*Sb;
+  double den=Ss*Bb-Sb*Bs;
+  double varDs=-errDs*Sb/den;
+  varDs *= varDs;
+  double varDb=errDb*Ss/den;
+  varDb *= varDb;
+  double varBs=(errBs*Sb*num)/(den*den);
+  varBs *= varBs;
+  double varBb=(-errBb*Ss*num)/(den*den);
+  varBb *= varBb;
+  double varSs=((Db/den)+((-Bb*num)/(den*den)))*errSs;
+  varSs *= varSs;
+  double varSb=((-Ds/den)+((Bs*num)/(den*den)))*errSb;
+  varSb *= varSb;
+  return varDs+varDb+varSs+varSb+varBs+varBb;
+}
+
 map<TString, MnvH1D*> PerformTwoFunctionSolution(map<TString, vector<MnvH1D*>> mcFitHistsINPUT, vector<MnvH1D*> dataFitHistsINPUT, vector<vector<MnvH1D*>> nonFitHists, TString varName, map<TString, vector<TString>> tagsToSave){
   map<TString, MnvH1D*> scalers;
 
@@ -151,6 +202,27 @@ map<TString, MnvH1D*> PerformTwoFunctionSolution(map<TString, vector<MnvH1D*>> m
   scalers["BKG"]->Add(bkgSub,-1.0);//D_b*S_s-D_s*S_b
   scalers["BKG"]->Divide(scalers["BKG"],denom);//(D_b*S_s-D_s*S_b)/(S_s*B_b-S_b*B_s)
 
+  TH1D* resultBKG=(TH1D*)(scalers["BKG"]->GetCVHistoWithStatError().Clone());
+  TH1D* resultSig=(TH1D*)(scalers["Signal"]->GetCVHistoWithStatError().Clone());
+
+  TH1D* Ds=(TH1D*)dataFitHists.at(0)->GetCVHistoWithStatError().Clone();
+  TH1D* Db=(TH1D*)dataFitHists.at(1)->GetCVHistoWithStatError().Clone();
+  TH1D* Ss=(TH1D*)mcFitHists["Signal"].at(0)->GetCVHistoWithStatError().Clone();
+  TH1D* Sb=(TH1D*)mcFitHists["Signal"].at(1)->GetCVHistoWithStatError().Clone();
+  TH1D* Bs=(TH1D*)mcFitHists["BKG"].at(0)->GetCVHistoWithStatError().Clone();
+  TH1D* Bb=(TH1D*)mcFitHists["BKG"].at(1)->GetCVHistoWithStatError().Clone();
+
+  int nBins=(Ds->GetNbinsX()+1);  
+  for (int iBin=0;iBin<=nBins;++iBin){
+    double errSig=sqrt(calcVarianceSig(Ds->GetBinContent(iBin),Db->GetBinContent(iBin),Ss->GetBinContent(iBin),Sb->GetBinContent(iBin),Bs->GetBinContent(iBin),Bb->GetBinContent(iBin),Ds->GetBinError(iBin),Db->GetBinError(iBin),Ss->GetBinError(iBin),Sb->GetBinError(iBin),Bs->GetBinError(iBin),Bb->GetBinError(iBin)));
+    double errBKG=sqrt(calcVarianceBKG(Ds->GetBinContent(iBin),Db->GetBinContent(iBin),Ss->GetBinContent(iBin),Sb->GetBinContent(iBin),Bs->GetBinContent(iBin),Bb->GetBinContent(iBin),Ds->GetBinError(iBin),Db->GetBinError(iBin),Ss->GetBinError(iBin),Sb->GetBinError(iBin),Bs->GetBinError(iBin),Bb->GetBinError(iBin)));
+    scalers["Signal"]->SetBinError(iBin, errSig);
+    scalers["BKG"]->SetBinError(iBin, errBKG);
+  }
+
+  syncCVHistos1D(scalers["Signal"]);
+  syncCVHistos1D(scalers["BKG"]);
+  
   return scalers;//This does nothing to correct for anything like non-solvable equations or negative factors. Want to see if the negative factors are even an issue. The underflow will be and I'm not sure exactly what it will do to the histogram if it tries to divide by the 0 content of 0*0-0*0 lol...
 }
 
@@ -196,11 +268,10 @@ int main(int argc, char* argv[]) {
   if (materialTag == ""){
     cout << "Fitting Tracker" << endl;
   }
-  else{
-    cout << "Broken! There is no option for this material tag." << endl;
-    return -999;
+  else {
+    cout << "Fitting " << materialTag << endl;
   }
-  
+
   bool breakInner = (bool)(atoi(argv[8]));
   int fitMuonBins = 0;
   
