@@ -1269,6 +1269,10 @@ int main(int argc, char* argv[]) {
 
     else if (materialTag == "C"){ 
       cout << "Fitting Carbon" << endl;
+      //Modifications for doing V2 after applying the tracker physics tune to the carbon
+      fitPieces1A["Signal"].push_back(make_tuple("ScaleFactor",1,999));
+      fitPieces1A["BKG"].push_back(make_tuple("Line",1,999));
+      /*V1
       fitPieces1A["Signal"].push_back(make_tuple("ScaleFactor",1,2));
       fitPieces1A["Signal"].push_back(make_tuple("Line",2,4));
       fitPieces1A["Signal"].push_back(make_tuple("ScaleFactor",5,7));
@@ -1277,6 +1281,7 @@ int main(int argc, char* argv[]) {
       fitPieces1A["BKG"].push_back(make_tuple("ScaleFactor",4,5));
       fitPieces1A["BKG"].push_back(make_tuple("Line",5,8));
       fitPieces1A["BKG"].push_back(make_tuple("ScaleFactor",8,999));
+      */
     }
 
     else if (materialTag == "Fe"){
@@ -1300,6 +1305,10 @@ int main(int argc, char* argv[]) {
 
     else if (materialTag == "Water"){
       cout << "Fitting Water" << endl;
+      //Modifications for doing V2 after applying the tracker physics tune to the carbon
+      fitPieces1A["Signal"].push_back(make_tuple("Line",1,999));
+      fitPieces1A["BKG"].push_back(make_tuple("Line",1,999));
+      /*V1
       fitPieces1A["Signal"].push_back(make_tuple("ScaleFactor",1,3));
       fitPieces1A["Signal"].push_back(make_tuple("ScaleFactor",4,6));
       fitPieces1A["Signal"].push_back(make_tuple("Line",6,999));
@@ -1308,6 +1317,7 @@ int main(int argc, char* argv[]) {
       fitPieces1A["BKG"].push_back(make_tuple("Line",6,8));
       //fitPieces1A["BKG"].push_back(make_tuple("ScaleFactor",7,8));
       fitPieces1A["BKG"].push_back(make_tuple("Line",8,999));
+      */
     }
 
     else{
