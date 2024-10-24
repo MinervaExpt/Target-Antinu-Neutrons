@@ -107,21 +107,21 @@ class Variable: public PlotUtils::VariableBase<CVUniverse>
 								(GetAxisLabel()).c_str(), TargetTypeLabels,
 								GetBinVec(), mc_error_bands);
 
-	/*
-	  m_SigLeadBlobTypeHists = new util::Categorized<Hist, int>((GetName() + "_sig_LeadBlobType").c_str(),
-	  (GetAxisLabel()).c_str(), LeadBlobTypeLabels,
-	  GetBinVec(), mc_error_bands);
-	*/
+	/**/
+	m_SigLeadBlobTypeHists = new util::Categorized<Hist, int>((GetName() + "_sig_LeadBlobType").c_str(),
+								  (GetAxisLabel()).c_str(), LeadBlobTypeLabels,
+								  GetBinVec(), mc_error_bands);
+	  /**/
 	
 	m_BkgTargetTypeHists = new util::Categorized<Hist, int>((GetName() + "_bkg_TargetType").c_str(),
 								(GetAxisLabel()).c_str(), TargetTypeLabels,
 								GetBinVec(), mc_error_bands);
 	
-	/*
-	  m_BkgLeadBlobTypeHists = new util::Categorized<Hist, int>((GetName() + "_bkg_LeadBlobType").c_str(),
-	  (GetAxisLabel()).c_str(), LeadBlobTypeLabels,
-	  GetBinVec(), mc_error_bands);
-	*/
+	/**/
+	m_BkgLeadBlobTypeHists = new util::Categorized<Hist, int>((GetName() + "_bkg_LeadBlobType").c_str(),
+								  (GetAxisLabel()).c_str(), LeadBlobTypeLabels,
+								  GetBinVec(), mc_error_bands);
+	  /**/
       }
       
       if (fAnaVar) efficiencyNumerator = new Hist((GetName() + "_efficiency_numerator").c_str(), (GetName()+";"+GetAxisLabel()).c_str(), GetBinVec(), mc_error_bands);
@@ -135,10 +135,10 @@ class Variable: public PlotUtils::VariableBase<CVUniverse>
     util::Categorized<Hist, int>* m_backgroundHists;
     util::Categorized<Hist, int>* m_SigIntTypeHists;
     util::Categorized<Hist, int>* m_SigTargetTypeHists;
-    //util::Categorized<Hist, int>* m_SigLeadBlobTypeHists;
+    util::Categorized<Hist, int>* m_SigLeadBlobTypeHists;
     util::Categorized<Hist, int>* m_BkgIntTypeHists;
     util::Categorized<Hist, int>* m_BkgTargetTypeHists;
-    //util::Categorized<Hist, int>* m_BkgLeadBlobTypeHists;
+    util::Categorized<Hist, int>* m_BkgLeadBlobTypeHists;
 
     Hist* dataHist;
     Hist* efficiencyNumerator;
@@ -207,26 +207,26 @@ class Variable: public PlotUtils::VariableBase<CVUniverse>
                                       //categ.hist->Write(); //TODO: Or let the TFile destructor do this the "normal" way?                                                                                           
                                     });
 	
-	/*
-	  m_SigLeadBlobTypeHists->visit([dir](Hist& categ)
-	  {
-	  categ.hist->SetDirectory(dir);
-	  //categ.hist->Write(); //TODO: Or let the TFile destructor do this the "normal" way?                                                                                           
-	  });
-	*/
+	/**/
+	m_SigLeadBlobTypeHists->visit([dir](Hist& categ)
+	                              {
+					categ.hist->SetDirectory(dir);
+					//categ.hist->Write(); //TODO: Or let the TFile destructor do this the "normal" way?                                                                                           
+				      });
+	  /**/
 	
 	m_BkgTargetTypeHists->visit([dir](Hist& categ)
                                     {
                                       categ.hist->SetDirectory(dir);
                                       //categ.hist->Write(); //TODO: Or let the TFile destructor do this the "normal" way?                                                                                           
                                     });
-	/*
-	  m_BkgLeadBlobTypeHists->visit([dir](Hist& categ)
-	  {
-	  categ.hist->SetDirectory(dir);
-	  //categ.hist->Write(); //TODO: Or let the TFile destructor do this the "normal" way?                                                                                           
-	  });
-	*/
+	/**/
+	m_BkgLeadBlobTypeHists->visit([dir](Hist& categ)
+	                              {
+					categ.hist->SetDirectory(dir);
+					//categ.hist->Write(); //TODO: Or let the TFile destructor do this the "normal" way?                                                                                           
+				      });
+	  /**/
       }
 
       if(efficiencyNumerator && fAnaVar)
@@ -272,10 +272,10 @@ class Variable: public PlotUtils::VariableBase<CVUniverse>
       if (fAllBreakdowns){
 	m_SigIntTypeHists->visit([](Hist& categ) { categ.SyncCVHistos(); });
 	m_SigTargetTypeHists->visit([](Hist& categ) { categ.SyncCVHistos(); });
-	//m_SigLeadBlobTypeHists->visit([](Hist& categ) { categ.SyncCVHistos(); });
+	m_SigLeadBlobTypeHists->visit([](Hist& categ) { categ.SyncCVHistos(); });
 
 	m_BkgTargetTypeHists->visit([](Hist& categ) { categ.SyncCVHistos(); });
-	//m_BkgLeadBlobTypeHists->visit([](Hist& categ) { categ.SyncCVHistos(); });
+	m_BkgLeadBlobTypeHists->visit([](Hist& categ) { categ.SyncCVHistos(); });
       }
 
       if(dataHist) dataHist->SyncCVHistos();
