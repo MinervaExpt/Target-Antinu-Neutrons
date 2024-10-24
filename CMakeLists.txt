@@ -118,6 +118,10 @@ add_executable(ProjectOuterPlastic ProjectOuterPlastic.cxx)
 target_link_libraries(ProjectOuterPlastic ${ROOT_LIBRARIES} MAT MAT-MINERvA)
 install(TARGETS ProjectOuterPlastic DESTINATION bin)
 
+add_executable(ProjectAll2D ProjectAll2D.cxx)
+target_link_libraries(ProjectAll2D ${ROOT_LIBRARIES} MAT MAT-MINERvA)
+install(TARGETS ProjectAll2D DESTINATION bin)
+
 add_executable(AddUpPOT AddUpPOT.cxx)
 target_link_libraries(AddUpPOT ${ROOT_LIBRARIES} MAT MAT-MINERvA)
 install(TARGETS AddUpPOT DESTINATION bin)
