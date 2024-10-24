@@ -326,7 +326,7 @@ void LoopAndFillEventSelection(
 		//Various breakdowns of selected signal reco
 		(*var->m_SigIntTypeHists)[intType].FillUniverse(universe, var->GetRecoValue(*universe), weight);
 		(*var->m_SigTargetTypeHists)[tgtType].FillUniverse(universe, var->GetRecoValue(*universe), weight);
-		//(*var->m_SigLeadBlobTypeHists)[leadBlobType].FillUniverse(universe, var->GetRecoValue(*universe), weight);
+		(*var->m_SigLeadBlobTypeHists)[leadBlobType].FillUniverse(universe, var->GetRecoValue(*universe), weight);
 	      }
 	    }
           }
@@ -342,7 +342,7 @@ void LoopAndFillEventSelection(
 	      //Various breakdowns of selected signal reco
 	      (*var->m_SigIntTypeHists)[intType].FillUniverse(universe, var->GetRecoValueX(*universe), var->GetRecoValueY(*universe), weight);;
 	      (*var->m_SigTargetTypeHists)[tgtType].FillUniverse(universe, var->GetRecoValueX(*universe), var->GetRecoValueY(*universe), weight);;
-	      //(*var->m_SigLeadBlobTypeHists)[leadBlobType].FillUniverse(universe, var->GetRecoValueX(*universe), var->GetRecoValueY(*universe), weight);
+	      (*var->m_SigLeadBlobTypeHists)[leadBlobType].FillUniverse(universe, var->GetRecoValueX(*universe), var->GetRecoValueY(*universe), weight);
 	      
 	      //var->efficiencyNumerator->FillUniverse(universe, var->GetTrueValueX(*universe), var->GetTrueValueY(*universe), weight);
 	    }
@@ -361,7 +361,7 @@ void LoopAndFillEventSelection(
 		  //Various breakdowns of selected signal reco
 		  (*(*var)[tgtCode].m_SigIntTypeHists)[intType].FillUniverse(universe, (*var)[tgtCode].GetRecoValue(*universe), weight);
 		  (*(*var)[tgtCode].m_SigTargetTypeHists)[tgtType].FillUniverse(universe, (*var)[tgtCode].GetRecoValue(*universe), weight);
-		  //(*(*var)[tgtCode].m_SigLeadBlobTypeHists)[leadBlobType].FillUniverse(universe, (*var)[tgtCode].GetRecoValue(*universe), weight);
+		  (*(*var)[tgtCode].m_SigLeadBlobTypeHists)[leadBlobType].FillUniverse(universe, (*var)[tgtCode].GetRecoValue(*universe), weight);
 		}
 	      }
 	    }
@@ -376,7 +376,7 @@ void LoopAndFillEventSelection(
 		//Various breakdowns of selected signal reco
 		(*(*var)[tgtCode].m_SigIntTypeHists)[intType].FillUniverse(universe, (*var)[tgtCode].GetRecoValueX(*universe), (*var)[tgtCode].GetRecoValueY(*universe), weight);;
 		(*(*var)[tgtCode].m_SigTargetTypeHists)[tgtType].FillUniverse(universe, (*var)[tgtCode].GetRecoValueX(*universe), (*var)[tgtCode].GetRecoValueY(*universe), weight);;
-		//(*(*var)[tgtCode].m_SigLeadBlobTypeHists)[leadBlobType].FillUniverse(universe, (*var)[tgtCode].GetRecoValueX(*universe), (*var)[tgtCode].GetRecoValueY(*universe), weight);
+		(*(*var)[tgtCode].m_SigLeadBlobTypeHists)[leadBlobType].FillUniverse(universe, (*var)[tgtCode].GetRecoValueX(*universe), (*var)[tgtCode].GetRecoValueY(*universe), weight);
 	      
 		//(*var)[tgtCode].efficiencyNumerator->FillUniverse(universe, (*var)[tgtCode].GetTrueValueX(*universe), (*var)[tgtCode].GetTrueValueY(*universe), weight);
 	      }
@@ -408,7 +408,7 @@ void LoopAndFillEventSelection(
 	      if (var->IsBroken()){
 		//Various breakdowns of selected backgrounds
 		(*var->m_BkgTargetTypeHists)[tgtType].FillUniverse(universe, var->GetRecoValue(*universe), weight);
-		//(*var->m_BkgLeadBlobTypeHists)[leadBlobType].FillUniverse(universe, var->GetRecoValue(*universe), weight);
+		(*var->m_BkgLeadBlobTypeHists)[leadBlobType].FillUniverse(universe, var->GetRecoValue(*universe), weight);
 	      }
 	    }
 	  }
@@ -419,7 +419,7 @@ void LoopAndFillEventSelection(
 	      //Various breakdowns of selected backgrounds
 	      (*var->m_BkgIntTypeHists)[intType].FillUniverse(universe, var->GetRecoValueX(*universe), var->GetRecoValueY(*universe), weight);
 	      (*var->m_BkgTargetTypeHists)[tgtType].FillUniverse(universe, var->GetRecoValueX(*universe), var->GetRecoValueY(*universe), weight);
-	      //(*var->m_BkgLeadBlobTypeHists)[leadBlobType].FillUniverse(universe, var->GetRecoValueX(*universe), var->GetRecoValueY(*universe), weight);
+	      (*var->m_BkgLeadBlobTypeHists)[leadBlobType].FillUniverse(universe, var->GetRecoValueX(*universe), var->GetRecoValueY(*universe), weight);
 	    }
 	  }
 
@@ -432,7 +432,7 @@ void LoopAndFillEventSelection(
 		(*(*var)[tgtCode].m_BkgIntTypeHists)[intType].FillUniverse(universe, (*var)[tgtCode].GetRecoValue(*universe), weight);
 		if ((*var)[tgtCode].IsBroken()){
 		  (*(*var)[tgtCode].m_BkgTargetTypeHists)[tgtType].FillUniverse(universe, (*var)[tgtCode].GetRecoValue(*universe), weight);
-		  //(*(*var)[tgtCode].m_BkgLeadBlobTypeHists)[leadBlobType].FillUniverse(universe, (*var)[tgtCode].GetRecoValue(*universe), weight);
+		  (*(*var)[tgtCode].m_BkgLeadBlobTypeHists)[leadBlobType].FillUniverse(universe, (*var)[tgtCode].GetRecoValue(*universe), weight);
 		}
 	      }
 	    }
@@ -443,7 +443,7 @@ void LoopAndFillEventSelection(
 		//Various breakdowns of selected backgrounds
 		(*(*var)[tgtCode].m_BkgIntTypeHists)[intType].FillUniverse(universe, (*var)[tgtCode].GetRecoValueX(*universe), (*var)[tgtCode].GetRecoValueY(*universe), weight);
 		(*(*var)[tgtCode].m_BkgTargetTypeHists)[tgtType].FillUniverse(universe, (*var)[tgtCode].GetRecoValueX(*universe), (*var)[tgtCode].GetRecoValueY(*universe), weight);
-		//(*(*var)[tgtCode].m_BkgLeadBlobTypeHists)[leadBlobType].FillUniverse(universe, (*var)[tgtCode].GetRecoValueX(*universe), (*var)[tgtCode].GetRecoValueY(*universe), weight);
+		(*(*var)[tgtCode].m_BkgLeadBlobTypeHists)[leadBlobType].FillUniverse(universe, (*var)[tgtCode].GetRecoValueX(*universe), (*var)[tgtCode].GetRecoValueY(*universe), weight);
 	      }
 	    }
 	  }
@@ -710,8 +710,10 @@ int main(const int argc, const char** argv)
   
   const TString FVregionName = (TString)FVregionNameTmp;
 
-  const bool doVtx = (atoi(argv[7]) != 0);
-
+  //const bool doVtx = (atoi(argv[7]) != 0); Outdated 
+  const bool doVtx = false;
+  const bool reducedNeutronCuts = (atoi(argv[7]) !=0);
+  
   const double sbLower = atof(argv[8]);
   const double sbUpper = atof(argv[9]);
 
@@ -739,7 +741,10 @@ int main(const int argc, const char** argv)
   }
   */
 
-  if (doNeutronCuts) nameExt = "_wNeutCuts_neutKE_"+std::to_string(neutKESig)+nameExt;
+  if (doNeutronCuts){
+    if (!reducedNeutronCuts) nameExt = "_wNeutCuts_neutKE_"+std::to_string(neutKESig)+nameExt;
+    else nameExt = "_wReducedNeutCuts_neutKE_"+std::to_string(neutKESig)+nameExt;
+  }
   else splitRecoil = true;
  
   nameExt = "_elasticFix_"+std::to_string(elFSI)+"_piFix_"+std::to_string(piFSI)+nameExt;
@@ -849,9 +854,9 @@ int main(const int argc, const char** argv)
   //preCuts.emplace_back(new MyCCQECuts::RecoilCut<CVUniverse, NeutronEvent>());
   if (doNeutronCuts){
     preCuts.emplace_back(new MyNeutCuts::LeadNeutIs3D<CVUniverse, NeutronEvent>());
-    preCuts.emplace_back(new MyNeutCuts::LeadNeutIsFarFromMuon<CVUniverse, NeutronEvent>());
-    preCuts.emplace_back(new MyNeutCuts::LeadNeutZDistMin<CVUniverse, NeutronEvent>()); //Removed for neutron study without z dist cut
     preCuts.emplace_back(new MyNeutCuts::LeadNeutOutsideTgt<CVUniverse, NeutronEvent>());
+    if(!reducedNeutronCuts) preCuts.emplace_back(new MyNeutCuts::LeadNeutIsFarFromMuon<CVUniverse, NeutronEvent>());
+    if(!reducedNeutronCuts) preCuts.emplace_back(new MyNeutCuts::LeadNeutZDistMin<CVUniverse, NeutronEvent>()); //Removed for neutron study without z dist cut
   }
   //preCuts.emplace_back(new MyNeutCuts::LeadNeutInTracker<CVUniverse, NeutronEvent>(maxZ));
   //preCuts.emplace_back(new reco::IsNeutrino<CVUniverse, NeutronEvent>());
@@ -960,6 +965,8 @@ int main(const int argc, const char** argv)
 		      myVtxXBins,
 		      myVtxYBins,
 		      myVtxZBins,
+                      myNeutAngleBins,
+                      myVtxDistBins,
 		      finePTBins//,
 		      //myBlobEBins
 		      ;
@@ -990,7 +997,6 @@ int main(const int argc, const char** argv)
   const double myPmuBinWidth = 0.5;
   for(int whichBin = 0; whichBin < 41; ++whichBin) myPmuBins.push_back(myPmuBinWidth * whichBin);
 
-
   const int nVtxXBins = 200;
   const double myVtxXBinWidth = 2000.0/(1.0*nVtxXBins);
   for (int whichBin = 0; whichBin < nVtxXBins; ++whichBin) myVtxXBins.push_back(-1000.0 + myVtxXBinWidth * whichBin);
@@ -1008,6 +1014,15 @@ int main(const int argc, const char** argv)
   //const double myBlobEBinWdith = 3.;
   //for(int whichBin = 0; whichBin < 51; ++whichBin) myBlobEBins.push_back(myBlobEBinWidth * whichBin);
 
+  const double nBinsNeutAngle = 180./15.;
+  const double radianCorr = TMath::Pi()/180.;
+  for(int whichBin = 0; whichBin <= nBinsNeutAngle+1;++whichBin){
+    myNeutAngleBins.push_back((double)(whichBin)*(15.)*radianCorr);
+  }
+
+  const double myVtxDistBinWidth = 10.;
+  for (int whichBin=0; whichBin < 101; ++whichBin) myVtxDistBins.push_back(myVtxDistBinWidth * whichBin);
+  
   std::vector<Variable*> vars = {
     //new Variable(true, "pTmu", "p_{T, #mu} [GeV/c]", dansPTBins, &CVUniverse::GetMuonPT, &CVUniverse::GetMuonPTTrue),
     //new Variable(true, "pTmu", "p_{T, #mu} [GeV/c]", finePTBins, &CVUniverse::GetMuonPT, &CVUniverse::GetMuonPTTrue),
@@ -1028,11 +1043,19 @@ int main(const int argc, const char** argv)
     new Variable(false,"vtxZ", "Z [mm]", myVtxZBins, &CVUniverse::GetVtxZ, &CVUniverse::GetTrueVtxZ),//Don't need GetDummyTrue perhaps...
     new Variable(false, "DaisyPetal", "Petal", n12Bins, &CVUniverse::GetRecoDaisyPetal, &CVUniverse::GetTrueDaisyPetal),
     new Variable(true, "MatchedNeutCandE", "Neutron KE [MeV]", neutronBins, &CVUniverse::GetMATCHEDLeadNeutCandE, &CVUniverse::GetMaxFSNeutronKE),//Truth only variable, but should be able to see the migration!!!
+    new Variable(false, "LeadNeutCandE", "Neutron Candidate Vis. Energy [MeV]", neutronBins, &CVUniverse::GetLeadNeutCandE),
+    new Variable(false, "LeadNeutCandAngleToMuon", "Angle To Muon [radians]", myNeutAngleBins, &CVUniverse::GetLeadNeutCandAngleToMuon),
+    new Variable(false, "LeadNeutCandZDist", "Neutron Candidate Z Distance [mm]", myVtxDistBins,&CVUniverse::GetLeadNeutVtxZDist),
+    new Variable(false, "LeadNeutCandDist", "Neutron Candidate Distance [mm]", myVtxDistBins, &CVUniverse::GetLeadNeutVtxDist),
 //new Variable("recQ2Bin","No.",myRecoilQ2Bins, &CVUniverse::GetRecoilQ2Bin),
   };
 
-  //vars.at(vars.size()-1)->SetIsBroken(true);//Just for the neutron variable studies.
-
+  vars.at(vars.size()-5)->SetIsBroken(true);//Just for the neutron variable studies.
+  vars.at(vars.size()-4)->SetIsBroken(true);//Just for the neutron variable studies.
+  vars.at(vars.size()-3)->SetIsBroken(true);//Just for the neutron variable studies.
+  vars.at(vars.size()-2)->SetIsBroken(true);//Just for the neutron variable studies.
+  vars.at(vars.size()-1)->SetIsBroken(true);//Just for the neutron variable studies.
+  
   /*
   std::map<int, std::string> TgtList = {{1,"Tgt1"},
 					{2,"Tgt2"},
@@ -1061,7 +1084,11 @@ int main(const int argc, const char** argv)
   }
 
   std::vector<Variable2D*> vars2D = {
-    //new Variable2D(false,"recoil_v_pT",*vars[0],*vars[vars.size()-6]),//This is broken by new variables added just now... probably correct for the Daisy petal addition though...
+    new Variable2D(false,"recoil_v_pT",*vars[0],*vars[3]),
+    new Variable2D(false,"neutCandE_v_pT",*vars[0],*vars[vars.size()-4]),
+    new Variable2D(false,"neutCandAngle_v_pT",*vars[0],*vars[vars.size()-3]),
+    new Variable2D(false,"neutCandZDist_v_pT",*vars[0],*vars[vars.size()-2]),
+    new Variable2D(false,"neutCandDist_v_pT",*vars[0],*vars[vars.size()-1]),
     //new Variable2D(false,"vtxXY",*vars[vars.size()-4],*vars[vars.size()-3]),
   };
   //With systematics these two might get a little hairy having both. But for now without, it's fine.

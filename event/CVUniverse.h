@@ -448,12 +448,61 @@ class CVUniverse : public PlotUtils::MinervaUniverse {
 
     if (nBlobs > 0){
       std::vector<double> Es = GetNeutCandEs();
-      return std::max(Es.begin(),Es.end()) - Es.begin();
+      return *std::max_element(Es.begin(),Es.end());
     }
 
     return -999;
   };
+  
+  //Returns the total energy of the candidate to fill a variable that is reco when just trying to make efficiency as function of true neutron energy :)
+  virtual TVector3 GetLeadNeutCandPos() const{
+    int nBlobs = GetNNeutBlobs();
+    
+    if (nBlobs > 0){
+      std::vector<double> Es = GetNeutCandEs();
+      int leadNeutIndex = std::max_element(Es.begin(),Es.end()) - Es.begin();
 
+      std::string toolName = GetAnaToolName();
+      std::string branchNameX = "_BlobBegX";
+      std::string branchNameY = "_BlobBegY";
+      std::string branchNameZ = "_BlobBegZ";
+      double x = GetVecElem((toolName+branchNameX).c_str(), leadNeutIndex);//Consistent calculation for KE from other comparisons.
+      double y = GetVecElem((toolName+branchNameY).c_str(), leadNeutIndex);//Consistent calculation for KE from other comparisons.
+      double z = GetVecElem((toolName+branchNameZ).c_str(), leadNeutIndex);//Consistent calculation for KE from other comparisons.
+      
+      TVector3 pos(x,y,z);
+      return pos;
+    }
+
+    TVector3 dummy(-999,-999,-999);
+    return dummy;
+  };
+
+  virtual TVector3 GetLeadNeutCandFlightPath() const{
+    TVector3 pos = GetLeadNeutCandPos();
+    std::vector<double> vtx = GetVtx();
+    TVector3 vtx3(vtx.at(0),vtx.at(1),vtx.at(2));
+    TVector3 FP = pos-vtx3;
+    return FP;
+  };
+
+  virtual double GetLeadNeutCandAngleToMuon() const{
+    TVector3 muonMom(GetMuon4V().X(),GetMuon4V().Y(),GetMuon4V().Z());
+    TVector3 FP=GetLeadNeutCandFlightPath();
+    if (FP.Mag() == 0 || muonMom.Mag() == 0) return -999;
+    else return FP.Angle(muonMom);
+  }; 
+  
+  virtual double GetLeadNeutVtxZDist() const{
+    TVector3 FP = GetLeadNeutCandFlightPath();
+    return fabs(FP.Z());
+  };
+
+  virtual double GetLeadNeutVtxDist() const{
+    TVector3 FP = GetLeadNeutCandFlightPath();
+    return FP.Mag();
+  };
+  
   virtual double GetMATCHEDLeadNeutCandE() const{
     //std::cout << "Entering get MATCHED" << std::endl;
     int nblobs = GetNNeutBlobs();
