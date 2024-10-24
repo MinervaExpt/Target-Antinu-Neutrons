@@ -601,7 +601,7 @@ void LoopAndFillEffDenom( PlotUtils::ChainWrapper* truth,
 
 	//I think I just need to check the true target material here... I'm not certain about that, but I think that's right...
 	for (auto var: vars2D_ByTgt){
-          if((*var)[trueTgtCode].IsFill()) (*var)[trueTgtCode].efficiencyDenominator->FillUniverse(universe, (*var)[trueTgtCode].GetTrueValueX(*universe), (*var)[trueTgtCode].GetTrueValueY(*universe), weight);
+          if ((*var)[trueTgtCode].IsAnaVar() && (*var)[trueTgtCode].IsFill()) (*var)[trueTgtCode].efficiencyDenominator->FillUniverse(universe, (*var)[trueTgtCode].GetTrueValueX(*universe), (*var)[trueTgtCode].GetTrueValueY(*universe), weight);
 	}
 
       }
