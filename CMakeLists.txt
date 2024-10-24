@@ -122,6 +122,10 @@ add_executable(ProjectAll2D ProjectAll2D.cxx)
 target_link_libraries(ProjectAll2D ${ROOT_LIBRARIES} MAT MAT-MINERvA)
 install(TARGETS ProjectAll2D DESTINATION bin)
 
+add_executable(SwapUniverse SwapUniverse.cxx)
+target_link_libraries(SwapUniverse ${ROOT_LIBRARIES} MAT MAT-MINERvA)
+install(TARGETS SwapUniverse DESTINATION bin)
+
 add_executable(AddUpPOT AddUpPOT.cxx)
 target_link_libraries(AddUpPOT ${ROOT_LIBRARIES} MAT MAT-MINERvA)
 install(TARGETS AddUpPOT DESTINATION bin)
