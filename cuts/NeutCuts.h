@@ -91,6 +91,7 @@ namespace MyNeutCuts{
       double x = evt.GetLeadingNeutCand().GetXPos();
       double y = evt.GetLeadingNeutCand().GetYPos();
       double z = evt.GetLeadingNeutCand().GetZPos();
+      if (z > 8422) return false;
       int TgtByZ = util::GetRecoTargetZWide(x, y, z, false);
       return TgtByZ < 1 || TgtByZ > 6;
     }
