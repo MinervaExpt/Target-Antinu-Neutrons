@@ -369,8 +369,8 @@ void LoopAndFillEventSelection(
 	    for(auto& var: vars2D_ByTgt){
 	      if ((*var)[tgtCode].IsFill()){
 		//Cross section components
-		(*var)[tgtCode].efficiencyNumerator->FillUniverse(universe, (*var)[tgtCode].GetTrueValueX(*universe), (*var)[tgtCode].GetTrueValueY(*universe), weight);
-		(*var)[tgtCode].migration->FillUniverse(universe, (*var)[tgtCode].FindBin((*var)[tgtCode].GetRecoValueX(*universe), (*var)[tgtCode].GetRecoValueY(*universe)), (*var)[tgtCode].FindBin((*var)[tgtCode].GetTrueValueX(*universe), (*var)[tgtCode].GetTrueValueY(*universe)), weight);
+		if ((*var)[tgtCode].IsAnaVar()) (*var)[tgtCode].efficiencyNumerator->FillUniverse(universe, (*var)[tgtCode].GetTrueValueX(*universe), (*var)[tgtCode].GetTrueValueY(*universe), weight);
+		if ((*var)[tgtCode].IsAnaVar()) (*var)[tgtCode].migration->FillUniverse(universe, (*var)[tgtCode].FindBin((*var)[tgtCode].GetRecoValueX(*universe), (*var)[tgtCode].GetRecoValueY(*universe)), (*var)[tgtCode].FindBin((*var)[tgtCode].GetTrueValueX(*universe), (*var)[tgtCode].GetTrueValueY(*universe)), weight);
 		(*var)[tgtCode].selectedSignalReco->FillUniverse(universe, (*var)[tgtCode].GetRecoValueX(*universe), (*var)[tgtCode].GetRecoValueY(*universe), weight);; //Efficiency numerator in reco variables.  Useful for warping studies.
 	      
 		//Various breakdowns of selected signal reco
@@ -972,7 +972,7 @@ int main(const int argc, const char** argv)
 		      ;
 
   const double neutronBinWidth = 5; //MeV
-  for(int whichBin = 0; whichBin < 100 + 1; ++whichBin) neutronBins.push_back(neutronBinWidth * whichBin);
+  for(int whichBin = 0; whichBin < 40+1; ++whichBin) neutronBins.push_back(neutronBinWidth * whichBin);
   
   const double robsRecoilBinWidth = 50; //MeV
   for(int whichBin = 0; whichBin < 100 + 1; ++whichBin) robsRecoilBins.push_back(robsRecoilBinWidth * whichBin);
@@ -1020,8 +1020,8 @@ int main(const int argc, const char** argv)
     myNeutAngleBins.push_back((double)(whichBin)*(15.)*radianCorr);
   }
 
-  const double myVtxDistBinWidth = 10.;
-  for (int whichBin=0; whichBin < 101; ++whichBin) myVtxDistBins.push_back(myVtxDistBinWidth * whichBin);
+  const double myVtxDistBinWidth = 100.;
+  for (int whichBin=0; whichBin < 21; ++whichBin) myVtxDistBins.push_back(myVtxDistBinWidth * whichBin);
   
   std::vector<Variable*> vars = {
     //new Variable(true, "pTmu", "p_{T, #mu} [GeV/c]", dansPTBins, &CVUniverse::GetMuonPT, &CVUniverse::GetMuonPTTrue),
@@ -1115,10 +1115,12 @@ int main(const int argc, const char** argv)
   }
   else {
     if (FVregionName.Contains("Target")){
-    }
-    else{
-      //vars2D.push_back(new Variable2D(false,"recoil_v_pT",*vars[0],*vars[vars.size()-3])); This is also not right... not sure how this and the other thing ended up being there... Does it just not make the next variable... or did it used to overwrite with something else but save the original... odd...
-      //std::cout << "Checking N bins X: " << vars2D.at(0)->GetNBinsX() << "Y: " << vars2D.at(0)->GetNBinsY() << std::endl;
+      for (auto& var: vars2D) var->SetFillVar(false);
+      vars2D_ByTgt.push_back(new util::Categorized<Variable2D, int>("", "ByTgt", false, "recoil_v_pT", util::TgtCodeList[TgtNum], *vars[0], *vars[3]));
+      vars2D_ByTgt.push_back(new util::Categorized<Variable2D, int>("", "ByTgt", false, "neutCandE_v_pT", util::TgtCodeList[TgtNum], *vars[0], *vars[vars.size()-4]));
+      vars2D_ByTgt.push_back(new util::Categorized<Variable2D, int>("", "ByTgt", false, "neutCandAngle_v_pT", util::TgtCodeList[TgtNum], *vars[0], *vars[vars.size()-3]));
+      vars2D_ByTgt.push_back(new util::Categorized<Variable2D, int>("", "ByTgt", false, "neutCandZDist_v_pT", util::TgtCodeList[TgtNum], *vars[0], *vars[vars.size()-2]));
+      vars2D_ByTgt.push_back(new util::Categorized<Variable2D, int>("", "ByTgt", false, "neutCandDist_v_pT", util::TgtCodeList[TgtNum], *vars[0], *vars[vars.size()-1]));		       
     }
   }
 
