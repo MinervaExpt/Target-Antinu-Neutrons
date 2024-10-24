@@ -238,11 +238,11 @@ void DrawBKGCateg(string name, TFile* mcFile, TFile* dataFile, TString sample, T
     if (hasUSPlastic && h_USPlastic_Bkg->GetEntries() > 0) h->Add((TH1D*)h_USPlastic_Bkg->GetCVHistoWithError().Clone());
     if (hasDSPlastic && h_DSPlastic_Bkg->GetEntries() > 0) h->Add((TH1D*)h_DSPlastic_Bkg->GetCVHistoWithError().Clone());
     if (hasWrongNucl && h_Wrong_Nucleus_Bkg->GetEntries() > 0) h->Add((TH1D*)h_Wrong_Nucleus_Bkg->GetCVHistoWithError().Clone());
-    h->Add((TH1D*)h_Other_Bkg->GetCVHistoWithError().Clone());
-    h->Add((TH1D*)h_NPi_Bkg->GetCVHistoWithError().Clone());
-    h->Add((TH1D*)h_1Pi0_Bkg->GetCVHistoWithError().Clone());
-    h->Add((TH1D*)h_1PiC_Bkg->GetCVHistoWithError().Clone());
-    h->Add((TH1D*)h_Sig->GetCVHistoWithError().Clone());
+    if (h_Other_Bkg->GetEntries() > 0) h->Add((TH1D*)h_Other_Bkg->GetCVHistoWithError().Clone());
+    if (h_NPi_Bkg->GetEntries() > 0) h->Add((TH1D*)h_NPi_Bkg->GetCVHistoWithError().Clone());
+    if (h_1Pi0_Bkg->GetEntries() > 0) h->Add((TH1D*)h_1Pi0_Bkg->GetCVHistoWithError().Clone());
+    if(h_1PiC_Bkg->GetEntries() > 0) h->Add((TH1D*)h_1PiC_Bkg->GetCVHistoWithError().Clone());
+    if (h_Sig->GetEntries() > 0) h->Add((TH1D*)h_Sig->GetCVHistoWithError().Clone());
   }
   else{
     if (hasUSPlastic) h->Add((TH1D*)h_USPlastic_Bkg->GetCVHistoWithStatError().Clone());
@@ -657,17 +657,17 @@ void DrawIntType(string name_QE, TFile* mcFile, TFile* dataFile, TString sample,
     if(hasWrongNucl && h_Wrong_Nucleus_Bkg->GetEntries() > 0) h->Add((TH1D*)h_Wrong_Nucleus_Bkg->GetCVHistoWithError().Clone());
     if(hasUSPlastic && h_USPlastic_Bkg->GetEntries() > 0) h->Add((TH1D*)h_USPlastic_Bkg->GetCVHistoWithError().Clone());
     if(hasDSPlastic && h_DSPlastic_Bkg->GetEntries() > 0) h->Add((TH1D*)h_DSPlastic_Bkg->GetCVHistoWithError().Clone());
-    h->Add((TH1D*)h_Other_Bkg->GetCVHistoWithError().Clone());
-    h->Add((TH1D*)h_2p2h_Bkg->GetCVHistoWithError().Clone());
-    h->Add((TH1D*)h_DIS_Bkg->GetCVHistoWithError().Clone());
-    h->Add((TH1D*)h_RES_Bkg->GetCVHistoWithError().Clone());
-    h->Add((TH1D*)h_QE_Bkg->GetCVHistoWithError().Clone());
+    if (h_Other_Bkg->GetEntries() > 0) h->Add((TH1D*)h_Other_Bkg->GetCVHistoWithError().Clone());
+    if (h_2p2h_Bkg->GetEntries() > 0) h->Add((TH1D*)h_2p2h_Bkg->GetCVHistoWithError().Clone());
+    if (h_DIS_Bkg->GetEntries() > 0) h->Add((TH1D*)h_DIS_Bkg->GetCVHistoWithError().Clone());
+    if (h_RES_Bkg->GetEntries() > 0) h->Add((TH1D*)h_RES_Bkg->GetCVHistoWithError().Clone());
+    if (h_QE_Bkg->GetEntries() > 0) h->Add((TH1D*)h_QE_Bkg->GetCVHistoWithError().Clone());
 
     if (h_Other_Sig->GetEntries() > 0) h->Add((TH1D*)h_Other_Sig->GetCVHistoWithError().Clone());
-    h->Add((TH1D*)h_2p2h_Sig->GetCVHistoWithError().Clone());
-    h->Add((TH1D*)h_DIS_Sig->GetCVHistoWithError().Clone());
-    h->Add((TH1D*)h_RES_Sig->GetCVHistoWithError().Clone());
-    h->Add((TH1D*)h_QE_Sig->GetCVHistoWithError().Clone());
+    if (h_2p2h_Sig->GetEntries() > 0) h->Add((TH1D*)h_2p2h_Sig->GetCVHistoWithError().Clone());
+    if (h_DIS_Sig->GetEntries() > 0) h->Add((TH1D*)h_DIS_Sig->GetCVHistoWithError().Clone());
+    if (h_RES_Sig->GetEntries() > 0) h->Add((TH1D*)h_RES_Sig->GetCVHistoWithError().Clone());
+    if (h_QE_Sig->GetEntries() > 0) h->Add((TH1D*)h_QE_Sig->GetCVHistoWithError().Clone());
   }
   else{
     if(hasWrongNucl) h->Add((TH1D*)h_Wrong_Nucleus_Bkg->GetCVHistoWithStatError().Clone());
@@ -1067,13 +1067,13 @@ void DrawIntTypeBKG(string name, TFile* mcFile, TFile* dataFile, TString sample,
     if (hasWrongNucl && h_Wrong_Nucleus_Bkg->GetEntries() > 0) h->Add((TH1D*)h_Wrong_Nucleus_Bkg->GetCVHistoWithError().Clone());
     if (hasUSPlastic && h_USPlastic_Bkg->GetEntries() > 0) h->Add((TH1D*)h_USPlastic_Bkg->GetCVHistoWithError().Clone());
     if (hasDSPlastic && h_DSPlastic_Bkg->GetEntries() > 0) h->Add((TH1D*)h_DSPlastic_Bkg->GetCVHistoWithError().Clone());
-    h->Add((TH1D*)h_Other_Bkg->GetCVHistoWithError().Clone());
-    h->Add((TH1D*)h_2p2h_Bkg->GetCVHistoWithError().Clone());
-    h->Add((TH1D*)h_DIS_Bkg->GetCVHistoWithError().Clone());
-    h->Add((TH1D*)h_RES_Bkg->GetCVHistoWithError().Clone());
-    h->Add((TH1D*)h_QE_Bkg->GetCVHistoWithError().Clone());
+    if (h_Other_Bkg->GetEntries() > 0) h->Add((TH1D*)h_Other_Bkg->GetCVHistoWithError().Clone());
+    if (h_2p2h_Bkg->GetEntries() > 0) h->Add((TH1D*)h_2p2h_Bkg->GetCVHistoWithError().Clone());
+    if (h_DIS_Bkg->GetEntries() > 0) h->Add((TH1D*)h_DIS_Bkg->GetCVHistoWithError().Clone());
+    if (h_RES_Bkg->GetEntries() > 0) h->Add((TH1D*)h_RES_Bkg->GetCVHistoWithError().Clone());
+    if (h_QE_Bkg->GetEntries() > 0) h->Add((TH1D*)h_QE_Bkg->GetCVHistoWithError().Clone());
 
-    h->Add((TH1D*)h_Sig->GetCVHistoWithError().Clone());
+    if (h_Sig->GetEntries() > 0) h->Add((TH1D*)h_Sig->GetCVHistoWithError().Clone());
   }
   else{
     if (hasWrongNucl) h->Add((TH1D*)h_Wrong_Nucleus_Bkg->GetCVHistoWithStatError().Clone());
@@ -1925,23 +1925,23 @@ void DrawLeadBlobType(string name_Neut, TFile* mcFile, TFile* dataFile, TString 
 
   THStack* h = new THStack();
   if(!isVtx){
-    h->Add((TH1D*)h_None_Bkg->GetCVHistoWithError().Clone());
-    h->Add((TH1D*)h_Other_Bkg->GetCVHistoWithError().Clone());
-    h->Add((TH1D*)h_Prot_Bkg->GetCVHistoWithError().Clone());
-    h->Add((TH1D*)h_PiP_Bkg->GetCVHistoWithError().Clone());
-    h->Add((TH1D*)h_PiM_Bkg->GetCVHistoWithError().Clone());
-    h->Add((TH1D*)h_Pi0_Bkg->GetCVHistoWithError().Clone());
-    h->Add((TH1D*)h_Mu_Bkg->GetCVHistoWithError().Clone());
-    h->Add((TH1D*)h_Neut_Bkg->GetCVHistoWithError().Clone());
+    if (h_None_Bkg->GetEntries() > 0) h->Add((TH1D*)h_None_Bkg->GetCVHistoWithError().Clone());
+    if (h_Other_Bkg->GetEntries() > 0) h->Add((TH1D*)h_Other_Bkg->GetCVHistoWithError().Clone());
+    if (h_Prot_Bkg->GetEntries() > 0) h->Add((TH1D*)h_Prot_Bkg->GetCVHistoWithError().Clone());
+    if (h_PiP_Bkg->GetEntries() > 0) h->Add((TH1D*)h_PiP_Bkg->GetCVHistoWithError().Clone());
+    if (h_PiM_Bkg->GetEntries() > 0) h->Add((TH1D*)h_PiM_Bkg->GetCVHistoWithError().Clone());
+    if (h_Pi0_Bkg->GetEntries() > 0) h->Add((TH1D*)h_Pi0_Bkg->GetCVHistoWithError().Clone());
+    if (h_Mu_Bkg->GetEntries() > 0) h->Add((TH1D*)h_Mu_Bkg->GetCVHistoWithError().Clone());
+    if (h_Neut_Bkg->GetEntries() > 0) h->Add((TH1D*)h_Neut_Bkg->GetCVHistoWithError().Clone());
     
-    h->Add((TH1D*)h_None_Sig->GetCVHistoWithError().Clone());
-    h->Add((TH1D*)h_Other_Sig->GetCVHistoWithError().Clone());
-    h->Add((TH1D*)h_Prot_Sig->GetCVHistoWithError().Clone());
-    h->Add((TH1D*)h_PiP_Sig->GetCVHistoWithError().Clone());
-    h->Add((TH1D*)h_PiM_Sig->GetCVHistoWithError().Clone());
-    h->Add((TH1D*)h_Pi0_Sig->GetCVHistoWithError().Clone());
-    h->Add((TH1D*)h_Mu_Sig->GetCVHistoWithError().Clone());
-    h->Add((TH1D*)h_Neut_Sig->GetCVHistoWithError().Clone());
+    if (h_None_Sig->GetEntries() > 0) h->Add((TH1D*)h_None_Sig->GetCVHistoWithError().Clone());
+    if (h_Other_Sig->GetEntries() > 0) h->Add((TH1D*)h_Other_Sig->GetCVHistoWithError().Clone());
+    if (h_Prot_Sig->GetEntries() > 0) h->Add((TH1D*)h_Prot_Sig->GetCVHistoWithError().Clone());
+    if (h_PiP_Sig->GetEntries() > 0) h->Add((TH1D*)h_PiP_Sig->GetCVHistoWithError().Clone());
+    if (h_PiM_Sig->GetEntries() > 0) h->Add((TH1D*)h_PiM_Sig->GetCVHistoWithError().Clone());
+    if (h_Pi0_Sig->GetEntries() > 0) h->Add((TH1D*)h_Pi0_Sig->GetCVHistoWithError().Clone());
+    if (h_Mu_Sig->GetEntries() > 0) h->Add((TH1D*)h_Mu_Sig->GetCVHistoWithError().Clone());
+    if (h_Neut_Sig->GetEntries() > 0) h->Add((TH1D*)h_Neut_Sig->GetCVHistoWithError().Clone());
   }
   if(!isVtx){
     h->Add((TH1D*)h_None_Bkg->GetCVHistoWithStatError().Clone());
@@ -2340,6 +2340,7 @@ int main(int argc, char* argv[]) {
 
     pos=0;
     string name=(string)key->GetName();
+    cout << "Name: " << name << endl;
     bool isVtx = false;
     if ((pos=name.find("vtxZ"))!=string::npos) isVtx = true;
     pos=0;
