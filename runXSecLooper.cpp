@@ -98,6 +98,9 @@ public:
     if (fTgtZ == -1){
       return (z > 5980 && z < 8422);
     }
+    else if (fTgtZ == 1){
+      return (z > 5980 && z < 8422 && trueTgtZ==fTgtZ);
+    }
     else if (fTgtZ == 8){
       if ((trueTgtZ != fTgtZ) && (trueTgtZ != 1)) return false;
       int trueTgtCode = util::GetTrueTgtCode(trueTgtZ, x, y, z);//Is this problematic to use the exact same definition? Feels self-fulfilling...
@@ -343,6 +346,17 @@ int main(const int argc, const char** argv)
   ds_dpT_Other->setNormalizationValue(GetNormFactor(-1));
   ds_dpT_Other->setUniverses(0); //default value, put 0 if you do not want universes to be included.
   loop.addXSec(ds_dpT_Other);
+
+  MinModDepCCQEXSec* ds_dpT_H_QE = new MinModDepCCQEXSec("pTmu_Tracker_H_QE", 1, neutKE, "QE");
+  ds_dpT_H_QE->setBinEdges(pt_nbins, pt_edges);
+  ds_dpT_H_QE->setVariable(XSec::kPTLep);
+  ds_dpT_H_QE->setIsFluxIntegrated(true);
+  ds_dpT_H_QE->setDimension(1);
+  ds_dpT_H_QE->setFluxIntLimits(0.0, 100.0);
+  ds_dpT_H_QE->setNormalizationType(XSec::kSelfNorm);
+  ds_dpT_H_QE->setNormalizationValue(GetNormFactor(-1));
+  ds_dpT_H_QE->setUniverses(0); //default value, put 0 if you do not want universes to be included.
+  loop.addXSec(ds_dpT_H_QE);
 
   MinModDepCCQEXSec* ds_dpT_C = new MinModDepCCQEXSec("pTmu_C", 6, neutKE);
   ds_dpT_C->setBinEdges(pt_nbins, pt_edges);
