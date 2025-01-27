@@ -115,7 +115,8 @@ void Plot(PlotUtils::MnvH1D& hist, const std::string& stepName, const std::strin
   can.Print((prefix + "_" + stepName + "_otherUncertainties.C").c_str());
   */
 
-  plotter.DrawErrorSummary(&hist, "TR", true, true, 1e-5, false, "Neutron Detection");
+  //plotter.DrawErrorSummary(&hist, "TR", true, true, 1e-5, false, "Neutron Detection");
+  plotter.DrawErrorSummary(&hist, "TR", true, true, 1e-5, false, "Neutron Interactions");
   can.Print((prefix + "_" + stepName + "_neutronUncertainties.png").c_str());
   can.Print((prefix + "_" + stepName + "_neutronUncertainties.pdf").c_str());
   can.Print((prefix + "_" + stepName + "_neutronUncertainties.C").c_str());
@@ -140,7 +141,8 @@ void Plot(PlotUtils::MnvH1D& hist, const std::string& stepName, const std::strin
   can.Print((prefix + "_" + stepName + "_MuonUncertainties.pdf").c_str());
   can.Print((prefix + "_" + stepName + "_MuonUncertainties.C").c_str());
 
-  plotter.DrawErrorSummary(&hist, "TR", true, true, 1e-5, false, "GEANT4");
+  //plotter.DrawErrorSummary(&hist, "TR", true, true, 1e-5, false, "GEANT4");
+  plotter.DrawErrorSummary(&hist, "TR", true, true, 1e-5, false, "GEANT4 Charged");
   can.Print((prefix + "_" + stepName + "_GEANTUncertainties.png").c_str());
   can.Print((prefix + "_" + stepName + "_GEANTUncertainties.pdf").c_str());
   can.Print((prefix + "_" + stepName + "_GEANTUncertainties.C").c_str());
@@ -150,7 +152,7 @@ void Plot(PlotUtils::MnvH1D& hist, const std::string& stepName, const std::strin
   can.Print((prefix + "_" + stepName + "_NormalizationUncertainties.pdf").c_str());
   can.Print((prefix + "_" + stepName + "_NormalizationUncertainties.C").c_str());
 
-  plotter.DrawErrorSummary(&hist, "TR", true, true, 1e-5, false, "MnvTune V1");
+  plotter.DrawErrorSummary(&hist, "TR", true, true, 1e-5, false, "MnvTune V2");
   can.Print((prefix + "_" + stepName + "_MnvTuneUncertainties.png").c_str());
   can.Print((prefix + "_" + stepName + "_MnvTuneUncertainties.pdf").c_str());
   can.Print((prefix + "_" + stepName + "_MnvTuneUncertainties.C").c_str());
@@ -238,7 +240,40 @@ double GetTotalScatteringCenters(int targetZ, bool isMC)
     Nucleons = targetInfo.GetTrackerNNucleons(5980, 8422, isMC, 850);
   }
   return Nucleons;
-}                                                                                                                                                                                                                 
+}
+
+double GetProtonScatteringCenters(int targetZ, bool isMC)
+{
+  // TARGET INFO
+  PlotUtils::TargetUtils targetInfo;
+  double Nucleons = 0.0;
+
+  // Target 1 is generally excluded due to rock muon contamination (in the inclusive analysis), keeping for now...
+  if(targetZ == 6){
+    Nucleons = targetInfo.GetPassiveTargetNProtons( 3, targetZ, isMC ); // Target 3
+  }
+  else if(targetZ == 26){                                                                                                                                                                                              
+    Nucleons = targetInfo.GetPassiveTargetNProtons( 1, targetZ, isMC ) // Target 1
+      + targetInfo.GetPassiveTargetNProtons( 2, targetZ, isMC ) // Target 2                                                                                                                                
+      + targetInfo.GetPassiveTargetNProtons( 3, targetZ, isMC ) // Target 3                                                                                                                                
+      + targetInfo.GetPassiveTargetNProtons( 5, targetZ, isMC );// Target 5
+  }
+  else if(targetZ == 82){
+    Nucleons = targetInfo.GetPassiveTargetNProtons( 1, targetZ, isMC ) // Target 2
+      + targetInfo.GetPassiveTargetNProtons( 2, targetZ, isMC ) // Target 2
+      + targetInfo.GetPassiveTargetNProtons( 3, targetZ, isMC ) // Target 3
+      + targetInfo.GetPassiveTargetNProtons( 4, targetZ, isMC ) // Target 4
+      + targetInfo.GetPassiveTargetNProtons( 5, targetZ, isMC );// Target 5
+  }
+  else if(targetZ == 8){
+    Nucleons = targetInfo.GetPassiveTargetNProtons( 6, targetZ, isMC );//Water
+      //+ targetInfo.GetPassiveTargetNNucleons( 6, 1, isMC );//Water Hydrogen is handled above. This was wrong from before. Explains why it seemed about a factor of 2 low... essentially divided by the number of water nucleons twice...
+      }
+  else if(targetZ > 90 ){
+    Nucleons = targetInfo.GetTrackerNProtons(5980, 8422, isMC, 850);
+  }
+  return Nucleons;
+}                                                                                                                                                                                                                
 
 //The final step of cross section extraction: normalize by flux, bin width, POT, and number of targets
 PlotUtils::MnvH1D* normalize(PlotUtils::MnvH1D* efficiencyCorrected, PlotUtils::MnvH1D* fluxIntegral, const double nNucleons, const double POT)
@@ -469,18 +504,27 @@ int main(const int argc, const char** argv)
 	*/
 	double nNuke=1.0;
 	double nNukeMC = 1.0;
+	double nProt=1.0;
+	double nProtMC=1.0;
 	if (tgtZ != -1){
 	  nNukeMC = GetTotalScatteringCenters(tgtZ,true);
 	  nNuke = GetTotalScatteringCenters(tgtZ, isMC);
+	  nProtMC = GetProtonScatteringCenters(tgtZ,true);
+	  nProt = GetProtonScatteringCenters(tgtZ, isMC);
 	}
 	else{
 	  nNukeMC = GetTotalScatteringCenters(99,true);
 	  nNuke = GetTotalScatteringCenters(99, isMC);
+	  nProtMC = GetProtonScatteringCenters(99,true);
+	  nProt = GetProtonScatteringCenters(99, isMC);
 	}
 
 	std::cout << "No. of nucleons: " << nNuke << std::endl;
+	std::cout << "No. of protons: " << nProt << std::endl;
 	std::cout << "No. of antineutrinos: " << flux->GetBinContent(1) << std::endl;
 	std::cout << "No. of antineutrinos multiplied: " << flux->GetBinContent(1)*dataPOT << std::endl;
+	auto unfoldedProt=unfolded->Clone();
+
 	auto crossSection = normalize(unfolded, flux, nNuke, dataPOT);
 	if (multPOT) crossSection->Scale(dataPOT);
 	if (!isMC){
@@ -492,14 +536,35 @@ int main(const int argc, const char** argv)
 	outFile->cd();
 	crossSection->Clone()->Write("crossSection");
       
+	auto crossSectionProt = normalize(unfoldedProt, flux, nProt, dataPOT);
+	if (multPOT) crossSectionProt->Scale(dataPOT);
+	if (!isMC){
+	  auto MassSyst = GetTargetMassSystHist(crossSectionProt, tgtZ);
+	  crossSectionProt->AddMissingErrorBandsAndFillWithCV(*MassSyst);
+	  crossSectionProt->Multiply(crossSectionProt,MassSyst);
+	}
+	Plot(*crossSectionProt, "crossSectionProt", prefix, tgtZ);
+	outFile->cd();
+	crossSectionProt->Clone()->Write("crossSectionProt");
+      
 	//Write a "simulated cross section" to compare to the data I just extracted.
 	//If this analysis passed its closure test, this should be the same cross section as
 	//what GENIEXSecExtract would produce.
+	simEventRate->Clone()->Write("simulatedEventRate");
+
+	auto simEventRateProt = simEventRate->Clone();
+	
 	normalize(simEventRate, flux, nNukeMC, mcPOT);
 	if (multPOT) simEventRate->Scale(dataPOT);  
 
 	Plot(*simEventRate, "simulatedCrossSection", prefix, tgtZ);
-	simEventRate->Write("simulatedCrossSection");
+	simEventRate->Clone()->Write("simulatedCrossSection");
+
+      	normalize(simEventRateProt, flux, nProtMC, mcPOT);
+	if (multPOT) simEventRateProt->Scale(dataPOT);  
+
+	Plot(*simEventRateProt, "simulatedCrossSectionProt", prefix, tgtZ);
+	simEventRateProt->Clone()->Write("simulatedCrossSectionProt");
       }
       outFile->Close();
     }
