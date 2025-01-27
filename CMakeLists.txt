@@ -86,6 +86,10 @@ add_executable(ExtractCrossSection2D ExtractCrossSection2D.cpp)
 target_link_libraries(ExtractCrossSection2D ${ROOT_LIBRARIES} util event fits MAT UnfoldUtils)
 install(TARGETS ExtractCrossSection2D DESTINATION bin)
 
+add_executable(ExtractDaisy ExtractDaisy.cpp)
+target_link_libraries(ExtractDaisy ${ROOT_LIBRARIES} util event fits MAT UnfoldUtils)
+install(TARGETS ExtractDaisy DESTINATION bin)
+
 add_executable(runXSecLooper runXSecLooper.cpp)
 target_link_libraries(runXSecLooper ${ROOT_LIBRARIES} MAT GENIEXSecExtract)
 install(TARGETS runXSecLooper DESTINATION bin)
