@@ -161,14 +161,14 @@ int main(int argc, char* argv[]) {
         TString nameObjInt = (TString)keyInt->GetName();
 	if (!(classNameInt.Contains("MnvH"))) continue;
 	else if (classNameInt.Contains("MnvH2")){
-	  MnvH2D* h2D = (MnvH2D*)(inFile->Get(nameObj+"/"+nameObjInt)->Clone(nameObjInt));
+	  MnvH2D* h2D = (MnvH2D*)(inFile->Get(nameObj+"/"+nameObjInt));
 	  newOutDir->cd();
 	  h2D->Write();
 	  delete h2D;
 	}
 	else if (classNameInt.Contains("MnvH1")){
 	  cout << "Working with: " << nameObjInt << endl;
-	  MnvH1D* h1D = SwapSysUniverse((MnvH1D*)(inFile->Get(nameObj+"/"+nameObjInt)->Clone(nameObjInt)),univName,univ);
+	  MnvH1D* h1D = SwapSysUniverse((MnvH1D*)(inFile->Get(nameObj+"/"+nameObjInt)),univName,univ);
 	  newOutDir->cd();
 	  h1D->Write();
 	  delete h1D;
@@ -182,20 +182,20 @@ int main(int argc, char* argv[]) {
     else if (!(className.Contains("MnvH") || className == "TParameter<double>") || nameObj.Contains("MYBins")) continue;
     else if (className == "TParameter<double>"){
       cout << "Working with: " << nameObj << endl;
-      TParameter<double>* tPar = (TParameter<double>*)(inFile->Get(nameObj))->Clone(nameObj);
+      TParameter<double>* tPar = (TParameter<double>*)(inFile->Get(nameObj));
       outFile->cd();
       tPar->Write();
       delete tPar;
     }
     else if (className.Contains("MnvH2")){
-      MnvH2D* h2D = (MnvH2D*)(inFile->Get(nameObj)->Clone(nameObj));
+      MnvH2D* h2D = (MnvH2D*)(inFile->Get(nameObj));
       outFile->cd();
       h2D->Write();
       delete h2D;
     }
     else if (className.Contains("MnvH1")){
       cout << "Working with: " << nameObj << endl;
-      MnvH1D* h1D = SwapSysUniverse((MnvH1D*)(inFile->Get(nameObj)->Clone(nameObj)),univName,univ);
+      MnvH1D* h1D = SwapSysUniverse((MnvH1D*)(inFile->Get(nameObj)),univName,univ);
       outFile->cd();
       h1D->Write();
       delete h1D;

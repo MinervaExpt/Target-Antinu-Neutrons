@@ -207,7 +207,7 @@ int main(int argc, char* argv[]) {
         else if (classNameInt.Contains("MnvH2")){
 	  //Could eventually be used as a way to check nuisance variables from a fit... for now just a direct copy over.
 	  bool scaled = false;
-	  MnvH2D* h2D = (MnvH2D*)(inFile->Get(nameObj+"/"+nameObjInt))->Clone(nameObjInt);
+	  MnvH2D* h2D = (MnvH2D*)(inFile->Get(nameObj+"/"+nameObjInt));
 	  for (auto varName: varTagsMap){
 	    if (scaled){
 	      continue;
@@ -222,7 +222,7 @@ int main(int argc, char* argv[]) {
 	      cout << "Scaling: " << nameObjInt << endl;
 	      TString nameOfScale = varNameMap[varName.first+tag];
 	      cout << "With Scale: " << nameOfScale << endl;
-	      MnvH1D* hScale = (MnvH1D*)(scaleFile->Get(nameOfScale)->Clone());
+	      MnvH1D* hScale = (MnvH1D*)(scaleFile->Get(nameOfScale));
 	      hScale->AddMissingErrorBandsAndFillWithCV(*h2D);
 	      MnvH2D* hScale2D = Make2DX(hScale,h2D);//Assume x axis, not worth trying to specify otherwise right now. Plan is that one could change the directory to match the tag of what's scaling, but just need to get something going first.
 	      h2D->Multiply(h2D,hScale2D);
@@ -238,7 +238,7 @@ int main(int argc, char* argv[]) {
 	}
 	else if (classNameInt.Contains("MnvH1")){
 	  bool scaled = false;
-	  MnvH1D* h1D = (MnvH1D*)(inFile->Get(nameObj+"/"+nameObjInt))->Clone(nameObjInt);
+	  MnvH1D* h1D = (MnvH1D*)(inFile->Get(nameObj+"/"+nameObjInt));
 	  for (auto varName: varTagsMap){
 	    if (!nameObjInt.Contains(varName.first) || scaled) continue;
 	    for (auto tag: varName.second){
@@ -247,7 +247,7 @@ int main(int argc, char* argv[]) {
 	      cout << "Scaling: " << nameObjInt << endl;
 	      TString nameOfScale = varNameMap[varName.first+tag];
 	      cout << "With Scale: " << nameOfScale << endl;
-	      MnvH1D* hScale = (MnvH1D*)(scaleFile->Get(nameOfScale)->Clone());
+	      MnvH1D* hScale = (MnvH1D*)(scaleFile->Get(nameOfScale));
 	      hScale->AddMissingErrorBandsAndFillWithCV(*h1D);
 	      h1D->Multiply(h1D,hScale);
 	      delete hScale;
@@ -267,20 +267,20 @@ int main(int argc, char* argv[]) {
 
     else if (!(className.Contains("MnvH") || className == "TParameter<double>") || nameObj.Contains("MYBins")) continue;
     else if (className == "TParameter<double>"){
-      TParameter<double>* tPar = (TParameter<double>*)(inFile->Get(nameObj))->Clone(nameObj);
+      TParameter<double>* tPar = (TParameter<double>*)(inFile->Get(nameObj));
       outFile->cd();
       tPar->Write();
       delete tPar;
     }
     else if (className.Contains("MnvH2")){
-      MnvH2D* h2D = (MnvH2D*)(inFile->Get(nameObj))->Clone(nameObj);
+      MnvH2D* h2D = (MnvH2D*)(inFile->Get(nameObj));
       outFile->cd();
       h2D->Write();
       delete h2D;
     }
     else if (className.Contains("MnvH1")){
       bool scaled = false;
-      MnvH1D* h1D = (MnvH1D*)(inFile->Get(nameObj))->Clone(nameObj);
+      MnvH1D* h1D = (MnvH1D*)(inFile->Get(nameObj));
       for (auto varName: varTagsMap){
 	if (!nameObj.Contains(varName.first) || scaled) continue;
 	for (auto tag: varName.second){
@@ -289,7 +289,7 @@ int main(int argc, char* argv[]) {
 	  cout << "Scaling: " << nameObj << endl;
 	  TString nameOfScale = varNameMap[varName.first+tag];
 	  cout << "With Scale: " << nameOfScale << endl;
-	  MnvH1D* hScale = (MnvH1D*)(scaleFile->Get(nameOfScale)->Clone());
+	  MnvH1D* hScale = (MnvH1D*)(scaleFile->Get(nameOfScale));
 	  hScale->AddMissingErrorBandsAndFillWithCV(*h1D);
 	  h1D->Multiply(h1D,hScale);
 	  delete hScale;
