@@ -1508,13 +1508,13 @@ void DrawBKGSubtracted(string name, TFile* mcFile, TFile* dataFile, TString samp
   MnvH1D* h_data_Top = (MnvH1D*)dataFile->Get((TString)name_bkg+"_data");
   MnvH1D* h_data = new MnvH1D(h_data_Top->GetBinNormalizedCopy());
   h_data->AddMissingErrorBandsAndFillWithCV(*h_Sig);
-  if (hasWrongNucl) h_data->Add(h_Wrong_Nucleus_Bkg,-1.0);
-  if (hasUSPlastic) h_data->Add(h_USPlastic_Bkg,-1.0);
-  if (hasDSPlastic) h_data->Add(h_DSPlastic_Bkg,-1.0);
-  h_data->Add(h_Other_Bkg,-1.0);
-  h_data->Add(h_NPi_Bkg,-1.0);
-  h_data->Add(h_1Pi0_Bkg,-1.0);
-  h_data->Add(h_1PiC_Bkg,-1.0);
+  if (hasWrongNucl && h_Wrong_Nucleus_Bkg->GetEntries() > 0) h_data->Add(h_Wrong_Nucleus_Bkg,-1.0);
+  if (hasUSPlastic && h_USPlastic_Bkg->GetEntries() > 0) h_data->Add(h_USPlastic_Bkg,-1.0);
+  if (hasDSPlastic && h_DSPlastic_Bkg->GetEntries() > 0) h_data->Add(h_DSPlastic_Bkg,-1.0);
+  if (h_Other_Bkg->GetEntries() > 0) h_data->Add(h_Other_Bkg,-1.0);
+  if (h_NPi_Bkg->GetEntries() > 0) h_data->Add(h_NPi_Bkg,-1.0);
+  if (h_1Pi0_Bkg->GetEntries() > 0) h_data->Add(h_1Pi0_Bkg,-1.0);
+  if (h_1PiC_Bkg->GetEntries() > 0) h_data->Add(h_1PiC_Bkg,-1.0);
 
   TH1D* dataHist = (TH1D*)h_data->GetCVHistoWithError().Clone();
   dataHist->SetLineColor(kBlack);
@@ -1634,14 +1634,23 @@ void DrawBKGSubtracted(string name, TFile* mcFile, TFile* dataFile, TString samp
   delete ratio;
   delete straightLine;
   delete h_data;
+  delete h_data_Top;
   delete h_Sig;
+  delete h_Sig_Top;
   delete h_1PiC_Bkg;
+  delete h_1PiC_Bkg_Top;
   delete h_1Pi0_Bkg;
+  delete h_1Pi0_Bkg_Top;
   delete h_NPi_Bkg;
+  delete h_NPi_Bkg_Top;
   delete h_USPlastic_Bkg;
+  delete h_USPlastic_Bkg_Top;
   delete h_DSPlastic_Bkg;
+  delete h_DSPlastic_Bkg_Top;
   delete h_Wrong_Nucleus_Bkg;
+  delete h_Wrong_Nucleus_Bkg_Top;
   delete h_Other_Bkg;
+  delete h_Other_Bkg_Top;
   delete c1;
 
   return;
@@ -1761,14 +1770,14 @@ void DrawPlasticBKGSubtracted(string name, TFile* mcFile, TFile* dataFile, TStri
   MnvH1D* h_data_Top = (MnvH1D*)dataFile->Get((TString)name_bkg+"_data");
   MnvH1D* h_data = new MnvH1D(h_data_Top->GetBinNormalizedCopy());
   h_data->AddMissingErrorBandsAndFillWithCV(*h_Sig);
-  if (hasUSPlastic) h_data->Add(h_USPlastic_Bkg,-1.0);
-  if (hasDSPlastic) h_data->Add(h_DSPlastic_Bkg,-1.0);
+  if (hasUSPlastic && h_USPlastic_Bkg->GetEntries() > 0) h_data->Add(h_USPlastic_Bkg,-1.0);
+  if (hasDSPlastic && h_DSPlastic_Bkg->GetEntries() > 0) h_data->Add(h_DSPlastic_Bkg,-1.0);
 
-  if (hasWrongNucl) h_Sig->Add(h_Wrong_Nucleus_Bkg);
-  h_Sig->Add(h_Other_Bkg);
-  h_Sig->Add(h_NPi_Bkg);
-  h_Sig->Add(h_1Pi0_Bkg);
-  h_Sig->Add(h_1PiC_Bkg);
+  if (hasWrongNucl && h_Wrong_Nucleus_Bkg->GetEntries() > 0) h_Sig->Add(h_Wrong_Nucleus_Bkg);
+  if (h_Other_Bkg->GetEntries() > 0) h_Sig->Add(h_Other_Bkg);
+  if (h_NPi_Bkg->GetEntries() > 0) h_Sig->Add(h_NPi_Bkg);
+  if (h_1Pi0_Bkg->GetEntries() > 0) h_Sig->Add(h_1Pi0_Bkg);
+  if (h_1PiC_Bkg->GetEntries() > 0) h_Sig->Add(h_1PiC_Bkg);
 
   TH1D* sigHist = (TH1D*)h_Sig->GetCVHistoWithError().Clone();
   sigHist->SetLineColor(kRed);
@@ -1920,16 +1929,23 @@ void DrawPlasticBKGSubtracted(string name, TFile* mcFile, TFile* dataFile, TStri
   delete ratio;
   delete straightLine;
   delete h_data;
+  delete h_data_Top;
   delete h_Sig;
+  delete h_Sig_Top;
   delete h_1PiC_Bkg;
+  delete h_1PiC_Bkg_Top;
   delete h_1Pi0_Bkg;
+  delete h_1Pi0_Bkg_Top;
   delete h_NPi_Bkg;
+  delete h_NPi_Bkg_Top;
   delete h_USPlastic_Bkg;
   if (inner && testInner) delete h_USPlastic_Bkg_Top;
   delete h_DSPlastic_Bkg;
   if (inner && testInner) delete h_DSPlastic_Bkg_Top;
   delete h_Wrong_Nucleus_Bkg;
+  delete h_Wrong_Nucleus_Bkg_Top;
   delete h_Other_Bkg;
+  delete h_Other_Bkg_Top;
   delete c1;
 
   return;

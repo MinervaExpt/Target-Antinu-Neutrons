@@ -87,7 +87,8 @@ void DrawBKGCateg(string name, TFile* mcFile, TFile* dataFile, TString sample, T
 
   TString sampleName = sample;
 
-  bool isTracker = sampleName.Contains("Tracker") ? true : false;
+  bool fillInner = (!sampleName.Contains("NoInner"));
+  bool isTracker = sampleName.Contains("Tracker");
 
   MnvH1D* h_Sig_Top = (MnvH1D*)mcFile->Get((TString)name);
   MnvH1D* h_Sig = new MnvH1D(h_Sig_Top->GetBinNormalizedCopy());
@@ -139,7 +140,7 @@ void DrawBKGCateg(string name, TFile* mcFile, TFile* dataFile, TString sample, T
 
   //Experimental which will break for tracker region!!!
   MnvH1D* h_USPlastic_Bkg_Top = nullptr;
-  if (((TString)(name_bkg)).Contains("pTmu") && !((TString)(name_bkg)).Contains("/") && !((TString)(name_bkg)).Contains("Outer") && (TString)(name_bkg) != "pTmu" && (TString)(name_bkg) != "pTmu_PreRecoilCut"){
+  if (fillInner && ((TString)(name_bkg)).Contains("pTmu") && !((TString)(name_bkg)).Contains("/") && !((TString)(name_bkg)).Contains("Outer") && (TString)(name_bkg) != "pTmu" && (TString)(name_bkg) != "pTmu_PreRecoilCut"){
     string nametag = name_bkg;
     nametag.erase(0,4);
     cout << name_bkg+"InnerUSPlastic"+nametag+"_selected_signal_reco" << endl;
@@ -163,7 +164,7 @@ void DrawBKGCateg(string name, TFile* mcFile, TFile* dataFile, TString sample, T
   cout << "TEST" << endl;
 
   MnvH1D* h_DSPlastic_Bkg_Top = nullptr;
-  if (((TString)(name_bkg)).Contains("pTmu") && !((TString)(name_bkg)).Contains("/") && !((TString)(name_bkg)).Contains("Outer") && (TString)(name_bkg) != "pTmu" && (TString)(name_bkg) != "pTmu_PreRecoilCut"){
+  if (fillInner && ((TString)(name_bkg)).Contains("pTmu") && !((TString)(name_bkg)).Contains("/") && !((TString)(name_bkg)).Contains("Outer") && (TString)(name_bkg) != "pTmu" && (TString)(name_bkg) != "pTmu_PreRecoilCut"){
     string nametag = name_bkg;
     nametag.erase(0,4);
     cout << name_bkg+"InnerDSPlastic"+nametag+"_selected_signal_reco" << endl;
@@ -340,7 +341,7 @@ void DrawBKGCateg(string name, TFile* mcFile, TFile* dataFile, TString sample, T
   h_Tot->SetLineColor(kRed);
   h_Tot->SetFillColorAlpha(kPink + 1, 0.4);
   h_Tot->Draw("E2 SAME");
-  */
+    */
   dataHist->Draw("same");
   c1->Update();
 
@@ -420,7 +421,7 @@ void DrawBKGCateg(string name, TFile* mcFile, TFile* dataFile, TString sample, T
       cout << "Fixing Axis?" << endl;
       ratio->GetXaxis()->SetRangeUser(0,2.5);
       }
-    */
+      */
     ratio->Draw();
 
     cout << "TEST" << endl;
@@ -464,18 +465,34 @@ void DrawBKGCateg(string name, TFile* mcFile, TFile* dataFile, TString sample, T
 
   delete mcSum;
   delete dataHist;
+  /*
+  TList* stackedHists = h->GetHists();
+  TIter next(stackedHists);
+  TH1D* stackedObj = 0;
+  while ( stackedObj = (TH1D*)next() ){
+    delete stackedObj;
+  }*/
   delete h;
-  if (!isVtx) delete ratio;
-  if (!isVtx) delete straightLine;
+  //if (!isVtx) delete ratio;
+  //if (!isVtx) delete straightLine;
   delete h_data;
+  delete h_data_Top;
   delete h_Sig;
+  delete h_Sig_Top;
   delete h_1PiC_Bkg;
+  delete h_1PiC_Bkg_Top;
   delete h_1Pi0_Bkg;
+  delete h_1Pi0_Bkg_Top;
   delete h_NPi_Bkg;
+  delete h_NPi_Bkg_Top;
   delete h_USPlastic_Bkg;
+  delete h_USPlastic_Bkg_Top;
   delete h_DSPlastic_Bkg;
+  delete h_DSPlastic_Bkg_Top;
   delete h_Wrong_Nucleus_Bkg;
+  delete h_Wrong_Nucleus_Bkg_Top;
   delete h_Other_Bkg;
+  delete h_Other_Bkg_Top;
   delete c1;
 
   cout << "TEST" << endl;
@@ -900,25 +917,46 @@ void DrawIntType(string name_QE, TFile* mcFile, TFile* dataFile, TString sample,
   cout << "Deleting" << endl;
   delete mcSum;
   delete dataHist;
+  /*
+  TList* stackedHists = h->GetHists();
+  TIter next(stackedHists);
+  TH1D* stackedObj = 0;
+  while ( stackedObj = (TH1D*)next() ){
+    delete stackedObj;
+    }*/
   delete h;
   delete h_data;
+  delete h_data_Top;
   if (!isVtx) delete ratio;
   if (!isVtx) delete straightLine;
   cout << "Through data" << endl;
   delete h_Wrong_Nucleus_Bkg;
+  delete h_Wrong_Nucleus_Bkg_Top;
   delete h_DSPlastic_Bkg;
+  delete h_DSPlastic_Bkg_Top;
   delete h_USPlastic_Bkg;
+  delete h_USPlastic_Bkg_Top;
   cout << "Deleted up through weird stuff " << endl;
   delete h_Other_Bkg;
+  delete h_Other_Bkg_Top;
   delete h_2p2h_Bkg;
+  delete h_2p2h_Bkg_Top;
   delete h_DIS_Bkg;
+  delete h_DIS_Bkg_Top;
   delete h_RES_Bkg;
+  delete h_RES_Bkg_Top;
   delete h_QE_Bkg;
+  delete h_QE_Bkg_Top;
   delete h_Other_Sig;
+  delete h_Other_Sig_Top;
   delete h_2p2h_Sig;
+  delete h_2p2h_Sig_Top;
   delete h_DIS_Sig;
+  delete h_DIS_Sig_Top;
   delete h_RES_Sig;
+  delete h_RES_Sig_Top;
   delete h_QE_Sig;
+  delete h_QE_Sig_Top;
   delete c1;
 
   delete hTmp;
@@ -1294,19 +1332,36 @@ void DrawIntTypeBKG(string name, TFile* mcFile, TFile* dataFile, TString sample,
 
   delete mcSum;
   delete dataHist;
+  /*
+  TList* stackedHists = h->GetHists();
+  TIter next(stackedHists);
+  TH1D* stackedObj = 0;
+  while ( stackedObj = (TH1D*)next() ){
+    delete stackedObj;
+    }*/
   delete h;
   if (!isVtx) delete ratio;
   if (!isVtx) delete straightLine;
   delete h_data;
+  delete h_data_Top;
   delete h_Wrong_Nucleus_Bkg;
+  delete h_Wrong_Nucleus_Bkg_Top;
   delete h_DSPlastic_Bkg;
+  delete h_DSPlastic_Bkg_Top;
   delete h_USPlastic_Bkg;
+  delete h_USPlastic_Bkg_Top;
   delete h_Other_Bkg;
+  delete h_Other_Bkg_Top;
   delete h_2p2h_Bkg;
+  delete h_2p2h_Bkg_Top;
   delete h_DIS_Bkg;
+  delete h_DIS_Bkg_Top;
   delete h_RES_Bkg;
+  delete h_RES_Bkg_Top;
   delete h_QE_Bkg;
+  delete h_QE_Bkg_Top;
   delete h_Sig;
+  delete h_Sig_Top;
   delete c1;
 
   delete hTmp;
@@ -1628,8 +1683,8 @@ void DrawTargetType(string name_Plastic, TFile* mcFile, TFile* dataFile, TString
   latex->SetTextColor(kRed);
   c1->Update();
 
-  //TLegend* leg = new TLegend(0.6,0.5,0.9,0.9);
-  TLegend* leg = new TLegend(0.1,0.5,0.4,0.9);
+  TLegend* leg = new TLegend(0.6,0.5,0.9,0.9);
+  //TLegend* leg = new TLegend(0.1,0.5,0.4,0.9);
 
   leg->SetNColumns(2);
 
@@ -1729,26 +1784,50 @@ void DrawTargetType(string name_Plastic, TFile* mcFile, TFile* dataFile, TString
 
   delete mcSum;
   delete dataHist;
+  /*
+  TList* stackedHists = h->GetHists();
+  TIter next(stackedHists);
+  TH1D* stackedObj = 0;
+  while ( stackedObj = (TH1D*)next() ){
+    delete stackedObj;
+    }*/
   delete h;
   if (!isVtx) delete ratio;
   if (!isVtx) delete straightLine;
   delete h_data;
+  delete h_data_Top;
   delete h_Other_Bkg;
+  delete h_Other_Bkg_Top;
   delete h_C_Bkg;
+  delete h_C_Bkg_Top;
   delete h_Water_Bkg;
+  delete h_Water_Bkg_Top;
   delete h_Pb_Bkg;
+  delete h_Pb_Bkg_Top;
   delete h_Fe_Bkg;
+  delete h_Fe_Bkg_Top;
   delete h_DS_Bkg;
+  delete h_DS_Bkg_Top;
   delete h_US_Bkg;
+  delete h_US_Bkg_Top;
   delete h_Plastic_Bkg;
+  delete h_Plastic_Bkg_Top;
   delete h_Other_Sig;
+  delete h_Other_Sig_Top;
   delete h_C_Sig;
+  delete h_C_Sig_Top;
   delete h_Water_Sig;
+  delete h_Water_Sig_Top;
   delete h_Pb_Sig;
+  delete h_Pb_Sig_Top;
   delete h_Fe_Sig;
+  delete h_Fe_Sig_Top;
   delete h_DS_Sig;
+  delete h_DS_Sig_Top;
   delete h_US_Sig;
+  delete h_US_Sig_Top;
   delete h_Plastic_Sig;
+  delete h_Plastic_Sig_Top;
   delete c1;
 
   return;
@@ -1943,7 +2022,7 @@ void DrawLeadBlobType(string name_Neut, TFile* mcFile, TFile* dataFile, TString 
     if (h_Mu_Sig->GetEntries() > 0) h->Add((TH1D*)h_Mu_Sig->GetCVHistoWithError().Clone());
     if (h_Neut_Sig->GetEntries() > 0) h->Add((TH1D*)h_Neut_Sig->GetCVHistoWithError().Clone());
   }
-  if(!isVtx){
+  else{
     h->Add((TH1D*)h_None_Bkg->GetCVHistoWithStatError().Clone());
     h->Add((TH1D*)h_Other_Bkg->GetCVHistoWithStatError().Clone());
     h->Add((TH1D*)h_Prot_Bkg->GetCVHistoWithStatError().Clone());
@@ -2064,8 +2143,8 @@ void DrawLeadBlobType(string name_Neut, TFile* mcFile, TFile* dataFile, TString 
   latex->SetTextColor(kRed);
   c1->Update();
 
-  //TLegend* leg = new TLegend(0.6,0.5,0.9,0.9);
-  TLegend* leg = new TLegend(0.1,0.5,0.4,0.9);
+  TLegend* leg = new TLegend(0.6,0.5,0.9,0.9);
+  //TLegend* leg = new TLegend(0.1,0.5,0.4,0.9);
 
   leg->SetNColumns(2);
 
@@ -2165,26 +2244,50 @@ void DrawLeadBlobType(string name_Neut, TFile* mcFile, TFile* dataFile, TString 
 
   delete mcSum;
   delete dataHist;
+  /*
+  TList* stackedHists = h->GetHists();
+  TIter next(stackedHists);
+  TH1D* stackedObj = 0;
+  while ( stackedObj = (TH1D*)next() ){
+    delete stackedObj;
+    }*/
   delete h;
   if(!isVtx) delete ratio;
   if(!isVtx) delete straightLine;
   delete h_data;
+  delete h_data_Top;
   delete h_None_Bkg;
+  delete h_None_Bkg_Top;
   delete h_Other_Bkg;
+  delete h_Other_Bkg_Top;
   delete h_Prot_Bkg;
+  delete h_Prot_Bkg_Top;
   delete h_PiP_Bkg;
+  delete h_PiP_Bkg_Top;
   delete h_PiM_Bkg;
+  delete h_PiM_Bkg_Top;
   delete h_Pi0_Bkg;
+  delete h_Pi0_Bkg_Top;
   delete h_Mu_Bkg;
+  delete h_Mu_Bkg_Top;
   delete h_Neut_Bkg;
+  delete h_Neut_Bkg_Top;
   delete h_None_Sig;
+  delete h_None_Sig_Top;
   delete h_Other_Sig;
+  delete h_Other_Sig_Top;
   delete h_Prot_Sig;
+  delete h_Prot_Sig_Top;
   delete h_PiP_Sig;
+  delete h_PiP_Sig_Top;
   delete h_PiM_Sig;
+  delete h_PiM_Sig_Top;
   delete h_Pi0_Sig;
+  delete h_Pi0_Sig_Top;
   delete h_Mu_Sig;
+  delete h_Mu_Sig_Top;
   delete h_Neut_Sig;
+  delete h_Neut_Sig_Top;
   delete c1;
 
   return;
@@ -2204,7 +2307,7 @@ int main(int argc, char* argv[]) {
   #endif
 
   //Pass an input file name to this script now
-  if (argc < 6 || argc > 7) {
+  if (argc < 7 || argc > 8) {
     cout << "Check usage..." << endl;
     return 2;
   }
@@ -2212,9 +2315,10 @@ int main(int argc, char* argv[]) {
   string MCfileName=string(argv[1]);
   string DATAfileName=string(argv[2]);
   string outDir=string(argv[3]);
-  TString label=argv[4];
-  TString pTaxis=argv[5];
-  bool doPOT = (argc==6) ? true:(atoi(argv[6]) > 0);
+  string contains=argv[4];
+  TString label=argv[5];
+  TString pTaxis=argv[6];
+  bool doPOT = (argc==7) ? true:(atoi(argv[7]) > 0);
 
   if (PathExists(outDir)){
     cout << "Thank you for choosing a path for output files that exists." << endl;
@@ -2304,7 +2408,7 @@ int main(int argc, char* argv[]) {
 	string nameInt = (string)keyInt->GetName();
 	string name = (string)key->GetName() + "/"+nameInt;
 	pos=0;
-	if ((pos=nameInt.find("TwoD")) != string::npos || (pos=nameInt.find("vtxZ")) != string::npos || (pos=name.find("Inner")) != string::npos) continue;
+	if ((pos=nameInt.find("TwoD")) != string::npos || (pos=nameInt.find("vtxZ")) != string::npos || (pos=nameInt.find("Inner")) != string::npos || (pos=nameInt.find(contains)) == string::npos || (pos=nameInt.find("Matched")) != string::npos) continue;
 	else if((pos = name.find("_sig_IntType_QE")) != string::npos){
 	  cout << "Entering internal IntType" << endl;
 	  cout << "Should be handling: " << name << endl;
@@ -2344,7 +2448,7 @@ int main(int argc, char* argv[]) {
     bool isVtx = false;
     if ((pos=name.find("vtxZ"))!=string::npos) isVtx = true;
     pos=0;
-    if((pos=name.find("TwoD")) != string::npos /*|| (pos=name.find("vtxZ")) != string::npos*/ || (pos=name.find("Inner")) != string::npos) continue;
+    if((pos=name.find("TwoD")) != string::npos /*|| (pos=name.find("vtxZ")) != string::npos*/ || (pos=name.find("Inner")) != string::npos || (pos=name.find(contains)) == string::npos || (pos=name.find("Matched")) != string::npos) continue;
     else if((pos = name.find("_sig_IntType_QE")) != string::npos && (pos=name.find("OuterUSPlastic")) == string::npos && (pos=name.find("OuterDSPlastic")) == string::npos){
       cout << "Entering base IntType" << endl;
       string nameToSave = name;
