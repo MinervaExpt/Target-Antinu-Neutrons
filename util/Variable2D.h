@@ -114,6 +114,7 @@ class Variable2D: public PlotUtils::Variable2DBase<CVUniverse>
       if (fAnaVar){ 
 	efficiencyNumerator = new Hist(("TwoD_" + GetName() + "_efficiency_numerator").c_str(), ("TwoD_"+GetName()).c_str(), GetBinVecX(), GetBinVecY(), mc_error_bands);
 	efficiencyDenominator = new Hist(("TwoD_" + GetName() + "_efficiency_denominator").c_str(), ("TwoD_" + GetName()).c_str(), GetBinVecX(), GetBinVecY(), truth_error_bands);
+	trueEvRate = new Hist(("TwoD_" + GetName() + "_true_evRate").c_str(), ("TwoD_" + GetName()).c_str(), GetBinVecX(), GetBinVecY(), truth_error_bands);
       }
       selectedSignalReco = new Hist(("TwoD_" + GetName() + "_selected_signal_reco").c_str(),  ("TwoD_"+GetName()).c_str(), GetBinVecX(), GetBinVecY(), mc_error_bands);
       selectedMCReco = new Hist(("TwoD_" + GetName() + "_selected_mc_reco").c_str(),  ("TwoD_"+GetName()).c_str(), GetBinVecX(), GetBinVecY(), mc_error_bands);
@@ -133,6 +134,7 @@ class Variable2D: public PlotUtils::Variable2DBase<CVUniverse>
     Hist* dataHist;  
     Hist* efficiencyNumerator;
     Hist* efficiencyDenominator;
+    Hist* trueEvRate;
     Hist* selectedSignalReco; //Effectively "true background subtracted" distribution for warping studies.                                                                                                         
                               //Also useful for a bakground breakdown plot that you'd use to start background subtraction studies.                                                                                 
     Hist* selectedMCReco; //Treat the MC CV just like data for the closure test                                             
@@ -239,6 +241,13 @@ class Variable2D: public PlotUtils::Variable2DBase<CVUniverse>
         efficiencyDenominator->hist->SetDirectory(dir);
         //efficiencyDenominator->hist->Write();
       }
+
+      if(trueEvRate && fAnaVar)
+      {
+        trueEvRate->hist->SetDirectory(dir);
+        //trueEvRate->hist->Write();
+      }
+
       if(selectedSignalReco)
 	{
 	  selectedSignalReco->hist->SetDirectory(dir);
@@ -276,6 +285,7 @@ class Variable2D: public PlotUtils::Variable2DBase<CVUniverse>
       if(dataHist) dataHist->SyncCVHistos();
       if(efficiencyNumerator && fAnaVar) efficiencyNumerator->SyncCVHistos();
       if(efficiencyDenominator && fAnaVar) efficiencyDenominator->SyncCVHistos();
+      if(trueEvRate && fAnaVar) trueEvRate->SyncCVHistos();
       if(selectedSignalReco) selectedSignalReco->SyncCVHistos();
       if(selectedMCReco) selectedMCReco->SyncCVHistos();
       if(migration && fAnaVar) migration->SyncCVHistos();

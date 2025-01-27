@@ -542,7 +542,8 @@ void LoopAndFillEffDenom( PlotUtils::ChainWrapper* truth,
                                 std::vector<Variable2D*> vars2D,
 			        std::vector<util::Categorized<Variable2D, int>*> vars2D_ByTgt,
     				PlotUtils::Cutter<CVUniverse, NeutronEvent>& michelcuts,
-                                PlotUtils::Model<CVUniverse, NeutronEvent>& model)
+			        PlotUtils::Model<CVUniverse, NeutronEvent>& model,
+			        PlotUtils::Model<CVUniverse, NeutronEvent>& evRateONLYmodel)
 {
   assert(!truth_bands["cv"].empty() && "\"cv\" error band is empty!  Could not set Model entry.");
   auto& cvUniv = truth_bands["cv"].front();
@@ -558,6 +559,10 @@ void LoopAndFillEffDenom( PlotUtils::ChainWrapper* truth,
     model.SetEntry(*cvUniv, cvEvent);
     const double cvWeight = model.GetWeight(*cvUniv, cvEvent);
 
+    //Need this now to allow for a true event rate without the modeling effects of things that would only matter to efficiency
+    evRateONLYmodel.SetEntry(*cvUniv, cvEvent);
+    const double cvevRateONLYWeight = evRateONLYmodel.GetWeight(*cvUniv, cvEvent);
+    
     //=========================================
     // Systematics loop(s)
     //=========================================
@@ -573,6 +578,7 @@ void LoopAndFillEffDenom( PlotUtils::ChainWrapper* truth,
 
         if (!michelcuts.isEfficiencyDenom(*universe, cvWeight)) continue; //Weight is ignored for isEfficiencyDenom() in all but the CV universe 
         const double weight = model.GetWeight(*universe, myevent); //Only calculate the weight for events that will use it
+	const double evRateONLYweight = evRateONLYmodel.GetWeight(*universe, myevent); //Only calculate the weight for events that will use it
 
 	std::vector<double> mc_vtx = universe->GetTrueVtx();
 	double mc_vtx_x = mc_vtx.at(0);
@@ -587,23 +593,26 @@ void LoopAndFillEffDenom( PlotUtils::ChainWrapper* truth,
         for(auto var: vars)
         {
           if (var->IsAnaVar() && var->IsFill()) var->efficiencyDenominator->FillUniverse(universe, var->GetTrueValue(*universe), weight);
+	  if (var->IsAnaVar() && var->IsFill()) var->trueEvRate->FillUniverse(universe, var->GetTrueValue(*universe), evRateONLYweight);
         }
 	
 	//I think I just need to check the true target material here... I'm not certain about that, but I think that's right... Need to sort out the right way to check that as well...
 	for (auto var: vars_ByTgt){
 	  if ((*var)[trueTgtCode].IsAnaVar() && (*var)[trueTgtCode].IsFill()) (*var)[trueTgtCode].efficiencyDenominator->FillUniverse(universe, (*var)[trueTgtCode].GetTrueValue(*universe), weight);
+	  if ((*var)[trueTgtCode].IsAnaVar() && (*var)[trueTgtCode].IsFill()) (*var)[trueTgtCode].trueEvRate->FillUniverse(universe, (*var)[trueTgtCode].GetTrueValue(*universe), evRateONLYweight);
 	}
 	
         for(auto var: vars2D)
         {
           if(var->IsFill() && var->IsAnaVar()) var->efficiencyDenominator->FillUniverse(universe, var->GetTrueValueX(*universe), var->GetTrueValueY(*universe), weight);
+	  if(var->IsFill() && var->IsAnaVar()) var->trueEvRate->FillUniverse(universe, var->GetTrueValueX(*universe), var->GetTrueValueY(*universe), evRateONLYweight);
         }
 
 	//I think I just need to check the true target material here... I'm not certain about that, but I think that's right...
 	for (auto var: vars2D_ByTgt){
           if ((*var)[trueTgtCode].IsAnaVar() && (*var)[trueTgtCode].IsFill()) (*var)[trueTgtCode].efficiencyDenominator->FillUniverse(universe, (*var)[trueTgtCode].GetTrueValueX(*universe), (*var)[trueTgtCode].GetTrueValueY(*universe), weight);
+	  if ((*var)[trueTgtCode].IsAnaVar() && (*var)[trueTgtCode].IsFill()) (*var)[trueTgtCode].trueEvRate->FillUniverse(universe, (*var)[trueTgtCode].GetTrueValueX(*universe), (*var)[trueTgtCode].GetTrueValueY(*universe), evRateONLYweight);
 	}
-
       }
     }
   }
@@ -884,31 +893,81 @@ int main(const int argc, const char** argv)
   PlotUtils::Cutter<CVUniverse, NeutronEvent> mycuts(std::move(preCuts), std::move(sidebands) , std::move(signalDefinition),std::move(phaseSpace));
 
   std::vector<std::unique_ptr<PlotUtils::Reweighter<CVUniverse, NeutronEvent>>> MnvTune;
+  std::vector<std::unique_ptr<PlotUtils::Reweighter<CVUniverse, NeutronEvent>>> AllModelWeighters;
   if (tuneVer != "None"){
+    //Flux weight affects true event rate so yes to both
+    AllModelWeighters.emplace_back(new PlotUtils::FluxAndCVReweighter<CVUniverse, NeutronEvent>());
     MnvTune.emplace_back(new PlotUtils::FluxAndCVReweighter<CVUniverse, NeutronEvent>());
-    MnvTune.emplace_back(new PlotUtils::MINOSEfficiencyReweighter<CVUniverse, NeutronEvent>());
-    if (!tuneVer.Contains("4")) MnvTune.emplace_back(new PlotUtils::GENIEReweighter<CVUniverse, NeutronEvent>(true, false));
-    else MnvTune.emplace_back(new PlotUtils::GENIEReweighter<CVUniverse, NeutronEvent>(true, true));
-    if (!tuneVer.Contains("_no2p2h") && !tuneVer.Contains("_SuSA") && !tuneVer.Contains("_zero2p2h")) MnvTune.emplace_back(new PlotUtils::LowRecoil2p2hReweighter<CVUniverse, NeutronEvent>());
-    if (tuneVer.Contains("_zero2p2h")) MnvTune.emplace_back(new Turn2p2hOffReweighter<CVUniverse, NeutronEvent>());
-    if (!tuneVer.Contains("_noRPA")) MnvTune.emplace_back(new PlotUtils::RPAReweighter<CVUniverse, NeutronEvent>());
-    if (tuneVer.Contains("2_") || tuneVer == "2"){
-      if (tuneVer.Contains("NUBARPI0")) MnvTune.emplace_back(new PlotUtils::LowQ2PiReweighter<CVUniverse, NeutronEvent>("NUBARPI0"));
-      else if (tuneVer.Contains("NUPI0")) MnvTune.emplace_back(new PlotUtils::LowQ2PiReweighter<CVUniverse, NeutronEvent>("NUPI0"));
-      else if (tuneVer.Contains("NU1PI")) MnvTune.emplace_back(new PlotUtils::LowQ2PiReweighter<CVUniverse, NeutronEvent>("NU1PI"));
-      else if (tuneVer.Contains("NUNPI")) MnvTune.emplace_back(new PlotUtils::LowQ2PiReweighter<CVUniverse, NeutronEvent>("NUNPI"));
-      else MnvTune.emplace_back(new PlotUtils::LowQ2PiReweighter<CVUniverse, NeutronEvent>("JOINT"));
+
+    //This weight doesn't apply to truth anyway so no need to apply it to the efficiency denominator
+    AllModelWeighters.emplace_back(new PlotUtils::MINOSEfficiencyReweighter<CVUniverse, NeutronEvent>());
+
+    if (!tuneVer.Contains("4")){
+      MnvTune.emplace_back(new PlotUtils::GENIEReweighter<CVUniverse, NeutronEvent>(true, false));
+      AllModelWeighters.emplace_back(new PlotUtils::GENIEReweighter<CVUniverse, NeutronEvent>(true, false));
     }
-    else if (tuneVer.Contains("_Aaron")) MnvTune.emplace_back(new PlotUtils::LowQ2PiReweighter<CVUniverse, NeutronEvent>("MENU1PI"));
-    if (tuneVer.Contains("_SuSA")) MnvTune.emplace_back(new PlotUtils::SuSAFromValencia2p2hReweighter<CVUniverse, NeutronEvent>());
-    if (tuneVer.Contains("_BodekRitchie")) MnvTune.emplace_back(new PlotUtils::BodekRitchieReweighter<CVUniverse, NeutronEvent>(1));
-    MnvTune.emplace_back(new PlotUtils::GeantNeutronCVReweighter<CVUniverse, NeutronEvent>()); //Removed 06/11/2024 for check with neutron systematics... shouldn't matter really. Replaced the following day for validation with new Oscar tuples.
+    else{
+      MnvTune.emplace_back(new PlotUtils::GENIEReweighter<CVUniverse, NeutronEvent>(true, true));
+      AllModelWeighters.emplace_back(new PlotUtils::GENIEReweighter<CVUniverse, NeutronEvent>(true, true));
+    }
+    if (!tuneVer.Contains("_no2p2h") && !tuneVer.Contains("_SuSA") && !tuneVer.Contains("_zero2p2h")){
+      MnvTune.emplace_back(new PlotUtils::LowRecoil2p2hReweighter<CVUniverse, NeutronEvent>());
+      AllModelWeighters.emplace_back(new PlotUtils::LowRecoil2p2hReweighter<CVUniverse, NeutronEvent>());
+    }
+    if (tuneVer.Contains("_zero2p2h")){
+      MnvTune.emplace_back(new Turn2p2hOffReweighter<CVUniverse, NeutronEvent>());
+      AllModelWeighters.emplace_back(new Turn2p2hOffReweighter<CVUniverse, NeutronEvent>());   
+    }
+    if (!tuneVer.Contains("_noRPA")){
+      MnvTune.emplace_back(new PlotUtils::RPAReweighter<CVUniverse, NeutronEvent>());
+      AllModelWeighters.emplace_back(new PlotUtils::RPAReweighter<CVUniverse, NeutronEvent>());
+    }
+    if (tuneVer.Contains("2_") || tuneVer == "2"){
+      if (tuneVer.Contains("NUBARPI0")){
+	MnvTune.emplace_back(new PlotUtils::LowQ2PiReweighter<CVUniverse, NeutronEvent>("NUBARPI0"));
+	AllModelWeighters.emplace_back(new PlotUtils::LowQ2PiReweighter<CVUniverse, NeutronEvent>("NUBARPI0"));
+      }
+      else if (tuneVer.Contains("NUPI0")){
+	MnvTune.emplace_back(new PlotUtils::LowQ2PiReweighter<CVUniverse, NeutronEvent>("NUPI0"));
+	AllModelWeighters.emplace_back(new PlotUtils::LowQ2PiReweighter<CVUniverse, NeutronEvent>("NUPI0"));
+      }
+      else if (tuneVer.Contains("NU1PI")){
+	MnvTune.emplace_back(new PlotUtils::LowQ2PiReweighter<CVUniverse, NeutronEvent>("NU1PI"));
+	AllModelWeighters.emplace_back(new PlotUtils::LowQ2PiReweighter<CVUniverse, NeutronEvent>("NU1PI"));
+      }
+      else if (tuneVer.Contains("NUNPI")){
+	MnvTune.emplace_back(new PlotUtils::LowQ2PiReweighter<CVUniverse, NeutronEvent>("NUNPI"));
+	AllModelWeighters.emplace_back(new PlotUtils::LowQ2PiReweighter<CVUniverse, NeutronEvent>("NUNPI"));
+      }
+      else{
+	MnvTune.emplace_back(new PlotUtils::LowQ2PiReweighter<CVUniverse, NeutronEvent>("JOINT"));
+	AllModelWeighters.emplace_back(new PlotUtils::LowQ2PiReweighter<CVUniverse, NeutronEvent>("JOINT"));
+      }
+    }
+    else if (tuneVer.Contains("_Aaron")){
+      MnvTune.emplace_back(new PlotUtils::LowQ2PiReweighter<CVUniverse, NeutronEvent>("MENU1PI"));
+      AllModelWeighters.emplace_back(new PlotUtils::LowQ2PiReweighter<CVUniverse, NeutronEvent>("MENU1PI"));
+    }
+    if (tuneVer.Contains("_SuSA")){
+      MnvTune.emplace_back(new PlotUtils::SuSAFromValencia2p2hReweighter<CVUniverse, NeutronEvent>());
+      AllModelWeighters.emplace_back(new PlotUtils::SuSAFromValencia2p2hReweighter<CVUniverse, NeutronEvent>());
+    }
+    if (tuneVer.Contains("_BodekRitchie")){
+      MnvTune.emplace_back(new PlotUtils::BodekRitchieReweighter<CVUniverse, NeutronEvent>(1));
+      AllModelWeighters.emplace_back(new PlotUtils::BodekRitchieReweighter<CVUniverse, NeutronEvent>(1));
+    }
+    //Do not apply this weight to the true eventrate
+    AllModelWeighters.emplace_back(new PlotUtils::GeantNeutronCVReweighter<CVUniverse, NeutronEvent>()); 
   }
   //TODO: Other Warps just need to see if these even work...
 
-  if (elFSI || piFSI) MnvTune.emplace_back(new PlotUtils::FSIReweighter<CVUniverse, NeutronEvent>(elFSI, piFSI));
+  if (elFSI || piFSI){
+    MnvTune.emplace_back(new PlotUtils::FSIReweighter<CVUniverse, NeutronEvent>(elFSI, piFSI));
+    AllModelWeighters.emplace_back(new PlotUtils::FSIReweighter<CVUniverse, NeutronEvent>(elFSI, piFSI));
+  }
 
-  PlotUtils::Model<CVUniverse, NeutronEvent> model(std::move(MnvTune));
+  PlotUtils::Model<CVUniverse, NeutronEvent> completeModel(std::move(AllModelWeighters));
+  PlotUtils::Model<CVUniverse, NeutronEvent> evRateONLYModel(std::move(MnvTune));
 
   // Make a map of systematic universes
   // Leave out systematics when making validation histograms
@@ -1198,10 +1257,10 @@ int main(const int argc, const char** argv)
   try
   {
     CVUniverse::SetTruth(false);
-    LoopAndFillEventSelection(options.m_mc, error_bands, vars, vars_ByTgt, vars2D, vars2D_ByTgt, studies, mycuts, model, doNeutronCuts);
-    //LoopAndFillEventSelection(options.m_mc, error_bands, vars, vars_ByTgt, vars2D, vars2D_ByTgt, studies, mycuts, model);
+    LoopAndFillEventSelection(options.m_mc, error_bands, vars, vars_ByTgt, vars2D, vars2D_ByTgt, studies, mycuts, completeModel, doNeutronCuts);
+    //LoopAndFillEventSelection(options.m_mc, error_bands, vars, vars_ByTgt, vars2D, vars2D_ByTgt, studies, mycuts, completeModel);
     CVUniverse::SetTruth(true);
-    LoopAndFillEffDenom(options.m_truth, truth_bands, vars, vars_ByTgt, vars2D, vars2D_ByTgt, mycuts, model);
+    LoopAndFillEffDenom(options.m_truth, truth_bands, vars, vars_ByTgt, vars2D, vars2D_ByTgt, mycuts, completeModel, evRateONLYModel);
     options.PrintMacroConfiguration(argv[0]);
     std::cout << "MC cut summary:\n" << mycuts << "\n";
     mycuts.resetStats();
