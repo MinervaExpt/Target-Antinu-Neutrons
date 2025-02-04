@@ -26,9 +26,6 @@
 #include "TVector3.h"
 
 class CVUniverse : public PlotUtils::MinervaUniverse {
-  private:
-  int m_LeadNeutIndex;
-
   public:
   #include "PlotUtils/MuonFunctions.h" // GetMinosEfficiencyWeight
   #include "PlotUtils/TruthFunctions.h" //Getq3True
@@ -41,6 +38,8 @@ class CVUniverse : public PlotUtils::MinervaUniverse {
 
   virtual ~CVUniverse() {}
 
+  int m_LeadNeutIndex;
+  
   virtual void OnNewEntry() override{
     m_LeadNeutIndex = -999;//Resetting to avoid any possible mishaps with the indexing of an array.
   }
