@@ -997,6 +997,10 @@ int main(const int argc, const char** argv)
   error_bands["cv"] = {new CVUniverse(options.m_mc)};
   std::map< std::string, std::vector<CVUniverse*> > truth_bands;
   if(doSystematics) truth_bands = GetStandardSystematics(options.m_truth, tuneVer,"nonMuonNonVtx100mm_wNuclTargs", true, (elFSI || piFSI));
+  else{
+    std::map<std::string, std::vector<CVUniverse*> > bands_neutDrop = GetNeutronDroppingUnivs(options.m_truth);
+    truth_bands.insert(bands_neutDrop.begin(), bands_neutDrop.end());
+  }
   ////else{
   ////std::map<std::string, std::vector<CVUniverse*> > bands_mona = GetMonaSystematicMap(options.m_truth);
   ////truth_bands.insert(bands_mona.begin(), bands_mona.end());
