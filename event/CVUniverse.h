@@ -26,6 +26,8 @@
 #include "TVector3.h"
 
 class CVUniverse : public PlotUtils::MinervaUniverse {
+  private:
+  int m_LeadNeutIndex;
 
   public:
   #include "PlotUtils/MuonFunctions.h" // GetMinosEfficiencyWeight
@@ -35,10 +37,14 @@ class CVUniverse : public PlotUtils::MinervaUniverse {
   // Constructor/Destructor
   // ========================================================================
   CVUniverse(PlotUtils::ChainWrapper* chw, double nsigma = 0)
-      : PlotUtils::MinervaUniverse(chw, nsigma) {}
+    : PlotUtils::MinervaUniverse(chw, nsigma), m_LeadNeutIndex(-999) {}
 
   virtual ~CVUniverse() {}
 
+  virtual void OnNewEntry() override{
+    m_LeadNeutIndex = -999;//Resetting to avoid any possible mishaps with the indexing of an array.
+  }
+  
   // ========================================================================
   // Quantities defined here as constants for the sake of below. Definition
   // matched to Dan's CCQENuInclusiveME variables from:
@@ -435,6 +441,8 @@ class CVUniverse : public PlotUtils::MinervaUniverse {
       std::vector<double> Es = GetNeutCandEs();
       int leadNeutEIndex = std::max_element(Es.begin(),Es.end()) - Es.begin();
 
+      m_LeadNeutIndex = leadNeutEIndex;//Setting so other functions can use. If they are called out of order, you will see no change.
+
       cands.push_back(GetNeutCand(leadNeutEIndex));
     }
 
@@ -444,11 +452,12 @@ class CVUniverse : public PlotUtils::MinervaUniverse {
 
   //Returns the total energy of the candidate to fill a variable that is reco when just trying to make efficiency as function of true neutron energy :)
   virtual double GetLeadNeutCandE() const{
-    int nBlobs = GetNNeutBlobs();
 
-    if (nBlobs > 0){
-      std::vector<double> Es = GetNeutCandEs();
-      return *std::max_element(Es.begin(),Es.end());
+    if (m_LeadNeutIndex >= 0){
+      std::string toolName = GetAnaToolName();
+      std::string branchName = "_BlobTotalE";
+      
+      return GetVecElem((toolName+branchName).c_str(), m_LeadNeutIndex);
     }
 
     return -999;
@@ -456,19 +465,15 @@ class CVUniverse : public PlotUtils::MinervaUniverse {
   
   //Returns the total energy of the candidate to fill a variable that is reco when just trying to make efficiency as function of true neutron energy :)
   virtual TVector3 GetLeadNeutCandPos() const{
-    int nBlobs = GetNNeutBlobs();
     
-    if (nBlobs > 0){
-      std::vector<double> Es = GetNeutCandEs();
-      int leadNeutIndex = std::max_element(Es.begin(),Es.end()) - Es.begin();
-
+    if (m_LeadNeutIndex >= 0){
       std::string toolName = GetAnaToolName();
       std::string branchNameX = "_BlobBegX";
       std::string branchNameY = "_BlobBegY";
       std::string branchNameZ = "_BlobBegZ";
-      double x = GetVecElem((toolName+branchNameX).c_str(), leadNeutIndex);//Consistent calculation for KE from other comparisons.
-      double y = GetVecElem((toolName+branchNameY).c_str(), leadNeutIndex);//Consistent calculation for KE from other comparisons.
-      double z = GetVecElem((toolName+branchNameZ).c_str(), leadNeutIndex);//Consistent calculation for KE from other comparisons.
+      double x = GetVecElem((toolName+branchNameX).c_str(), m_LeadNeutIndex);//Consistent calculation for KE from other comparisons.
+      double y = GetVecElem((toolName+branchNameY).c_str(), m_LeadNeutIndex);//Consistent calculation for KE from other comparisons.
+      double z = GetVecElem((toolName+branchNameZ).c_str(), m_LeadNeutIndex);//Consistent calculation for KE from other comparisons.
       
       TVector3 pos(x,y,z);
       return pos;
@@ -504,20 +509,12 @@ class CVUniverse : public PlotUtils::MinervaUniverse {
   };
   
   virtual double GetMATCHEDLeadNeutCandE() const{
-    //std::cout << "Entering get MATCHED" << std::endl;
-    int nblobs = GetNNeutBlobs();
-    
-    std::string toolName = GetAnaToolName();
 
-    std::string branchName = "_BlobMCTopTrackE";
-    
-    if (nblobs > 0){
-      std::vector<double> Es = GetNeutCandEs();
-      int leadNeutEIndex = std::max_element(Es.begin(),Es.end()) - Es.begin();
-
-      //std::cout << "Trying to return the matched value as I should be able to..." << std::endl;
+    if (m_LeadNeutIndex >= 0){
+      std::string toolName = GetAnaToolName();
+      std::string branchName = "_BlobMCTopTrackE";
       
-      return (GetVecElem((toolName+branchName).c_str(), leadNeutEIndex)-M_n);//Consistent calculation for KE from other comparisons.
+      return (GetVecElem((toolName+branchName).c_str(), m_LeadNeutIndex)-M_n);//Consistent calculation for KE from other comparisons.
     }
     return -999;
   }
@@ -553,7 +550,7 @@ class CVUniverse : public PlotUtils::MinervaUniverse {
     NeutronCandidates::NeutCands EvtCands(cands);
     return EvtCands;
   };
-
+  
   //Still needed for some systematics to compile, but shouldn't be used for reweighting anymore.
   protected:
   #include "PlotUtils/WeightFunctions.h" // Get*Weight
