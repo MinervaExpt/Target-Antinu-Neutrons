@@ -59,6 +59,7 @@ enum ErrorCodes
 #include "event/NeutCands.h"
 #include "systematics/Systematics.h"
 #include "systematics/MonaSystematic.h"
+#include "systematics/NeutronDroppingUniverse.h"
 #include "cuts/MaxPzMu.h"
 #include "cuts/CCQECuts.h"
 #include "cuts/NeutCuts.h"
@@ -988,6 +989,8 @@ int main(const int argc, const char** argv)
     std::map<std::string, std::vector<CVUniverse*> > band_flux = PlotUtils::GetFluxSystematicsMap<CVUniverse>(options.m_mc, CVUniverse::GetNFluxUniverses());
     error_bands.insert(band_flux.begin(), band_flux.end()); //Necessary to get flux integral later...
     //TEMPORARY NEUTRON SYSTEMATIC ONLY ADDED INTO THE FOLD. Turn back on for testing. Turned off for validation with new Oscar 6J tuples.
+    std::map<std::string, std::vector<CVUniverse*> > bands_neutDrop = GetNeutronDroppingUnivs(options.m_mc);
+    error_bands.insert(bands_neutDrop.begin(), bands_neutDrop.end());
     ////std::map<std::string, std::vector<CVUniverse*> > bands_mona = GetMonaSystematicMap(options.m_mc);
     ////error_bands.insert(bands_mona.begin(), bands_mona.end());
   }
