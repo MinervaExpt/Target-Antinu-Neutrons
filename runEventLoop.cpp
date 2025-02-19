@@ -137,11 +137,15 @@ void LoopAndFillEventSelection(
     if(i%1000==0) std::cout << i << " / " << nEntries << "\r" << std::endl;
     
     cvUniv->SetEntry(i);
-
+    
     //NeutronEvent cvEvent(cvUniv->GetLeadNeutCandOnly());
-    NeutronEvent cvEvent = doNeutron ? NeutronEvent(cvUniv->GetLeadNeutCandOnly()) : NeutronEvent();
+    //NeutronEvent cvEvent = doNeutron ? NeutronEvent(cvUniv->GetLeadNeutCandOnly()) : NeutronEvent();
+    NeutronEvent cvEvent = doNeutron ? NeutronEvent(cvUniv->GetLeadNeutCandOnlyWithDrop()) : NeutronEvent();
     model.SetEntry(*cvUniv, cvEvent);
     const double cvWeight = model.GetWeight(*cvUniv, cvEvent);
+
+    int cvNeutIndex = cvUniv->m_LeadNeutIndex;
+    
     //For testing.
     //const double cvWeight = 1.0;
 
@@ -158,7 +162,8 @@ void LoopAndFillEventSelection(
         
         // This is where you would Access/create a Michel
         //NeutronEvent myevent(universe->GetLeadNeutCandOnly()); // make sure your event is inside the error band loop. 
-	NeutronEvent myevent = doNeutron ? NeutronEvent(universe->GetLeadNeutCandOnly()) : NeutronEvent();
+	//NeutronEvent myevent = doNeutron ? NeutronEvent(universe->GetLeadNeutCandOnly()) : NeutronEvent();
+	NeutronEvent myevent = doNeutron ? NeutronEvent(universe->GetLeadNeutCandOnlyFromIndex(cvNeutIndex)) : NeutronEvent();
 	myevent.SetIsMC();
 
 	myevent.SetEMBlobInfo(universe->GetEMNBlobsTotalEnergyTotalNHits());
@@ -472,7 +477,8 @@ void LoopAndFillData( PlotUtils::ChainWrapper* data,
     for (auto universe : data_band) {
       universe->SetEntry(i);
       if(i%1000==0) std::cout << i << " / " << nEntries << "\r" << std::endl;
-      NeutronEvent myevent = doNeutron ? NeutronEvent(universe->GetLeadNeutCandOnly()) : NeutronEvent();
+      //NeutronEvent myevent = doNeutron ? NeutronEvent(universe->GetLeadNeutCandOnly()) : NeutronEvent();
+      NeutronEvent myevent = doNeutron ? NeutronEvent(universe->GetLeadNeutCandOnlyWithDrop()) : NeutronEvent();
 
       myevent.SetEMBlobInfo(universe->GetEMNBlobsTotalEnergyTotalNHits());
       std::bitset<64> SBStat = michelcuts.isDataSelected(*universe, myevent);
@@ -809,6 +815,7 @@ int main(const int argc, const char** argv)
   PlotUtils::MacroUtil options(reco_tree_name, mc_file_list, data_file_list, "minervame1A", true);
   options.m_plist_string = util::GetPlaylist(*options.m_mc, true); //TODO: Put GetPlaylist into PlotUtils::MacroUtil
   ////options.m_plist_string = "minervame6J"; //GET RID OF THIS AS SOON AS YOU ARE DONE BUILDING THE VALIDATION CODE YOU DINGUS
+  ////options.m_plist_string = "minervame6I"; //GET RID OF THIS AS SOON AS YOU ARE DONE BUILDING THE VALIDATION CODE YOU DINGUS
   ////std::cout << "The playlist I'm using is: " << options.m_plist_string << std::endl;
 
   // You're required to make some decisions
@@ -989,8 +996,8 @@ int main(const int argc, const char** argv)
     std::map<std::string, std::vector<CVUniverse*> > band_flux = PlotUtils::GetFluxSystematicsMap<CVUniverse>(options.m_mc, CVUniverse::GetNFluxUniverses());
     error_bands.insert(band_flux.begin(), band_flux.end()); //Necessary to get flux integral later...
     //TEMPORARY NEUTRON SYSTEMATIC ONLY ADDED INTO THE FOLD. Turn back on for testing. Turned off for validation with new Oscar 6J tuples.
-    std::map<std::string, std::vector<CVUniverse*> > bands_neutDrop = GetNeutronDroppingUnivs(options.m_mc);
-    error_bands.insert(bands_neutDrop.begin(), bands_neutDrop.end());
+    /**/std::map<std::string, std::vector<CVUniverse*> > bands_neutDrop = GetNeutronDroppingUnivs(options.m_mc);
+    /**/error_bands.insert(bands_neutDrop.begin(), bands_neutDrop.end());
     ////std::map<std::string, std::vector<CVUniverse*> > bands_mona = GetMonaSystematicMap(options.m_mc);
     ////error_bands.insert(bands_mona.begin(), bands_mona.end());
   }
@@ -998,8 +1005,10 @@ int main(const int argc, const char** argv)
   std::map< std::string, std::vector<CVUniverse*> > truth_bands;
   if(doSystematics) truth_bands = GetStandardSystematics(options.m_truth, tuneVer,"nonMuonNonVtx100mm_wNuclTargs", true, (elFSI || piFSI));
   else{
-    std::map<std::string, std::vector<CVUniverse*> > bands_neutDrop = GetNeutronDroppingUnivs(options.m_truth);
-    truth_bands.insert(bands_neutDrop.begin(), bands_neutDrop.end());
+    /**/std::map<std::string, std::vector<CVUniverse*> > bands_mona = GetMonaSystematicMap(options.m_mc);
+    /**/truth_bands.insert(bands_mona.begin(), bands_mona.end());
+    ////std::map<std::string, std::vector<CVUniverse*> > bands_neutDrop = GetNeutronDroppingUnivs(options.m_truth);
+    ////truth_bands.insert(bands_neutDrop.begin(), bands_neutDrop.end());
   }
   ////else{
   ////std::map<std::string, std::vector<CVUniverse*> > bands_mona = GetMonaSystematicMap(options.m_truth);
@@ -1150,11 +1159,13 @@ int main(const int argc, const char** argv)
   }
 
   std::vector<Variable2D*> vars2D = {
+    /*
     new Variable2D(false,"recoil_v_pT",*vars[0],*vars[3]),
     new Variable2D(false,"neutCandE_v_pT",*vars[0],*vars[vars.size()-4]),
     new Variable2D(false,"neutCandAngle_v_pT",*vars[0],*vars[vars.size()-3]),
     new Variable2D(false,"neutCandZDist_v_pT",*vars[0],*vars[vars.size()-2]),
     new Variable2D(false,"neutCandDist_v_pT",*vars[0],*vars[vars.size()-1]),
+    */
     //new Variable2D(false,"vtxXY",*vars[vars.size()-4],*vars[vars.size()-3]),
   };
   //With systematics these two might get a little hairy having both. But for now without, it's fine.
@@ -1181,12 +1192,14 @@ int main(const int argc, const char** argv)
   }
   else {
     if (FVregionName.Contains("Target")){
+      /*
       for (auto& var: vars2D) var->SetFillVar(false);
       vars2D_ByTgt.push_back(new util::Categorized<Variable2D, int>("", "ByTgt", false, "recoil_v_pT", util::TgtCodeList[TgtNum], *vars[0], *vars[3]));
       vars2D_ByTgt.push_back(new util::Categorized<Variable2D, int>("", "ByTgt", false, "neutCandE_v_pT", util::TgtCodeList[TgtNum], *vars[0], *vars[vars.size()-4]));
       vars2D_ByTgt.push_back(new util::Categorized<Variable2D, int>("", "ByTgt", false, "neutCandAngle_v_pT", util::TgtCodeList[TgtNum], *vars[0], *vars[vars.size()-3]));
       vars2D_ByTgt.push_back(new util::Categorized<Variable2D, int>("", "ByTgt", false, "neutCandZDist_v_pT", util::TgtCodeList[TgtNum], *vars[0], *vars[vars.size()-2]));
-      vars2D_ByTgt.push_back(new util::Categorized<Variable2D, int>("", "ByTgt", false, "neutCandDist_v_pT", util::TgtCodeList[TgtNum], *vars[0], *vars[vars.size()-1]));		       
+      vars2D_ByTgt.push_back(new util::Categorized<Variable2D, int>("", "ByTgt", false, "neutCandDist_v_pT", util::TgtCodeList[TgtNum], *vars[0], *vars[vars.size()-1]));
+      */		       
     }
   }
 
