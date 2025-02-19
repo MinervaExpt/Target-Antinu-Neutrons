@@ -24,6 +24,7 @@
 //Needed for neutron candidates business... May change at some point, but for now this is what we're working with.
 #include "event/NeutCands.h"
 #include "TVector3.h"
+#include "TRandom3.h"
 
 class CVUniverse : public PlotUtils::MinervaUniverse {
   public:
@@ -34,7 +35,9 @@ class CVUniverse : public PlotUtils::MinervaUniverse {
   // Constructor/Destructor
   // ========================================================================
   CVUniverse(PlotUtils::ChainWrapper* chw, double nsigma = 0)
-    : PlotUtils::MinervaUniverse(chw, nsigma), m_LeadNeutIndex(-999) {}
+    : PlotUtils::MinervaUniverse(chw, nsigma), m_LeadNeutIndex(-999) {
+    m_Random = new TRandom3(0);
+  }
 
   virtual ~CVUniverse() {}
 
@@ -449,6 +452,68 @@ class CVUniverse : public PlotUtils::MinervaUniverse {
     return EvtCands;
   };
 
+  //Need to set up something where this is what gets called by choice... Might just hard-code it for now... Need to run the effect of the GENIE drop too... Maybe I need to define the function with an input probability...
+  virtual NeutronCandidates::NeutCands GetLeadNeutCandOnlyWithDrop(double prob=0.25, double thresh=10.0)
+  {
+    if (prob < 0.0) prob = 0.0;
+    if (prob > 1.0) prob = 1.0;
+    
+    std::vector<NeutronCandidates::NeutCand> cands = {};
+    int nBlobs = GetNNeutBlobs();
+
+    if (nBlobs > 0){
+      std::vector<double> Es = GetNeutCandEs();
+      std::string toolName = GetAnaToolName();
+      std::string branchNameParent = "_BlobParentMCPID";
+      std::string branchNamePID = "_BlobMCPID";
+      int leadNeutEIndex = -999;
+      double maxE = -999;
+      for (unsigned int idx = 0; idx < Es.size(); ++idx){
+        if (Es.at(idx) > maxE){
+          if (Es.at(idx) < thresh){
+              int parentID = GetVecElemInt((toolName+branchNameParent).c_str(), idx);
+              int ID = GetVecElemInt((toolName+branchNamePID).c_str(), idx);
+              //std::cout << "parent: " << parentID << ", self: " << ID << std::endl;                                                                                                                              
+              if ((parentID==2112 || ID==2112) && m_Random->Binomial(1,prob)){
+		continue;
+	      }
+          }
+          maxE = Es.at(idx);
+          leadNeutEIndex = idx;
+        }
+      }
+
+      if (leadNeutEIndex >= 0){
+        cands.push_back(GetNeutCand(leadNeutEIndex));
+      }
+
+      m_LeadNeutIndex = leadNeutEIndex;
+    }
+
+    NeutronCandidates::NeutCands EvtCands(cands);
+    return EvtCands;
+  }
+
+  //This is so that when using the CV with the drop as above, the same neutrons are dropped in all universes... see runEventLoop for implementation
+  virtual NeutronCandidates::NeutCands GetLeadNeutCandOnlyFromIndex(int idx)
+  {
+    std::vector<NeutronCandidates::NeutCand> cands = {};
+    int nBlobs = GetNNeutBlobs();
+
+    if (nBlobs < idx){
+      NeutronCandidates::NeutCands dummy(cands);
+      return cands;
+    }
+    else{
+      cands.push_back(GetNeutCand(idx));
+    }
+
+    m_LeadNeutIndex = idx;
+
+    NeutronCandidates::NeutCands EvtCands(cands);
+    return EvtCands;
+  }
+  
   //Returns the total energy of the candidate to fill a variable that is reco when just trying to make efficiency as function of true neutron energy :)
   virtual double GetLeadNeutCandE() const{
 
@@ -549,6 +614,9 @@ class CVUniverse : public PlotUtils::MinervaUniverse {
     NeutronCandidates::NeutCands EvtCands(cands);
     return EvtCands;
   };
+
+  private:
+  TRandom3* m_Random;
   
   //Still needed for some systematics to compile, but shouldn't be used for reweighting anymore.
   protected:
