@@ -49,7 +49,7 @@ public:
 	      int parentID = GetVecElemInt((toolName+branchNameParent).c_str(), idx);
 	      int ID = GetVecElemInt((toolName+branchNamePID).c_str(), idx);
 	      //std::cout << "parent: " << parentID << ", self: " << ID << std::endl;
-	      if ((parentID==2112 || ID==2112) && !m_Rnd->Binomial(1,m_Prob)) continue;
+	      if ((parentID==2112 || ID==2112) && m_Rnd->Binomial(1,m_Prob)) continue;
 	  }
 	  maxE = Es.at(idx);
 	  leadNeutEIndex = idx;
@@ -73,11 +73,13 @@ public:
   TRandom3* m_Rnd;
 };
 
-/*
 class DropGENIENeutrons: public CVUniverse{
 public:
-  DropGENIENeutrons(PlotUtils::ChainWrapper* chw): CVUniverse(chw)
+  DropGENIENeutrons(PlotUtils::ChainWrapper* chw, double prob=0.5, double thresh=50.0): CVUniverse(chw), m_Prob(prob), m_Thresh(thresh)
   {
+    m_Rnd = new TRandom3(0);
+    if (m_Prob > 1.0) m_Prob = 1.0;
+    else if (m_Prob < 0.0) m_Prob = 0.0;
   }
   
   virtual ~DropGENIENeutrons() = default;
@@ -92,37 +94,75 @@ public:
     return "Drop GENIE Neutrons";
   }
 
-  //Need to write a truth function? If so, how do I ensure that the neutron removed is removed in true and reco both...
-
+  //This only handles the reco side of things. Not trying to get the truth side at this current juncture.
   NeutronCandidates::NeutCands GetLeadNeutCandOnly() override
   {
-    std::vector<NeutronCandidates::NeutCand> cands = {};
+    std::vector<double> energiesToDrop;
+    std::vector<int> FS_PDGs = GetFSPartPDG();
+    std::vector<double> FS_Es = GetFSPartE();
+
+    unsigned int nFS = FS_PDGs.size();
+    for (unsigned int iFS = 0; iFS < nFS; ++iFS){
+      int PDG = FS_PDGs.at(iFS);
+      double E = FS_Es.at(iFS);
+      if (PDG==2112 && (E-M_n) < m_Thresh && m_Rnd->Binomial(1,m_Prob)) energiesToDrop.push_back(E);
+    }
+
+    unsigned int nSkip = energiesToDrop.size();
+    
+    std::vector<NeutronCandidates::NeutCand> cands = {}; 
     int nBlobs = GetNNeutBlobs();
     
     if (nBlobs > 0){
       std::vector<double> Es = GetNeutCandEs();
-      int leadNeutEIndex = std::max_element(Es.begin(),Es.end()) - Es.begin();
+      std::string toolName = GetAnaToolName();
+      std::string branchNameTopPID = "_BlobTopMCPID";
+      std::string branchNameTopE = "_BlobMCTopTrackE";
+      int leadNeutEIndex = -999;
+      double maxE = -999;
+      for (unsigned int idx = 0; idx < Es.size(); ++idx){
+	if (Es.at(idx) > maxE){
+	  double TopE = GetVecElem((toolName+branchNameTopE).c_str(), idx);
+	  int TopPID = GetVecElemInt((toolName+branchNameTopPID).c_str(), idx);
 
-      //This lives as a test where it shouldn't affect the total number of events.
-      cands.push_back(GetNeutCand(leadNeutEIndex));
-      
-      if (Es.at(leadNeutEIndex) > 100.0){
-	m_LeadNeutIndex = leadNeutEIndex;
+	  //Only check the kinetic energy as one to skip if the energy is below the threshold for possibly being skipped.
+	  if(nSkip > 0 && TopPID==2112 && (TopE-M_n) < m_Thresh){
+	    bool skip = false;
+	    for (unsigned int iEn=0; iEn < nSkip; ++iEn){
+	      if (fabs(TopE-energiesToDrop.at(iEn)) < 0.1){
+		skip = true;
+		break;
+	      }
+	    }
+	    if (skip) continue;
+	  }
+	  maxE = Es.at(idx);
+	  leadNeutEIndex = idx;
+	}
       }
+
+      if (leadNeutEIndex >= 0){
+	cands.push_back(GetNeutCand(leadNeutEIndex));
+      }
+
+      m_LeadNeutIndex = leadNeutEIndex;
     }
 
     NeutronCandidates::NeutCands EvtCands(cands);
     return EvtCands;
   }
-  
-};
-*/
 
-UniverseMap GetNeutronDroppingUnivs(PlotUtils::ChainWrapper* chw, double prob=0.5)
+  private:
+  double m_Prob;
+  double m_Thresh;
+  TRandom3* m_Rnd;
+};
+
+UniverseMap GetNeutronDroppingUnivs(PlotUtils::ChainWrapper* chw, double probGENIE=0.5, double probGEANT=0.5)
 {
   UniverseMap error_bands;
-  //error_bands["DropGENIENeutrons"].push_back(new DropGENIENeutrons(chw, prob));
-  error_bands["DropGEANTNeutrons"].push_back(new DropGEANTNeutrons(chw, prob));
+  error_bands["DropGENIENeutrons"].push_back(new DropGENIENeutrons(chw, probGENIE));
+  error_bands["DropGEANTNeutrons"].push_back(new DropGEANTNeutrons(chw, probGEANT));
 
   return error_bands;
 };
