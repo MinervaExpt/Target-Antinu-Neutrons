@@ -52,6 +52,7 @@ using namespace std;
 using namespace PlotUtils;
 
 MnvH1D* SwapSysUniverse(MnvH1D* input, TString errorBandName, int univ){
+  cout << "Working with: " << input->GetName() << endl;
   MnvH1D* ret = nullptr;
   int nUniv = input->GetVertErrorBand(errorBandName.Data())->GetHists().size();
   if (univ >= nUniv || nUniv <= 0) return ret;
@@ -63,7 +64,7 @@ MnvH1D* SwapSysUniverse(MnvH1D* input, TString errorBandName, int univ){
 
     return ret;
   }
-  errBand->Divide(errBand,CV);
+  errBand->Divide(CV,errBand);
   for (int iBin=0; iBin <= errBand->GetNbinsX()+1; ++iBin){
     errBand->SetBinError(iBin,0);
   }
@@ -75,6 +76,45 @@ MnvH1D* SwapSysUniverse(MnvH1D* input, TString errorBandName, int univ){
     TH1D* newErrHist = ret->GetVertErrorBand(errorBandName.Data())->GetHist(univ);
     for (int iBin=0; iBin <= newErrHist->GetNbinsX()+1; ++iBin){
       newErrHist->SetBinContent(iBin, CV->GetBinContent(iBin));
+    }
+  }
+  delete CV;
+  delete errBand;
+  delete rat;
+  delete input;
+  
+  return ret;
+}
+
+MnvH2D* SwapSysUniverse(MnvH2D* input, TString errorBandName, int univ){
+  cout << "Working with: " << input->GetName() << endl;
+  MnvH2D* ret = nullptr;
+  int nUniv = input->GetVertErrorBand(errorBandName.Data())->GetHists().size();
+  if (univ >= nUniv || nUniv <= 0) return ret;
+  TH2D* CV = (TH2D*)(input->GetCVHistoWithStatError().Clone());
+  TH2D* errBand = (TH2D*)(input->GetVertErrorBand(errorBandName.Data())->GetHist(univ)->Clone());
+  if (!errBand){
+    delete CV;
+    delete input;
+
+    return ret;
+  }
+  errBand->Divide(CV,errBand);
+  for (int iBinX=0; iBinX <= errBand->GetNbinsX()+1; ++iBinX){
+    for (int iBinY=0; iBinY <= errBand->GetNbinsY()+1; ++iBinY){    
+      errBand->SetBinError(iBinX,iBinY,0);
+    }
+  }
+  MnvH2D* rat = new MnvH2D(*errBand);
+  rat->AddMissingErrorBandsAndFillWithCV(*input);
+  ret = (MnvH2D*)(input->Clone());
+  ret->Divide(ret,rat);
+  if (nUniv == 1){
+    TH2D* newErrHist = ret->GetVertErrorBand(errorBandName.Data())->GetHist(univ);
+    for (int iBinX=0; iBinX <= newErrHist->GetNbinsX()+1; ++iBinX){
+      for (int iBinY=0; iBinY <= newErrHist->GetNbinsY()+1; ++iBinY){
+	newErrHist->SetBinContent(iBinX, iBinY, CV->GetBinContent(iBinX, iBinY));
+      }
     }
   }
   delete CV;
@@ -161,13 +201,12 @@ int main(int argc, char* argv[]) {
         TString nameObjInt = (TString)keyInt->GetName();
 	if (!(classNameInt.Contains("MnvH"))) continue;
 	else if (classNameInt.Contains("MnvH2")){
-	  MnvH2D* h2D = (MnvH2D*)(inFile->Get(nameObj+"/"+nameObjInt));
+	  MnvH2D* h2D = SwapSysUniverse((MnvH2D*)(inFile->Get(nameObj+"/"+nameObjInt)),univName,univ);
 	  newOutDir->cd();
 	  h2D->Write();
 	  delete h2D;
 	}
 	else if (classNameInt.Contains("MnvH1")){
-	  cout << "Working with: " << nameObjInt << endl;
 	  MnvH1D* h1D = SwapSysUniverse((MnvH1D*)(inFile->Get(nameObj+"/"+nameObjInt)),univName,univ);
 	  newOutDir->cd();
 	  h1D->Write();
@@ -188,7 +227,7 @@ int main(int argc, char* argv[]) {
       delete tPar;
     }
     else if (className.Contains("MnvH2")){
-      MnvH2D* h2D = (MnvH2D*)(inFile->Get(nameObj));
+      MnvH2D* h2D = SwapSysUniverse((MnvH2D*)(inFile->Get(nameObj)),univName,univ);
       outFile->cd();
       h2D->Write();
       delete h2D;
