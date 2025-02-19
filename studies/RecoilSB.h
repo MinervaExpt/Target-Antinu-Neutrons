@@ -162,7 +162,7 @@ class PreRecoil: public Study
 	      }
 	    }
 	    else {
-	      /*
+	      /**/
 	      fVtxTest_US_Post_ByTgt = new util::Categorized<Variable, int>(var->GetDirectoryName(), "ByTgt", false, (var->GetName()+"_OuterUSPlastic").c_str(),var->GetAxisLabel().c_str(), util::TgtCodeList[fTgtID],coarseVtxBinsUS,var->GetRecoFunc(),var->GetTrueFunc());
 	      fVtxTest_US_ByTgt = new util::Categorized<Variable, int>(var->GetDirectoryName(), "ByTgt", false, (var->GetName()+"_OuterUSPlastic_PreRecoilCut").c_str(),var->GetAxisLabel().c_str(), util::TgtCodeList[fTgtID],coarseVtxBinsUS,var->GetRecoFunc(),var->GetTrueFunc());
 	      fVtxTest_DS_Post_ByTgt = new util::Categorized<Variable, int>(var->GetDirectoryName(), "ByTgt", false, (var->GetName()+"_OuterDSPlastic").c_str(),var->GetAxisLabel().c_str(), util::TgtCodeList[fTgtID],coarseVtxBinsDS,var->GetRecoFunc(),var->GetTrueFunc());
@@ -178,19 +178,19 @@ class PreRecoil: public Study
 		fVtx_DS_ByTgt[tgt.first]=new util::Categorized<Variable, int>(("ByTgt_"+tgt.second).c_str(), "DS_ByType", false, (var->GetName()+"_ByTgt_"+tgt.second+"_PreRecoilCut").c_str(),var->GetAxisLabel().c_str(), util::TgtTypeList,coarseVtxBinsDS,var->GetRecoFunc(),var->GetTrueFunc());
 		//fVtx2D_US_ByTgt[tgt.first]=new util::Categorized<Variable2D, int>(("ByTgt_"+tgt.second).c_str(), "US_ByType", false, (var->GetName()+"2D_ByTgt_"+tgt.second+"_PreRecoilCut").c_str(),*fVars[0],*fVtx_US_ByTgt[tgt.first]);
 		//fVtx2D_DS_ByTgt[tgt.first]=new util::Categorized<Variable2D, int>(("ByTgt_"+tgt.second).c_str(), "DS_ByType", false, (var->GetName()+"2D_ByTgt_"+tgt.second+"_PreRecoilCut").c_str(),*fVars[0],*fVtx_DS_ByTgt[tgt.first]);
-		
+
 	      }
-	      */
+	      /**/ 
 	    }
 	  }
 	  else if ((nameCheck == "pTmu" || nameCheck == "recoilE") && fDoNeutronCuts){
 	    fVars_ByTgt.push_back(new util::Categorized<Variable, int>(var->GetDirectoryName(), "ByTgt", false, (var->GetName()+"_PreRecoilCut").c_str(),var->GetAxisLabel().c_str(), util::TgtCodeList[fTgtID],var->GetBinVec(),var->GetRecoFunc(),var->GetTrueFunc()));
-	    /*
+	    /**/
 	    fVars_US_ByTgt.push_back(new util::Categorized<Variable, int>(var->GetDirectoryName(), "ByTgt", false, (var->GetName()+"_InnerUSPlastic_PreRecoilCut").c_str(),var->GetAxisLabel().c_str(), util::TgtCodeList[fTgtID],var->GetBinVec(),var->GetRecoFunc(),var->GetTrueFunc()));
 	    fVars_DS_ByTgt.push_back(new util::Categorized<Variable, int>(var->GetDirectoryName(), "ByTgt", false, (var->GetName()+"_InnerDSPlastic_PreRecoilCut").c_str(),var->GetAxisLabel().c_str(), util::TgtCodeList[fTgtID],var->GetBinVec(),var->GetRecoFunc(),var->GetTrueFunc()));
 	    fVars_US_Post_ByTgt.push_back(new util::Categorized<Variable, int>(var->GetDirectoryName(), "ByTgt", false, (var->GetName()+"_InnerUSPlastic").c_str(),var->GetAxisLabel().c_str(), util::TgtCodeList[fTgtID],var->GetBinVec(),var->GetRecoFunc(),var->GetTrueFunc()));
 	    fVars_DS_Post_ByTgt.push_back(new util::Categorized<Variable, int>(var->GetDirectoryName(), "ByTgt", false, (var->GetName()+"_InnerDSPlastic").c_str(),var->GetAxisLabel().c_str(), util::TgtCodeList[fTgtID],var->GetBinVec(),var->GetRecoFunc(),var->GetTrueFunc()));
-	    */
+	    /**/
 	  }
 	  else if (fDoNeutronCuts){
 	    fVars_ByTgt.push_back(new util::Categorized<Variable, int>(var->GetDirectoryName(), "ByTgt", false, (var->GetName()+"_PreRecoilCut").c_str(),var->GetAxisLabel().c_str(), util::TgtCodeList[fTgtID],var->GetBinVec(),var->GetRecoFunc(),var->GetTrueFunc()));
@@ -202,18 +202,22 @@ class PreRecoil: public Study
       fVars2D_ByTgt = {};
       //Look to main code for other 2D variable initializations.
       if (!fFVregionName.Contains("Target")){
+	/*
 	fVars2D.push_back(new Variable2D(false,"recoil_v_pT_PreRecoilCut",*vars[0],*vars[3]));
 	fVars2D.push_back(new Variable2D(false,"neutCandE_v_pT_PreRecoilCut",*vars[0],*vars[vars.size()-4]));
 	fVars2D.push_back(new Variable2D(false,"neutCandAngle_v_pT_PreRecoilCut",*vars[0],*vars[vars.size()-3]));
 	fVars2D.push_back(new Variable2D(false,"neutCandZDist_v_pT_PreRecoilCut",*vars[0],*vars[vars.size()-2]));
 	fVars2D.push_back(new Variable2D(false,"neutCandDist_v_pT_PreRecoilCut",*vars[0],*vars[vars.size()-1]));
+	*/
       }
       else{
+	/*
 	fVars2D_ByTgt.push_back(new util::Categorized<Variable2D, int>("", "ByTgt", false, "recoil_v_pT_PreRecoilCut", util::TgtCodeList[fTgtID], *vars[0], *vars[3]));
 	fVars2D_ByTgt.push_back(new util::Categorized<Variable2D, int>("", "ByTgt", false, "neutCandE_v_pT_PreRecoilCut", util::TgtCodeList[fTgtID], *vars[0], *vars[vars.size()-4]));
 	fVars2D_ByTgt.push_back(new util::Categorized<Variable2D, int>("", "ByTgt", false, "neutCandAngle_v_pT_PreRecoilCut", util::TgtCodeList[fTgtID], *vars[0], *vars[vars.size()-3]));
 	fVars2D_ByTgt.push_back(new util::Categorized<Variable2D, int>("", "ByTgt", false, "neutCandZDist_v_pT_PreRecoilCut", util::TgtCodeList[fTgtID], *vars[0], *vars[vars.size()-2]));
 	fVars2D_ByTgt.push_back(new util::Categorized<Variable2D, int>("", "ByTgt", false, "neutCandDist_v_pT_PreRecoilCut", util::TgtCodeList[fTgtID], *vars[0], *vars[vars.size()-1]));
+	*/
       }
       if (!fDoNeutronCuts){
 	for (auto& var: fVars) var->SetFillVar(false);
@@ -301,7 +305,7 @@ class PreRecoil: public Study
       }
 
       if (fFVregionName.Contains("Target")){
-	/*
+	/**/
 	fVtxTest_US_Post_ByTgt->visit([&mc_error_bands, &truth_error_bands](Variable& var){
 	    var.InitializeMCHists(mc_error_bands, truth_error_bands);
 	  });
@@ -353,7 +357,7 @@ class PreRecoil: public Study
 	fVtxTest2D_DS_ByTgt->visit([&data_error_bands](Variable2D& var){
 	    var.InitializeDATAHists(data_error_bands);
 	  });
-	*/
+	/**/
       }
 
       for(auto& tgt: fVtx_US_ByTgt){
@@ -505,7 +509,7 @@ class PreRecoil: public Study
       }
 
       if (fFVregionName.Contains("Target")){
-	/*
+	/**/
 	fVtxTest_US_Post_ByTgt->visit([&outFile](Variable& var){
 	    var.WriteMC(outFile);
 	  });
@@ -533,7 +537,7 @@ class PreRecoil: public Study
 	fVtxTest2D_DS_ByTgt->visit([&outFile](Variable2D& var){
 	    var.WriteMC(outFile);
 	  });
-	*/
+	/**/
       }
 
       for(auto& tgt: fVtx_US_ByTgt){
@@ -628,7 +632,7 @@ class PreRecoil: public Study
       }
 
       if (fFVregionName.Contains("Target")){
-	/*
+	/**/
 	fVtxTest_US_Post_ByTgt->visit([&outFile](Variable& var){
 	    var.WriteData(outFile);
 	  });
@@ -656,7 +660,7 @@ class PreRecoil: public Study
 	fVtxTest2D_DS_ByTgt->visit([&outFile](Variable2D& var){
 	    var.WriteData(outFile);
 	  });
-	*/
+	/**/
       }
 
       for(auto& tgt: fVtx_US_ByTgt){
@@ -870,7 +874,7 @@ class PreRecoil: public Study
 		(*(*var)[tgtCode].m_SigLeadBlobTypeHists)[leadBlobType].FillUniverse(&univ, (*var)[tgtCode].GetRecoValueX(univ), (*var)[tgtCode].GetRecoValueY(univ), weight);
 	      }
 	    }
-	    /*
+	    /**/
 	    else if (tgtCode == -1){
 	      if(USTgt > 0){
 		(*fVtxTest_US_ByTgt)[USTgt].selectedMCReco->FillUniverse(&univ, util::GetNPlanesUSOfTarget(USTgt,(*fVtxTest_US_ByTgt)[USTgt].GetRecoValue(univ)), weight); //"Fake data" for closure
@@ -904,10 +908,10 @@ class PreRecoil: public Study
 		(*(*fVtxTest2D_DS_ByTgt)[DSTgt].m_SigLeadBlobTypeHists)[leadBlobType].FillUniverse(&univ, (*fVtxTest2D_DS_ByTgt)[DSTgt].GetRecoValueX(univ), util::GetNPlanesDSOfTarget(DSTgt,(*fVtxTest2D_DS_ByTgt)[DSTgt].GetRecoValueY(univ)), weight);
 	      }
 	    }
-	    */
+	    /**/
 	  }
 	  else if (tgtCode == -1){
-	    /*
+	    /**/
 	    if(USTgt > 0){
 	      (*fVtxTest_US_Post_ByTgt)[USTgt].selectedMCReco->FillUniverse(&univ, util::GetNPlanesUSOfTarget(USTgt,(*fVtxTest_US_Post_ByTgt)[USTgt].GetRecoValue(univ)), weight); //"Fake data" for closure
 	      (*fVtxTest_US_Post_ByTgt)[USTgt].selectedSignalReco->FillUniverse(&univ, util::GetNPlanesUSOfTarget(USTgt,(*fVtxTest_US_Post_ByTgt)[USTgt].GetRecoValue(univ)), weight);
@@ -931,7 +935,7 @@ class PreRecoil: public Study
 		 std::cout << "Variable Vtx Z: " << (*(fVtx_US_ByTgt[USTgt]))[tgtType].GetRecoValue(univ) << std::endl;
 		 std::cout << "NPlanes US for Target: " << util::GetNPlanesUSOfTarget(USTgt,(*(fVtx_US_ByTgt[USTgt]))[tgtType].GetRecoValue(univ)) << std::endl;
 		 std::cout << "" << std::endl;
-	    *//*
+	      *//**/
 	      if (fVtx_US_ByTgt.size() > 0){
 		(*(fVtx_US_ByTgt[USTgt]))[tgtType].selectedMCReco->FillUniverse(&univ, util::GetNPlanesUSOfTarget(USTgt,(*(fVtx_US_ByTgt[USTgt]))[tgtType].GetRecoValue(univ)), weight); //"Fake data" for closure
 		(*(fVtx_US_ByTgt[USTgt]))[tgtType].selectedSignalReco->FillUniverse(&univ, util::GetNPlanesUSOfTarget(USTgt,(*(fVtx_US_ByTgt[USTgt]))[tgtType].GetRecoValue(univ)), weight);
@@ -975,7 +979,7 @@ class PreRecoil: public Study
 		std::cout << "Variable Vtx Z: " << (*(fVtx_DS_ByTgt[DSTgt]))[tgtType].GetRecoValue(univ) << std::endl;
 		std::cout << "NPlanes DS for Target: " << util::GetNPlanesDSOfTarget(DSTgt,(*(fVtx_DS_ByTgt[DSTgt]))[tgtType].GetRecoValue(univ)) << std::endl;
 		std::cout << "" << std::endl;
-	      *//*
+	      *//**/
 	      if (fVtx_DS_ByTgt.size() > 0){
 		(*(fVtx_DS_ByTgt[DSTgt]))[tgtType].selectedMCReco->FillUniverse(&univ, util::GetNPlanesDSOfTarget(DSTgt,(*(fVtx_DS_ByTgt[DSTgt]))[tgtType].GetRecoValue(univ)), weight); //"Fake data" for closure
 		(*(fVtx_DS_ByTgt[DSTgt]))[tgtType].selectedSignalReco->FillUniverse(&univ, util::GetNPlanesDSOfTarget(DSTgt,(*(fVtx_DS_ByTgt[DSTgt]))[tgtType].GetRecoValue(univ)), weight);
@@ -994,7 +998,7 @@ class PreRecoil: public Study
 		  (*(*(fVtxBinned_DS_ByTgt[iBin][DSTgt]))[tgtType].m_SigLeadBlobTypeHists)[leadBlobType].FillUniverse(&univ, util::GetNPlanesDSOfTarget(DSTgt,(*(fVtxBinned_DS_ByTgt[iBin][DSTgt]))[tgtType].GetRecoValue(univ)), weight);
 		}
 	      }
-	    }*/
+	    }/**/
 	  }
 	}
 
@@ -1274,7 +1278,7 @@ class PreRecoil: public Study
 	      }
 	    }
 	    else if (tgtCode == -1){
-	      /*
+	      /**/
 	      if (USTgt > 0){
 		(*fVtxTest_US_ByTgt)[USTgt].selectedMCReco->FillUniverse(&univ, util::GetNPlanesUSOfTarget(USTgt,(*fVtxTest_US_ByTgt)[USTgt].GetRecoValue(univ)), weight); //"Fake data" for closure
 		(*(*fVtxTest_US_ByTgt)[USTgt].m_backgroundHists)[bkgd_ID].FillUniverse(&univ, util::GetNPlanesUSOfTarget(USTgt,(*fVtxTest_US_ByTgt)[USTgt].GetRecoValue(univ)), weight);
@@ -1306,11 +1310,11 @@ class PreRecoil: public Study
 		(*(*fVtxTest2D_DS_ByTgt)[DSTgt].m_BkgTargetTypeHists)[tgtType].FillUniverse(&univ, (*fVtxTest2D_DS_ByTgt)[DSTgt].GetRecoValueX(univ), util::GetNPlanesDSOfTarget(DSTgt,(*fVtxTest2D_DS_ByTgt)[DSTgt].GetRecoValueY(univ)), weight);
 		(*(*fVtxTest2D_DS_ByTgt)[DSTgt].m_BkgLeadBlobTypeHists)[leadBlobType].FillUniverse(&univ, (*fVtxTest2D_DS_ByTgt)[DSTgt].GetRecoValueX(univ), util::GetNPlanesDSOfTarget(DSTgt,(*fVtxTest2D_DS_ByTgt)[DSTgt].GetRecoValueY(univ)), weight);
 	      }
-	      */
+	      /**/
 	    }
 	  }
 	  else if (tgtCode == -1){
-	    /*
+	    /**/
 	    if(USTgt > 0){
 	      (*fVtxTest_US_Post_ByTgt)[USTgt].selectedMCReco->FillUniverse(&univ, util::GetNPlanesUSOfTarget(USTgt,(*fVtxTest_US_Post_ByTgt)[USTgt].GetRecoValue(univ)), weight); //"Fake data" for closure
 	      (*(*fVtxTest_US_Post_ByTgt)[USTgt].m_backgroundHists)[bkgd_ID].FillUniverse(&univ, util::GetNPlanesUSOfTarget(USTgt,(*fVtxTest_US_Post_ByTgt)[USTgt].GetRecoValue(univ)), weight);
@@ -1334,7 +1338,7 @@ class PreRecoil: public Study
 		 std::cout << "Variable Vtx Z: " << (*(fVtx_US_ByTgt[USTgt]))[tgtType].GetRecoValue(univ) << std::endl;
 		 std::cout << "NPlanes US for Target: " << util::GetNPlanesUSOfTarget(USTgt,(*(fVtx_US_ByTgt[USTgt]))[tgtType].GetRecoValue(univ)) << std::endl;
 		 std::cout << "" << std::endl;
-	      *//*
+	      *//**/
 	      if (fVtx_US_ByTgt.size() > 0){
 		(*(fVtx_US_ByTgt[USTgt]))[tgtType].selectedMCReco->FillUniverse(&univ, util::GetNPlanesUSOfTarget(USTgt,(*(fVtx_US_ByTgt[USTgt]))[tgtType].GetRecoValue(univ)), weight); //"Fake data" for closure
 		(*(*(fVtx_US_ByTgt[USTgt]))[tgtType].m_backgroundHists)[bkgd_ID].FillUniverse(&univ, util::GetNPlanesUSOfTarget(USTgt,(*(fVtx_US_ByTgt[USTgt]))[tgtType].GetRecoValue(univ)), weight);
@@ -1377,7 +1381,7 @@ class PreRecoil: public Study
 		std::cout << "Variable Vtx Z: " << (*(fVtx_DS_ByTgt[DSTgt]))[tgtType].GetRecoValue(univ) << std::endl;
 		std::cout << "NPlanes DS for Target: " << util::GetNPlanesDSOfTarget(DSTgt,(*(fVtx_DS_ByTgt[DSTgt]))[tgtType].GetRecoValue(univ)) << std::endl;
 		std::cout << "" << std::endl;
-	      *//*
+	      *//**/
 	      if (fVtx_DS_ByTgt.size() > 0){
 		(*(fVtx_DS_ByTgt[DSTgt]))[tgtType].selectedMCReco->FillUniverse(&univ, util::GetNPlanesDSOfTarget(DSTgt,(*(fVtx_DS_ByTgt[DSTgt]))[tgtType].GetRecoValue(univ)), weight); //"Fake data" for closure
 		(*(*(fVtx_DS_ByTgt[DSTgt]))[tgtType].m_backgroundHists)[bkgd_ID].FillUniverse(&univ, util::GetNPlanesDSOfTarget(DSTgt,(*(fVtx_DS_ByTgt[DSTgt]))[tgtType].GetRecoValue(univ)), weight);
@@ -1396,7 +1400,7 @@ class PreRecoil: public Study
 		  (*(*(fVtxBinned_DS_ByTgt[iBin][DSTgt]))[tgtType].m_BkgLeadBlobTypeHists)[leadBlobType].FillUniverse(&univ, util::GetNPlanesDSOfTarget(DSTgt,(*(fVtxBinned_DS_ByTgt[iBin][DSTgt]))[tgtType].GetRecoValue(univ)), weight);
 		}
 	      }
-	    }*/
+	    }/**/
 	  }
 	}
       }
@@ -1431,7 +1435,7 @@ class PreRecoil: public Study
 	  }
 	  
 	  else if (tgtCode == -1){
-	    /*
+	    /**/
 	    if(USTgt > 0){
 	      (*fVtxTest_US_ByTgt)[USTgt].dataHist->FillUniverse(&univ, util::GetNPlanesUSOfTarget(USTgt,(*fVtxTest_US_ByTgt)[USTgt].GetRecoValue(univ)), 1);
 	      (*fVtxTest2D_US_ByTgt)[USTgt].dataHist->FillUniverse(&univ, (*fVtxTest2D_US_ByTgt)[USTgt].GetRecoValueX(univ), util::GetNPlanesUSOfTarget(USTgt,(*fVtxTest2D_US_ByTgt)[USTgt].GetRecoValueY(univ)), 1); //"Fake data" for closure
@@ -1439,13 +1443,13 @@ class PreRecoil: public Study
 	    if(DSTgt > 0){
 	      (*fVtxTest_DS_ByTgt)[DSTgt].dataHist->FillUniverse(&univ, util::GetNPlanesDSOfTarget(DSTgt,(*fVtxTest_DS_ByTgt)[DSTgt].GetRecoValue(univ)), 1);
 	      (*fVtxTest2D_DS_ByTgt)[DSTgt].dataHist->FillUniverse(&univ, (*fVtxTest2D_DS_ByTgt)[DSTgt].GetRecoValueX(univ), util::GetNPlanesDSOfTarget(DSTgt,(*fVtxTest2D_DS_ByTgt)[DSTgt].GetRecoValueY(univ)), 1); //"Fake data" for closure
-	    }*/
+	    }/**/
 	  }
 	}
 
 	// REMOVE FILLING THE PLASTIC DATA. It's useless... except it's what I need to fit... wheeeeeeeeee.... so I un-removed... but this set me back a minute... oopsie...
 	else if (tgtCode == -1){
-	  /*
+	  /**/
 	  if(USTgt > 0){
 	    (*fVtxTest_US_Post_ByTgt)[USTgt].dataHist->FillUniverse(&univ, util::GetNPlanesUSOfTarget(USTgt,(*fVtxTest_US_Post_ByTgt)[USTgt].GetRecoValue(univ)), 1);
 
@@ -1459,7 +1463,7 @@ class PreRecoil: public Study
 	       std::cout << "Variable Vtx Z: " << (*(fVtx_US_ByTgt[USTgt]))[tgtType].GetRecoValue(univ) << std::endl;
 	       std::cout << "NPlanes US for Target: " << util::GetNPlanesUSOfTarget(USTgt,(*(fVtx_US_ByTgt[USTgt]))[tgtType].GetRecoValue(univ)) << std::endl;
 	       std::cout << "" << std::endl;
-	    *//*
+	    *//**/
 	    if (fVtx_US_ByTgt.size() > 0){
 	      (*(fVtx_US_ByTgt[USTgt]))[tgtType].dataHist->FillUniverse(&univ, util::GetNPlanesUSOfTarget(USTgt,(*(fVtx_US_ByTgt[USTgt]))[tgtType].GetRecoValue(univ)), 1);
 	    }
@@ -1478,12 +1482,12 @@ class PreRecoil: public Study
 	       std::cout << "Variable Vtx Z: " << (*(fVtx_DS_ByTgt[DSTgt]))[tgtType].GetRecoValue(univ) << std::endl;
 	       std::cout << "NPlanes DS for Target: " << util::GetNPlanesDSOfTarget(DSTgt,(*(fVtx_DS_ByTgt[DSTgt]))[tgtType].GetRecoValue(univ)) << std::endl;
 	       std::cout << "" << std::endl;
-	    *//*
+	    *//**/
 	    if (fVtx_DS_ByTgt.size() > 0){
 	      (*(fVtx_DS_ByTgt[DSTgt]))[tgtType].dataHist->FillUniverse(&univ, util::GetNPlanesDSOfTarget(DSTgt,(*(fVtx_DS_ByTgt[DSTgt]))[tgtType].GetRecoValue(univ)), 1);
 	    }
 	    if (fSplitRecoil && fVtxBinned_DS_ByTgt.size() > 0) (*(fVtxBinned_DS_ByTgt[iBin][DSTgt]))[tgtType].dataHist->FillUniverse(&univ, util::GetNPlanesDSOfTarget(DSTgt,(*(fVtxBinned_DS_ByTgt[iBin][DSTgt]))[tgtType].GetRecoValue(univ)), 1);	  
-	  }*/
+	  }/**/
 	}
       }
       return;
