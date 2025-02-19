@@ -117,8 +117,8 @@ UniverseMap GetStandardSystematics(PlotUtils::ChainWrapper* chain, TString tuneV
   }
 
   //Adding in the effect of dropping the neutron candidates either for GENIE/GEANT modifications or both (as of 16:10 Feb 4, 2025... it is just GEANT)
-  UniverseMap bands_neutDrop = GetNeutronDroppingUnivs(chain);
-  error_bands.insert(bands_neutDrop.begin(), bands_neutDrop.end());
+  //UniverseMap bands_neutDrop = GetNeutronDroppingUnivs(chain);
+  //error_bands.insert(bands_neutDrop.begin(), bands_neutDrop.end());
   
   // Hadron inelastics cross sections
   //TODO: There's some special recoil function I need to write for the response systematics to work correctly
