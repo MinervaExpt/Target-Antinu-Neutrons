@@ -132,7 +132,7 @@ void LoopAndFillEventSelection(
 
   std::cout << "Starting MC reco loop...\n";
   const int nEntries = chain->GetEntries();
-  for (int i=0; i<nEntries; ++i)
+  for (int i=0; i<10/*nEntries*/; ++i)
   {
     if(i%1000==0) std::cout << i << " / " << nEntries << "\r" << std::endl;
     
@@ -557,17 +557,19 @@ void LoopAndFillEffDenom( PlotUtils::ChainWrapper* truth,
 
   std::cout << "Starting efficiency denominator loop...\n";
   const int nEntries = truth->GetEntries();
-  for (int i=0; i<nEntries; ++i)
+  for (int i=/*0*/2510000; i</*nEntries*/2530000; ++i)
   {
     if(i%1000==0) std::cout << i << " / " << nEntries << "\r" << std::endl;
 
     NeutronEvent cvEvent;
     cvUniv->SetEntry(i);
     model.SetEntry(*cvUniv, cvEvent);
+    std::cout << "Getting CV Weight" << std::endl;
     const double cvWeight = model.GetWeight(*cvUniv, cvEvent);
 
     //Need this now to allow for a true event rate without the modeling effects of things that would only matter to efficiency
     evRateONLYmodel.SetEntry(*cvUniv, cvEvent);
+    std::cout << "Getting CV Weight for evRateONLY" << std::endl;
     const double cvevRateONLYWeight = evRateONLYmodel.GetWeight(*cvUniv, cvEvent);
     
     //=========================================
@@ -583,10 +585,15 @@ void LoopAndFillEffDenom( PlotUtils::ChainWrapper* truth,
         // Tell the Event which entry in the TChain it's looking at
         universe->SetEntry(i);
 
+	std::cout << "About to check is effdenom" << std::endl;
+
         if (!michelcuts.isEfficiencyDenom(*universe, cvWeight)) continue; //Weight is ignored for isEfficiencyDenom() in all but the CV universe 
-        const double weight = model.GetWeight(*universe, myevent); //Only calculate the weight for events that will use it
+
+	std::cout << "done checking getting weights" << std::endl;
+	const double weight = model.GetWeight(*universe, myevent); //Only calculate the weight for events that will use it
 	const double evRateONLYweight = evRateONLYmodel.GetWeight(*universe, myevent); //Only calculate the weight for events that will use it
 
+	std::cout << "filling... would be surprised if this issue happens sooner..." << std::endl;
 	std::vector<double> mc_vtx = universe->GetTrueVtx();
 	double mc_vtx_x = mc_vtx.at(0);
 	double mc_vtx_y = mc_vtx.at(1);
@@ -872,7 +879,8 @@ int main(const int argc, const char** argv)
   if (doNeutronCuts){
     preCuts.emplace_back(new MyNeutCuts::LeadNeutIs3D<CVUniverse, NeutronEvent>());
     preCuts.emplace_back(new MyNeutCuts::LeadNeutOutsideTgt<CVUniverse, NeutronEvent>());
-    if(!reducedNeutronCuts) preCuts.emplace_back(new MyNeutCuts::LeadNeutIsFarFromMuon<CVUniverse, NeutronEvent>());
+    //if(!reducedNeutronCuts) preCuts.emplace_back(new MyNeutCuts::LeadNeutIsFarFromMuon<CVUniverse, NeutronEvent>());
+    preCuts.emplace_back(new MyNeutCuts::LeadNeutIsFarFromMuon<CVUniverse, NeutronEvent>());
     if(!reducedNeutronCuts) preCuts.emplace_back(new MyNeutCuts::LeadNeutZDistMin<CVUniverse, NeutronEvent>()); //Removed for neutron study without z dist cut
   }
   //preCuts.emplace_back(new MyNeutCuts::LeadNeutInTracker<CVUniverse, NeutronEvent>(maxZ));
@@ -983,6 +991,8 @@ int main(const int argc, const char** argv)
   if(!doSystematics){
     nameExt = "_SkippedSyst"+nameExt;
     std::cout << "Skipping systematics (except 1 flux universe) because <systematics> argument is non-zero.\n";
+    std::cout << "Something is broken about no systematics... Testing" << std::endl;
+    //return -1234;
     PlotUtils::MinervaUniverse::SetNFluxUniverses(2); //Necessary to get Flux integral later...  Doesn't work with just 1 flux universe though because _that_ triggers "spread errors".
   }
 
@@ -993,18 +1003,20 @@ int main(const int argc, const char** argv)
   if(doSystematics) error_bands = GetStandardSystematics(options.m_mc, tuneVer,"nonMuonNonVtx100mm_wNuclTargs", true, (elFSI || piFSI));
   //if(doSystematics) error_bands = GetStandardSystematics(options.m_mc,"dispr_id_and_blobbed_energy_wNuclTargs",true,true);
   else{
-    std::map<std::string, std::vector<CVUniverse*> > band_flux = PlotUtils::GetFluxSystematicsMap<CVUniverse>(options.m_mc, CVUniverse::GetNFluxUniverses());
-    error_bands.insert(band_flux.begin(), band_flux.end()); //Necessary to get flux integral later...
+    //std::map<std::string, std::vector<CVUniverse*> > band_flux = PlotUtils::GetFluxSystematicsMap<CVUniverse>(options.m_mc, CVUniverse::GetNFluxUniverses());
+    //error_bands.insert(band_flux.begin(), band_flux.end()); //Necessary to get flux integral later...
     //TEMPORARY NEUTRON SYSTEMATIC ONLY ADDED INTO THE FOLD. Turn back on for testing. Turned off for validation with new Oscar 6J tuples.
-    /**/std::map<std::string, std::vector<CVUniverse*> > bands_neutDrop = GetNeutronDroppingUnivs(options.m_mc);
-    /**/error_bands.insert(bands_neutDrop.begin(), bands_neutDrop.end());
-    ////std::map<std::string, std::vector<CVUniverse*> > bands_mona = GetMonaSystematicMap(options.m_mc);
-    ////error_bands.insert(bands_mona.begin(), bands_mona.end());
+    ////std::map<std::string, std::vector<CVUniverse*> > bands_neutDrop = GetNeutronDroppingUnivs(options.m_mc);
+    ////error_bands.insert(bands_neutDrop.begin(), bands_neutDrop.end());
+    /**/std::map<std::string, std::vector<CVUniverse*> > bands_mona = GetMonaSystematicMap(options.m_mc);
+    /**/error_bands.insert(bands_mona.begin(), bands_mona.end());
   }
   error_bands["cv"] = {new CVUniverse(options.m_mc)};
   std::map< std::string, std::vector<CVUniverse*> > truth_bands;
   if(doSystematics) truth_bands = GetStandardSystematics(options.m_truth, tuneVer,"nonMuonNonVtx100mm_wNuclTargs", true, (elFSI || piFSI));
   else{
+    //std::map<std::string, std::vector<CVUniverse*> > band_flux = PlotUtils::GetFluxSystematicsMap<CVUniverse>(options.m_mc, CVUniverse::GetNFluxUniverses());
+    //truth_bands.insert(band_flux.begin(), band_flux.end());
     /**/std::map<std::string, std::vector<CVUniverse*> > bands_mona = GetMonaSystematicMap(options.m_mc);
     /**/truth_bands.insert(bands_mona.begin(), bands_mona.end());
     ////std::map<std::string, std::vector<CVUniverse*> > bands_neutDrop = GetNeutronDroppingUnivs(options.m_truth);
@@ -1159,13 +1171,11 @@ int main(const int argc, const char** argv)
   }
 
   std::vector<Variable2D*> vars2D = {
-    /*
     new Variable2D(false,"recoil_v_pT",*vars[0],*vars[3]),
     new Variable2D(false,"neutCandE_v_pT",*vars[0],*vars[vars.size()-4]),
     new Variable2D(false,"neutCandAngle_v_pT",*vars[0],*vars[vars.size()-3]),
     new Variable2D(false,"neutCandZDist_v_pT",*vars[0],*vars[vars.size()-2]),
     new Variable2D(false,"neutCandDist_v_pT",*vars[0],*vars[vars.size()-1]),
-    */
     //new Variable2D(false,"vtxXY",*vars[vars.size()-4],*vars[vars.size()-3]),
   };
   //With systematics these two might get a little hairy having both. But for now without, it's fine.
@@ -1192,14 +1202,12 @@ int main(const int argc, const char** argv)
   }
   else {
     if (FVregionName.Contains("Target")){
-      /*
       for (auto& var: vars2D) var->SetFillVar(false);
       vars2D_ByTgt.push_back(new util::Categorized<Variable2D, int>("", "ByTgt", false, "recoil_v_pT", util::TgtCodeList[TgtNum], *vars[0], *vars[3]));
       vars2D_ByTgt.push_back(new util::Categorized<Variable2D, int>("", "ByTgt", false, "neutCandE_v_pT", util::TgtCodeList[TgtNum], *vars[0], *vars[vars.size()-4]));
       vars2D_ByTgt.push_back(new util::Categorized<Variable2D, int>("", "ByTgt", false, "neutCandAngle_v_pT", util::TgtCodeList[TgtNum], *vars[0], *vars[vars.size()-3]));
       vars2D_ByTgt.push_back(new util::Categorized<Variable2D, int>("", "ByTgt", false, "neutCandZDist_v_pT", util::TgtCodeList[TgtNum], *vars[0], *vars[vars.size()-2]));
       vars2D_ByTgt.push_back(new util::Categorized<Variable2D, int>("", "ByTgt", false, "neutCandDist_v_pT", util::TgtCodeList[TgtNum], *vars[0], *vars[vars.size()-1]));
-      */		       
     }
   }
 
@@ -1276,6 +1284,7 @@ int main(const int argc, const char** argv)
   // Loop entries and fill
   try
   {
+    /* Temporary reordering for checking something*/
     CVUniverse::SetTruth(false);
     LoopAndFillEventSelection(options.m_mc, error_bands, vars, vars_ByTgt, vars2D, vars2D_ByTgt, studies, mycuts, completeModel, doNeutronCuts);
     //LoopAndFillEventSelection(options.m_mc, error_bands, vars, vars_ByTgt, vars2D, vars2D_ByTgt, studies, mycuts, completeModel);
