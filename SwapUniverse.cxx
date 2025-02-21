@@ -233,7 +233,6 @@ int main(int argc, char* argv[]) {
       delete h2D;
     }
     else if (className.Contains("MnvH1")){
-      cout << "Working with: " << nameObj << endl;
       MnvH1D* h1D = SwapSysUniverse((MnvH1D*)(inFile->Get(nameObj)),univName,univ);
       outFile->cd();
       h1D->Write();
