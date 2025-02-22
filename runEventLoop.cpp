@@ -564,12 +564,10 @@ void LoopAndFillEffDenom( PlotUtils::ChainWrapper* truth,
     NeutronEvent cvEvent;
     cvUniv->SetEntry(i);
     model.SetEntry(*cvUniv, cvEvent);
-    std::cout << "Getting CV Weight" << std::endl;
     const double cvWeight = model.GetWeight(*cvUniv, cvEvent);
 
     //Need this now to allow for a true event rate without the modeling effects of things that would only matter to efficiency
     evRateONLYmodel.SetEntry(*cvUniv, cvEvent);
-    std::cout << "Getting CV Weight for evRateONLY" << std::endl;
     const double cvevRateONLYWeight = evRateONLYmodel.GetWeight(*cvUniv, cvEvent);
     
     //=========================================
@@ -585,15 +583,11 @@ void LoopAndFillEffDenom( PlotUtils::ChainWrapper* truth,
         // Tell the Event which entry in the TChain it's looking at
         universe->SetEntry(i);
 
-	std::cout << "About to check is effdenom" << std::endl;
-
         if (!michelcuts.isEfficiencyDenom(*universe, cvWeight)) continue; //Weight is ignored for isEfficiencyDenom() in all but the CV universe 
 
-	std::cout << "done checking getting weights" << std::endl;
 	const double weight = model.GetWeight(*universe, myevent); //Only calculate the weight for events that will use it
 	const double evRateONLYweight = evRateONLYmodel.GetWeight(*universe, myevent); //Only calculate the weight for events that will use it
 
-	std::cout << "filling... would be surprised if this issue happens sooner..." << std::endl;
 	std::vector<double> mc_vtx = universe->GetTrueVtx();
 	double mc_vtx_x = mc_vtx.at(0);
 	double mc_vtx_y = mc_vtx.at(1);
@@ -1015,9 +1009,9 @@ int main(const int argc, const char** argv)
   std::map< std::string, std::vector<CVUniverse*> > truth_bands;
   if(doSystematics) truth_bands = GetStandardSystematics(options.m_truth, tuneVer,"nonMuonNonVtx100mm_wNuclTargs", true, (elFSI || piFSI));
   else{
-    //std::map<std::string, std::vector<CVUniverse*> > band_flux = PlotUtils::GetFluxSystematicsMap<CVUniverse>(options.m_mc, CVUniverse::GetNFluxUniverses());
+    //std::map<std::string, std::vector<CVUniverse*> > band_flux = PlotUtils::GetFluxSystematicsMap<CVUniverse>(options.m_truth, CVUniverse::GetNFluxUniverses());
     //truth_bands.insert(band_flux.begin(), band_flux.end());
-    /**/std::map<std::string, std::vector<CVUniverse*> > bands_mona = GetMonaSystematicMap(options.m_mc);
+    /**/std::map<std::string, std::vector<CVUniverse*> > bands_mona = GetMonaSystematicMap(options.m_truth);
     /**/truth_bands.insert(bands_mona.begin(), bands_mona.end());
     ////std::map<std::string, std::vector<CVUniverse*> > bands_neutDrop = GetNeutronDroppingUnivs(options.m_truth);
     ////truth_bands.insert(bands_neutDrop.begin(), bands_neutDrop.end());
