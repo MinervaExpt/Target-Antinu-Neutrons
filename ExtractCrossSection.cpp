@@ -383,7 +383,8 @@ int main(const int argc, const char** argv)
       auto migration = util::GetIngredient<PlotUtils::MnvH2D>(*mcFile, "migration", prefix);
       auto effNum = util::GetIngredient<PlotUtils::MnvH1D>(*mcFile, "efficiency_numerator", prefix);
       auto effDenom = util::GetIngredient<PlotUtils::MnvH1D>(*mcFile, "efficiency_denominator", prefix);
-      auto simEventRate = effDenom->Clone(); //Make a copy for later
+      //auto simEventRate = effDenom->Clone(); //Make a copy for later
+      auto simEventRate = util::GetIngredient<PlotUtils::MnvH1D>(*mcFile, "true_evRate", prefix);//This would be right for anything that doesn't swap the CV with some other universe... I need to sort out the quickest fix there for plot making... but this change is still right... I'll just take the unfit version and extract the plot from there when making plots right now...
 
       //Look for backgrounds with <prefix>_<analysis>_Background_<name>
       std::vector<PlotUtils::MnvH1D*> backgrounds;
