@@ -762,7 +762,8 @@ int main(const int argc, const char** argv)
   if (doNeutronCuts){
     if (reducedNeutronCuts==0) nameExt = "_wNeutCuts_neutKE_"+std::to_string(neutKESig)+nameExt;
     else if (reducedNeutronCuts==1) nameExt = "_wFewerNeutCuts_neutKE_"+std::to_string(neutKESig)+nameExt;
-    else if (reducedNeutronCuts > 1) nameExt = "_wReducedNeutCuts_neutKE_"+std::to_string(neutKESig)+nameExt;
+    else if (reducedNeutronCuts==2) nameExt = "_wReducedNeutCuts_neutKE_"+std::to_string(neutKESig)+nameExt;
+    else if (reducedNeutronCuts > 2) nameExt = "_wFullyReducedNeutCuts_neutKE_"+std::to_string(neutKESig)+nameExt;
     else {
       std::cout << "Bad option for reduced neutron cuts. Exiting." << std::endl;
       return 1812;
@@ -877,8 +878,10 @@ int main(const int argc, const char** argv)
   preCuts.emplace_back(new MyCCQECuts::RemoveRecoilBand<CVUniverse, NeutronEvent>(sbLower)); //Removed for neutron study with no recoil cut
   //preCuts.emplace_back(new MyCCQECuts::RecoilCut<CVUniverse, NeutronEvent>());
   if (doNeutronCuts){
-    preCuts.emplace_back(new MyNeutCuts::LeadNeutIs3D<CVUniverse, NeutronEvent>());
-    preCuts.emplace_back(new MyNeutCuts::LeadNeutOutsideTgt<CVUniverse, NeutronEvent>());
+    if (reducedNeutronCuts < 3){
+      preCuts.emplace_back(new MyNeutCuts::LeadNeutIs3D<CVUniverse, NeutronEvent>());
+      preCuts.emplace_back(new MyNeutCuts::LeadNeutOutsideTgt<CVUniverse, NeutronEvent>());
+    }
     //if(!reducedNeutronCuts) preCuts.emplace_back(new MyNeutCuts::LeadNeutIsFarFromMuon<CVUniverse, NeutronEvent>());
     if (reducedNeutronCuts < 2) preCuts.emplace_back(new MyNeutCuts::LeadNeutIsFarFromMuon<CVUniverse, NeutronEvent>());
     if (reducedNeutronCuts < 1) preCuts.emplace_back(new MyNeutCuts::LeadNeutZDistMin<CVUniverse, NeutronEvent>()); //Removed for neutron study without z dist cut
