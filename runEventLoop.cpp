@@ -60,6 +60,7 @@ enum ErrorCodes
 #include "systematics/Systematics.h"
 #include "systematics/MonaSystematic.h"
 #include "systematics/NeutronDroppingUniverse.h"
+#include "systematics/FSIReplacementUniverse.h"
 #include "cuts/MaxPzMu.h"
 #include "cuts/CCQECuts.h"
 #include "cuts/NeutCuts.h"
@@ -135,6 +136,8 @@ void LoopAndFillEventSelection(
   for (int i=0; i<nEntries; ++i)
   {
     if(i%1000==0) std::cout << i << " / " << nEntries << "\r" << std::endl;
+
+    //std::cout << "Event: " << i << std::endl;
     
     cvUniv->SetEntry(i);
     
@@ -170,6 +173,26 @@ void LoopAndFillEventSelection(
 	std::bitset<64> SBStat = michelcuts.isMCSelected(*universe, myevent, cvWeight);
 	myevent.SetSideBandStat(SBStat);
 
+	//Checking my modified final state particle business
+	/*
+	if (((TString)(universe->ShortName())).Contains("FSIReplace") || ((TString)(universe->ShortName())).Contains("cv")){
+	
+	  std::vector<int> PDGs = universe->GetFSPartPDG();
+	  std::vector<double> Es = universe->GetFSPartE();
+	  
+	  std::cout << "Universe: " << universe->ShortName() << std::endl;
+	  
+	  if (PDGs.size() != Es.size()) std::cout << "UHHHHHHH HWAT" << std::endl;
+	  else{
+	    for (int iFS=0; iFS < PDGs.size(); ++iFS){
+	      std::cout << "Particle: " << PDGs.at(iFS) << ", with Energy: " << Es.at(iFS) << std::endl;
+	    }
+	  }
+
+	  std::cout << "" << std::endl;
+	}
+	*/
+	
 	if (SBStat.none()) continue;
 
 	/*
@@ -249,7 +272,7 @@ void LoopAndFillEventSelection(
 	//if (tgtZ == 6 && (tgtID < 0 || tgtID > 6)) std::cout << "tgtType: " << tgtType << std::endl;
 
 	const bool isSignal = tmpIsSignal;
-
+	       
 	/* Just for checking the output of GetRecoTargetZ
 	std::cout << "Checking Target Breakdown" << std::endl;
 	std::cout << "Target Z " << tgtType << std::endl;
@@ -561,6 +584,8 @@ void LoopAndFillEffDenom( PlotUtils::ChainWrapper* truth,
   {
     if(i%1000==0) std::cout << i << " / " << nEntries << "\r" << std::endl;
 
+    //std::cout << "Event: " << i << std::endl;
+    
     NeutronEvent cvEvent;
     cvUniv->SetEntry(i);
     model.SetEntry(*cvUniv, cvEvent);
@@ -583,6 +608,26 @@ void LoopAndFillEffDenom( PlotUtils::ChainWrapper* truth,
         // Tell the Event which entry in the TChain it's looking at
         universe->SetEntry(i);
 
+	//Checkng in the efficiency filler now...
+	/*
+	if (((TString)(universe->ShortName())).Contains("FSIReplace") || ((TString)(universe->ShortName())).Contains("cv")){
+	
+	  std::vector<int> PDGs = universe->GetFSPartPDG();
+	  std::vector<double> Es = universe->GetFSPartE();
+	  
+	  std::cout << "Universe: " << universe->ShortName() << std::endl;
+	  
+	  if (PDGs.size() != Es.size()) std::cout << "UHHHHHHH HWAT" << std::endl;
+	  else{
+	    for (int iFS=0; iFS < PDGs.size(); ++iFS){
+	      std::cout << "Particle: " << PDGs.at(iFS) << ", with Energy: " << Es.at(iFS) << std::endl;
+	    }
+	  }
+
+	  std::cout << "" << std::endl;
+	}
+	*/
+	
         if (!michelcuts.isEfficiencyDenom(*universe, cvWeight)) continue; //Weight is ignored for isEfficiencyDenom() in all but the CV universe 
 
 	const double weight = model.GetWeight(*universe, myevent); //Only calculate the weight for events that will use it
@@ -1007,6 +1052,8 @@ int main(const int argc, const char** argv)
     std::map<std::string, std::vector<CVUniverse*> > band_flux = PlotUtils::GetFluxSystematicsMap<CVUniverse>(options.m_mc, CVUniverse::GetNFluxUniverses());
     error_bands.insert(band_flux.begin(), band_flux.end()); //Necessary to get flux integral later...
     //TEMPORARY NEUTRON SYSTEMATIC ONLY ADDED INTO THE FOLD. Turn back on for testing. Turned off for validation with new Oscar 6J tuples.
+    ////std::map<std::string, std::vector<CVUniverse*> > bands_FSIReplace = GetFSIReplaceUnivs(options.m_mc);
+    ////error_bands.insert(bands_FSIReplace.begin(), bands_FSIReplace.end());
     ////std::map<std::string, std::vector<CVUniverse*> > bands_neutDrop = GetNeutronDroppingUnivs(options.m_mc);
     ////error_bands.insert(bands_neutDrop.begin(), bands_neutDrop.end());
     /**/std::map<std::string, std::vector<CVUniverse*> > bands_mona = GetMonaSystematicMap(options.m_mc);
@@ -1018,6 +1065,10 @@ int main(const int argc, const char** argv)
   else{
     std::map<std::string, std::vector<CVUniverse*> > band_flux = PlotUtils::GetFluxSystematicsMap<CVUniverse>(options.m_truth, CVUniverse::GetNFluxUniverses());
     truth_bands.insert(band_flux.begin(), band_flux.end());
+
+    ////std::map<std::string, std::vector<CVUniverse*> > bands_FSIReplace = GetFSIReplaceUnivs(options.m_truth);
+    ////truth_bands.insert(bands_FSIReplace.begin(), bands_FSIReplace.end());
+
     /**/std::map<std::string, std::vector<CVUniverse*> > bands_mona = GetMonaSystematicMap(options.m_truth);
     /**/truth_bands.insert(bands_mona.begin(), bands_mona.end());
     ////std::map<std::string, std::vector<CVUniverse*> > bands_neutDrop = GetNeutronDroppingUnivs(options.m_truth);
@@ -1061,6 +1112,7 @@ int main(const int argc, const char** argv)
 
   const double neutronBinWidth = 5; //MeV
   for(int whichBin = 0; whichBin < 40+1; ++whichBin) neutronBins.push_back(neutronBinWidth * whichBin);
+  //for(int whichBin = 0; whichBin < 100+1; ++whichBin) neutronBins.push_back(neutronBinWidth * whichBin);
   
   const double robsRecoilBinWidth = 50; //MeV
   for(int whichBin = 0; whichBin < 100 + 1; ++whichBin) robsRecoilBins.push_back(robsRecoilBinWidth * whichBin);
@@ -1130,6 +1182,12 @@ int main(const int argc, const char** argv)
     new Variable(false,"vtxY", "Y [mm]", myVtxYBins, &CVUniverse::GetVtxY, &CVUniverse::GetTrueVtxY),//Don't need GetDummyTrue perhaps...
     new Variable(false,"vtxZ", "Z [mm]", myVtxZBins, &CVUniverse::GetVtxZ, &CVUniverse::GetTrueVtxZ),//Don't need GetDummyTrue perhaps...
     new Variable(false, "DaisyPetal", "Petal", n12Bins, &CVUniverse::GetRecoDaisyPetal, &CVUniverse::GetTrueDaisyPetal),
+    /*
+    new Variable(true, "recoilProxy", "Recoil Proxy [GeV]", myRecoilBins, &CVUniverse::GetRecoilProxy, &CVUniverse::GetRecoilProxy),//Truth only variable, will break with data!!!
+    new Variable(true, "Eavail", "Available Energy [GeV]", myRecoilBins, &CVUniverse::GetAvailableEnergy, &CVUniverse::GetAvailableEnergy),//Truth only variable, will break with data!!!
+    new Variable(true, "TotalNeutronKE", "#Sigma Neutron KE [GeV]", myRecoilBins, &CVUniverse::GetTotalNeutronKE, &CVUniverse::GetTotalNeutronKE),//Truth only variable, will break with data!!!
+    new Variable(true, "MatchedNeutCandE", "Neutron KE [MeV]", neutronBins, &CVUniverse::GetMaxFSNeutronKE, &CVUniverse::GetMaxFSNeutronKE),//Truth only variable, will break with data!!!
+    */
     new Variable(true, "MatchedNeutCandE", "Neutron KE [MeV]", neutronBins, &CVUniverse::GetMATCHEDLeadNeutCandE, &CVUniverse::GetMaxFSNeutronKE),//Truth only variable, but should be able to see the migration!!!
     new Variable(false, "LeadNeutCandE", "Neutron Candidate Vis. Energy [MeV]", neutronBins, &CVUniverse::GetLeadNeutCandE),
     new Variable(false, "LeadNeutCandAngleToMuon", "Angle To Muon [radians]", myNeutAngleBins, &CVUniverse::GetLeadNeutCandAngleToMuon),
@@ -1172,7 +1230,12 @@ int main(const int argc, const char** argv)
   }
 
   std::vector<Variable2D*> vars2D = {
-    /*
+    /*    
+    new Variable2D(true,"maxNeutE_v_pT",*vars[0],*vars[vars.size()-5]),
+    new Variable2D(true,"totNeutE_v_pT",*vars[0],*vars[vars.size()-6]),
+    new Variable2D(true,"Eavail_v_pT",*vars[0],*vars[vars.size()-7]),
+    new Variable2D(true,"Proxy_v_pT",*vars[0],*vars[vars.size()-8]),
+
     new Variable2D(false,"recoil_v_pT",*vars[0],*vars[3]),
     new Variable2D(false,"neutCandE_v_pT",*vars[0],*vars[vars.size()-4]),
     new Variable2D(false,"neutCandAngle_v_pT",*vars[0],*vars[vars.size()-3]),
@@ -1207,6 +1270,11 @@ int main(const int argc, const char** argv)
     if (FVregionName.Contains("Target")){
       for (auto& var: vars2D) var->SetFillVar(false);
       /*
+      vars2D_ByTgt.push_back(new util::Categorized<Variable2D, int>("", "ByTgt", true, "maxNeutE_v_pT", util::TgtCodeList[TgtNum], *vars[0], *vars[vars.size()-5]));
+      vars2D_ByTgt.push_back(new util::Categorized<Variable2D, int>("", "ByTgt", true, "totNeutE_v_pT", util::TgtCodeList[TgtNum], *vars[0], *vars[vars.size()-6]));
+      vars2D_ByTgt.push_back(new util::Categorized<Variable2D, int>("", "ByTgt", true, "Eavail_v_pT", util::TgtCodeList[TgtNum], *vars[0], *vars[vars.size()-7]));
+      vars2D_ByTgt.push_back(new util::Categorized<Variable2D, int>("", "ByTgt", true, "Proxy_v_pT", util::TgtCodeList[TgtNum], *vars[0], *vars[vars.size()-8]));
+
       vars2D_ByTgt.push_back(new util::Categorized<Variable2D, int>("", "ByTgt", false, "recoil_v_pT", util::TgtCodeList[TgtNum], *vars[0], *vars[3]));
       vars2D_ByTgt.push_back(new util::Categorized<Variable2D, int>("", "ByTgt", false, "neutCandE_v_pT", util::TgtCodeList[TgtNum], *vars[0], *vars[vars.size()-4]));
       vars2D_ByTgt.push_back(new util::Categorized<Variable2D, int>("", "ByTgt", false, "neutCandAngle_v_pT", util::TgtCodeList[TgtNum], *vars[0], *vars[vars.size()-3]));
