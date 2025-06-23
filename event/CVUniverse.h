@@ -54,11 +54,15 @@ class CVUniverse : public PlotUtils::MinervaUniverse {
   // ========================================================================
   static constexpr double M_n = 939.56536;
   static constexpr double M_p = 938.272013;
+  static constexpr double M_pi = 139.57061;
   static constexpr double M_nucleon = (1.5*M_n+M_p)/2.5;
 
   static constexpr int PDG_n = 2112;
   static constexpr int PDG_p = 2212;
+  
+  static constexpr double MeVGeV=0.001;
 
+  
   // ========================================================================
   // Write a "Get" function for all quantities access by your analysis.
   // For composite quantities (e.g. Enu) use a calculator function.
@@ -247,6 +251,8 @@ class CVUniverse : public PlotUtils::MinervaUniverse {
   }
 
   virtual int GetTargetZ() const { return GetInt("mc_targetZ"); }
+  
+  virtual int GetTargetA() const { return GetInt("mc_targetA"); }
 
   virtual int GetNFSPart() const { return GetInt("mc_nFSPart"); }
 
@@ -269,6 +275,34 @@ class CVUniverse : public PlotUtils::MinervaUniverse {
       if (PDGs.at(iFS) == 2112 && KE > max_KE) max_KE = KE;
     }
     return max_KE;
+  }
+  
+  virtual double GetTotalNeutronKE() const {
+    double tot_KE = 0.0;
+    std::vector<int> PDGs = GetFSPartPDG();
+    std::vector<double> Es = GetFSPartE();
+    for (int iFS=0; iFS < PDGs.size(); ++iFS){
+      double KE = Es.at(iFS)-M_n;
+      if (PDGs.at(iFS) == 2112) tot_KE += KE;
+    }
+    return tot_KE*MeVGeV;
+  }
+
+  virtual double GetAvailableEnergy() const {
+    double tot_E = 0.0;
+    std::vector<int> PDGs = GetFSPartPDG();
+    std::vector<double> Es = GetFSPartE();
+    for (int iFS=0; iFS < PDGs.size(); ++iFS){
+      if (PDGs.at(iFS)==2112 || PDGs.at(iFS) > 1000000000 || fabs(PDGs.at(iFS))==13) continue;
+      else if (PDGs.at(iFS)==2212) tot_E += Es.at(iFS) - M_p;
+      else if (fabs(PDGs.at(iFS))==211) tot_E += Es.at(iFS) - M_pi;
+      else tot_E += Es.at(iFS);
+    }
+    return tot_E*MeVGeV;
+  }
+
+  virtual double GetRecoilProxy() const {
+    return 0.1*GetTotalNeutronKE()+GetAvailableEnergy();
   }
   
   virtual int GetNImprovedMichel() const { return GetInt("improved_michel_vertex_type_sz"); }
@@ -316,9 +350,6 @@ class CVUniverse : public PlotUtils::MinervaUniverse {
   virtual int GetIsMinosMatchStub() const { return GetInt("isMinosMatchStub"); }
   
   virtual int GetIsMinosMatchStubOLD() const { return GetInt("muon_is_minos_match_stub"); }
-
-  // Functions added by David that have a conflicting match above, be careful with naming
-  double MeVGeV=0.001;
 
   virtual double GetCalRecoilEnergy() const{
     return GetDouble("recoil_energy_nonmuon_nonvtx100mm")+GetDouble("recoil_energy_nonmuon_nonvtx100mm_nuclTargs");
