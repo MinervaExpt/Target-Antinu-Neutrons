@@ -550,9 +550,14 @@ class CVUniverse : public PlotUtils::MinervaUniverse {
 
     if (m_LeadNeutIndex >= 0){
       std::string toolName = GetAnaToolName();
-      std::string branchName = "_BlobTotalE";
+      std::string branchEName = "_BlobTotalE";
+      std::string branchPIDName = "_BlobMCPID";
+
+      double factor = 1.0;
+      // Change below to have a shift in the reconstructed energy for protons that make neutron candidates.
+      //if (GetVecElem((toolName+branchPIDName).c_str(), m_LeadNeutIndex) == 2212) factor = 1.0-0.035;//Temp change to test shifting proton energy by 3.5% down to see if this covers the discrepancy in the shape of this variable.
       
-      return GetVecElem((toolName+branchName).c_str(), m_LeadNeutIndex);
+      return factor*GetVecElem((toolName+branchEName).c_str(), m_LeadNeutIndex);
     }
 
     return -999;
