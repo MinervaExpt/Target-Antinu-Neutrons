@@ -8,7 +8,9 @@
 namespace NeutronCandidates{
 
   std::unordered_map<int,int> GetPDGBins(){ 
-    return {{2112,2},
+    return {{1000020040,1},//Alphas
+	    {1000010020,1},//Alphas/Deuterons
+            {2112,2},
 	    {2212,3},
 	    {111,4},
 	    {211,5},

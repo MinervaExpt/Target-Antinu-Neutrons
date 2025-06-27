@@ -77,7 +77,7 @@ class Variable2D: public PlotUtils::Variable2DBase<CVUniverse>
                                                        {5, "pip"},
                                                        {6, "pim"},
                                                        {9, "mu"},
-                                                       {1, "None"}};
+                                                       {1, "Alpha"}};
       
       m_backgroundHists = new util::Categorized<Hist, int>(("TwoD_"+GetName() + "_background").c_str(),
 							   ("TwoD_" + GetName()).c_str(), BKGLabels,

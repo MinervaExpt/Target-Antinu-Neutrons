@@ -65,12 +65,20 @@ namespace NeutronCandidates{
     int GetMCParentPID() const { return fMCParentPID; };
     
     double GetTotalE() const { return fTotE; };
+    /*
+    double GetTotalE() const {
+      if (fMCPID != 2212) return fTotE;
+      else return 0.965*fTotE;
+      };*/
     double GetAngleToFP() const { return fAngleToFP; };
 
     double GetPDGBin() const { 
       std::unordered_map<int,int> bins = GetPDGBins();
+      /* Temporary Change to just get that lovely little parent PID which made the deposit
       if (fMCParentTrackID == 0) return bins[fMCPID];
       else return bins[fTopMCPID];
+      */
+      return bins[fMCPID];
     };
     double GetLength() const { 
       if (fID >= 0) return fDirection.Mag(); 

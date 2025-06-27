@@ -87,7 +87,7 @@ class Variable: public PlotUtils::VariableBase<CVUniverse>
 						       {5, "pip"},
 						       {6, "pim"},
 						       {9, "mu"},
-						       {1, "None"}};
+						       {1, "Alpha"}};
 
       m_backgroundHists = new util::Categorized<Hist, int>((GetName() + "_background").c_str(),
 							   (GetAxisLabel()).c_str(), BKGLabels,

@@ -1915,7 +1915,8 @@ void DrawLeadBlobType(string name_Neut, TFile* mcFile, TFile* dataFile, TString 
   h_Other_Sig->SetLineColor(TColor::GetColor("#CC6677"));
   h_Other_Sig->SetFillColor(TColor::GetColor("#CC6677"));
 
-  MnvH1D* h_None_Sig_Top = (MnvH1D*)mcFile->Get((TString)name_sig+"_None");
+  //  MnvH1D* h_None_Sig_Top = (MnvH1D*)mcFile->Get((TString)name_sig+"_None");
+  MnvH1D* h_None_Sig_Top = (MnvH1D*)mcFile->Get((TString)name_sig+"_Alpha");
   MnvH1D* h_None_Sig = new MnvH1D(h_None_Sig_Top->GetBinNormalizedCopy());
   h_None_Sig->Scale(scale);
   mcSum->Add(h_None_Sig);
@@ -1978,7 +1979,8 @@ void DrawLeadBlobType(string name_Neut, TFile* mcFile, TFile* dataFile, TString 
   h_Other_Bkg->SetFillColor(TColor::GetColor("#CC6677"));
   h_Other_Bkg->SetFillStyle(3003);
 
-  MnvH1D* h_None_Bkg_Top = (MnvH1D*)mcFile->Get((TString)name_bkg+"_bkg_LeadBlobType_None");
+  //MnvH1D* h_None_Bkg_Top = (MnvH1D*)mcFile->Get((TString)name_bkg+"_bkg_LeadBlobType_None");
+  MnvH1D* h_None_Bkg_Top = (MnvH1D*)mcFile->Get((TString)name_bkg+"_bkg_LeadBlobType_Alpha");
   MnvH1D* h_None_Bkg = new MnvH1D(h_None_Bkg_Top->GetBinNormalizedCopy());
   h_None_Bkg->Scale(scale);
   mcSum->Add(h_None_Bkg);
@@ -2172,8 +2174,11 @@ void DrawLeadBlobType(string name_Neut, TFile* mcFile, TFile* dataFile, TString 
   leg->AddEntry(h_Other_Sig,"Sig. + Other");
   leg->AddEntry(h_Other_Bkg,"Bkg. + Other");
 
-  leg->AddEntry(h_None_Sig,"Sig. + None");
-  leg->AddEntry(h_None_Bkg,"Bkg. + None");
+  //leg->AddEntry(h_None_Sig,"Sig. + None");
+  //leg->AddEntry(h_None_Bkg,"Bkg. + None");
+
+  leg->AddEntry(h_None_Sig,"Sig. + #alpha/d");
+  leg->AddEntry(h_None_Bkg,"Bkg. + #alpha/d");
 
   leg->Draw();
   c1->Update();
