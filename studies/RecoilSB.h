@@ -207,13 +207,13 @@ class PreRecoil: public Study
 	fVars2D.push_back(new Variable2D(false,"totNeutE_v_pT_PreRecoilCut",*vars[0],*vars[vars.size()-6]));
 	fVars2D.push_back(new Variable2D(false,"Eavail_v_pT_PreRecoilCut",*vars[0],*vars[vars.size()-7]));
 	fVars2D.push_back(new Variable2D(false,"Proxy_v_pT_PreRecoilCut",*vars[0],*vars[vars.size()-8]));
-
+	*/
 	fVars2D.push_back(new Variable2D(false,"recoil_v_pT_PreRecoilCut",*vars[0],*vars[3]));
 	fVars2D.push_back(new Variable2D(false,"neutCandE_v_pT_PreRecoilCut",*vars[0],*vars[vars.size()-4]));
 	fVars2D.push_back(new Variable2D(false,"neutCandAngle_v_pT_PreRecoilCut",*vars[0],*vars[vars.size()-3]));
 	fVars2D.push_back(new Variable2D(false,"neutCandZDist_v_pT_PreRecoilCut",*vars[0],*vars[vars.size()-2]));
 	fVars2D.push_back(new Variable2D(false,"neutCandDist_v_pT_PreRecoilCut",*vars[0],*vars[vars.size()-1]));
-	*/
+	/**/
       }
       else{
 	/*
@@ -221,12 +221,13 @@ class PreRecoil: public Study
 	fVars2D_ByTgt.push_back(new util::Categorized<Variable2D, int>("", "ByTgt", false, "totNeutE_v_pT_PreRecoilCut", util::TgtCodeList[fTgtID], *vars[0], *vars[vars.size()-6]));
 	fVars2D_ByTgt.push_back(new util::Categorized<Variable2D, int>("", "ByTgt", false, "Eavail_v_pT_PreRecoilCut", util::TgtCodeList[fTgtID], *vars[0], *vars[vars.size()-7]));
 	fVars2D_ByTgt.push_back(new util::Categorized<Variable2D, int>("", "ByTgt", false, "Proxy_v_pT_PreRecoilCut", util::TgtCodeList[fTgtID], *vars[0], *vars[vars.size()-8]));
+	*/
 	fVars2D_ByTgt.push_back(new util::Categorized<Variable2D, int>("", "ByTgt", false, "recoil_v_pT_PreRecoilCut", util::TgtCodeList[fTgtID], *vars[0], *vars[3]));
 	fVars2D_ByTgt.push_back(new util::Categorized<Variable2D, int>("", "ByTgt", false, "neutCandE_v_pT_PreRecoilCut", util::TgtCodeList[fTgtID], *vars[0], *vars[vars.size()-4]));
 	fVars2D_ByTgt.push_back(new util::Categorized<Variable2D, int>("", "ByTgt", false, "neutCandAngle_v_pT_PreRecoilCut", util::TgtCodeList[fTgtID], *vars[0], *vars[vars.size()-3]));
 	fVars2D_ByTgt.push_back(new util::Categorized<Variable2D, int>("", "ByTgt", false, "neutCandZDist_v_pT_PreRecoilCut", util::TgtCodeList[fTgtID], *vars[0], *vars[vars.size()-2]));
 	fVars2D_ByTgt.push_back(new util::Categorized<Variable2D, int>("", "ByTgt", false, "neutCandDist_v_pT_PreRecoilCut", util::TgtCodeList[fTgtID], *vars[0], *vars[vars.size()-1]));
-	*/
+	/**/
       }
       if (!fDoNeutronCuts){
 	for (auto& var: fVars) var->SetFillVar(false);
