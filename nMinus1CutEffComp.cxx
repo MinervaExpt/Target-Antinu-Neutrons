@@ -86,19 +86,20 @@ void DrawEffComp(TString name, TFile* mcFile_N, TFile* mcFile_NM1, TFile* dataFi
   mcFile_N->cd();
 
   MnvH1D* MC_N = nullptr;
+  MnvH1D* MC_BKG_N = nullptr;
   
   if (useSig){
     string nameSTR = string(name.Data());
     nameSTR.erase(nameSTR.length()-5);
     TString tmpName = (TString)(nameSTR.c_str());
-    MC_N = new MnvH1D(*(MnvH1D*)(mcFile_N->Get(tmpName+"_selected_signal_reco")));
-    MC_N->Add((MnvH1D*)(mcFile_N->Get(tmpName+"_background_1chargePi")));
-    MC_N->Add((MnvH1D*)(mcFile_N->Get(tmpName+"_background_1neutPi")));
-    MC_N->Add((MnvH1D*)(mcFile_N->Get(tmpName+"_background_NPi")));
-    MC_N->Add((MnvH1D*)(mcFile_N->Get(tmpName+"_background_Other")));
-    MC_N->Add((MnvH1D*)(mcFile_N->Get(tmpName+"_background_USPlastic")));
-    MC_N->Add((MnvH1D*)(mcFile_N->Get(tmpName+"_background_DSPlastic")));
-    MC_N->Add((MnvH1D*)(mcFile_N->Get(tmpName+"_background_Wrong_Nucleus")));
+    MC_N = (MnvH1D*)(mcFile_N->Get(tmpName+"_selected_signal_reco")->Clone());
+    MC_BKG_N = (MnvH1D*)(mcFile_N->Get(tmpName+"_background_1chargePi")->Clone());
+    MC_BKG_N->Add((MnvH1D*)(mcFile_N->Get(tmpName+"_background_1neutPi")));
+    MC_BKG_N->Add((MnvH1D*)(mcFile_N->Get(tmpName+"_background_NPi")));
+    MC_BKG_N->Add((MnvH1D*)(mcFile_N->Get(tmpName+"_background_Other")));
+    MC_BKG_N->Add((MnvH1D*)(mcFile_N->Get(tmpName+"_background_USPlastic")));
+    MC_BKG_N->Add((MnvH1D*)(mcFile_N->Get(tmpName+"_background_DSPlastic")));
+    MC_BKG_N->Add((MnvH1D*)(mcFile_N->Get(tmpName+"_background_Wrong_Nucleus")));
   }
   else{
     MC_N = new MnvH1D(*(MnvH1D*)(mcFile_N->Get(name)));
@@ -107,6 +108,7 @@ void DrawEffComp(TString name, TFile* mcFile_N, TFile* mcFile_NM1, TFile* dataFi
   if (MC_N->GetEntries()==0){
     cout << "MC_N empty. Skipping." << endl;
     delete MC_N;
+    delete MC_BKG_N;
     return;
   }
 
@@ -115,19 +117,20 @@ void DrawEffComp(TString name, TFile* mcFile_N, TFile* mcFile_NM1, TFile* dataFi
   mcFile_NM1->cd();
 
   MnvH1D* MC_NM1 = nullptr;
+  MnvH1D* MC_BKG_NM1 = nullptr;
   
   if (useSig){
     string nameSTR = string(name.Data());
     nameSTR.erase(nameSTR.length()-5);
     TString tmpName = (TString)(nameSTR.c_str());
-    MC_NM1 = new MnvH1D(*(MnvH1D*)(mcFile_NM1->Get(tmpName+"_selected_signal_reco")));
-    MC_NM1->Add((MnvH1D*)(mcFile_NM1->Get(tmpName+"_background_1chargePi")));
-    MC_NM1->Add((MnvH1D*)(mcFile_NM1->Get(tmpName+"_background_1neutPi")));
-    MC_NM1->Add((MnvH1D*)(mcFile_NM1->Get(tmpName+"_background_NPi")));
-    MC_NM1->Add((MnvH1D*)(mcFile_NM1->Get(tmpName+"_background_Other")));
-    MC_NM1->Add((MnvH1D*)(mcFile_NM1->Get(tmpName+"_background_USPlastic")));
-    MC_NM1->Add((MnvH1D*)(mcFile_NM1->Get(tmpName+"_background_DSPlastic")));
-    MC_NM1->Add((MnvH1D*)(mcFile_NM1->Get(tmpName+"_background_Wrong_Nucleus")));
+    MC_NM1 = (MnvH1D*)(mcFile_NM1->Get(tmpName+"_selected_signal_reco")->Clone());
+    MC_BKG_NM1 = (MnvH1D*)(mcFile_NM1->Get(tmpName+"_background_1chargePi")->Clone());
+    MC_BKG_NM1->Add((MnvH1D*)(mcFile_NM1->Get(tmpName+"_background_1neutPi")));
+    MC_BKG_NM1->Add((MnvH1D*)(mcFile_NM1->Get(tmpName+"_background_NPi")));
+    MC_BKG_NM1->Add((MnvH1D*)(mcFile_NM1->Get(tmpName+"_background_Other")));
+    MC_BKG_NM1->Add((MnvH1D*)(mcFile_NM1->Get(tmpName+"_background_USPlastic")));
+    MC_BKG_NM1->Add((MnvH1D*)(mcFile_NM1->Get(tmpName+"_background_DSPlastic")));
+    MC_BKG_NM1->Add((MnvH1D*)(mcFile_NM1->Get(tmpName+"_background_Wrong_Nucleus")));
   }
   else{
     MC_NM1 = new MnvH1D(*(MnvH1D*)(mcFile_NM1->Get(name)));
@@ -137,7 +140,9 @@ void DrawEffComp(TString name, TFile* mcFile_N, TFile* mcFile_NM1, TFile* dataFi
   if (MC_NM1->GetEntries()==0){
     cout << "MC_NM1 empty. Skipping." << endl;
     delete MC_N;
+    delete MC_BKG_N;
     delete MC_NM1;
+    delete MC_BKG_NM1;
     return;
   }
 
@@ -154,12 +159,15 @@ void DrawEffComp(TString name, TFile* mcFile_N, TFile* mcFile_NM1, TFile* dataFi
   if (data_N->GetEntries()==0){
     cout << "data_N empty. Skipping." << endl;
     delete MC_N;
+    delete MC_BKG_N;
     delete MC_NM1;
+    delete MC_BKG_NM1;
     delete MC_eff;
     delete data_N;
     return;
   }
   data_N->AddMissingErrorBandsAndFillWithCV(*MC_N);
+  if (MC_BKG_N)data_N->Add(MC_BKG_N,-1.0);
 
   double dataN_Int = data_N->Integral(0,-1);
 
@@ -168,14 +176,17 @@ void DrawEffComp(TString name, TFile* mcFile_N, TFile* mcFile_NM1, TFile* dataFi
   if (data_NM1->GetEntries()==0){
     cout << "data_NM1 empty. Skipping." << endl;
     delete MC_N;
+    delete MC_BKG_N;
     delete MC_NM1;
+    delete MC_BKG_NM1;
     delete MC_eff;
     delete data_N;
     delete data_NM1;
     return;
   }
   data_NM1->AddMissingErrorBandsAndFillWithCV(*MC_NM1);
-
+  if (MC_BKG_NM1)data_NM1->Add(MC_BKG_NM1,-1.0);
+  
   double dataNM1_Int = data_NM1->Integral(0,-1);
   
   MnvH1D* data_eff = (MnvH1D*)(data_N->Clone());
@@ -253,8 +264,9 @@ void DrawEffComp(TString name, TFile* mcFile_N, TFile* mcFile_NM1, TFile* dataFi
 
   MnvH1D* ratio = (MnvH1D*)data_eff->Clone();
   ratio->Divide(ratio,MC_eff);
+  TH1D* ratioHist = new TH1D(ratio->GetCVHistoWithError());
   TString Xtitle = mcHist->GetXaxis()->GetTitle();
-  ratio->GetXaxis()->SetTitle(Xtitle);
+  ratioHist->GetXaxis()->SetTitle(Xtitle);
 
   TH1D* mcRatio = new TH1D(MC_eff->GetTotalError(false, true, false));
   for (int iBin=1; iBin <= mcRatio->GetXaxis()->GetNbins(); ++iBin){
@@ -262,23 +274,23 @@ void DrawEffComp(TString name, TFile* mcFile_N, TFile* mcFile_NM1, TFile* dataFi
     mcRatio->SetBinContent(iBin, 1);
   }
 
-  ratio->SetLineColor(kBlack);
-  ratio->SetLineWidth(3);
-  ratio->SetTitle("");
-  ratio->GetYaxis()->SetTitle("Data / MC");
-  ratio->GetYaxis()->SetTitleSize(0.05*areaScale);
-  ratio->GetYaxis()->SetTitleOffset(0.75/areaScale);
-  ratio->GetYaxis()->SetLabelSize(ratio->GetYaxis()->GetLabelSize()*areaScale);
+  ratioHist->SetLineColor(kBlack);
+  ratioHist->SetLineWidth(3);
+  ratioHist->SetTitle("");
+  ratioHist->GetYaxis()->SetTitle("Data / MC");
+  ratioHist->GetYaxis()->SetTitleSize(0.05*areaScale);
+  ratioHist->GetYaxis()->SetTitleOffset(0.75/areaScale);
+  ratioHist->GetYaxis()->SetLabelSize(ratioHist->GetYaxis()->GetLabelSize()*areaScale);
 
-  ratio->GetXaxis()->SetLabelSize(ratio->GetXaxis()->GetLabelSize()*areaScale);
-  ratio->GetXaxis()->SetTitleSize(0.04*areaScale);
-  ratio->SetMinimum(0.5);
-  ratio->SetMaximum(1.5);
+  ratioHist->GetXaxis()->SetLabelSize(ratioHist->GetXaxis()->GetLabelSize()*areaScale);
+  ratioHist->GetXaxis()->SetTitleSize(0.04*areaScale);
+  ratioHist->SetMinimum(0.5);
+  ratioHist->SetMaximum(1.5);
   
-  ratio->Draw();
+  ratioHist->Draw();
 
   mcRatio->SetLineColor(kRed);
-  mcRatio->SetLineWidth(3);
+  //mcRatio->SetLineWidth(3);
   mcRatio->SetFillColorAlpha(kPink + 1, 0.4);
   mcRatio->Draw("E2 SAME");
 
@@ -286,7 +298,7 @@ void DrawEffComp(TString name, TFile* mcFile_N, TFile* mcFile_NM1, TFile* dataFi
   straightLine->SetFillStyle(0);
   straightLine->Draw("HIST SAME");
 
-  ratio->Draw("SAME");
+  ratioHist->Draw("SAME");
 
   c1->Update();
 
@@ -306,6 +318,7 @@ void DrawEffComp(TString name, TFile* mcFile_N, TFile* mcFile_NM1, TFile* dataFi
   delete latex;
   delete leg;
   delete ratio;
+  delete ratioHist;
   delete mcRatio;
   delete straightLine;
   delete c1;
