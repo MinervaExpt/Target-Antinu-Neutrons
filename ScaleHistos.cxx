@@ -190,6 +190,7 @@ int main(int argc, char* argv[]) {
   while ( key = (TKey*)next() ){
     TString className = (TString)key->GetClassName();
     TString nameObj = (TString)key->GetName();
+    if (nameObj.Contains("Hists")) continue;
     if (className == "TDirectoryFile"){
       TDirectory* newOutDir = outFile->mkdir(nameObj);
       TDirectoryFile* dirInt = (TDirectoryFile*)inFile->Get(nameObj);
