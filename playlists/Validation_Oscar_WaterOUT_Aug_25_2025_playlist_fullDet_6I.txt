@@ -1,0 +1,17 @@
+root://fndca1.fnal.gov:1094/pnfs/fnal.gov/usr/minerva/persistent/users/zdar/merged_runs/Merged_mc_ana_me6I_DualVertex_p6WaterFixed/MasterAnaDev_mc_AnaTuple_run00120425_Playlist.root
+root://fndca1.fnal.gov:1094/pnfs/fnal.gov/usr/minerva/persistent/users/zdar/merged_runs/Merged_mc_ana_me6I_DualVertex_p6WaterFixed/MasterAnaDev_mc_AnaTuple_run00120426_Playlist.root
+root://fndca1.fnal.gov:1094/pnfs/fnal.gov/usr/minerva/persistent/users/zdar/merged_runs/Merged_mc_ana_me6I_DualVertex_p6WaterFixed/MasterAnaDev_mc_AnaTuple_run00120427_Playlist.root
+root://fndca1.fnal.gov:1094/pnfs/fnal.gov/usr/minerva/persistent/users/zdar/merged_runs/Merged_mc_ana_me6I_DualVertex_p6WaterFixed/MasterAnaDev_mc_AnaTuple_run00120428_Playlist.root
+root://fndca1.fnal.gov:1094/pnfs/fnal.gov/usr/minerva/persistent/users/zdar/merged_runs/Merged_mc_ana_me6I_DualVertex_p6WaterFixed/MasterAnaDev_mc_AnaTuple_run00120429_Playlist.root
+root://fndca1.fnal.gov:1094/pnfs/fnal.gov/usr/minerva/persistent/users/zdar/merged_runs/Merged_mc_ana_me6I_DualVertex_p6WaterFixed/MasterAnaDev_mc_AnaTuple_run00120430_Playlist.root
+root://fndca1.fnal.gov:1094/pnfs/fnal.gov/usr/minerva/persistent/users/zdar/merged_runs/Merged_mc_ana_me6I_DualVertex_p6WaterFixed/MasterAnaDev_mc_AnaTuple_run00120431_Playlist.root
+root://fndca1.fnal.gov:1094/pnfs/fnal.gov/usr/minerva/persistent/users/zdar/merged_runs/Merged_mc_ana_me6I_DualVertex_p6WaterFixed/MasterAnaDev_mc_AnaTuple_run00120432_Playlist.root
+root://fndca1.fnal.gov:1094/pnfs/fnal.gov/usr/minerva/persistent/users/zdar/merged_runs/Merged_mc_ana_me6I_DualVertex_p6WaterFixed/MasterAnaDev_mc_AnaTuple_run00120433_Playlist.root
+root://fndca1.fnal.gov:1094/pnfs/fnal.gov/usr/minerva/persistent/users/zdar/merged_runs/Merged_mc_ana_me6I_DualVertex_p6WaterFixed/MasterAnaDev_mc_AnaTuple_run00120434_Playlist.root
+root://fndca1.fnal.gov:1094/pnfs/fnal.gov/usr/minerva/persistent/users/zdar/merged_runs/Merged_mc_ana_me6I_DualVertex_p6WaterFixed/MasterAnaDev_mc_AnaTuple_run00120435_Playlist.root
+root://fndca1.fnal.gov:1094/pnfs/fnal.gov/usr/minerva/persistent/users/zdar/merged_runs/Merged_mc_ana_me6I_DualVertex_p6WaterFixed/MasterAnaDev_mc_AnaTuple_run00120436_Playlist.root
+root://fndca1.fnal.gov:1094/pnfs/fnal.gov/usr/minerva/persistent/users/zdar/merged_runs/Merged_mc_ana_me6I_DualVertex_p6WaterFixed/MasterAnaDev_mc_AnaTuple_run00120437_Playlist.root
+root://fndca1.fnal.gov:1094/pnfs/fnal.gov/usr/minerva/persistent/users/zdar/merged_runs/Merged_mc_ana_me6I_DualVertex_p6WaterFixed/MasterAnaDev_mc_AnaTuple_run00120438_Playlist.root
+root://fndca1.fnal.gov:1094/pnfs/fnal.gov/usr/minerva/persistent/users/zdar/merged_runs/Merged_mc_ana_me6I_DualVertex_p6WaterFixed/MasterAnaDev_mc_AnaTuple_run00120439_Playlist.root
+root://fndca1.fnal.gov:1094/pnfs/fnal.gov/usr/minerva/persistent/users/zdar/merged_runs/Merged_mc_ana_me6I_DualVertex_p6WaterFixed/MasterAnaDev_mc_AnaTuple_run00120440_Playlist.root
+root://fndca1.fnal.gov:1094/pnfs/fnal.gov/usr/minerva/persistent/users/zdar/merged_runs/Merged_mc_ana_me6I_DualVertex_p6WaterFixed/MasterAnaDev_mc_AnaTuple_run00120441_Playlist.root

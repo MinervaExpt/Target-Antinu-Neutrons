@@ -1,0 +1,1 @@
+root://fndca1.fnal.gov:1094/pnfs/fnal.gov/usr/minerva/scratch/users/minervapro/minervame6A_pstar_rerun7_cvsOpts/minervame6A_122000/grid/central_value/minerva/ana/v22r1p1/00/12/20/00//SIM_minerva_00122000_Subruns_0023_MasterAnaDev_Ana_Tuple_v22r1p1.root
