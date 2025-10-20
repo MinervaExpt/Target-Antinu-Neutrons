@@ -1,4 +1,4 @@
-//File: NeutronInelasticReweighter.h
+//File: Neutron3ChannelEach1Sigma.h
 //Brief: A Reweighter that changes MINERvA's neutron inelastic cross sections for several channels into the inelastic cross sections from low energy neutron data.
 //Author: Andrew Olivier aolivier@ur.rochester.edu
 
@@ -123,12 +123,27 @@ namespace
 }
 
 template <class UNIVERSE, class EVENT = PlotUtils::detail::empty>
-class NeutronInelasticReweighter: public PlotUtils::Reweighter<UNIVERSE, EVENT>
+class Neutron3ChannelEach1Sigma: public PlotUtils::Reweighter<UNIVERSE, EVENT>
 {
   public:
-  NeutronInelasticReweighter(const std::map<std::string, std::vector<int>>& fileNameToFS, std::map<std::string, double>& fileNameToNSigma, const int mode=0): fTotalInelastic("inelastic", {}), fKinENormalization(nullptr), fGeometry(), fMode(mode)
+  Neutron3ChannelEach1Sigma(): fTotalInelastic("inelastic", {}), fKinENormalization(nullptr), fGeometry(), fMode(1)
     {
+      const std::map<std::string,std::vector<int>> fileNameToFS = {{"nGamma",{1000060120, 2112}},
+								   {"threeAlpha",{1000020040, 1000020040, 1000020040, 2112}},
+								   {"Bnp",{1000050110, 2112, 2212}}};
+
+      
+      
       if (fMode < 0 || fMode > 5) fMode = 0;
+
+      fEach1Sigma = {{0,0,0},
+		     {0,0,1},
+		     {0,0,-1},
+		     {1,0,0},
+		     {-1,0,0},
+		     {0,1,0},
+		     {0,-1,0}};
+      
       fChannels.reserve(fileNameToFS.size()); //If I don't use this, the program will often crash.  std::vector::emplace_back() will have to
                                               //reallocate memory many times.  When it does that, it copies the old Channels is made and then
                                               //deletes the originals.  But the copied TF1s hold lambda functions that still point at the
@@ -177,7 +192,7 @@ class NeutronInelasticReweighter: public PlotUtils::Reweighter<UNIVERSE, EVENT>
       gDirectory = oldPwd;
     }
 
-    ~NeutronInelasticReweighter() = default;
+    ~Neutron3ChannelEach1Sigma() = default;
 
     double GetWeight(const UNIVERSE& univ, const EVENT& /*event*/) const;
     std::string GetName() const { return "NeutronInelasticExclusives"; }
@@ -212,7 +227,7 @@ class NeutronInelasticReweighter: public PlotUtils::Reweighter<UNIVERSE, EVENT>
         std::unique_ptr<TFile> oldGraphFile(TFile::Open(oldFileName.c_str()));
         if(!oldGraphFile) throw std::runtime_error("Failed to open a file named " + oldFileName + " for a GEANT cross section graph in InelasticNeutronReweighter::Channel.");
         auto oldRatioGraph = dynamic_cast<TGraph*>(oldGraphFile->Get(channelName.c_str()));
-        if(!oldRatioGraph) throw std::runtime_error("Failed to load a TGraph named " + channelName + " from a file named " + oldFileName + " for NeutronInelasticReweighter::Channel");
+        if(!oldRatioGraph) throw std::runtime_error("Failed to load a TGraph named " + channelName + " from a file named " + oldFileName + " for Neutron3ChannelEach1Sigma::Channel");
         fOldSigmaRatioSpline = TSpline3(channelName.c_str(), oldRatioGraph);
 
 	///////////////////////////////////////////////////////////////////////////////
@@ -280,7 +295,8 @@ class NeutronInelasticReweighter: public PlotUtils::Reweighter<UNIVERSE, EVENT>
       mutable TSpline3 fErrSpline;//Adding this so that shifts in sigma from each cross section can propagat to the inelastic total.
     };
 
-    std::vector<Channel> fChannels; //channels that will be reweighted
+    std::vector<std::vector<int>> fEach1Sigma;
+    std::vector<std::vector<Channel>> fChannels; //channels that will be reweighted
                                             //and because ROOT couldn't be bothered to get const-ness right on TSpline3::Eval().
     //Channel fOther; //All other channels that aren't reweighted are lumped into one.  This keeps the total inelastic cross section the same.
     Channel fTotalInelastic; //Wouldn't be needed if I could get away with just weighting each neutron by exclusive cross section ratio
@@ -309,7 +325,7 @@ class NeutronInelasticReweighter: public PlotUtils::Reweighter<UNIVERSE, EVENT>
 };
 
 template <class UNIVERSE, class EVENT>
-double NeutronInelasticReweighter<UNIVERSE, EVENT>::GetWeight(const UNIVERSE& univ, const EVENT& /*event*/) const
+double Neutron3ChannelEach1Sigma<UNIVERSE, EVENT>::GetWeight(const UNIVERSE& univ, const EVENT& /*event*/) const
 {
   double weight = 1;
 
@@ -622,7 +638,7 @@ double NeutronInelasticReweighter<UNIVERSE, EVENT>::GetWeight(const UNIVERSE& un
 }
 
 template <class UNIVERSE, class EVENT>
-double NeutronInelasticReweighter<UNIVERSE, EVENT>::getInteractingWeight(const Channel& channel, const double density, const double Ti, const double Tf) const
+double Neutron3ChannelEach1Sigma<UNIVERSE, EVENT>::getInteractingWeight(const Channel& channel, const double density, const double Ti, const double Tf) const
 {
   ////std::cout << "Channel Min: " << channel.fMin << ", Max: " << channel.fMax << std::endl;
   ////std::cout << "Ti: " << Ti << "Tf: " << std::endl;
@@ -676,7 +692,7 @@ double NeutronInelasticReweighter<UNIVERSE, EVENT>::getInteractingWeight(const C
 }
 
 template <class UNIVERSE, class EVENT>
-double NeutronInelasticReweighter<UNIVERSE, EVENT>::getInelasticRatioWeight(const Channel& channel, const double Ti, const double Tf) const
+double Neutron3ChannelEach1Sigma<UNIVERSE, EVENT>::getInelasticRatioWeight(const Channel& channel, const double Ti, const double Tf) const
 {
   //if(Tf < channel.fMin || Ti > channel.fMax) return 1.; //When given KE outside the range where I have splines to compare to, don't reweight. Removed because of the requirements for summing the points up for the total inelastic. Just take the widest range and deal with it in the edge cases. where there's not data for all channels.
 
@@ -701,7 +717,7 @@ double NeutronInelasticReweighter<UNIVERSE, EVENT>::getInelasticRatioWeight(cons
 }
 
 template <class UNIVERSE, class EVENT>
-double NeutronInelasticReweighter<UNIVERSE, EVENT>::getOtherInelasticRatioWeight(const double Ti, const double Tf) const
+double Neutron3ChannelEach1Sigma<UNIVERSE, EVENT>::getOtherInelasticRatioWeight(const double Ti, const double Tf) const
 {
   //if(Tf < fTotalInelastic.fMin || Ti > fTotalInelastic.fMax) return 1.; //When given KE outside the range of total inelastic... See getInelasticRatioWeight for reasoning
 
@@ -738,7 +754,7 @@ double NeutronInelasticReweighter<UNIVERSE, EVENT>::getOtherInelasticRatioWeight
 
 //Weight for a channel that I'm not reweighting while still keeping the total inelastic cross section at the predicted value.
 template <class UNIVERSE, class EVENT>
-double NeutronInelasticReweighter<UNIVERSE, EVENT>::getOtherInelasticWeight(const double density, const double Ti, const double Tf) const
+double Neutron3ChannelEach1Sigma<UNIVERSE, EVENT>::getOtherInelasticWeight(const double density, const double Ti, const double Tf) const
 {
   int nChannelsActive = 0;
   double oldKnownInelastic = 0, newKnownInelastic = 0;
@@ -808,7 +824,7 @@ double NeutronInelasticReweighter<UNIVERSE, EVENT>::getOtherInelasticWeight(cons
 //Weight for a channel that I'm not actually reweighting.  It turns out not to be 1 if I work out the math for MnvHadronReweight.
 //I use it in multiple places, so I'm making it a function to force myself to be consistent.
 template <class UNIVERSE, class EVENT>
-double NeutronInelasticReweighter<UNIVERSE, EVENT>::getConstantChannelWeight(const double density, const double Ti, const double Tf) const
+double Neutron3ChannelEach1Sigma<UNIVERSE, EVENT>::getConstantChannelWeight(const double density, const double Ti, const double Tf) const
 {
   const double totalElastic = evalSigmaRatio(fTotalElasticSpline, Ti, Tf, fLowestMinKE, fHighestMaxKE);
   const double oldTotal = evalSigmaRatio(fTotalInelastic.fOldSigmaRatioSpline, Ti, Tf, fTotalInelastic.fMin, fTotalInelastic.fMax) + totalElastic;
@@ -831,7 +847,7 @@ double NeutronInelasticReweighter<UNIVERSE, EVENT>::getConstantChannelWeight(con
 }
 
 template <class UNIVERSE, class EVENT>
-double NeutronInelasticReweighter<UNIVERSE, EVENT>::getNoInteractionWeight(const double density, const double Ti, const double Tf) const
+double Neutron3ChannelEach1Sigma<UNIVERSE, EVENT>::getNoInteractionWeight(const double density, const double Ti, const double Tf) const
 {
   const double oldInel = evalSigmaRatio(fTotalInelastic.fOldSigmaRatioSpline, Ti, Tf, fTotalInelastic.fMin, fTotalInelastic.fMax);
   /*
@@ -847,7 +863,7 @@ double NeutronInelasticReweighter<UNIVERSE, EVENT>::getNoInteractionWeight(const
 
 //Adapt to graph evaluation pitfalls
 template <class UNIVERSE, class EVENT>
-double NeutronInelasticReweighter<UNIVERSE, EVENT>::evalSigmaRatio(TSpline3& sigmaSpline, double Ti, double Tf, const double min, const double max, bool allowNeg) const
+double Neutron3ChannelEach1Sigma<UNIVERSE, EVENT>::evalSigmaRatio(TSpline3& sigmaSpline, double Ti, double Tf, const double min, const double max, bool allowNeg) const
 {
   //std::cout << "Starting with Ti = " << Ti << " and Tf = " << Tf << std::endl;
 
@@ -881,7 +897,7 @@ double NeutronInelasticReweighter<UNIVERSE, EVENT>::evalSigmaRatio(TSpline3& sig
 }
 
 template <class UNIVERSE, class EVENT>
-double NeutronInelasticReweighter<UNIVERSE, EVENT>::evalAdjustedSigmaRatio(TSpline3& sigmaSpline, std::vector<std::tuple<TSpline3, double, double>> errSplines, double Ti, double Tf, const double min, const double max) const
+double Neutron3ChannelEach1Sigma<UNIVERSE, EVENT>::evalAdjustedSigmaRatio(TSpline3& sigmaSpline, std::vector<std::tuple<TSpline3, double, double>> errSplines, double Ti, double Tf, const double min, const double max) const
 {
   double total = evalSigmaRatio(sigmaSpline, Ti, Tf, min, max);
   //std::cout << "Total: " << total << std::endl;
