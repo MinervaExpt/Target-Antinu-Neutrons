@@ -192,3 +192,5 @@ install(FILES runTransWarp.sh PERMISSIONS OWNER_READ OWNER_WRITE OWNER_EXECUTE G
 
 configure_file(setup.sh.in setup_${PROJECT_NAME}.sh @ONLY)
 install(FILES ${CMAKE_CURRENT_BINARY_DIR}/setup_${PROJECT_NAME}.sh DESTINATION bin)
+
+install(DIRECTORY extraWeightFiles DESTINATION etc)
