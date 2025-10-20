@@ -54,8 +54,9 @@ using namespace PlotUtils;
 MnvH1D* SwapSysUniverse(MnvH1D* input, TString errorBandName, int univ){
   cout << "Working with: " << input->GetName() << endl;
   MnvH1D* ret = nullptr;
-  int nUniv = input->GetVertErrorBand(errorBandName.Data())->GetHists().size();
-  if (univ >= nUniv || nUniv <= 0) return ret;
+  MnvVertErrorBand* inputBand = input->GetVertErrorBand(errorBandName.Data());
+  int nUniv = inputBand->GetNHists();
+  if (univ >= nUniv || nUniv <= 0 || univ < 0) return ret;
   TH1D* CV = (TH1D*)(input->GetCVHistoWithStatError().Clone());
   TH1D* errBand = (TH1D*)(input->GetVertErrorBand(errorBandName.Data())->GetHist(univ)->Clone());
   if (!errBand){
@@ -78,6 +79,16 @@ MnvH1D* SwapSysUniverse(MnvH1D* input, TString errorBandName, int univ){
       newErrHist->SetBinContent(iBin, CV->GetBinContent(iBin));
     }
   }
+  else {
+    MnvVertErrorBand* sameBand = ret->PopVertErrorBand(errorBandName.Data());
+    delete sameBand;
+    std::vector<TH1D*> hists;
+    for (int iHist=0; iHist < nUniv; ++iHist){
+      if (iHist==univ) continue;
+      hists.push_back(inputBand->GetHist(iHist));
+    }
+    ret->AddVertErrorBand(errorBandName.Data(), hists);
+  }
   delete CV;
   delete errBand;
   delete rat;
@@ -89,8 +100,9 @@ MnvH1D* SwapSysUniverse(MnvH1D* input, TString errorBandName, int univ){
 MnvH2D* SwapSysUniverse(MnvH2D* input, TString errorBandName, int univ){
   cout << "Working with: " << input->GetName() << endl;
   MnvH2D* ret = nullptr;
-  int nUniv = input->GetVertErrorBand(errorBandName.Data())->GetHists().size();
-  if (univ >= nUniv || nUniv <= 0) return ret;
+  MnvVertErrorBand2D* inputBand = input->GetVertErrorBand(errorBandName.Data());
+  int nUniv = inputBand->GetNHists();
+  if (univ >= nUniv || nUniv <= 0 || univ < 0) return ret;
   TH2D* CV = (TH2D*)(input->GetCVHistoWithStatError().Clone());
   TH2D* errBand = (TH2D*)(input->GetVertErrorBand(errorBandName.Data())->GetHist(univ)->Clone());
   if (!errBand){
@@ -117,6 +129,17 @@ MnvH2D* SwapSysUniverse(MnvH2D* input, TString errorBandName, int univ){
       }
     }
   }
+  else {
+    MnvVertErrorBand2D* sameBand = ret->PopVertErrorBand(errorBandName.Data());
+    delete sameBand;
+    std::vector<TH2D*> hists;
+    for (int iHist=0; iHist < nUniv; ++iHist){
+      if (iHist==univ) continue;
+      hists.push_back(inputBand->GetHist(iHist));
+    }
+    ret->AddVertErrorBand(errorBandName.Data(), hists);
+  }
+
   delete CV;
   delete errBand;
   delete rat;
