@@ -1,7 +1,7 @@
 //File: nMinus1CutEffComp
 //Info: Compares Specific cut efficiencies in data versus total MC with cuts N compared to N-1
 //
-//Usage: signalBKGStack <mc file N> <mc file N-1> <data file N> <data file N-1> <outputDir> <plot title>
+//Usage: nMinus1CutEffComp <mc file N> <mc file N-1> <data file N> <data file N-1> <outputDir> <plot title> OPTIONAL: <use signal histos and background subtracted in straight comparisons>
 //Author: David Last david.last@rochester.edu/lastd44@gmail.com
 
 //C++ includes
@@ -61,8 +61,8 @@ double Chi2(MnvH1D* m1, MnvH1D* m2){
     cout << "No entries in one of the input histograms. Assume this is faulty." << endl;
     return -99.0;
   }
-  TH1D* h1 = (TH1D*)m1->GetCVHistoWithError().Clone();
-  TH1D* h2 = (TH1D*)m2->GetCVHistoWithError().Clone();
+  TH1D* h1 = new TH1D(m1->GetCVHistoWithError());
+  TH1D* h2 = new TH1D(m2->GetCVHistoWithError());
   double chi2 = 0.0;
   for (int whichBin = 1; whichBin <= h1->GetNbinsX(); ++whichBin){
     double h1Content = h1->GetBinContent(whichBin);
@@ -80,29 +80,463 @@ double Chi2(MnvH1D* m1, MnvH1D* m2){
   return chi2;
 }
 
-void DrawEffComp(TString name, TFile* mcFile_N, TFile* mcFile_NM1, TFile* dataFile_N, TFile* dataFile_NM1, TString title, TString nameToSave, bool useSig=false){
+void DrawEffCorrComp(TString name, TFile* mcFile_N, TFile* mcFile_NM1, TFile* dataFile_N, TFile* dataFile_NM1, TString title, TString nameToSave, bool useInner){
+  cout << "Handling: " << name << endl;
+
+  mcFile_N->cd();
+  
+  string nameSTR = string(name.Data());
+  nameSTR.erase(nameSTR.length()-5);
+  TString tmpName = (TString)(nameSTR.c_str());
+
+  TString nameTag;
+  
+  if (useInner){
+    nameSTR.erase(0,4);
+    nameTag = (TString)(nameSTR.c_str());
+  }
+  
+  MnvH1D* tmpHist = nullptr;
+  
+  tmpHist = (MnvH1D*)(mcFile_N->Get(tmpName+"_selected_signal_reco"));
+  MnvH1D* MC_N = (MnvH1D*)(tmpHist->Clone());
+  delete tmpHist;
+    
+  tmpHist = (MnvH1D*)(mcFile_N->Get(tmpName+"_background_1chargePi"));
+  MnvH1D* MC_BKG_N = (MnvH1D*)(tmpHist->Clone());
+  delete tmpHist;  
+  tmpHist = (MnvH1D*)(mcFile_N->Get(tmpName+"_background_1neutPi"));
+  MC_BKG_N->Add(tmpHist);
+  delete tmpHist;  
+  tmpHist = (MnvH1D*)(mcFile_N->Get(tmpName+"_background_NPi"));
+  MC_BKG_N->Add(tmpHist);
+  delete tmpHist;
+  tmpHist = (MnvH1D*)(mcFile_N->Get(tmpName+"_background_Other"));
+  MC_BKG_N->Add(tmpHist);
+  delete tmpHist;
+  if (!useInner){
+    tmpHist = (MnvH1D*)(mcFile_N->Get(tmpName+"_background_USPlastic"));
+    MC_BKG_N->Add(tmpHist);
+    delete tmpHist;
+    tmpHist = (MnvH1D*)(mcFile_N->Get(tmpName+"_background_DSPlastic"));
+    MC_BKG_N->Add(tmpHist);
+    delete tmpHist;
+  }
+  else{
+    tmpHist = (MnvH1D*)(mcFile_N->Get("pTmu_InnerUSPlastic"+nameTag+"_selected_signal_reco"));
+    MC_BKG_N->Add(tmpHist);
+    delete tmpHist;
+    tmpHist = (MnvH1D*)(mcFile_N->Get("pTmu_InnerUSPlastic"+nameTag+"_background_1chargePi"));
+    MC_BKG_N->Add(tmpHist);
+    delete tmpHist;
+    tmpHist = (MnvH1D*)(mcFile_N->Get("pTmu_InnerUSPlastic"+nameTag+"_background_1neutPi"));
+    MC_BKG_N->Add(tmpHist);
+    delete tmpHist;
+    tmpHist = (MnvH1D*)(mcFile_N->Get("pTmu_InnerUSPlastic"+nameTag+"_background_NPi"));
+    MC_BKG_N->Add(tmpHist);
+    tmpHist = (MnvH1D*)(mcFile_N->Get("pTmu_InnerUSPlastic"+nameTag+"_background_Other"));
+    MC_BKG_N->Add(tmpHist);
+    delete tmpHist;
+    tmpHist = (MnvH1D*)(mcFile_N->Get("pTmu_InnerDSPlastic"+nameTag+"_selected_signal_reco"));
+    MC_BKG_N->Add(tmpHist);
+    delete tmpHist;
+    tmpHist = (MnvH1D*)(mcFile_N->Get("pTmu_InnerDSPlastic"+nameTag+"_background_1chargePi"));
+    MC_BKG_N->Add(tmpHist);
+    delete tmpHist;
+    tmpHist = (MnvH1D*)(mcFile_N->Get("pTmu_InnerDSPlastic"+nameTag+"_background_1neutPi"));
+    MC_BKG_N->Add(tmpHist);
+    delete tmpHist;
+    tmpHist = (MnvH1D*)(mcFile_N->Get("pTmu_InnerDSPlastic"+nameTag+"_background_NPi"));
+    MC_BKG_N->Add(tmpHist);
+    tmpHist = (MnvH1D*)(mcFile_N->Get("pTmu_InnerDSPlastic"+nameTag+"_background_Other"));
+    MC_BKG_N->Add(tmpHist);
+    delete tmpHist;
+  }
+  tmpHist = (MnvH1D*)(mcFile_N->Get(tmpName+"_background_Wrong_Nucleus"));
+  MC_BKG_N->Add(tmpHist);
+  delete tmpHist;
+
+  if (MC_N->GetEntries()==0 || MC_BKG_N->GetEntries()==0){
+    cout << "MC_N empty. Skipping." << endl;
+    delete MC_N;
+    delete MC_BKG_N;
+    return;
+  }
+
+  //Don't want flux error bands for this comparison just in case
+  MnvVertErrorBand* oldBand_N = MC_N->PopVertErrorBand("Flux");
+  delete oldBand_N;
+  MnvVertErrorBand* oldBand_Neut_N = MC_N->PopVertErrorBand("NeutronInelasticExclusives");
+  delete oldBand_Neut_N;
+  MnvVertErrorBand* oldBand_BKG_N = MC_BKG_N->PopVertErrorBand("Flux");
+  delete oldBand_BKG_N;
+  MnvVertErrorBand* oldBand_Neut_BKG_N = MC_BKG_N->PopVertErrorBand("NeutronInelasticExclusives");
+  delete oldBand_Neut_BKG_N;
+  
+  mcFile_NM1->cd();
+
+  tmpHist = (MnvH1D*)(mcFile_NM1->Get(tmpName+"_selected_signal_reco"));
+  MnvH1D* MC_NM1 = (MnvH1D*)(tmpHist->Clone());
+  delete tmpHist;
+
+  tmpHist = (MnvH1D*)(mcFile_NM1->Get(tmpName+"_background_1chargePi"));
+  MnvH1D* MC_BKG_NM1 = (MnvH1D*)(tmpHist->Clone());
+  delete tmpHist;
+  tmpHist = (MnvH1D*)(mcFile_NM1->Get(tmpName+"_background_1neutPi"));
+  MC_BKG_NM1->Add(tmpHist);
+  delete tmpHist;
+  tmpHist = (MnvH1D*)(mcFile_NM1->Get(tmpName+"_background_NPi"));
+  MC_BKG_NM1->Add(tmpHist);
+  delete tmpHist;
+  tmpHist = (MnvH1D*)(mcFile_NM1->Get(tmpName+"_background_Other"));
+  MC_BKG_NM1->Add(tmpHist);
+  delete tmpHist;
+  if (!useInner){
+    tmpHist = (MnvH1D*)(mcFile_NM1->Get(tmpName+"_background_USPlastic"));
+    MC_BKG_NM1->Add(tmpHist);
+    delete tmpHist;
+    tmpHist = (MnvH1D*)(mcFile_NM1->Get(tmpName+"_background_DSPlastic"));
+    MC_BKG_NM1->Add(tmpHist);
+    delete tmpHist;
+  }
+  else{
+    tmpHist = (MnvH1D*)(mcFile_NM1->Get("pTmu_InnerUSPlastic"+nameTag+"_selected_signal_reco"));
+    MC_BKG_NM1->Add(tmpHist);
+    delete tmpHist;
+    tmpHist = (MnvH1D*)(mcFile_NM1->Get("pTmu_InnerUSPlastic"+nameTag+"_background_1chargePi"));
+    MC_BKG_NM1->Add(tmpHist);
+    delete tmpHist;
+    tmpHist = (MnvH1D*)(mcFile_NM1->Get("pTmu_InnerUSPlastic"+nameTag+"_background_1neutPi"));
+    MC_BKG_NM1->Add(tmpHist);
+    delete tmpHist;
+    tmpHist = (MnvH1D*)(mcFile_NM1->Get("pTmu_InnerUSPlastic"+nameTag+"_background_NPi"));
+    MC_BKG_NM1->Add(tmpHist);
+    delete tmpHist;
+    tmpHist = (MnvH1D*)(mcFile_NM1->Get("pTmu_InnerUSPlastic"+nameTag+"_background_Other"));
+    MC_BKG_NM1->Add(tmpHist);
+    delete tmpHist;
+    tmpHist = (MnvH1D*)(mcFile_NM1->Get("pTmu_InnerDSPlastic"+nameTag+"_selected_signal_reco"));
+    MC_BKG_NM1->Add(tmpHist);
+    delete tmpHist;
+    tmpHist = (MnvH1D*)(mcFile_NM1->Get("pTmu_InnerDSPlastic"+nameTag+"_background_1chargePi"));
+    MC_BKG_NM1->Add(tmpHist);
+    delete tmpHist;
+    tmpHist = (MnvH1D*)(mcFile_NM1->Get("pTmu_InnerDSPlastic"+nameTag+"_background_1neutPi"));
+    MC_BKG_NM1->Add(tmpHist);
+    delete tmpHist;
+    tmpHist = (MnvH1D*)(mcFile_NM1->Get("pTmu_InnerDSPlastic"+nameTag+"_background_NPi"));
+    MC_BKG_NM1->Add(tmpHist);
+    delete tmpHist;
+    tmpHist = (MnvH1D*)(mcFile_NM1->Get("pTmu_InnerDSPlastic"+nameTag+"_background_Other"));
+    MC_BKG_NM1->Add(tmpHist);
+    delete tmpHist;
+  }
+  tmpHist = (MnvH1D*)(mcFile_NM1->Get(tmpName+"_background_Wrong_Nucleus"));
+  MC_BKG_NM1->Add(tmpHist);
+  delete tmpHist;
+
+  if (MC_NM1->GetEntries()==0 || MC_BKG_NM1->GetEntries()==0){
+    cout << "MC_NM1 empty. Skipping." << endl;
+    delete MC_N;
+    delete MC_BKG_N;
+    delete MC_NM1;
+    delete MC_BKG_NM1;
+    return;
+  }
+
+  MnvVertErrorBand* oldBand_NM1 = MC_NM1->PopVertErrorBand("Flux");
+  delete oldBand_NM1;
+  MnvVertErrorBand* oldBand_Neut_NM1 = MC_NM1->PopVertErrorBand("NeutronInelasticExclusives");
+  delete oldBand_Neut_NM1;
+  MnvVertErrorBand* oldBand_Muon_NM1 = MC_NM1->PopVertErrorBand("MuonUpweight");
+  delete oldBand_Muon_NM1;
+  MnvVertErrorBand* oldBand_BKG_NM1 = MC_BKG_NM1->PopVertErrorBand("Flux");
+  delete oldBand_BKG_NM1;
+  MnvVertErrorBand* oldBand_Neut_BKG_NM1 = MC_BKG_NM1->PopVertErrorBand("NeutronInelasticExclusives");
+  delete oldBand_Neut_BKG_NM1;
+  MnvVertErrorBand* oldBand_Muon_BKG_NM1 = MC_BKG_NM1->PopVertErrorBand("MuonUpweight");
+  delete oldBand_Muon_BKG_NM1;
+
+  MC_NM1->AddMissingErrorBandsAndFillWithCV(*MC_N);
+  MC_BKG_NM1->AddMissingErrorBandsAndFillWithCV(*MC_BKG_N);
+  
+  //Signal efficiency from MC.
+  MnvH1D* MC_eff = (MnvH1D*)(MC_N->Clone());
+  MC_eff->Divide(MC_eff,MC_NM1);
+  
+  dataFile_N->cd();
+  tmpHist = (MnvH1D*)(dataFile_N->Get(name));
+  MnvH1D* data_N = (MnvH1D*)(tmpHist->Clone());
+  delete tmpHist;
+  if (data_N->GetEntries()==0){
+    cout << "data_N empty. Skipping." << endl;
+    delete MC_N;
+    delete MC_BKG_N;
+    delete MC_NM1;
+    delete MC_BKG_NM1;
+    delete MC_eff;
+    delete data_N;
+    return;
+  }
+  data_N->AddMissingErrorBandsAndFillWithCV(*MC_N);
+
+  cout << "MC_N: " << MC_N->GetBinContent(1) << ", MC_BKG_N: " << MC_BKG_N->GetBinContent(1) << ", MC_NM1: " << MC_NM1->GetBinContent(1) << ", MC_BKG_NM1: " << MC_BKG_NM1->GetBinContent(1) << ", MC_eff: " << MC_eff->GetBinContent(1) << ", data_N: " << data_N->GetBinContent(1) << endl;
+  
+  if (MC_BKG_N)data_N->Add(MC_BKG_N,-1.0);//Background-Subtracted N
+
+  cout << "data_N - MC_BKG_N: " << data_N->GetBinContent(1) << endl;
+  
+  MnvH1D* dataCorr = (MnvH1D*)(data_N->Clone());
+  dataCorr->Divide(dataCorr,MC_eff);
+
+  cout << "(data_N - MC_BKG_N)/MC_eff: " << dataCorr->GetBinContent(1) << endl;
+  
+  dataCorr->Add(MC_BKG_NM1);
+
+  cout << "(data_N - MC_BKG_N)/MC_eff + MC_BKG_NM1: " << dataCorr->GetBinContent(1) << endl;
+  
+  dataFile_NM1->cd();
+  tmpHist = (MnvH1D*)(dataFile_NM1->Get(name));
+  MnvH1D* data_NM1 = (MnvH1D*)(tmpHist->Clone());
+  delete tmpHist;
+  
+  if (data_NM1->GetEntries()==0){
+    cout << "data_NM1 empty. Skipping." << endl;
+    delete MC_N;
+    delete MC_BKG_N;
+    delete MC_NM1;
+    delete MC_BKG_NM1;
+    delete MC_eff;
+    delete data_N;
+    delete data_NM1;
+    delete dataCorr;
+    return;
+  }
+  data_NM1->AddMissingErrorBandsAndFillWithCV(*MC_NM1); // Total Data to compare to at N-1 stage.
+  //if (MC_BKG_NM1)data_NM1->Add(MC_BKG_NM1,-1.0);
+
+  cout << "data_NM1: " << data_NM1->GetBinContent(1) << endl;
+  
+  double chi2 = Chi2(dataCorr,data_NM1);
+  
+  cout << "Chi2: " << chi2 << endl;
+  
+  if (chi2 == -99 || chi2 == -999){
+    cout << "Bad Chi2. Skipping" << endl;
+    delete MC_N;
+    delete MC_NM1;
+    delete MC_BKG_N;
+    delete MC_BKG_NM1;
+    delete MC_eff;
+    delete data_N;
+    delete data_NM1;
+    delete dataCorr;
+    return;
+  }
+  
+  TH1D* mcHist = new TH1D(dataCorr->GetCVHistoWithError());
+  mcHist->SetLineColor(kRed);
+  TH1D* errHist = (TH1D*)mcHist->Clone();
+  errHist->SetFillColorAlpha(kPink + 1, 0.4);
+  
+  TH1D* dataHist = new TH1D(data_NM1->GetCVHistoWithError());
+  dataHist->SetLineColor(kBlack);
+  dataHist->SetLineWidth(3);
+
+  TCanvas* c1 = new TCanvas("c1","c1",1200,800);
+  c1->cd();
+  TPad* top = new TPad("Overlay","Overlay",0,0.078+0.2,1,1);
+  TPad* bottom = new TPad("Ratio","Ratio",0,0,1,0.078+0.2);
+  top->Draw();
+  bottom->Draw();
+  top->cd();
+
+  double bottomArea = bottom->GetWNDC()*bottom->GetHNDC();
+  double topArea = top->GetWNDC()*top->GetHNDC();
+
+  double areaScale = topArea/bottomArea;
+
+  mcHist->SetMaximum((dataHist->GetMaximum())*1.25);
+
+  mcHist->SetTitle(title);
+  
+  mcHist->Draw("hist");
+  errHist->Draw("E2 SAME");
+  c1->Update();
+
+  dataHist->Draw("same");
+  c1->Update();
+
+  TLatex* latex = new TLatex( 0.2, 0.83, "MINER#nuA Work in Progress" );
+  latex->SetTextFont(43);
+  latex->SetTextSize(32);
+  latex->SetNDC();
+  latex->Draw();
+  latex->SetTextColor(kRed);
+  c1->Update();
+
+  TLegend* leg = new TLegend(0.7,0.9,0.7,0.9);
+
+  leg->AddEntry(dataHist,"DATA");
+  leg->AddEntry(mcHist,"MC-Corrected DATA");
+
+  leg->Draw();
+  c1->Update();
+
+  bottom->cd();
+  bottom->SetTopMargin(0.05);
+  bottom->SetBottomMargin(0.3);
+
+  MnvH1D* ratio = (MnvH1D*)data_NM1->Clone();
+  ratio->Divide(ratio, dataCorr);
+  TH1D* ratioHist = new TH1D(ratio->GetCVHistoWithError());
+  TString Xtitle = mcHist->GetXaxis()->GetTitle();
+  ratioHist->GetXaxis()->SetTitle(Xtitle);
+
+  TH1D* mcRatio = new TH1D(dataCorr->GetTotalError(false, true, false));
+  for (int iBin=1; iBin <= mcRatio->GetXaxis()->GetNbins(); ++iBin){
+    mcRatio->SetBinError(iBin, max(mcRatio->GetBinContent(iBin),1.0e-9));
+    mcRatio->SetBinContent(iBin, 1);
+  }
+
+  ratioHist->SetLineColor(kBlack);
+  ratioHist->SetLineWidth(3);
+  ratioHist->SetTitle("");
+  ratioHist->GetYaxis()->SetTitle("Data / MC-Corrected Data");
+  ratioHist->GetYaxis()->SetTitleSize(0.05*areaScale);
+  ratioHist->GetYaxis()->SetTitleOffset(0.75/areaScale);
+  ratioHist->GetYaxis()->SetLabelSize(ratioHist->GetYaxis()->GetLabelSize()*areaScale);
+
+  ratioHist->GetXaxis()->SetLabelSize(ratioHist->GetXaxis()->GetLabelSize()*areaScale);
+  ratioHist->GetXaxis()->SetTitleSize(0.04*areaScale);
+  ratioHist->SetMinimum(0.5);
+  ratioHist->SetMaximum(1.5);
+  
+  ratioHist->Draw();
+
+  mcRatio->SetLineColor(kRed);
+  //mcRatio->SetLineWidth(3);
+  mcRatio->SetFillColorAlpha(kPink + 1, 0.4);
+  mcRatio->Draw("E2 SAME");
+
+  TH1D* straightLine = (TH1D*)mcRatio->Clone();
+  straightLine->SetFillStyle(0);
+  straightLine->Draw("HIST SAME");
+
+  ratioHist->Draw("SAME");
+
+  c1->Update();
+
+  c1->Print(nameToSave+"/"+name+"_Efficiency_Corrected_Comparison.pdf");
+  c1->Print(nameToSave+"/"+name+"_Efficiency_Corrected_Comparison.png");
+  c1->Print(nameToSave+"/"+name+"_Efficiency_Corrected_Comparison.C");
+
+  delete MC_N;
+  delete MC_BKG_N;
+  delete MC_NM1;
+  delete MC_BKG_NM1;
+  delete MC_eff;
+  delete data_N;
+  delete data_NM1;
+  delete dataCorr;
+  delete mcHist;
+  delete errHist;
+  delete dataHist;
+  delete latex;
+  delete leg;
+  delete ratio;
+  delete ratioHist;
+  delete mcRatio;
+  delete straightLine;
+  delete c1;
+  
+  return;
+}
+
+void DrawEffComp(TString name, TFile* mcFile_N, TFile* mcFile_NM1, TFile* dataFile_N, TFile* dataFile_NM1, TString title, TString nameToSave, bool useInner, bool useSig=false){
+
   cout << "Handling: " << name << endl;
 
   mcFile_N->cd();
 
   MnvH1D* MC_N = nullptr;
   MnvH1D* MC_BKG_N = nullptr;
+  MnvH1D* tmpHist = nullptr;
   
+
   if (useSig){
     string nameSTR = string(name.Data());
     nameSTR.erase(nameSTR.length()-5);
     TString tmpName = (TString)(nameSTR.c_str());
-    MC_N = (MnvH1D*)(mcFile_N->Get(tmpName+"_selected_signal_reco")->Clone());
-    MC_BKG_N = (MnvH1D*)(mcFile_N->Get(tmpName+"_background_1chargePi")->Clone());
-    MC_BKG_N->Add((MnvH1D*)(mcFile_N->Get(tmpName+"_background_1neutPi")));
-    MC_BKG_N->Add((MnvH1D*)(mcFile_N->Get(tmpName+"_background_NPi")));
-    MC_BKG_N->Add((MnvH1D*)(mcFile_N->Get(tmpName+"_background_Other")));
-    MC_BKG_N->Add((MnvH1D*)(mcFile_N->Get(tmpName+"_background_USPlastic")));
-    MC_BKG_N->Add((MnvH1D*)(mcFile_N->Get(tmpName+"_background_DSPlastic")));
-    MC_BKG_N->Add((MnvH1D*)(mcFile_N->Get(tmpName+"_background_Wrong_Nucleus")));
+
+    TString nameTag;
+
+    if (useInner){
+      nameSTR.erase(0,4);
+      nameTag = (TString)(nameSTR.c_str());
+    }
+    
+    tmpHist = (MnvH1D*)(mcFile_N->Get(tmpName+"_selected_signal_reco"));
+    MC_N = (MnvH1D*)(tmpHist->Clone());
+    delete tmpHist;
+    tmpHist = (MnvH1D*)(mcFile_N->Get(tmpName+"_background_1chargePi"));
+    MC_BKG_N = (MnvH1D*)(tmpHist->Clone());
+    delete tmpHist;
+    tmpHist = (MnvH1D*)(mcFile_N->Get(tmpName+"_background_1neutPi"));
+    MC_BKG_N->Add(tmpHist);
+    delete tmpHist;
+    tmpHist = (MnvH1D*)(mcFile_N->Get(tmpName+"_background_NPi"));
+    MC_BKG_N->Add(tmpHist);
+    delete tmpHist;
+    tmpHist = (MnvH1D*)(mcFile_N->Get(tmpName+"_background_Other"));
+    MC_BKG_N->Add(tmpHist);
+    delete tmpHist;
+    if (!useInner){
+      tmpHist = (MnvH1D*)(mcFile_N->Get(tmpName+"_background_USPlastic"));
+      MC_BKG_N->Add(tmpHist);
+      delete tmpHist;
+      tmpHist = (MnvH1D*)(mcFile_N->Get(tmpName+"_background_DSPlastic"));
+      MC_BKG_N->Add(tmpHist);
+      delete tmpHist;
+    }
+    else{
+      tmpHist = (MnvH1D*)(mcFile_N->Get("pTmu_InnerUSPlastic"+nameTag+"_selected_signal_reco"));
+      MC_BKG_N->Add(tmpHist);
+      delete tmpHist;
+      tmpHist = (MnvH1D*)(mcFile_N->Get("pTmu_InnerUSPlastic"+nameTag+"_background_1chargePi"));
+      MC_BKG_N->Add(tmpHist);
+      delete tmpHist;
+      tmpHist = (MnvH1D*)(mcFile_N->Get("pTmu_InnerUSPlastic"+nameTag+"_background_1neutPi"));
+      MC_BKG_N->Add(tmpHist);
+      delete tmpHist;
+      tmpHist = (MnvH1D*)(mcFile_N->Get("pTmu_InnerUSPlastic"+nameTag+"_background_NPi"));
+      MC_BKG_N->Add(tmpHist);
+      tmpHist = (MnvH1D*)(mcFile_N->Get("pTmu_InnerUSPlastic"+nameTag+"_background_Other"));
+      MC_BKG_N->Add(tmpHist);
+      delete tmpHist;
+      tmpHist = (MnvH1D*)(mcFile_N->Get("pTmu_InnerDSPlastic"+nameTag+"_selected_signal_reco"));
+      MC_BKG_N->Add(tmpHist);
+      delete tmpHist;
+      tmpHist = (MnvH1D*)(mcFile_N->Get("pTmu_InnerDSPlastic"+nameTag+"_background_1chargePi"));
+      MC_BKG_N->Add(tmpHist);
+      delete tmpHist;
+      tmpHist = (MnvH1D*)(mcFile_N->Get("pTmu_InnerDSPlastic"+nameTag+"_background_1neutPi"));
+      MC_BKG_N->Add(tmpHist);
+      delete tmpHist;
+      tmpHist = (MnvH1D*)(mcFile_N->Get("pTmu_InnerDSPlastic"+nameTag+"_background_NPi"));
+      MC_BKG_N->Add(tmpHist);
+      tmpHist = (MnvH1D*)(mcFile_N->Get("pTmu_InnerDSPlastic"+nameTag+"_background_Other"));
+      MC_BKG_N->Add(tmpHist);
+      delete tmpHist;
+    }
+    tmpHist = (MnvH1D*)(mcFile_N->Get(tmpName+"_background_Wrong_Nucleus"));
+    MC_BKG_N->Add(tmpHist);
+    delete tmpHist;
   }
   else{
-    MC_N = new MnvH1D(*(MnvH1D*)(mcFile_N->Get(name)));
+    tmpHist = (MnvH1D*)(mcFile_N->Get(name));
+    MC_N = (MnvH1D*)(tmpHist->Clone());
+    delete tmpHist;
   }
 
   if (MC_N->GetEntries()==0){
@@ -112,30 +546,99 @@ void DrawEffComp(TString name, TFile* mcFile_N, TFile* mcFile_NM1, TFile* dataFi
     return;
   }
 
+  MnvVertErrorBand* oldBand_N = MC_N->PopVertErrorBand("Flux");
+  delete oldBand_N;
+  MnvVertErrorBand* oldBand_Neut_N = MC_N->PopVertErrorBand("NeutronInelasticExclusives");
+  delete oldBand_Neut_N;
+  if (MC_BKG_N){
+    MnvVertErrorBand* oldBand_BKG_N = MC_BKG_N->PopVertErrorBand("Flux");
+    delete oldBand_BKG_N;
+    MnvVertErrorBand* oldBand_Neut_BKG_N = MC_BKG_N->PopVertErrorBand("NeutronInelasticExclusives");
+    delete oldBand_Neut_BKG_N;
+  }
+
   double MCN_Int = MC_N->Integral(0,-1);
 
   mcFile_NM1->cd();
 
   MnvH1D* MC_NM1 = nullptr;
   MnvH1D* MC_BKG_NM1 = nullptr;
-  
+
   if (useSig){
     string nameSTR = string(name.Data());
     nameSTR.erase(nameSTR.length()-5);
     TString tmpName = (TString)(nameSTR.c_str());
-    MC_NM1 = (MnvH1D*)(mcFile_NM1->Get(tmpName+"_selected_signal_reco")->Clone());
-    MC_BKG_NM1 = (MnvH1D*)(mcFile_NM1->Get(tmpName+"_background_1chargePi")->Clone());
-    MC_BKG_NM1->Add((MnvH1D*)(mcFile_NM1->Get(tmpName+"_background_1neutPi")));
-    MC_BKG_NM1->Add((MnvH1D*)(mcFile_NM1->Get(tmpName+"_background_NPi")));
-    MC_BKG_NM1->Add((MnvH1D*)(mcFile_NM1->Get(tmpName+"_background_Other")));
-    MC_BKG_NM1->Add((MnvH1D*)(mcFile_NM1->Get(tmpName+"_background_USPlastic")));
-    MC_BKG_NM1->Add((MnvH1D*)(mcFile_NM1->Get(tmpName+"_background_DSPlastic")));
-    MC_BKG_NM1->Add((MnvH1D*)(mcFile_NM1->Get(tmpName+"_background_Wrong_Nucleus")));
+
+    TString nameTag;
+
+    if (useInner){
+      nameSTR.erase(0,4);
+      nameTag = (TString)(nameSTR.c_str());
+    }
+
+    tmpHist = (MnvH1D*)(mcFile_NM1->Get(tmpName+"_selected_signal_reco"));
+    MC_NM1 = (MnvH1D*)(tmpHist->Clone());
+    delete tmpHist;
+    tmpHist = (MnvH1D*)(mcFile_NM1->Get(tmpName+"_background_1chargePi"));
+    MC_BKG_NM1 = (MnvH1D*)(tmpHist->Clone());
+    delete tmpHist;
+    tmpHist = (MnvH1D*)(mcFile_NM1->Get(tmpName+"_background_1neutPi"));
+    MC_BKG_NM1->Add(tmpHist);
+    delete tmpHist;
+    tmpHist = (MnvH1D*)(mcFile_NM1->Get(tmpName+"_background_NPi"));
+    MC_BKG_NM1->Add(tmpHist);
+    delete tmpHist;
+    tmpHist = (MnvH1D*)(mcFile_NM1->Get(tmpName+"_background_Other"));
+    MC_BKG_NM1->Add(tmpHist);
+    delete tmpHist;	
+    if (!useInner){
+      tmpHist = (MnvH1D*)(mcFile_NM1->Get(tmpName+"_background_USPlastic"));
+      MC_BKG_NM1->Add(tmpHist);
+      delete tmpHist;
+      tmpHist = (MnvH1D*)(mcFile_NM1->Get(tmpName+"_background_DSPlastic"));
+      MC_BKG_NM1->Add(tmpHist);
+      delete tmpHist;
+    }
+    else{
+      tmpHist = (MnvH1D*)(mcFile_NM1->Get("pTmu_InnerUSPlastic"+nameTag+"_selected_signal_reco"));
+      MC_BKG_NM1->Add(tmpHist);
+      delete tmpHist;
+      tmpHist = (MnvH1D*)(mcFile_NM1->Get("pTmu_InnerUSPlastic"+nameTag+"_background_1chargePi"));
+      MC_BKG_NM1->Add(tmpHist);
+      delete tmpHist;
+      tmpHist = (MnvH1D*)(mcFile_NM1->Get("pTmu_InnerUSPlastic"+nameTag+"_background_1neutPi"));
+      MC_BKG_NM1->Add(tmpHist);
+      delete tmpHist;
+      tmpHist = (MnvH1D*)(mcFile_NM1->Get("pTmu_InnerUSPlastic"+nameTag+"_background_NPi"));
+      MC_BKG_NM1->Add(tmpHist);
+      delete tmpHist;
+      tmpHist = (MnvH1D*)(mcFile_NM1->Get("pTmu_InnerUSPlastic"+nameTag+"_background_Other"));
+      MC_BKG_NM1->Add(tmpHist);
+      delete tmpHist;
+      tmpHist = (MnvH1D*)(mcFile_NM1->Get("pTmu_InnerDSPlastic"+nameTag+"_selected_signal_reco"));
+      MC_BKG_NM1->Add(tmpHist);
+      delete tmpHist;
+      tmpHist = (MnvH1D*)(mcFile_NM1->Get("pTmu_InnerDSPlastic"+nameTag+"_background_1chargePi"));
+      MC_BKG_NM1->Add(tmpHist);
+      delete tmpHist;
+      tmpHist = (MnvH1D*)(mcFile_NM1->Get("pTmu_InnerDSPlastic"+nameTag+"_background_1neutPi"));
+      MC_BKG_NM1->Add(tmpHist);
+      delete tmpHist;
+      tmpHist = (MnvH1D*)(mcFile_NM1->Get("pTmu_InnerDSPlastic"+nameTag+"_background_NPi"));
+      MC_BKG_NM1->Add(tmpHist);
+      delete tmpHist;
+      tmpHist = (MnvH1D*)(mcFile_NM1->Get("pTmu_InnerDSPlastic"+nameTag+"_background_Other"));
+      MC_BKG_NM1->Add(tmpHist);
+      delete tmpHist;
+    }
+    tmpHist = (MnvH1D*)(mcFile_NM1->Get(tmpName+"_background_Wrong_Nucleus"));
+    MC_BKG_NM1->Add(tmpHist);
+    delete tmpHist;
   }
   else{
-    MC_NM1 = new MnvH1D(*(MnvH1D*)(mcFile_NM1->Get(name)));
+    tmpHist = (MnvH1D*)(mcFile_NM1->Get(name));
+    MC_NM1 = (MnvH1D*)(tmpHist->Clone());
   }
-
 
   if (MC_NM1->GetEntries()==0){
     cout << "MC_NM1 empty. Skipping." << endl;
@@ -146,16 +649,34 @@ void DrawEffComp(TString name, TFile* mcFile_N, TFile* mcFile_NM1, TFile* dataFi
     return;
   }
 
-  double MCNM1_Int = MC_NM1->Integral(0,-1);
+  MnvVertErrorBand* oldBand_NM1 = MC_NM1->PopVertErrorBand("Flux");
+  delete oldBand_NM1;
+  MnvVertErrorBand* oldBand_Neut_NM1 = MC_NM1->PopVertErrorBand("NeutronInelasticExclusives");
+  delete oldBand_Neut_NM1;
+  MnvVertErrorBand* oldBand_Muon_NM1 = MC_NM1->PopVertErrorBand("MuonUpweight");
+  delete oldBand_Muon_NM1;
+  if (MC_BKG_NM1){
+    MnvVertErrorBand* oldBand_BKG_NM1 = MC_BKG_NM1->PopVertErrorBand("Flux");
+    delete oldBand_BKG_NM1;
+    MnvVertErrorBand* oldBand_Neut_BKG_NM1 = MC_BKG_NM1->PopVertErrorBand("NeutronInelasticExclusives");
+    delete oldBand_Neut_BKG_NM1;
+    MnvVertErrorBand* oldBand_Muon_BKG_NM1 = MC_BKG_NM1->PopVertErrorBand("MuonUpweight");
+    delete oldBand_Muon_BKG_NM1;
+  }
+
+  MC_NM1->AddMissingErrorBandsAndFillWithCV(*MC_N);
+  if (MC_BKG_NM1 && MC_BKG_N) MC_BKG_NM1->AddMissingErrorBandsAndFillWithCV(*MC_BKG_N);
+
   
+  double MCNM1_Int = MC_NM1->Integral(0,-1);
+
   MnvH1D* MC_eff = (MnvH1D*)(MC_N->Clone());
   MC_eff->Divide(MC_eff,MC_NM1);
-  
-  //Don't want flux error bands for this comparison just in case
-  MC_eff->PopVertErrorBand("Flux");
 
   dataFile_N->cd();
-  MnvH1D* data_N = new MnvH1D(*(MnvH1D*)(dataFile_N->Get(name)));
+  tmpHist = (MnvH1D*)(dataFile_N->Get(name));
+  MnvH1D* data_N = (MnvH1D*)(tmpHist->Clone());
+  delete tmpHist;
   if (data_N->GetEntries()==0){
     cout << "data_N empty. Skipping." << endl;
     delete MC_N;
@@ -172,7 +693,9 @@ void DrawEffComp(TString name, TFile* mcFile_N, TFile* mcFile_NM1, TFile* dataFi
   double dataN_Int = data_N->Integral(0,-1);
 
   dataFile_NM1->cd();
-  MnvH1D* data_NM1 = new MnvH1D(*(MnvH1D*)(dataFile_NM1->Get(name)));
+  tmpHist = (MnvH1D*)(dataFile_NM1->Get(name));
+  MnvH1D* data_NM1 = (MnvH1D*)(tmpHist->Clone());
+  delete tmpHist;
   if (data_NM1->GetEntries()==0){
     cout << "data_NM1 empty. Skipping." << endl;
     delete MC_N;
@@ -186,12 +709,12 @@ void DrawEffComp(TString name, TFile* mcFile_N, TFile* mcFile_NM1, TFile* dataFi
   }
   data_NM1->AddMissingErrorBandsAndFillWithCV(*MC_NM1);
   if (MC_BKG_NM1)data_NM1->Add(MC_BKG_NM1,-1.0);
-  
+
   double dataNM1_Int = data_NM1->Integral(0,-1);
-  
+
   MnvH1D* data_eff = (MnvH1D*)(data_N->Clone());
   data_eff->Divide(data_eff,data_NM1);
-
+  
   cout << "MC_N: " << MCN_Int << ", MC_NM1: " << MCNM1_Int << ", data_N: " << dataN_Int << ", data_NM1: " << dataNM1_Int << endl;
   
   double chi2 = Chi2(MC_eff,data_eff);
@@ -202,6 +725,8 @@ void DrawEffComp(TString name, TFile* mcFile_N, TFile* mcFile_NM1, TFile* dataFi
     cout << "Bad Chi2. Skipping" << endl;
     delete MC_N;
     delete MC_NM1;
+    delete MC_BKG_N;
+    delete MC_BKG_NM1;
     delete MC_eff;
     delete data_N;
     delete data_NM1;
@@ -308,6 +833,8 @@ void DrawEffComp(TString name, TFile* mcFile_N, TFile* mcFile_NM1, TFile* dataFi
 
   delete MC_N;
   delete MC_NM1;
+  delete MC_BKG_N;
+  delete MC_BKG_NM1;
   delete MC_eff;
   delete data_N;
   delete data_NM1;
@@ -322,7 +849,6 @@ void DrawEffComp(TString name, TFile* mcFile_N, TFile* mcFile_NM1, TFile* dataFi
   delete mcRatio;
   delete straightLine;
   delete c1;
-
   return;
 }
 
@@ -387,8 +913,12 @@ int main(int argc, char* argv[]) {
   while ( key = (TKey*)next() ){
     TString name = (TString)(key->GetName());
     TString className = (TString)(key->GetClassName());
-    if (!className.Contains("MnvH1D") || !name.Contains("_data") || name.Contains("vtx")) continue;
+    if (!className.Contains("MnvH1D") || !name.Contains("_data") || name.Contains("vtx") || name.Contains("Inner") || name.Contains("Outer") || name.Contains("MatchedNeutCandE")) continue;
+    bool useInner=false;
+    if (name.Contains("pTmu_") && (name.Contains("_C_") || name.Contains("_Fe_") || name.Contains("_Pb_") || name.Contains("_Water_"))) useInner=true;
+    
     DrawEffComp(name, mcFile_N, mcFile_NM1, dataFile_N, dataFile_NM1, title, (TString)(outDir.c_str()), useSig);
+    DrawEffCorrComp(name, mcFile_N, mcFile_NM1, dataFile_N, dataFile_NM1, title, (TString)(outDir.c_str()), useInner);
   }
 
   cout << "Closing Files... Does this solve the issue of seg fault." << endl;
