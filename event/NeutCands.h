@@ -74,11 +74,11 @@ namespace NeutronCandidates{
 
     double GetPDGBin() const { 
       std::unordered_map<int,int> bins = GetPDGBins();
-      /* Temporary Change to just get that lovely little parent PID which made the deposit
+      /* Temporary Change to just get that lovely little parent PID which made the deposit*/
       if (fMCParentTrackID == 0) return bins[fMCPID];
       else return bins[fTopMCPID];
-      */
-      return bins[fMCPID];
+      //*/
+      //return bins[fMCPID];
     };
     double GetLength() const { 
       if (fID >= 0) return fDirection.Mag(); 
