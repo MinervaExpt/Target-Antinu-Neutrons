@@ -30,6 +30,26 @@ namespace MyNeutCuts{
     
   };
 
+  template <class UNIVERSE, class EVENT>
+  class HasNeut: public PlotUtils::Cut<UNIVERSE, EVENT>
+  {
+  public:
+    // Constructor                                                          
+    HasNeut():
+    PlotUtils::Cut<UNIVERSE, EVENT>("Has a leading neut candidate")
+    {
+    }
+
+  private:
+  // THE cut function                                                     
+    bool checkCut(const UNIVERSE& univ, EVENT& evt) const override
+    {
+      // Call a CVUniverse member function to make the cut                
+      return univ.m_LeadNeutIndex != -999;
+    }
+    
+  };
+
   //Currently a fixed angle. Could make it something
   template <class UNIVERSE, class EVENT>
   class LeadNeutIsFarFromMuon: public PlotUtils::Cut<UNIVERSE, EVENT>
@@ -59,6 +79,7 @@ namespace MyNeutCuts{
   private:
     bool checkCut(const UNIVERSE& /*univ*/, EVENT& evt) const override
     {
+      //return evt.GetLeadingNeutCand().GetVtxZDist() >= 250;
       return evt.GetLeadingNeutCand().GetVtxZDist() >= 100;
     }
   };
@@ -75,6 +96,9 @@ namespace MyNeutCuts{
     bool checkCut(const UNIVERSE& /*univ*/, EVENT& evt) const override
     {
       return evt.GetLeadingNeutCand().GetVtxDist() >= 100;
+      //return evt.GetLeadingNeutCand().GetVtxDist() >= 200;
+      //return evt.GetLeadingNeutCand().GetVtxDist() >= 300;
+      //return evt.GetLeadingNeutCand().GetVtxDist() >= 400;
     }
   };
 
