@@ -81,7 +81,7 @@ TCanvas* DrawRatio(string name, TFile* file1, TFile* file2, double scale){
   cout << "Maximum Post-Divide: " << h1->GetMaximum() << endl;
 
   h1->SetTitle("Ratio for "+(TString)name+" of file 1 to file 2.");
-  h1->GetYaxis()->SetRangeUser(0.5,1.5);
+  h1->GetYaxis()->SetRangeUser(0.0,1.5);
 
   TCanvas* c1 = new TCanvas("c1","c1",1200,800);
 
