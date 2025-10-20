@@ -61,6 +61,7 @@ enum ErrorCodes
 #include "systematics/MonaSystematic.h"
 #include "systematics/NeutronDroppingUniverse.h"
 #include "systematics/FSIReplacementUniverse.h"
+#include "systematics/UniverseStudies.h"
 #include "cuts/MaxPzMu.h"
 #include "cuts/CCQECuts.h"
 #include "cuts/NeutCuts.h"
@@ -79,6 +80,7 @@ enum ErrorCodes
 #include "studies/EMSideBands.h"
 #include "studies/MichelAndNBlobSB.h"
 #include "studies/RecoilSB.h"
+#include "studies/NeutronInelReweightStudy.h"
 #include "reweighter/Turn2p2hOffReweighter.h"
 //#include "Binning.h" //TODO: Fix me
 
@@ -113,6 +115,29 @@ enum ErrorCodes
 #include <iostream>
 #include <cstdlib> //getenv()
 
+double GetTXFromXY(double x, double y, int view){
+  const double radianCorr = TMath::Pi()/180.;  
+  if (view == 1) return x;
+  else if (view == 2) return x*TMath::Cos(radianCorr*60)-y*TMath::Sin(radianCorr*60);
+  else if (view == 3) return x*TMath::Cos(radianCorr*60)+y*TMath::Sin(radianCorr*60);
+  else return -999999999;
+}
+
+std::pair<double, double> ProjectTrackToZ(std::vector<double> point, std::vector<double> trkMom, double z){
+  std::pair<double,double> ret = std::make_pair(-999,-999);
+  if (point.size() < 3 || trkMom.size() !=3){
+    return ret;
+  }
+  double dXPerZ = trkMom.at(0)/trkMom.at(2);
+  double dYPerZ = trkMom.at(1)/trkMom.at(2);
+  double dZ = z-point.at(2);
+  double X = point.at(0) + dZ*dXPerZ;
+  double Y = point.at(1) + dZ*dYPerZ;
+  ret = std::make_pair(X,Y);
+  return ret;
+}
+
+
 //==============================================================================
 // Loop and Fill
 //==============================================================================
@@ -142,11 +167,19 @@ void LoopAndFillEventSelection(
     cvUniv->SetEntry(i);
     
     //NeutronEvent cvEvent(cvUniv->GetLeadNeutCandOnly());
-    //NeutronEvent cvEvent = doNeutron ? NeutronEvent(cvUniv->GetLeadNeutCandOnly()) : NeutronEvent();
-    NeutronEvent cvEvent = doNeutron ? NeutronEvent(cvUniv->GetLeadNeutCandOnlyWithDrop()) : NeutronEvent();
+    NeutronEvent cvEvent = doNeutron ? NeutronEvent(cvUniv->GetLeadNeutCandOnly()) : NeutronEvent();
+    //NeutronEvent cvEvent = doNeutron ? NeutronEvent(cvUniv->GetLeadNeutCandOnlyWithDrop()) : NeutronEvent();
+    //NeutronEvent cvEvent = doNeutron ? NeutronEvent(cvUniv->GetLeadNeutCandOnlyWithDropNoNearVertex()) : NeutronEvent();
+    //NeutronEvent cvEvent = doNeutron ? NeutronEvent(cvUniv->GetLeadNeutCandOnlyWithDropNoNearVertexOrMuon()) : NeutronEvent();
+    //NeutronEvent cvEvent = doNeutron ? NeutronEvent(cvUniv->GetLeadNeutCandOnlyWithDropNoNearVertexOrMuonOrECAL()) : NeutronEvent();
+    //cvEvent = doNeutron ? NeutronEvent(cvUniv->GetLeadNeutCandOnlyWithDropNoNearVertexOrMuonOrECAL()) : NeutronEvent();
+    //std::cout << "" << std::endl;
+    
     model.SetEntry(*cvUniv, cvEvent);
     const double cvWeight = model.GetWeight(*cvUniv, cvEvent);
 
+    //std::cout << "CV WEIGHT: " << cvWeight << " for event: " << cvUniv->GetDouble("eventID") << std::endl;
+    
     int cvNeutIndex = cvUniv->m_LeadNeutIndex;
     
     //For testing.
@@ -173,6 +206,15 @@ void LoopAndFillEventSelection(
 	std::bitset<64> SBStat = michelcuts.isMCSelected(*universe, myevent, cvWeight);
 	myevent.SetSideBandStat(SBStat);
 
+	//Checking that the cut should work right
+	if (((TString)(universe->ShortName())) == "cv"){
+	  if (universe->GetNNeutBlobs() == 0){
+	    if (myevent.GetLeadingNeutCand().GetIs3D() == 1){
+	      std:: cout << "Event: " << i << " in subrun: " << universe->GetInt("mc_subrun") << " has bad neutron cut." << std::endl;
+	    }
+	  }
+	}
+	
 	//Checking my modified final state particle business
 	/*
 	if (((TString)(universe->ShortName())).Contains("FSIReplace") || ((TString)(universe->ShortName())).Contains("cv")){
@@ -194,7 +236,10 @@ void LoopAndFillEventSelection(
 	*/
 	
 	if (SBStat.none()) continue;
-
+	//if (!SBStat.all()) continue;
+	//if (myevent.GetLeadingNeutCand().GetPDGBin() != 2) continue;
+	//if (!michelcuts.isSignal(*universe, cvWeight)) continue;
+	
 	/*
 	if (((TString)(universe->ShortName())).Contains("NeutronInelasticExclusives")){
 	  std::cout << "" << std::endl;
@@ -206,7 +251,9 @@ void LoopAndFillEventSelection(
 
         //weight is ignored in isMCSelected() for all but the CV Universe.
         //if (!michelcuts.isMCSelected(*universe, myevent, cvWeight).all()) continue; //all is another function that will later help me with sidebands
+	//std::cout << "Getting weight" << std::endl;
         const double weight = model.GetWeight(*universe, myevent); //Only calculate the per-universe weight for events that will actually use it.
+	
         //const double weight = 1.0; //Dummy weight for testing/validation pre-weight
 
 	/*
@@ -231,6 +278,7 @@ void LoopAndFillEventSelection(
 	double vtx_x = vtx.at(0);
 	double vtx_y = vtx.at(1);
 	double vtx_z = vtx.at(2);
+	double vtx_t = vtx.at(3);
 
 	/*
 	if ((TString)(universe->ShortName()) == "cv" && vtx_z > 5650 && vtx_z < 5800){
@@ -328,6 +376,70 @@ void LoopAndFillEventSelection(
 	for(auto& study: studies) study->Selected(*universe, myevent, weight);
 
 	if (!SBStat.all()) continue;
+
+	/*
+	if (((TString)(universe->ShortName())) == "cv"){
+	const double radianCorr = TMath::Pi()/180.;*/
+	  /*if (universe->GetLeadNeutCandAngleToMuon() > (75.0*radianCorr)
+	    && universe->GetLeadNeutCandAngleToMuon() < (105.0*radianCorr)){*//*
+	    std::cout << "MC Event: " << universe->GetDouble("eventID") << " has a selected Transverse Neutron Candidate!" << std::endl;
+	    std::cout << "Lead Neut Index: " << cvNeutIndex << std::endl;
+	    std::cout << "Lead Blob Type: " << leadBlobType << std::endl;
+	    TVector3 BegPos = myevent.GetLeadingNeutCand().GetBegPos();
+	    TVector3 EndPos = myevent.GetLeadingNeutCand().GetEndPos();
+	    std::cout << "Lead Blob Beg Pos: " << BegPos.X() << ", " << BegPos.Y() << ", " << BegPos.Z() << std::endl;
+	    std::cout << "Lead Blob End Pos: " << EndPos.X() << ", " << EndPos.Y() << ", " << EndPos.Z() << std::endl;
+	    std::cout << "Lead Blob Energy: " << myevent.GetLeadingNeutCand().GetTotalE() << std::endl;
+	    std::cout << "Is 3D?: " << myevent.GetLeadingNeutCand().GetIs3D() << std::endl;
+	    std::cout << "Lead Blob Direction Relative To Flight Path" << myevent.GetLeadingNeutCand().GetAngleToFP() << std::endl;
+	    std::cout << "Vertex: " << vtx_x << ", " << vtx_y << ", " << vtx_z << ", time: " << vtx_t << std::endl;
+	    std::cout << "Angle to Muon in Degrees: " << universe->GetLeadNeutCandAngleToMuon()/radianCorr << std::endl;
+	    std::vector<double> zpos = universe->GetLeadNeutZPerCluster();
+	    std::vector<double> zpos2 = universe->GetNeutZPerCluster(cvNeutIndex);
+	    std::vector<double> tpos = universe->GetLeadNeutTPosPerCluster();
+	    std::vector<double> tpos2 = universe->GetNeutTPosPerCluster(cvNeutIndex);
+	    std::vector<double> time = universe->GetLeadNeutTimePerCluster();
+	    std::vector<double> nrg = universe->GetLeadNeutEnergyPerCluster();
+	    std::vector<int> view = universe->GetLeadNeutViewPerCluster();
+	    std::vector<int> view2 = universe->GetNeutViewPerCluster(cvNeutIndex);
+
+	    bool check2Z = true;
+	    bool check2View = true;
+	    bool check2T = true;			    
+	    
+	    if (zpos.size() != zpos2.size()){
+	      std::cout << "Different Number in Z" << std::endl;
+	      check2Z = false;
+	    }
+	    if (view.size() != view2.size()){
+	      std::cout << "Different Number in View" << std::endl;
+	      check2View = false;
+	    }
+	    if (tpos.size() != tpos2.size()){
+	      std::cout << "Different Number in T" << std::endl;
+	      check2T = false;
+	    }
+	  
+	    for (int iClus=0; iClus < zpos.size(); ++iClus){
+	      double vtxTPosInView = GetTXFromXY(vtx_x, vtx_y, view.at(iClus));
+	      std::cout << "Cluster at Z: " << zpos.at(iClus) << ", T: " << tpos.at(iClus) << " in view: " << view.at(iClus) << ", time: " << time.at(iClus) << ", and E: " << nrg.at(iClus) << std::endl;
+	      std::cout << "Vertex TPos if in this view: " << vtxTPosInView << std::endl;
+	      std::pair<double,double> muonXY = ProjectTrackToZ(vtx, muonMom, zpos.at(iClus));
+	      double muonTPosAtZ = GetTXFromXY(muonXY.first, muonXY.second, view.at(iClus));
+	      std::cout << "Muon TPos at this Z: " << muonTPosAtZ << std::endl;
+	      if (check2Z && (zpos.at(iClus) != zpos2.at(iClus))){
+		std::cout << "Different cluster in Z" << std::endl;
+	      }
+	      if (check2View && (view.at(iClus) != view2.at(iClus))){
+		std::cout << "Different cluster in View" << std::endl;
+	      }
+	      if (check2T && (tpos.at(iClus) != tpos2.at(iClus))){
+		std::cout << "Different cluster in T" << std::endl;
+	      }
+	    }
+	    std::cout << "" << std::endl;   
+	    /*}*//*
+	      }*/
 
         for(auto& var: vars) if(var->IsFill()) var->selectedMCReco->FillUniverse(universe, var->GetRecoValue(*universe), weight); //"Fake data" for closure
 
@@ -500,8 +612,11 @@ void LoopAndFillData( PlotUtils::ChainWrapper* data,
     for (auto universe : data_band) {
       universe->SetEntry(i);
       if(i%1000==0) std::cout << i << " / " << nEntries << "\r" << std::endl;
-      //NeutronEvent myevent = doNeutron ? NeutronEvent(universe->GetLeadNeutCandOnly()) : NeutronEvent();
-      NeutronEvent myevent = doNeutron ? NeutronEvent(universe->GetLeadNeutCandOnlyWithDrop()) : NeutronEvent();
+      NeutronEvent myevent = doNeutron ? NeutronEvent(universe->GetLeadNeutCandOnly()) : NeutronEvent();
+      //NeutronEvent myevent = doNeutron ? NeutronEvent(universe->GetLeadNeutCandOnlyWithDrop()) : NeutronEvent();
+      //NeutronEvent myevent = doNeutron ? NeutronEvent(universe->GetLeadNeutCandOnlyWithDropNoNearVertex()) : NeutronEvent();
+      //NeutronEvent myevent = doNeutron ? NeutronEvent(universe->GetLeadNeutCandOnlyWithDropNoNearVertexOrMuon()) : NeutronEvent();
+      //NeutronEvent myevent = doNeutron ? NeutronEvent(universe->GetLeadNeutCandOnlyWithDropNoNearVertexOrMuonOrECAL()) : NeutronEvent();
 
       myevent.SetEMBlobInfo(universe->GetEMNBlobsTotalEnergyTotalNHits());
       std::bitset<64> SBStat = michelcuts.isDataSelected(*universe, myevent);
@@ -537,6 +652,29 @@ void LoopAndFillData( PlotUtils::ChainWrapper* data,
 
       if (!SBStat.all()) continue;
 
+            /*
+      std::cout << "Data Event: " << universe->GetInt("ev_run") << ", " << universe->GetInt("ev_subrun") << ", " << universe->GetInt("ev_gate") << " has a selected event" << std::endl;
+      std::cout << "Seen in target: " << tgtCode << std::endl;
+      std::cout << "" << std::endl;
+       
+
+      const double radianCorr = TMath::Pi()/180.;
+      if (universe->GetLeadNeutCandAngleToMuon() > (75.0*radianCorr)
+	  && universe->GetLeadNeutCandAngleToMuon() < (105.0*radianCorr)){
+	std::cout << "Data Event: " << universe->GetInt("ev_run") << " ," << universe->GetInt("ev_subrun") << ", " << universe->GetInt("ev_gate") << " has a selected Transverse Neutron Candidate!" << std::endl;
+	std::cout << "Lead Neut Index: " << universe->m_LeadNeutIndex << std::endl;
+	TVector3 BegPos = myevent.GetLeadingNeutCand().GetBegPos();
+	TVector3 EndPos = myevent.GetLeadingNeutCand().GetEndPos();
+	std::cout << "Lead Blob Beg Pos: " << BegPos.X() << ", " << BegPos.Y() << ", " << BegPos.Z() << std::endl;
+	std::cout << "Lead Blob End Pos: " << EndPos.X() << ", " << EndPos.Y() << ", " << EndPos.Z() << std::endl;
+	std::cout << "Lead Blob Energy: " << myevent.GetLeadingNeutCand().GetTotalE() << std::endl;
+	std::cout << "Is 3D?: " << myevent.GetLeadingNeutCand().GetIs3D() << std::endl;
+	std::cout << "Lead Blob Direction Relative To Flight Path" << myevent.GetLeadingNeutCand().GetAngleToFP() << std::endl;
+	std::cout << "Vertex: " << vtx_x << ", " << vtx_y << ", " << vtx_z << std::endl;
+	std::cout << "" << std::endl;
+      }
+      */
+
       //      if (!michelcuts.isDataSelected(*universe, myevent).all()) continue;
 
       
@@ -571,6 +709,7 @@ void LoopAndFillEffDenom( PlotUtils::ChainWrapper* truth,
 			        std::vector<util::Categorized<Variable, int>*> vars_ByTgt,
                                 std::vector<Variable2D*> vars2D,
 			        std::vector<util::Categorized<Variable2D, int>*> vars2D_ByTgt,
+			        std::vector<Study*> studies,
     				PlotUtils::Cutter<CVUniverse, NeutronEvent>& michelcuts,
 			        PlotUtils::Model<CVUniverse, NeutronEvent>& model,
 			        PlotUtils::Model<CVUniverse, NeutronEvent>& evRateONLYmodel)
@@ -590,7 +729,7 @@ void LoopAndFillEffDenom( PlotUtils::ChainWrapper* truth,
     cvUniv->SetEntry(i);
     model.SetEntry(*cvUniv, cvEvent);
     const double cvWeight = model.GetWeight(*cvUniv, cvEvent);
-
+    
     //Need this now to allow for a true event rate without the modeling effects of things that would only matter to efficiency
     evRateONLYmodel.SetEntry(*cvUniv, cvEvent);
     const double cvevRateONLYWeight = evRateONLYmodel.GetWeight(*cvUniv, cvEvent);
@@ -627,10 +766,20 @@ void LoopAndFillEffDenom( PlotUtils::ChainWrapper* truth,
 	  std::cout << "" << std::endl;
 	}
 	*/
+
+	// Use this to fill the neutron reweight histograms I need... Need to figure out the right way to do that.
+	// Fill with both the weight and not the weight so that it gives the right thing. Likely need to just do pT in the same binning as the analysis...
+	// And then the ratio will be the weight that I can save.
+	// Going to do it by playlist actually.
+	//
+        if (!michelcuts.isPhaseSpace(*universe, cvWeight)) continue; //This might proclude some of the backgrunds, but it's doubtful
+	
+	const double weight = model.GetWeight(*universe, myevent); //Only calculate the weight for events that will use it
+	for(auto& study: studies) study->TruthSignal(*universe, myevent, weight);
 	
         if (!michelcuts.isEfficiencyDenom(*universe, cvWeight)) continue; //Weight is ignored for isEfficiencyDenom() in all but the CV universe 
 
-	const double weight = model.GetWeight(*universe, myevent); //Only calculate the weight for events that will use it
+	//const double weight = model.GetWeight(*universe, myevent); //Only calculate the weight for events that will use it
 	const double evRateONLYweight = evRateONLYmodel.GetWeight(*universe, myevent); //Only calculate the weight for events that will use it
 
 	std::vector<double> mc_vtx = universe->GetTrueVtx();
@@ -806,9 +955,11 @@ int main(const int argc, const char** argv)
 
   if (doNeutronCuts){
     if (reducedNeutronCuts==0) nameExt = "_wNeutCuts_neutKE_"+std::to_string(neutKESig)+nameExt;
-    else if (reducedNeutronCuts==1) nameExt = "_wFewerNeutCuts_neutKE_"+std::to_string(neutKESig)+nameExt;
-    else if (reducedNeutronCuts==2) nameExt = "_wReducedNeutCuts_neutKE_"+std::to_string(neutKESig)+nameExt;
-    else if (reducedNeutronCuts > 2) nameExt = "_wFullyReducedNeutCuts_neutKE_"+std::to_string(neutKESig)+nameExt;
+    else if (reducedNeutronCuts==1) nameExt = "_wAllButDistanceNeutCuts_neutKE_"+std::to_string(neutKESig)+nameExt;
+    else if (reducedNeutronCuts==2) nameExt = "_wAllButAngleAndDistNeutCuts_neutKE_"+std::to_string(neutKESig)+nameExt;
+    else if (reducedNeutronCuts==3) nameExt = "_wCleaningPositionNeutCuts_neutKE_"+std::to_string(neutKESig)+nameExt;
+    else if (reducedNeutronCuts==4) nameExt = "_wFullyReducedNeutCuts_neutKE_"+std::to_string(neutKESig)+nameExt;
+    else if (reducedNeutronCuts > 4) nameExt = "_wNoNeutCuts_neutKE_"+std::to_string(neutKESig)+nameExt;
     else {
       std::cout << "Bad option for reduced neutron cuts. Exiting." << std::endl;
       return 1812;
@@ -878,6 +1029,7 @@ int main(const int argc, const char** argv)
   ////PlotUtils::MinervaUniverse::SetAnalysisNuPDG(14);//Changed for Zubair...
   PlotUtils::MinervaUniverse::SetNFluxUniverses(100);
   PlotUtils::MinervaUniverse::SetZExpansionFaReweight(false);
+  //PlotUtils::MinervaUniverse::SetZExpansionFaReweight(false); Maybe this turning on would help with relative shape discrepancy. Can this be adapted to use Tejin's result... or at least as a systematic?
 
   //ADDING IN RPAMATERIALS and getting hadron systematics extended to the target region
   PlotUtils::MinervaUniverse::RPAMaterials(true);
@@ -923,13 +1075,17 @@ int main(const int argc, const char** argv)
   preCuts.emplace_back(new MyCCQECuts::RemoveRecoilBand<CVUniverse, NeutronEvent>(sbLower)); //Removed for neutron study with no recoil cut
   //preCuts.emplace_back(new MyCCQECuts::RecoilCut<CVUniverse, NeutronEvent>());
   if (doNeutronCuts){
+    if (reducedNeutronCuts < 5) preCuts.emplace_back(new MyNeutCuts::HasNeut<CVUniverse, NeutronEvent>());
+    if (reducedNeutronCuts < 4) preCuts.emplace_back(new MyNeutCuts::LeadNeutOutsideTgt<CVUniverse, NeutronEvent>());
+    // Just doesn't even try and consider events without neutrons as if they did due to some funniness in getting the lead neutron in MC that doesn't seem to happen in data.
+    //preCuts.emplace_back(new MyNeutCuts::LeadNeutZDistMin<CVUniverse, NeutronEvent>()); //Removed for neutron study without z dist cut
     if (reducedNeutronCuts < 3){
       preCuts.emplace_back(new MyNeutCuts::LeadNeutIs3D<CVUniverse, NeutronEvent>());
-      preCuts.emplace_back(new MyNeutCuts::LeadNeutOutsideTgt<CVUniverse, NeutronEvent>());
     }
     //if(!reducedNeutronCuts) preCuts.emplace_back(new MyNeutCuts::LeadNeutIsFarFromMuon<CVUniverse, NeutronEvent>());
     if (reducedNeutronCuts < 2) preCuts.emplace_back(new MyNeutCuts::LeadNeutIsFarFromMuon<CVUniverse, NeutronEvent>());
     if (reducedNeutronCuts < 1) preCuts.emplace_back(new MyNeutCuts::LeadNeutZDistMin<CVUniverse, NeutronEvent>()); //Removed for neutron study without z dist cut
+    //if (reducedNeutronCuts < 1) preCuts.emplace_back(new MyNeutCuts::LeadNeutDistMin<CVUniverse, NeutronEvent>()); //Removed for neutron study without z dist cut
   }
   //preCuts.emplace_back(new MyNeutCuts::LeadNeutInTracker<CVUniverse, NeutronEvent>(maxZ));
   //preCuts.emplace_back(new reco::IsNeutrino<CVUniverse, NeutronEvent>());
@@ -1056,6 +1212,8 @@ int main(const int argc, const char** argv)
     ////error_bands.insert(bands_FSIReplace.begin(), bands_FSIReplace.end());
     ////std::map<std::string, std::vector<CVUniverse*> > bands_neutDrop = GetNeutronDroppingUnivs(options.m_mc);
     ////error_bands.insert(bands_neutDrop.begin(), bands_neutDrop.end());
+    ////std::map<std::string, std::vector<CVUniverse*> > bands_Study = GetStudyUnivs(options.m_mc);
+    ////error_bands.insert(bands_Study.begin(), bands_Study.end());    
     /**/std::map<std::string, std::vector<CVUniverse*> > bands_mona = GetMonaSystematicMap(options.m_mc);
     /**/error_bands.insert(bands_mona.begin(), bands_mona.end());
   }
@@ -1068,6 +1226,8 @@ int main(const int argc, const char** argv)
 
     ////std::map<std::string, std::vector<CVUniverse*> > bands_FSIReplace = GetFSIReplaceUnivs(options.m_truth);
     ////truth_bands.insert(bands_FSIReplace.begin(), bands_FSIReplace.end());
+    ////std::map<std::string, std::vector<CVUniverse*> > bands_Study = GetStudyUnivs(options.m_truth);
+    ////truth_bands.insert(bands_Study.begin(), bands_Study.end());
 
     /**/std::map<std::string, std::vector<CVUniverse*> > bands_mona = GetMonaSystematicMap(options.m_truth);
     /**/truth_bands.insert(bands_mona.begin(), bands_mona.end());
@@ -1320,6 +1480,7 @@ int main(const int argc, const char** argv)
     //new NeutronVariables(maxZ, minZ, false, error_bands, truth_bands, data_band),
     //new RecoilSB(vars, error_bands, truth_bands, data_band, splitRecoil),
     new PreRecoil(vars, error_bands, truth_bands, data_band, splitRecoil, doNeutronCuts, FVregionName, TgtNum, doVtx),
+    new NeutronInelReweightStudy(truth_bands, neutKESig),
   };
 
   for(auto& var: vars) if(var->IsFill()) var->InitializeMCHists(error_bands, truth_bands);
@@ -1361,7 +1522,7 @@ int main(const int argc, const char** argv)
     LoopAndFillEventSelection(options.m_mc, error_bands, vars, vars_ByTgt, vars2D, vars2D_ByTgt, studies, mycuts, completeModel, doNeutronCuts);
     //LoopAndFillEventSelection(options.m_mc, error_bands, vars, vars_ByTgt, vars2D, vars2D_ByTgt, studies, mycuts, completeModel);
     CVUniverse::SetTruth(true);
-    LoopAndFillEffDenom(options.m_truth, truth_bands, vars, vars_ByTgt, vars2D, vars2D_ByTgt, mycuts, completeModel, evRateONLYModel);
+    LoopAndFillEffDenom(options.m_truth, truth_bands, vars, vars_ByTgt, vars2D, vars2D_ByTgt, studies, mycuts, completeModel, evRateONLYModel);
     options.PrintMacroConfiguration(argv[0]);
     std::cout << "MC cut summary:\n" << mycuts << "\n";
     mycuts.resetStats();
@@ -1384,6 +1545,7 @@ int main(const int argc, const char** argv)
     std::cout << "Actually Setting Directories in the File" << std::endl;
 
     for(auto& study: studies) study->SaveOrDrawMC(*mcOutDir);
+    for(auto& study: studies) study->SaveOrDraw(*mcOutDir);
     for(auto& var: vars) if(var->IsFill()) var->WriteMC(*mcOutDir);
     for(auto& tgt: vars_ByTgt){ 
       tgt->visit([mcOutDir](Variable& var)
