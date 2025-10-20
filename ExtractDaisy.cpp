@@ -3,9 +3,9 @@
 //       Subtracts backgrounds, performs unfolding, applies efficiency x acceptance correction, and 
 //       divides by flux and number of nucleons.  Writes a .root file with the cross section histogram.
 //
-//Usage: ExtractCrossSection <unfolding iterations> <data.root> <mc.root> <stop at efficiency correction> <varName> <tgtZ> <no. Flux Universes> <multiply by data POT> <background naming> <5A Fraction> : optional <flux_file> <fluxVarName>
+//Usage: ExtractDaisy POTFile outFileName tgtZ numFluxUniv frac5A daisyfiles in 00->11 order
 //
-//Author: Andrew Olivier aolivier@ur.rochester.edu
+//Author: David Last david.last@rochester.edu/lastd44@gmail.com
 
 //util includes
 #include "util/GetIngredient.h"
