@@ -19,6 +19,8 @@
 
 #include <iostream>
 
+#include "PlotUtils/ErrorHandler.h" //For ROOT::exception in case it's being used to react to non-existent files.
+
 #include "PlotUtils/PhysicsVariables.h"//Included by David, unsure if needed
 #include "PlotUtils/MinervaUniverse.h"
 //Needed for neutron candidates business... May change at some point, but for now this is what we're working with.
@@ -37,11 +39,47 @@ class CVUniverse : public PlotUtils::MinervaUniverse {
   CVUniverse(PlotUtils::ChainWrapper* chw, double nsigma = 0)
     : PlotUtils::MinervaUniverse(chw, nsigma), m_LeadNeutIndex(-999) {
     m_Random = new TRandom3(0);
+    LoadNeutronReweightHistos();
   }
 
   virtual ~CVUniverse() {}
 
   int m_LeadNeutIndex;
+
+  std::map<int, TH2D*> m_NeutRWHists;
+  
+  std::map<int, TString> NeutRWCategs = {{11, "sigQE"},
+					 {18, "sig2p2h"},
+					 {19, "sigOther"},
+					 {1, "1chargePi"},
+					 {2, "1neutPi"},
+					 {3, "NPi"},
+					 {4, "SubThresh"},
+					 {5, "TrackableProt"},
+					 {-999, "Other"}};
+  
+  void LoadNeutronReweightHistos(){
+    for (auto Categ : NeutRWCategs){
+      m_NeutRWHists[Categ.first] = nullptr;
+    }
+
+    try{ 
+      std::string weightFileName = "";
+      //if(std::getenv("PLOTUTILSROOT")) weightFileName = std::string(std::getenv("PLOTUTILSROOT")) + "/../etc/extraWeightFiles/BURP.root";
+      //if(std::getenv("PLOTUTILSROOT")) weightFileName = std::string(std::getenv("PLOTUTILSROOT")) + "/../etc/extraWeightFiles/test.root";
+      if(std::getenv("PLOTUTILSROOT")) weightFileName = std::string(std::getenv("PLOTUTILSROOT")) + "/../etc/extraWeightFiles/NeutronRenorm_" + GetPlaylist() + ".root";
+      std::unique_ptr<TFile> weightFile(TFile::Open(weightFileName.c_str()));
+      
+      for (auto Categ : NeutRWCategs){
+	TH2D* hist = (TH2D*)(weightFile->Get("NeutronRenormWeight_"+Categ.second));
+	if (hist) m_NeutRWHists[Categ.first] = hist;
+      }
+    }
+    catch(const ROOT::warning& /*w*/){
+      std::cout << "No Neutron Renormalization File. Doing without" << std::endl;
+    }
+
+  }
   
   virtual void OnNewEntry() override{
     m_LeadNeutIndex = -999;//Resetting to avoid any possible mishaps with the indexing of an array.
@@ -62,6 +100,40 @@ class CVUniverse : public PlotUtils::MinervaUniverse {
   
   static constexpr double MeVGeV=0.001;
 
+  std::pair<double, double> ProjectTrackToZ(std::vector<double> point, std::vector<double> trkMom, double z){
+    std::pair<double,double> ret = std::make_pair(-999,-999);
+    if (point.size() < 3 || trkMom.size() !=3){
+      return ret;
+    }
+    double dXPerZ = trkMom.at(0)/trkMom.at(2);
+    double dYPerZ = trkMom.at(1)/trkMom.at(2);
+    double dZ = z-point.at(2);
+    double X = point.at(0) + dZ*dXPerZ;
+    double Y = point.at(1) + dZ*dYPerZ;
+    ret = std::make_pair(X,Y);
+    return ret;
+  }
+
+
+  double GetTCutFromAngle(double angle, std::vector<double> trkMom, double dZ) const{
+    double ret=0.0;
+    if (trkMom.size() != 3) return ret;
+    const double radianCorr = TMath::Pi()/180.;    
+    double angleTan = TMath::Tan(radianCorr*angle);
+    double dRdZ = TMath::Sqrt(trkMom.at(0)*trkMom.at(0) + trkMom.at(1)*trkMom.at(1) + trkMom.at(2)* trkMom.at(2))/(trkMom.at(2));
+    double dR = dRdZ*dZ;
+    ret = dR*angleTan;
+    
+    return ret;
+  }
+  
+  double GetTXFromXY(double x, double y, int view) const{
+    const double radianCorr = TMath::Pi()/180.;
+    if (view == 1) return x;
+    else if (view == 2) return x*TMath::Cos(radianCorr*60)-y*TMath::Sin(radianCorr*60);
+    else if (view == 3) return x*TMath::Cos(radianCorr*60)+y*TMath::Sin(radianCorr*60);
+    else return -999999999;
+  }  
   
   // ========================================================================
   // Write a "Get" function for all quantities access by your analysis.
@@ -266,6 +338,80 @@ class CVUniverse : public PlotUtils::MinervaUniverse {
 
   virtual std::vector<double> GetFSPartPz() const { return GetVec<double>("mc_FSPartPz"); }
 
+  virtual int GetNeutronReweightCategory(double neutKE) const {
+    int ret = -999;
+
+    /*
+      std::map<int, std::string> Categs = {{11, "sigQE"},
+      {18, "sig2p2h"},
+      {19, "sigOther"},
+      {1, "1chargePi"},
+      {2, "1neutPi"},
+      {3, "NPi"},
+      {4, "SubThresh"},
+      {5, "TrackableProt"}};
+    */
+    
+    if (GetTruthNuPDG() != -14 || GetCurrent() != 1) return ret;
+    
+    int genie_n_muons = 0;
+    int genie_n_piPM = 0;
+    int genie_n_pi0 = 0;
+    int genie_n_mesons = 0;
+    int genie_n_heavy_baryons = 0;
+    int genie_n_photons = 0;
+    int genie_n_protons_above = 0;
+    int genie_n_neutrons = 0;
+    int genie_n_neutrons_above = 0;
+    
+    std::vector<int> PDGs = GetFSPartPDG();
+    std::vector<double> Es = GetFSPartE();
+    
+    for (unsigned int i=0; i<PDGs.size(); ++i){
+      int pdg = PDGs.at(i);
+      double energy = Es.at(i);
+      double proton_E = M_p +120.0;//Trackable Protons at 120 MeV T_p
+      double neutron_E = M_n + neutKE;
+      if ( abs(pdg) == 13) genie_n_muons++;
+      else if ( pdg == 22  && energy > 10) genie_n_photons++;
+      else if ( abs(pdg) == 211 ) genie_n_piPM++;
+      else if ( pdg == 111 ) genie_n_pi0++;
+      else if (abs(pdg) == 321 || abs(pdg) == 323 || pdg == 130 || pdg == 310 || pdg == 311 || pdg == 313 ){
+	genie_n_mesons++;
+      }
+      else if ( pdg == 3112 || pdg == 3122 || pdg == 3212 || pdg == 3222 || pdg == 4112 || pdg == 4122 || pdg == 4222 || pdg == 411 || pdg == 421){
+	genie_n_heavy_baryons++;
+      }
+      else if ( pdg == 2212 && energy > proton_E) genie_n_protons_above++;
+      else if ( pdg == 2112 ) {
+	if (energy > M_n) genie_n_neutrons++;
+	if (energy > neutron_E) genie_n_neutrons_above++;
+      }
+    }
+
+    if (genie_n_muons == 1 &&
+        genie_n_piPM == 0 &&
+        genie_n_pi0 == 0 &&
+        genie_n_mesons == 0 &&
+        genie_n_heavy_baryons == 0 &&
+        genie_n_photons == 0 &&
+        genie_n_protons_above == 0 &&
+        genie_n_neutrons_above > 0) {
+      ret = 10;
+      ret += GetInteractionType();
+      if (ret != 11 && ret != 18) ret = 19;
+    }
+    else if ( (genie_n_piPM + genie_n_pi0) > 1) ret = 3;
+    else if ( genie_n_piPM == 1 ) ret = 1;
+    else if ( genie_n_pi0 == 1 ) ret = 2;
+    else if ( genie_n_heavy_baryons == 0 && genie_n_photons == 0 && genie_n_mesons == 0 && genie_n_muons == 1){
+      if ( genie_n_protons_above > 0 ) ret = 5;
+      else if ( genie_n_neutrons > 0 ) ret = 4;
+    }
+    
+    return ret;
+  }
+  
   virtual double GetMaxFSNeutronKE() const {
     double max_KE = -999.;
     std::vector<int> PDGs = GetFSPartPDG();
@@ -353,7 +499,8 @@ class CVUniverse : public PlotUtils::MinervaUniverse {
 
   virtual double GetCalRecoilEnergy() const{
     return GetDouble("recoil_energy_nonmuon_nonvtx100mm")+GetDouble("recoil_energy_nonmuon_nonvtx100mm_nuclTargs");
-  /*
+    //return GetDouble("recoil_energy_nonmuon_nonvtx100mm");//TEMP FOR DAN STUFF
+    /*
   if (GetVec<double>("recoil_summed_energy").size()==0) return -999.0;
     return (GetVec<double>("recoil_summed_energy")[0]-GetDouble("recoil_energy_nonmuon_vtx100mm"));
   */
@@ -525,6 +672,234 @@ class CVUniverse : public PlotUtils::MinervaUniverse {
     return EvtCands;
   }
 
+  virtual NeutronCandidates::NeutCands GetLeadNeutCandOnlyWithDropNoNearVertex(double prob=0.25, double thresh=10.0)
+  {
+    if (prob < 0.0) prob = 0.0;
+    if (prob > 1.0) prob = 1.0;
+    
+    std::vector<NeutronCandidates::NeutCand> cands = {};
+    int nBlobs = GetNNeutBlobs();
+
+    std::vector<double> vtx = GetVtx();
+
+    if (nBlobs > 0){
+      std::vector<double> Es = GetNeutCandEs();
+      std::string toolName = GetAnaToolName();
+      std::string branchNameParent = "_BlobParentMCPID";
+      std::string branchNamePID = "_BlobMCPID";
+      int leadNeutEIndex = -999;
+      double maxE = -999;
+      for (unsigned int idx = 0; idx < Es.size(); ++idx){
+        if (Es.at(idx) > maxE){
+          if (Es.at(idx) < thresh){
+              int parentID = GetVecElemInt((toolName+branchNameParent).c_str(), idx);
+              int ID = GetVecElemInt((toolName+branchNamePID).c_str(), idx);
+              //std::cout << "parent: " << parentID << ", self: " << ID << std::endl;                                                                                                                              
+              if ((parentID==2112 || ID==2112) && m_Random->Binomial(1,prob)){
+		continue;
+	      }
+          }
+
+	  std::vector<double> zpos = GetNeutZPerCluster(idx);
+	  std::vector<double> tpos = GetNeutTPosPerCluster(idx);
+	  std::vector<int> view = GetNeutViewPerCluster(idx);
+
+	  bool skipCand = false;
+	  
+	  for (int iClus=0; iClus < zpos.size(); ++iClus){
+	    if (fabs(zpos.at(iClus) - vtx.at(2)) > 50.0) continue;//Only worry about clusters within 20mm (~1 plane) of vertex position in z for now.
+	    double vtxTPosInView = GetTXFromXY(vtx.at(0), vtx.at(1), view.at(iClus));
+	    if (fabs(tpos.at(iClus) - vtxTPosInView) < 50.0){//Skip candidates where there is a cluster within 50mm (~ 3 strips) of the vertex position in the view of the cluster.
+	      skipCand = true;
+	      //std::cout << "Skipping index: " << idx << "for being too close to the vertex" << std::endl;
+	      break;
+	    }
+	  }
+
+	  if (skipCand){
+	    continue;
+	  }
+	  
+          maxE = Es.at(idx);
+          leadNeutEIndex = idx;
+        }
+      }
+
+      if (leadNeutEIndex >= 0){
+        cands.push_back(GetNeutCand(leadNeutEIndex));
+
+	//std::cout << "Index: " << leadNeutEIndex << std::endl;
+	//std::cout << "E: " << maxE << std::endl;
+      }
+
+      m_LeadNeutIndex = leadNeutEIndex;
+    }
+
+    NeutronCandidates::NeutCands EvtCands(cands);
+    return EvtCands;
+  }
+
+  virtual NeutronCandidates::NeutCands GetLeadNeutCandOnlyWithDropNoNearVertexOrMuon(double prob=0.25, double thresh=10.0)
+  {
+    if (prob < 0.0) prob = 0.0;
+    if (prob > 1.0) prob = 1.0;
+    
+    std::vector<NeutronCandidates::NeutCand> cands = {};
+    int nBlobs = GetNNeutBlobs();
+
+    std::vector<double> vtx = GetVtx();
+    std::vector<double> muonMom = {GetMuon4V().X(), GetMuon4V().Y(), GetMuon4V().Z()};
+
+    if (nBlobs > 0){
+      std::vector<double> Es = GetNeutCandEs();
+      std::string toolName = GetAnaToolName();
+      std::string branchNameParent = "_BlobParentMCPID";
+      std::string branchNamePID = "_BlobMCPID";
+      int leadNeutEIndex = -999;
+      double maxE = -999;
+      for (unsigned int idx = 0; idx < Es.size(); ++idx){
+        if (Es.at(idx) > maxE){
+          if (Es.at(idx) < thresh){
+              int parentID = GetVecElemInt((toolName+branchNameParent).c_str(), idx);
+              int ID = GetVecElemInt((toolName+branchNamePID).c_str(), idx);
+              //std::cout << "parent: " << parentID << ", self: " << ID << std::endl;                                                                                                                              
+              if ((parentID==2112 || ID==2112) && m_Random->Binomial(1,prob)){
+		continue;
+	      }
+          }
+
+	  std::vector<double> zpos = GetNeutZPerCluster(idx);
+	  std::vector<double> tpos = GetNeutTPosPerCluster(idx);
+	  std::vector<int> view = GetNeutViewPerCluster(idx);
+
+	  bool skipCand = false;
+	  
+	  for (int iClus=0; iClus < zpos.size(); ++iClus){
+	    if (fabs(zpos.at(iClus) - vtx.at(2)) <= 50.0){
+	      double vtxTPosInView = GetTXFromXY(vtx.at(0), vtx.at(1), view.at(iClus));
+	      if (fabs(tpos.at(iClus) - vtxTPosInView) < 50.0){//Skip candidates where there is a cluster within 50mm (~ 3 strips) of the vertex position in the view of the cluster.
+		skipCand = true;
+		break;
+	      }
+	    }
+
+	    //Only worry about muon contamination mostly downstream of the vertex...
+	    if (zpos.at(iClus) - vtx.at(2) >= 0.0){
+	      std::pair<double, double> muonXYAtZ = ProjectTrackToZ(vtx, muonMom, zpos.at(iClus));
+	      double muonTPosAtZ = GetTXFromXY(muonXYAtZ.first, muonXYAtZ.second, view.at(iClus));
+	      if (fabs(tpos.at(iClus) - muonTPosAtZ) < 150.0){
+		skipCand = true;
+		break;
+	      }
+	    }
+	  }
+
+	  if (skipCand) continue;
+	  
+          maxE = Es.at(idx);
+          leadNeutEIndex = idx;
+        }
+      }
+
+      if (leadNeutEIndex >= 0){
+        cands.push_back(GetNeutCand(leadNeutEIndex));
+      }
+
+      m_LeadNeutIndex = leadNeutEIndex;
+    }
+
+    NeutronCandidates::NeutCands EvtCands(cands);
+    return EvtCands;
+  }
+
+  virtual NeutronCandidates::NeutCands GetLeadNeutCandOnlyWithDropNoNearVertexOrMuonOrECAL(double prob=0.25, double thresh=10.0)
+  {
+    if (prob < 0.0) prob = 0.0;
+    if (prob > 1.0) prob = 1.0;
+    
+    std::vector<NeutronCandidates::NeutCand> cands = {};
+    int nBlobs = GetNNeutBlobs();
+
+    std::vector<double> vtx = GetVtx();
+    std::vector<double> muonMom = {GetMuon4V().X(), GetMuon4V().Y(), GetMuon4V().Z()};
+
+    if (nBlobs > 0){
+      std::vector<double> Es = GetNeutCandEs();
+      std::string toolName = GetAnaToolName();
+      std::string branchNameParent = "_BlobParentMCPID";
+      std::string branchNamePID = "_BlobMCPID";
+      int leadNeutEIndex = -999;
+      double maxE = -999;
+      for (unsigned int idx = 0; idx < Es.size(); ++idx){
+	//Added in this requirement of the energy being above 2 MeV since I see 0 3D neutrons above that point.
+        if (Es.at(idx) > maxE && Es.at(idx) >= 2.0){
+          if (Es.at(idx) < thresh){
+              int parentID = GetVecElemInt((toolName+branchNameParent).c_str(), idx);
+              int ID = GetVecElemInt((toolName+branchNamePID).c_str(), idx);
+              //std::cout << "parent: " << parentID << ", self: " << ID << std::endl;                                                                                                                              
+              if ((parentID==2112 || ID==2112) && m_Random->Binomial(1,prob)){
+		continue;
+	      }
+          }
+
+	  std::vector<double> zpos = GetNeutZPerCluster(idx);
+	  std::vector<double> tpos = GetNeutTPosPerCluster(idx);
+	  std::vector<int> view = GetNeutViewPerCluster(idx);
+
+	  bool skipCand = false;
+	  
+	  for (int iClus=0; iClus < zpos.size(); ++iClus){
+	    //Just skip anything near/around/in the ECAL.
+	    if (zpos.at(iClus) > 8422){
+	      skipCand=true;
+	      //std::cout << "Skipping index: " << idx << " for being in the ECAL" << std::endl;
+	      break;
+	    }
+	    
+	    if (fabs(zpos.at(iClus) - vtx.at(2)) <= 50.0){
+	      double vtxTPosInView = GetTXFromXY(vtx.at(0), vtx.at(1), view.at(iClus));
+	      if (fabs(tpos.at(iClus) - vtxTPosInView) < 50.0){//Skip candidates where there is a cluster within 50mm (~ 3 strips) of the vertex position in the view of the cluster.
+		skipCand = true;
+		//std::cout << "Skipping index: " << idx << " for being too close to the vertex" << std::endl;
+		break;
+	      }
+	    }
+	    
+	    //Only worry about muon contamination mostly downstream of the vertex...
+	    if (zpos.at(iClus) - vtx.at(2) >= 0.0){
+	      std::pair<double, double> muonXYAtZ = ProjectTrackToZ(vtx, muonMom, zpos.at(iClus));
+	      double muonTPosAtZ = GetTXFromXY(muonXYAtZ.first, muonXYAtZ.second, view.at(iClus));
+	      double cutAtThisZ = GetTCutFromAngle(15, muonMom, zpos.at(iClus)-vtx.at(2));
+	      if (fabs(tpos.at(iClus) - muonTPosAtZ) < cutAtThisZ){
+	      //if (fabs(tpos.at(iClus) - muonTPosAtZ) < 100.0){
+		skipCand = true;
+		//std::cout << "Skipping index: " << idx << " for being too close to the muon" << std::endl;
+		break;
+	      }
+	    }
+	  }
+
+	  if (skipCand) continue;
+
+          maxE = Es.at(idx);
+          leadNeutEIndex = idx;
+        }
+      }
+
+      if (leadNeutEIndex >= 0){
+        cands.push_back(GetNeutCand(leadNeutEIndex));
+
+	//std::cout << "Index: " << leadNeutEIndex << std::endl;
+	//std::cout << "E: " << maxE << std::endl;
+      }
+
+      m_LeadNeutIndex = leadNeutEIndex;
+    }
+
+    NeutronCandidates::NeutCands EvtCands(cands);
+    return EvtCands;
+  }
+
   //This is so that when using the CV with the drop as above, the same neutrons are dropped in all universes... see runEventLoop for implementation
   virtual NeutronCandidates::NeutCands GetLeadNeutCandOnlyFromIndex(int idx)
   {
@@ -582,7 +957,7 @@ class CVUniverse : public PlotUtils::MinervaUniverse {
     TVector3 dummy(-999,-999,-999);
     return dummy;
   };
-
+  
   virtual TVector3 GetLeadNeutCandFlightPath() const{
     TVector3 pos = GetLeadNeutCandPos();
     std::vector<double> vtx = GetVtx();
@@ -597,6 +972,11 @@ class CVUniverse : public PlotUtils::MinervaUniverse {
     if (FP.Mag() == 0 || muonMom.Mag() == 0) return -999;
     else return FP.Angle(muonMom);
   }; 
+
+  virtual double GetLeadNeutCandZPos() const{
+    TVector3 pos = GetLeadNeutCandPos();
+    return pos.Z();
+  }
   
   virtual double GetLeadNeutVtxZDist() const{
     TVector3 FP = GetLeadNeutCandFlightPath();
@@ -607,6 +987,174 @@ class CVUniverse : public PlotUtils::MinervaUniverse {
     TVector3 FP = GetLeadNeutCandFlightPath();
     return FP.Mag();
   };
+
+  virtual std::vector<double> GetLeadNeutTPosPerCluster() const{
+    std::vector<double> ret;
+    if (m_LeadNeutIndex >= 0){
+      std::string toolName = GetAnaToolName();
+      std::string branchTPos = "_BlobTPosPerCluster";
+      std::string branchNClus = "_BlobNClusters";
+      int idx1=0;
+      
+      std::vector<int> nClus = GetVec<int>((toolName+branchNClus).c_str());
+      for (int iCand=0; iCand < m_LeadNeutIndex; ++iCand){
+	idx1 += nClus.at(iCand);
+      }
+      
+      std::vector<double> tPos = GetVec<double>((toolName+branchTPos).c_str());
+      for (int iClus=idx1; iClus < idx1+nClus.at(m_LeadNeutIndex); ++iClus){
+	ret.push_back(tPos.at(iClus));
+      }
+    }
+    return ret;
+  }
+
+  virtual std::vector<int> GetLeadNeutViewPerCluster() const{
+    std::vector<int> ret;
+    if (m_LeadNeutIndex >= 0){
+      std::string toolName = GetAnaToolName();
+      std::string branchView = "_BlobViewPerCluster";
+      std::string branchNClus = "_BlobNClusters";
+      int idx1=0;
+      
+      std::vector<int> nClus = GetVec<int>((toolName+branchNClus).c_str());
+      for (int iCand=0; iCand < m_LeadNeutIndex; ++iCand){
+	idx1 += nClus.at(iCand);
+      }
+      
+      std::vector<int> view = GetVec<int>((toolName+branchView).c_str());
+      for (int iClus=idx1; iClus < idx1+nClus.at(m_LeadNeutIndex); ++iClus){
+	ret.push_back(view.at(iClus));
+      }
+    }
+    return ret;
+  }
+
+  virtual std::vector<double> GetLeadNeutTimePerCluster() const{
+    std::vector<double> ret;
+    if (m_LeadNeutIndex >= 0){
+      std::string toolName = GetAnaToolName();
+      std::string branchTime = "_BlobTimePerCluster";
+      std::string branchNClus = "_BlobNClusters";
+      int idx1=0;
+      
+      std::vector<int> nClus = GetVec<int>((toolName+branchNClus).c_str());
+      for (int iCand=0; iCand < m_LeadNeutIndex; ++iCand){
+	idx1 += nClus.at(iCand);
+      }
+      
+      std::vector<double> time = GetVec<double>((toolName+branchTime).c_str());
+      for (int iClus=idx1; iClus < idx1+nClus.at(m_LeadNeutIndex); ++iClus){
+	ret.push_back(time.at(iClus));
+      }
+    }
+    return ret;
+  }
+  
+  virtual std::vector<double> GetLeadNeutEnergyPerCluster() const{
+    std::vector<double> ret;
+    if (m_LeadNeutIndex >= 0){
+      std::string toolName = GetAnaToolName();
+      std::string branchEnergy = "_BlobEnergyPerCluster";
+      std::string branchNClus = "_BlobNClusters";
+      int idx1=0;
+      
+      std::vector<int> nClus = GetVec<int>((toolName+branchNClus).c_str());
+      for (int iCand=0; iCand < m_LeadNeutIndex; ++iCand){
+	idx1 += nClus.at(iCand);
+      }
+      
+      std::vector<double> time = GetVec<double>((toolName+branchEnergy).c_str());
+      for (int iClus=idx1; iClus < idx1+nClus.at(m_LeadNeutIndex); ++iClus){
+	ret.push_back(time.at(iClus));
+      }
+    }
+    return ret;
+  }
+
+  virtual std::vector<double> GetLeadNeutZPerCluster() const{
+    std::vector<double> ret;
+    if (m_LeadNeutIndex >= 0){
+      std::string toolName = GetAnaToolName();
+      std::string branchZPos = "_BlobZPerCluster";
+      std::string branchNClus = "_BlobNClusters";
+      int idx1=0;
+      
+      std::vector<int> nClus = GetVec<int>((toolName+branchNClus).c_str());
+      for (int iCand=0; iCand < m_LeadNeutIndex; ++iCand){
+	idx1 += nClus.at(iCand);
+      }
+      
+      std::vector<double> zPos = GetVec<double>((toolName+branchZPos).c_str());
+      for (int iClus=idx1; iClus < idx1+nClus.at(m_LeadNeutIndex); ++iClus){
+	ret.push_back(zPos.at(iClus));
+      }
+    }
+    return ret;
+  }
+
+  virtual std::vector<double> GetNeutZPerCluster(int index) const{
+    std::vector<double> ret;
+    if (index >= 0){
+      std::string toolName = GetAnaToolName();
+      std::string branchZPos = "_BlobZPerCluster";
+      std::string branchNClus = "_BlobNClusters";
+      int idx1=0;
+      
+      std::vector<int> nClus = GetVec<int>((toolName+branchNClus).c_str());
+      for (int iCand=0; iCand < index; ++iCand){
+	idx1 += nClus.at(iCand);
+      }
+      
+      std::vector<double> zPos = GetVec<double>((toolName+branchZPos).c_str());
+      for (int iClus=idx1; iClus < idx1+nClus.at(index); ++iClus){
+	ret.push_back(zPos.at(iClus));
+      }
+    }
+    return ret;
+  }
+
+  virtual std::vector<double> GetNeutTPosPerCluster(int index) const{
+    std::vector<double> ret;
+    if (index >= 0){
+      std::string toolName = GetAnaToolName();
+      std::string branchTPos = "_BlobTPosPerCluster";
+      std::string branchNClus = "_BlobNClusters";
+      int idx1=0;
+      
+      std::vector<int> nClus = GetVec<int>((toolName+branchNClus).c_str());
+      for (int iCand=0; iCand < index; ++iCand){
+	idx1 += nClus.at(iCand);
+      }
+      
+      std::vector<double> tPos = GetVec<double>((toolName+branchTPos).c_str());
+      for (int iClus=idx1; iClus < idx1+nClus.at(index); ++iClus){
+	ret.push_back(tPos.at(iClus));
+      }
+    }
+    return ret;
+  }
+
+  virtual std::vector<int> GetNeutViewPerCluster(int index) const{
+    std::vector<int> ret;
+    if (index >= 0){
+      std::string toolName = GetAnaToolName();
+      std::string branchView = "_BlobViewPerCluster";
+      std::string branchNClus = "_BlobNClusters";
+      int idx1=0;
+      
+      std::vector<int> nClus = GetVec<int>((toolName+branchNClus).c_str());
+      for (int iCand=0; iCand < index; ++iCand){
+	idx1 += nClus.at(iCand);
+      }
+      
+      std::vector<int> view = GetVec<int>((toolName+branchView).c_str());
+      for (int iClus=idx1; iClus < idx1+nClus.at(index); ++iClus){
+	ret.push_back(view.at(iClus));
+      }
+    }
+    return ret;
+  }
   
   virtual double GetMATCHEDLeadNeutCandE() const{
 
@@ -651,6 +1199,20 @@ class CVUniverse : public PlotUtils::MinervaUniverse {
     return EvtCands;
   };
 
+  double GetNeutronNormWeight() const{
+    double ret = 1.0;
+    return ret;//Temporary to Remake the Renormalization Plots In The Face of Extending The Reweight Beyond The 200 MeV cutoff...
+    int categ = GetNeutronReweightCategory(10.0);
+    TH2D* reweightHist = m_NeutRWHists.at(categ);
+    if (!reweightHist) return ret;
+    int binX = reweightHist->GetXaxis()->FindBin(GetMuonPTTrue());
+    int binY = reweightHist->GetYaxis()->FindBin(GetMaxFSNeutronKE());
+    double val = reweightHist->GetBinContent(binX,binY);
+    ret = std::max(0.0, val);
+    if (ret==0.0) ret = 1.0;
+    return ret;
+  }
+  
   private:
   TRandom3* m_Random;
   
