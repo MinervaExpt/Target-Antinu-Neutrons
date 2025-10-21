@@ -1,4 +1,4 @@
-//File: Neutron3ChannelEach1Sigma.h
+//File: Neutron3ChannelsEach1Sigma.h
 //Brief: A Reweighter that changes MINERvA's neutron inelastic cross sections for several channels into the inelastic cross sections from low energy neutron data.
 //Author: Andrew Olivier aolivier@ur.rochester.edu
 
@@ -28,7 +28,7 @@
 #include <tuple>
 #include "assert.h"
 
-namespace
+namespace util
 {
   constexpr double scintDensityToNucleons = 4.626e22 * 1e-27; //Nucleons per cubic millimeter times cm^2 per millibarn
   constexpr double neutronMass = 939.6; //MeV/c^2
@@ -120,22 +120,25 @@ namespace
   
     return integral;
   }
-}
 
-template <class UNIVERSE, class EVENT = PlotUtils::detail::empty>
-class Neutron3ChannelEach1Sigma: public PlotUtils::Reweighter<UNIVERSE, EVENT>
-{
+  template <class UNIVERSE, class EVENT = PlotUtils::detail::empty>
+  class Neutron3ChannelsEach1Sigma: public PlotUtils::Reweighter<UNIVERSE, EVENT>
+  {
   public:
-  Neutron3ChannelEach1Sigma(): fTotalInelastic("inelastic", {}), fKinENormalization(nullptr), fGeometry(), fMode(1)
+    Neutron3ChannelsEach1Sigma(): fTotalInelastic("inelastic", {}), fKinENormalization(nullptr), fGeometry(), fMode(1)
     {
       const std::map<std::string,std::vector<int>> fileNameToFS = {{"nGamma",{1000060120, 2112}},
 								   {"threeAlpha",{1000020040, 1000020040, 1000020040, 2112}},
 								   {"Bnp",{1000050110, 2112, 2212}}};
-
       
+      
+
+      const std::map<std::string, int> indices = {{"nGamma", 0},
+						  {"threeAlpha", 1},
+						  {"Bnp", 2}};
       
       if (fMode < 0 || fMode > 5) fMode = 0;
-
+      
       fEach1Sigma = {{0,0,0},
 		     {0,0,1},
 		     {0,0,-1},
@@ -144,96 +147,104 @@ class Neutron3ChannelEach1Sigma: public PlotUtils::Reweighter<UNIVERSE, EVENT>
 		     {0,1,0},
 		     {0,-1,0}};
       
-      fChannels.reserve(fileNameToFS.size()); //If I don't use this, the program will often crash.  std::vector::emplace_back() will have to
-                                              //reallocate memory many times.  When it does that, it copies the old Channels is made and then
-                                              //deletes the originals.  But the copied TF1s hold lambda functions that still point at the
-                                              //original (now deleted) Channels.
-
+      for (int i=0; i<fEach1Sigma.size(); ++i){
+	fChannels[i].reserve(fileNameToFS.size());
+      }
+      //If I don't use this, the program will often crash.  std::vector::emplace_back() will have to
+      //reallocate memory many times.  When it does that, it copies the old Channels is made and then
+      //deletes the originals.  But the copied TF1s hold lambda functions that still point at the
+      //original (now deleted) Channels.
+      
       //Load fKinENormalization from a file.  Do this first because it can fail.
       const std::string kinEFileName = "MoNA_FS_normalizations.root", 
-                        kinENormHistName = "Tracker_Signal_FSParticleKE_Truth_Neutron";
+	kinENormHistName = "Tracker_Signal_FSParticleKE_Truth_Neutron";
       TDirectory *oldPwd = gDirectory;
       try
-      {
-        std::unique_ptr<TFile> kinEFile(TFile::Open(kinEFileName.c_str()));
-        if(kinEFile)
-        {
-          fKinENormalization = dynamic_cast<TH1D*>(kinEFile->Get(kinENormHistName.c_str())->Clone()); //Make a Clone() so I don't have to keep kinEFile open while the job runs.
-          //if(!fKinENormalization) throw std::runtime_error("Failed to load a histogram named " + kinENormHistName + " from a file named " + kinEFileName + " for neutron inelastic reweight normalization.");
-          if(fKinENormalization) fKinENormalization->SetDirectory(nullptr); //Make sure fKineENormalization is no longer tied to its parent object's file because that file will eventually be closed.
-        }
-      }
+	{
+	  std::unique_ptr<TFile> kinEFile(TFile::Open(kinEFileName.c_str()));
+	  if(kinEFile)
+	    {
+	      fKinENormalization = dynamic_cast<TH1D*>(kinEFile->Get(kinENormHistName.c_str())->Clone()); //Make a Clone() so I don't have to keep kinEFile open while the job runs.
+	      //if(!fKinENormalization) throw std::runtime_error("Failed to load a histogram named " + kinENormHistName + " from a file named " + kinEFileName + " for neutron inelastic reweight normalization.");
+	      if(fKinENormalization) fKinENormalization->SetDirectory(nullptr); //Make sure fKineENormalization is no longer tied to its parent object's file because that file will eventually be closed.
+	    }
+	}
       catch(const ROOT::exception& /*e*/)
-      {
-        std::cerr << "Failed to load neutron inelastic reweight's renormalization file from " << kinEFileName << ".  Proceeding without renormalization...\n";
-      }
-
+	{
+	  std::cerr << "Failed to load neutron inelastic reweight's renormalization file from " << kinEFileName << ".  Proceeding without renormalization...\n";
+	}
+      
       //Load total elastic cross section from a file
       {
-        std::string weightFileDir = "";
-        if(std::getenv("PLOTUTILSROOT")) weightFileDir = std::string(std::getenv("PLOTUTILSROOT")) + "/data/neutronInelasticReweight/";
-
-        std::unique_ptr<TFile> totalElasticFile(TFile::Open((weightFileDir + "minerva_neutron_cross_sections.root").c_str()));
-        assert(totalElasticFile);
-        auto totalElasticGraph = dynamic_cast<TGraph*>(totalElasticFile->Get("elastic"));
-        assert(totalElasticGraph);
-        fTotalElasticSpline = TSpline3("elastic", totalElasticGraph);
+	std::string weightFileDir = "";
+	if(std::getenv("PLOTUTILSROOT")) weightFileDir = std::string(std::getenv("PLOTUTILSROOT")) + "/data/neutronInelasticReweight/";
+	
+	std::unique_ptr<TFile> totalElasticFile(TFile::Open((weightFileDir + "minerva_neutron_cross_sections.root").c_str()));
+	assert(totalElasticFile);
+	auto totalElasticGraph = dynamic_cast<TGraph*>(totalElasticFile->Get("elastic"));
+	assert(totalElasticGraph);
+	fTotalElasticSpline = TSpline3("elastic", totalElasticGraph);
       }
-
+      
       //Load interaction channels from files
-      for(const auto& channel: fileNameToFS){
-	fChannels.emplace_back(channel.first, channel.second, fileNameToNSigma[channel.first]);
+      for (int i=0; i<fEach1Sigma.size();++i){
+	for(const auto& channel: fileNameToFS){
+	  int index = indices.at(channel.first);
+	  fChannels[i].emplace_back(channel.first, channel.second, fEach1Sigma.at(i).at(index));
+	}
       }
       //for(const auto& channel: fileNameToFS) fChannels.emplace_back(channel.first, channel.second);
-
-      fLowestMinKE = std::min_element(fChannels.begin(), fChannels.end(), [](const auto& lhs, const auto& rhs) { return lhs.fMin < rhs.fMin; })->fMin;
-      fHighestMaxKE = std::max_element(fChannels.begin(), fChannels.end(), [](const auto& lhs, const auto& rhs) { return lhs.fMax < rhs.fMax; })->fMax;
-
+      
+      fLowestMinKE = std::min_element(fChannels[0].begin(), fChannels[0].end(), [](const auto& lhs, const auto& rhs) { return lhs.fMin < rhs.fMin; })->fMin;
+      fHighestMaxKE = std::max_element(fChannels[0].begin(), fChannels[0].end(), [](const auto& lhs, const auto& rhs) { return lhs.fMax < rhs.fMax; })->fMax;
+      
       gDirectory = oldPwd;
     }
-
-    ~Neutron3ChannelEach1Sigma() = default;
-
-    double GetWeight(const UNIVERSE& univ, const EVENT& /*event*/) const;
+    
+    ~Neutron3ChannelsEach1Sigma() = default;
+    
+    double GetWeight(const UNIVERSE& univ, const EVENT& /*event*/) const { return 1; }
+    
+    std::vector<double> GetWeights(const UNIVERSE& univ, const EVENT& /*event*/) const;
     std::string GetName() const { return "NeutronInelasticExclusives"; }
-
+    
     bool DependsReco() const { return false; }
-
+    
   private:
     struct Channel
     {
       std::multiset<int> fInelasticChildren;
-
+      
       double fMin;
       double fMax;
-
+      
       //Associate previous cross section integrals with each channel for when Ti and Tf don't change much.
       /*mutable double fOldSigmaCache;
-      mutable double fNewSigmaCache;*/
-
+	mutable double fNewSigmaCache;*/
+      
       Channel(): fInelasticChildren(), fMin(), fMax(), fOldSigmaRatioSpline(), fNewSigmaRatioSpline(), fErrSpline()
       {
       }
-
+      
       //Think this is the spot to put in the nsigma...
       //Channel(const std::string& channelName, const std::vector<int> inelChildren): fInelasticChildren(inelChildren.begin(), inelChildren.end())
       Channel(const std::string& channelName, const std::vector<int> inelChildren, double nsigma=0.0): fInelasticChildren(inelChildren.begin(), inelChildren.end())
       {
 	std::cout << "Building Channel: " << channelName << std::endl;
 	std::string weightFileDir = "";
-        if(std::getenv("PLOTUTILSROOT")) weightFileDir = std::string(std::getenv("PLOTUTILSROOT")) + "/data/neutronInelasticReweight/";
-
-        const std::string oldFileName = weightFileDir + "minerva_neutron_cross_sections.root";
-        std::unique_ptr<TFile> oldGraphFile(TFile::Open(oldFileName.c_str()));
-        if(!oldGraphFile) throw std::runtime_error("Failed to open a file named " + oldFileName + " for a GEANT cross section graph in InelasticNeutronReweighter::Channel.");
-        auto oldRatioGraph = dynamic_cast<TGraph*>(oldGraphFile->Get(channelName.c_str()));
-        if(!oldRatioGraph) throw std::runtime_error("Failed to load a TGraph named " + channelName + " from a file named " + oldFileName + " for Neutron3ChannelEach1Sigma::Channel");
-        fOldSigmaRatioSpline = TSpline3(channelName.c_str(), oldRatioGraph);
-
+	if(std::getenv("PLOTUTILSROOT")) weightFileDir = std::string(std::getenv("PLOTUTILSROOT")) + "/data/neutronInelasticReweight/";
+	
+	const std::string oldFileName = weightFileDir + "minerva_neutron_cross_sections.root";
+	std::unique_ptr<TFile> oldGraphFile(TFile::Open(oldFileName.c_str()));
+	if(!oldGraphFile) throw std::runtime_error("Failed to open a file named " + oldFileName + " for a GEANT cross section graph in InelasticNeutronReweighter::Channel.");
+	auto oldRatioGraph = dynamic_cast<TGraph*>(oldGraphFile->Get(channelName.c_str()));
+	if(!oldRatioGraph) throw std::runtime_error("Failed to load a TGraph named " + channelName + " from a file named " + oldFileName + " for Neutron3ChannelsEach1Sigma::Channel");
+	fOldSigmaRatioSpline = TSpline3(channelName.c_str(), oldRatioGraph);
+	
 	///////////////////////////////////////////////////////////////////////////////
 	// These are where the changes to have Tejin's error incorporation would be. //
 	///////////////////////////////////////////////////////////////////////////////
-
+	
 	// Need a temporary access path to test against Tejin files instead of the symlink'd central files.
 	if (std::getenv("PLOTUTILSROOT")) weightFileDir = std::string(std::getenv("PLOTUTILSROOT")) + "/../etc/extraWeightFiles/";
 	
@@ -241,11 +252,11 @@ class Neutron3ChannelEach1Sigma: public PlotUtils::Reweighter<UNIVERSE, EVENT>
 	TGraph *errGraph = NULL;
 	std::fstream file ((weightFileDir + channelName + ".csv"), std::ios::in);
 	if( file.is_open() )
-          {
+	  {
 	    std::vector< std::vector<double> > data(4);
 	    std::vector<double>  values;
-            std::string line,value;
-            while(std::getline(file, line))
+	    std::string line,value;
+	    while(std::getline(file, line))
 	      {
 		values.clear();
 		std::stringstream str(line);
@@ -258,486 +269,488 @@ class Neutron3ChannelEach1Sigma: public PlotUtils::Reweighter<UNIVERSE, EVENT>
 		std::cout<<"n sigma: " << nsigma << ", err: " << err << ", product: " << nsigma*err << std::endl;
 	      }
 	    
-            newRatioGraph = new TGraph(data[0].size(), &(data[0])[0], &(data[1])[0] );
-            fNewSigmaRatioSpline = TSpline3(channelName.c_str(), newRatioGraph);
+	    newRatioGraph = new TGraph(data[0].size(), &(data[0])[0], &(data[1])[0] );
+	    fNewSigmaRatioSpline = TSpline3(channelName.c_str(), newRatioGraph);
 	    errGraph = new TGraph(data[0].size(), &(data[0])[0], &(data[2])[0]);
 	    fErrSpline = TSpline3((TString)(channelName.c_str()) + "err", errGraph);
-          }
+	  }
 	else
-          {
-            std::cout<<"Opening "<<(weightFileDir + channelName + ".csv")<<" failed."<<std::endl;
-            throw std::invalid_argument( "File does not exist" );
-          }
+	  {
+	    std::cout<<"Opening "<<(weightFileDir + channelName + ".csv")<<" failed."<<std::endl;
+	    throw std::invalid_argument( "File does not exist" );
+	  }
 	
 	/* OLD WAY OF DOING THINGS...	
-		TGraph newRatioGraph((weightFileDir + channelName + ".csv").c_str());
-		fNewSigmaRatioSpline = TSpline3(channelName.c_str(), &newRatioGraph);
+	   TGraph newRatioGraph((weightFileDir + channelName + ".csv").c_str());
+	   fNewSigmaRatioSpline = TSpline3(channelName.c_str(), &newRatioGraph);
 	*/
 	
 	////std::cout << "Channel: " << channelName << std::endl;
-        double fMinTmp = std::max(findFirstNonZeroPointX(*oldRatioGraph), findFirstNonZeroPointX(*newRatioGraph));
+	double fMinTmp = std::max(findFirstNonZeroPointX(*oldRatioGraph), findFirstNonZeroPointX(*newRatioGraph));
 	////std::cout << "OLD Minimum: " << fMinTmp << std::endl;
 	fMin = std::max(findFirstNonNegligiblePointX(*oldRatioGraph), findFirstNonNegligiblePointX(*newRatioGraph));
 	////std::cout << "NEW Minimum: " << fMin << std::endl;
 	
-        fMax = std::min(findLastNonZeroPointX(*oldRatioGraph), findLastNonZeroPointX(*newRatioGraph));
-
+	fMax = std::min(findLastNonZeroPointX(*oldRatioGraph), findLastNonZeroPointX(*newRatioGraph));
+	
 	delete newRatioGraph;
       }
       
       double evalOldSpline(double* x, double* /*p*/) const { return fOldSigmaRatioSpline.Eval(x[0]); }
       double evalNewSpline(double* x, double* /*p*/) const { return fNewSigmaRatioSpline.Eval(x[0]); }
-
+      
       //I think I have to keep these TSpline3 objects around because they're referenced by the TF1s :(
       //TODO: Get the ROOT authors of TSpline3 to be const-correct!
       mutable TSpline3 fOldSigmaRatioSpline;
       mutable TSpline3 fNewSigmaRatioSpline;
       mutable TSpline3 fErrSpline;//Adding this so that shifts in sigma from each cross section can propagat to the inelastic total.
     };
-
+    
     std::vector<std::vector<int>> fEach1Sigma;
-    std::vector<std::vector<Channel>> fChannels; //channels that will be reweighted
-                                            //and because ROOT couldn't be bothered to get const-ness right on TSpline3::Eval().
+    std::map<int,std::vector<Channel>> fChannels; //channels that will be reweighted
+    //and because ROOT couldn't be bothered to get const-ness right on TSpline3::Eval().
     //Channel fOther; //All other channels that aren't reweighted are lumped into one.  This keeps the total inelastic cross section the same.
     Channel fTotalInelastic; //Wouldn't be needed if I could get away with just weighting each neutron by exclusive cross section ratio
     mutable TSpline3 fTotalElasticSpline;
-
+    
     //KE range which at least some channel covers.  Any neutrons outside of this range just get a weight of 1.
     double fLowestMinKE;
     double fHighestMaxKE;
-
+    
     TH1D* fKinENormalization; //Normalization to keep the overall neutrino cross section the same in kinetic energy and angle
-
+    
     PlotUtils::TargetUtils fGeometry;
-
+    
     int fMode;
-
-    double getInteractingWeight(const Channel& channel, const double density, const double Ti, const double Tf) const;
-    double getInelasticRatioWeight(const Channel& channel, const double Ti, const double Tf) const;
-    double getOtherInelasticRatioWeight(const double Ti, const double Tf) const;
-    double getOtherInelasticWeight(const double density, const double Ti, const double Tf) const;
-    double getConstantChannelWeight(const double density, const double Ti, const double Tf) const;
-    double getNoInteractionWeight(const double density, const double Ti, const double Tf) const;
-
+    
+    double getInteractingWeight(const Channel& channel, const double density, const double Ti, const double Tf, const int iSig) const;
+    double getInelasticRatioWeight(const Channel& channel, const double Ti, const double Tf, const int iSig) const;
+    double getOtherInelasticRatioWeight(const double Ti, const double Tf, const int iSig) const;
+    double getOtherInelasticWeight(const double density, const double Ti, const double Tf, const int iSig) const;
+    double getConstantChannelWeight(const double density, const double Ti, const double Tf, const int iSig) const;
+    double getNoInteractionWeight(const double density, const double Ti, const double Tf, const int iSig) const;
+    
     double evalSigmaRatio(TSpline3& sigmaSpline, double Ti, double Tf, const double min, const double max, bool allowNeg=false) const;
-
+    
     double evalAdjustedSigmaRatio(TSpline3& sigmaSpline, std::vector<std::tuple<TSpline3,double,double>> errSplines, double Ti, double Tf, const double min, const double max) const;
-};
-
-template <class UNIVERSE, class EVENT>
-double Neutron3ChannelEach1Sigma<UNIVERSE, EVENT>::GetWeight(const UNIVERSE& univ, const EVENT& /*event*/) const
-{
-  double weight = 1;
-
-  const std::string prefix = "truth_neutronInelasticReweight"; //Beginning of branch names for inelastic reweighting
-
-  const int nNeutrons = univ.GetInt((prefix + "NPaths").c_str());
-  const auto startEnergyPerPoint = univ.GetVecDouble((prefix + "InitialE").c_str()),
-             endEnergyPerPoint = univ.GetVecDouble((prefix + "FinalE").c_str()),
-             densityPerPoint = univ.GetVecDouble((prefix + "ColumnarDensity").c_str()),
-             xPerPoint = univ.GetVecDouble((prefix + "PosX").c_str()),
-             yPerPoint = univ.GetVecDouble((prefix + "PosY").c_str()),
-             zPerPoint = univ.GetVecDouble((prefix + "PosZ").c_str());
-  const auto nPointsPerNeutron = univ.GetVecInt((prefix + "NTrajPointsSaved").c_str()),
-             nInelasticChildren = univ.GetVecInt((prefix + "NInelasticChildren").c_str()),
-             allInelChildren = univ.GetVecInt((prefix + "InelasticChildPDGs").c_str()),
-             materialPerPoint = univ.GetVecInt((prefix + "Nuke").c_str()),
-             intCodePerPoint = univ.GetVecInt((prefix + "IntCodePerSegment").c_str());
-
-  if(nPointsPerNeutron.empty()) return 1.;
-
-  int endPoint = 0,
-      endInelasticChild = 0;
-  for(int whichNeutron = 0; whichNeutron < nNeutrons; ++whichNeutron)
+  };
+  
+  template <class UNIVERSE, class EVENT>
+  std::vector<double> Neutron3ChannelsEach1Sigma<UNIVERSE, EVENT>::GetWeights(const UNIVERSE& univ, const EVENT& /*event*/) const
   {
-    const int startPoint = endPoint,
-              startInelasticChild = endInelasticChild;
-    endPoint += nPointsPerNeutron[whichNeutron];
-    endInelasticChild += nInelasticChildren[whichNeutron];
-
-    //Possibly-elastic points where inelastic interaction did not happen
-    //Stop before the last point because it may have ended with an inelastic interaction
-    for(int whichPoint = startPoint; whichPoint < endPoint-1; ++whichPoint)
-    {
-      const int intCode = intCodePerPoint[whichPoint];
-      assert(intCode == 0 || intCode == 2 || intCode == 3);
-
-      const bool inTracker = fGeometry.InTracker(xPerPoint[whichPoint], yPerPoint[whichPoint], zPerPoint[whichPoint]);
-      const bool inNukeRegion = fGeometry.InNukeRegion(xPerPoint[whichPoint], yPerPoint[whichPoint], zPerPoint[whichPoint]);
-      //const bool inNukeRegion = false;
-
-      //N.B.: material of -6 seems to be a special flag Jeffrey added to denote CH scintillator as opposed to pure carbon from target 3.
-      //if(materialPerPoint[whichPoint] == 6 && fGeometry.InTracker(xPerPoint[whichPoint], yPerPoint[whichPoint], zPerPoint[whichPoint]))
-      bool passInternal = false;
-      if (fMode!=2 && fMode!=3) passInternal = false;
-      else passInternal = ((fMode==2) ? inTracker : (inTracker || inNukeRegion)) && materialPerPoint[whichPoint] == -6;
-
-      //if(materialPerPoint[whichPoint] == 91235 && fGeometry.InTracker(xPerPoint[whichPoint], yPerPoint[whichPoint], zPerPoint[whichPoint])) //Nonsense number used to avoid issues with applying to Carbon but not the Carbon in scintillator.
-	//if(materialPerPoint[whichPoint] == -6 && (inTracker || inNukeRegion)) //Allow also nuke region... still only do scintillator until any idea is formed... neutrons also end up in ECAL since I don't explicitly tell them not too... maybe need to reconsider that if they make up a significant fraction of events... really only the tracker measurement...
-      if (passInternal)
+    std::vector<double> weights;
+    for (int i=0; i<fEach1Sigma.size(); ++i) weights.push_back(1);
+    
+    const std::string prefix = "truth_neutronInelasticReweight"; //Beginning of branch names for inelastic reweighting
+    
+    const int nNeutrons = univ.GetInt((prefix + "NPaths").c_str());
+    const auto startEnergyPerPoint = univ.GetVecDouble((prefix + "InitialE").c_str()),
+      endEnergyPerPoint = univ.GetVecDouble((prefix + "FinalE").c_str()),
+      densityPerPoint = univ.GetVecDouble((prefix + "ColumnarDensity").c_str()),
+      xPerPoint = univ.GetVecDouble((prefix + "PosX").c_str()),
+      yPerPoint = univ.GetVecDouble((prefix + "PosY").c_str()),
+      zPerPoint = univ.GetVecDouble((prefix + "PosZ").c_str());
+    const auto nPointsPerNeutron = univ.GetVecInt((prefix + "NTrajPointsSaved").c_str()),
+      nInelasticChildren = univ.GetVecInt((prefix + "NInelasticChildren").c_str()),
+      allInelChildren = univ.GetVecInt((prefix + "InelasticChildPDGs").c_str()),
+      materialPerPoint = univ.GetVecInt((prefix + "Nuke").c_str()),
+      intCodePerPoint = univ.GetVecInt((prefix + "IntCodePerSegment").c_str());
+    
+    if(nPointsPerNeutron.empty()) return weights;
+    
+    int endPoint = 0,
+      endInelasticChild = 0;
+    for(int whichNeutron = 0; whichNeutron < nNeutrons; ++whichNeutron)
       {
-        const double Ti = startEnergyPerPoint[whichPoint] - ::neutronMass,
-                     Tf = endEnergyPerPoint[whichPoint] - ::neutronMass;
-        const double density = densityPerPoint[whichPoint];
-
-        //Developer's note: oldInel is calculated on both if branches.  Right now, this is done by independent functions.  Calculating it outside the if block would at least make a GPU happier.  Not so sure about a CPU...
-        if(intCode == 3) weight *= getConstantChannelWeight(density, Ti, Tf); //elastic interacting
-        else weight *= getNoInteractionWeight(density, Ti, Tf); //if no interaction.  Signaled by intCode is 0 or 2, according to MnvHadronReweight comments
-      } //If point is in tracker
-    } //For each point in whichNeutron's trajectory
-    assert(!isinf(weight));
-
-    const bool inTracker = (startPoint != endPoint) ? fGeometry.InTracker(xPerPoint[endPoint - 1], yPerPoint[endPoint - 1], zPerPoint[endPoint - 1]) : false;
-    const bool inNukeRegion = (startPoint != endPoint) ? fGeometry.InNukeRegion(xPerPoint[endPoint - 1], yPerPoint[endPoint - 1], zPerPoint[endPoint - 1]) : false;
-    //const bool inNukeRegion = false;
-
-    /*
-    if ( materialPerPoint[endPoint - 1] == -6 ){
-      std::cout << "CHECKING WHERE THIS IS GOING RIGHT OR WRONG" << std::endl;
-      std::cout << "Positions" << std::endl;
-      std::cout << "X: " << xPerPoint[endPoint - 1] << ", Y: " << yPerPoint[endPoint - 1] << ", Z: " << zPerPoint[endPoint - 1] << std::endl;
-      if (inNukeRegion) std::cout << "Is in nuke region" << std::endl;
-      else std::cout << "Not in nuke region" << std::endl;
-      if (fGeometry.InNukeRegion(xPerPoint[endPoint - 1], yPerPoint[endPoint - 1], zPerPoint[endPoint - 1])) std::cout << "Should be in nuke region" << std::endl;
-      else std::cout << "Should not be" << std::endl;
-      if (startPoint != endPoint) std::cout << "Not same start and end" << std::endl;
-      else std::cout << "Same start and end" << std::endl;
-    }
-    */
-
-    //Weight for final trajectory point.  This is a special case because it's the only time inelastic interactions can happen.
-    //if(startPoint != endPoint && fGeometry.InTracker(xPerPoint[endPoint - 1], yPerPoint[endPoint - 1], zPerPoint[endPoint - 1]) && materialPerPoint[endPoint - 1] == -6)
-    bool passEnd = false;
-    passEnd = ((fMode==0 || fMode==2 || fMode==4) ? inTracker : (inTracker || inNukeRegion) ) && materialPerPoint[endPoint-1] == -6;
-
-    //if(startPoint != endPoint && (inTracker || inNukeRegion) && materialPerPoint[endPoint - 1] == -6)//Allow also nuke region... still only do scintillator until any idea is formed... neutrons also end up in ECAL since I don't explicitly tell them not too... maybe need to reconsider that if they make up a significant fraction of events... really only the tracker measurement...
-    if(passEnd)
-    {
-
-      //A multi-set is a collection of numbers with a count of how many times each number came up.
-      std::multiset<int> inelasticChildren(allInelChildren.begin() + startInelasticChild, allInelChildren.begin() + endInelasticChild);
-      inelasticChildren.erase(22); //Ignore photons because GEANT tends to emit extra low energy photons to distribute binding energy
-
-      //Break up very short-lived nuclei
-      if(inelasticChildren.count(1000040080))
-      {
-        inelasticChildren.insert(1000020040);
-        inelasticChildren.insert(1000020040);
-        inelasticChildren.erase(1000040080);
-      }
-
-      ////std::cout << "Inelastic children: ";
-      ////for (auto child:inelasticChildren){
-      ////std::cout << child << ", ";
-      ////}
-      ////std::cout << " end." << std::endl;
-      
-      //Replacing the density*path length saved to the tree with the value estimated based on known detector quantities.
-      //Validated using the commented out block below to check that the percentage difference was reasonable with very few things differing by more than 1-2% if I recall correctly
-      //This is not done above as the code above is not used by standard. If it were, then yes this would need to be implemented.
-      //The material is assumed to be scintillator since the points reweighted are required to be on scintillator in the standard approach as there is no alternative model implemented as a weight for the other nuclei in the detector.
-      //David L. 10/09/2024
-
-      double scintDensity = 1.06;// grams/cubic cm From PDG... Our own in MC is likely a bit different. This is to test the principle of it at all.
-      double guessDens = -999;
-
-      TVector3 currPos(xPerPoint[endPoint - 1], yPerPoint[endPoint - 1], zPerPoint[endPoint - 1]);
-      TVector3 lastPos(xPerPoint[endPoint - 2], yPerPoint[endPoint - 2], zPerPoint[endPoint - 2]);
-      TVector3 lastLastPos(xPerPoint[endPoint - 3], yPerPoint[endPoint -3], zPerPoint[endPoint - 3]);
-      if ((currPos-lastPos).Mag() > 1e-9){
-	guessDens = (currPos-lastPos).Mag()*scintDensity/10.0;
-      }
-      else{
-	guessDens = (currPos-lastLastPos).Mag()*scintDensity/10.0;
-      }
-
-      const double density = (densityPerPoint[endPoint - 1] !=0 ) ? densityPerPoint[endPoint - 1] : guessDens;//Performing the aforementioned replacement if the tree-saved value was 0 -David L. 10/09/2024
-      
-      const double Ti = startEnergyPerPoint[endPoint - 1] - ::neutronMass,
-	           Tf = endEnergyPerPoint[endPoint - 1] - ::neutronMass;
-      const int intCode = intCodePerPoint[endPoint - 1];
-      
-      //If a particle is outside the range covered by the MoNA paper's data, that's OK.
-      //Don't apply a weight for that particle.
-      //if(Ti < fLowestMinKE || Ti > fHighestMaxKE) continue;
-      if(Ti < fLowestMinKE) continue;//This allows for flat cross sections above the highest.
-      
-      /*
-      if (density!=0){
-	std::cout << "Density Calc Checking ZONE!" << std::endl;
-	std::cout << "Current Position" << std::endl;
- 	std::cout << "X: " << xPerPoint[endPoint - 1] << ", Y: " << yPerPoint[endPoint - 1] << ", Z: " << zPerPoint[endPoint - 1] << std::endl;
-	std::cout << "Last Position" << std::endl;
- 	std::cout << "X: " << xPerPoint[endPoint - 2] << ", Y: " << yPerPoint[endPoint - 2] << ", Z: " << zPerPoint[endPoint - 2] << std::endl;
-	std::cout << "Last Last Position" << std::endl;
- 	std::cout << "X: " << xPerPoint[endPoint - 3] << ", Y: " << yPerPoint[endPoint - 3] << ", Z: " << zPerPoint[endPoint - 3] << std::endl;
-	TVector3 currPos(xPerPoint[endPoint - 1], yPerPoint[endPoint - 1], zPerPoint[endPoint - 1]);
-	TVector3 lastPos(xPerPoint[endPoint - 2], yPerPoint[endPoint - 2], zPerPoint[endPoint - 2]);
-	TVector3 lastLastPos(xPerPoint[endPoint - 3], yPerPoint[endPoint -3], zPerPoint[endPoint - 3]);
-	std::cout << "Distance to Last: " << (currPos-lastPos).Mag() << std::endl;
-	std::cout << "Distance to Last Last: " << (currPos-lastLastPos).Mag() << std::endl;
-	std::cout << "Material!: " << materialPerPoint[endPoint - 1] << std::endl;
-	std::cout << "Last Material!: " << materialPerPoint[endPoint - 2] << std::endl;
-	std::cout << "Last Last Material!: " << materialPerPoint[endPoint - 3] << std::endl;
-
-	if ((currPos-lastPos).Mag() > 1e-9){
-	  guessDens = (currPos-lastPos).Mag()*scintDensity/10.0;
-	  std::cout << "Guessed Path Length Times Density: " << guessDens << std::endl;
+	const int startPoint = endPoint,
+	  startInelasticChild = endInelasticChild;
+	endPoint += nPointsPerNeutron[whichNeutron];
+	endInelasticChild += nInelasticChildren[whichNeutron];
+	
+	//Possibly-elastic points where inelastic interaction did not happen
+	//Stop before the last point because it may have ended with an inelastic interaction
+	for(int whichPoint = startPoint; whichPoint < endPoint-1; ++whichPoint)
+	  {
+	    const int intCode = intCodePerPoint[whichPoint];
+	    assert(intCode == 0 || intCode == 2 || intCode == 3);
+	    
+	    const bool inTracker = fGeometry.InTracker(xPerPoint[whichPoint], yPerPoint[whichPoint], zPerPoint[whichPoint]);
+	    const bool inNukeRegion = fGeometry.InNukeRegion(xPerPoint[whichPoint], yPerPoint[whichPoint], zPerPoint[whichPoint]);
+	    //const bool inNukeRegion = false;
+	    
+	    //N.B.: material of -6 seems to be a special flag Jeffrey added to denote CH scintillator as opposed to pure carbon from target 3.
+	    //if(materialPerPoint[whichPoint] == 6 && fGeometry.InTracker(xPerPoint[whichPoint], yPerPoint[whichPoint], zPerPoint[whichPoint]))
+	    bool passInternal = false;
+	    if (fMode!=2 && fMode!=3) passInternal = false;
+	    else passInternal = ((fMode==2) ? inTracker : (inTracker || inNukeRegion)) && materialPerPoint[whichPoint] == -6;
+	    
+	    //if(materialPerPoint[whichPoint] == 91235 && fGeometry.InTracker(xPerPoint[whichPoint], yPerPoint[whichPoint], zPerPoint[whichPoint])) //Nonsense number used to avoid issues with applying to Carbon but not the Carbon in scintillator.
+	    //if(materialPerPoint[whichPoint] == -6 && (inTracker || inNukeRegion)) //Allow also nuke region... still only do scintillator until any idea is formed... neutrons also end up in ECAL since I don't explicitly tell them not too... maybe need to reconsider that if they make up a significant fraction of events... really only the tracker measurement...
+	    if (passInternal)
+	      {
+		const double Ti = startEnergyPerPoint[whichPoint] - ::neutronMass,
+		  Tf = endEnergyPerPoint[whichPoint] - ::neutronMass;
+		const double density = densityPerPoint[whichPoint];
+		
+		//Developer's note: oldInel is calculated on both if branches.  Right now, this is done by independent functions.  Calculating it outside the if block would at least make a GPU happier.  Not so sure about a CPU...
+		if(intCode == 3){
+		  for (int iSig=0; iSig < fEach1Sigma.size(); ++iSig){
+		    weights.at(iSig) = weights.at(iSig)*getConstantChannelWeight(density, Ti, Tf, iSig); //elastic interacting
+		  }
+		}
+		else{
+		  for (int iSig=0; iSig < fEach1Sigma.size(); ++iSig){
+		    weights.at(iSig) = weights.at(iSig)*getNoInteractionWeight(density, Ti, Tf, iSig); //if no interaction.  Signaled by intCode is 0 or 2, according to MnvHadronReweight comments
+		  }
+		}
+	      } //If point is in tracker
+	  } //For each point in whichNeutron's trajectory
+	for (int iSig=0; iSig < fEach1Sigma.size(); ++iSig){
+	  assert(!isinf(weights.at(iSig)));
 	}
-	else{
-	  guessDens = (currPos-lastLastPos).Mag()*scintDensity/10.0;
-	  std::cout << "Guessed Path Length Times Density: " << guessDens << std::endl;
-	}
-	std::cout << "Saved Path Length Times Density: " << density << std::endl;
-	std::cout << "Fractional Difference in %: " << 100.0*(guessDens-density)/density << std::endl;
-      }
-      */
-      
-      ////std::cout << "ENTERED WEIGHTING" << std::endl;
-      ////std::cout << "WEIGHT BEFORE: " << weight << std::endl;
-      ////std::cout << "Ti: " << Ti << ", Tf: " << Tf << ", density: " << density << ", intCode: " << intCode << std::endl;
-      ////if (startPoint == endPoint) std::cout << "Start equal end?" << std::endl;
-      ////else{
-	////std::cout << "Current Position" << std::endl;
- 	////std::cout << "X: " << xPerPoint[endPoint - 1] << ", Y: " << yPerPoint[endPoint - 1] << ", Z: " << zPerPoint[endPoint - 1] << std::endl;
-	////std::cout << "Last Last Position" << std::endl;
- 	////std::cout << "X: " << xPerPoint[endPoint - 3] << ", Y: " << yPerPoint[endPoint - 3] << ", Z: " << zPerPoint[endPoint - 3] << std::endl;
-	////std::cout << "Last IntCode: " << intCodePerPoint[endPoint - 2] << std::endl;
-	////}
-      /*      */
-      
-      //Inelastic interactions end any TG4Trajectory.  Figure out whether this
-      //trajectory ended with an inelastic interaction.  If so, is it one of
-      //the channels I'm reweighting?
-
-      bool doInelRatOnly = (fMode==4 || fMode==5);
-      if(intCode == 1 || intCode == 4) //If there was an inelastic interaction
-      {
-        const auto foundChannel = std::find_if(fChannels.begin(), fChannels.end(),
-                                               [&inelasticChildren](const auto& channel)
-                                               {
-                                                 return channel.fInelasticChildren == inelasticChildren;
-                                               });
-        if(foundChannel != fChannels.end()){
-	  if (!doInelRatOnly){
-	    ////std::cout << "Doing interacting weight" << std::endl;
+	
+	const bool inTracker = (startPoint != endPoint) ? fGeometry.InTracker(xPerPoint[endPoint - 1], yPerPoint[endPoint - 1], zPerPoint[endPoint - 1]) : false;
+	const bool inNukeRegion = (startPoint != endPoint) ? fGeometry.InNukeRegion(xPerPoint[endPoint - 1], yPerPoint[endPoint - 1], zPerPoint[endPoint - 1]) : false;
+	//const bool inNukeRegion = false;
+	
+	/*
+	  if ( materialPerPoint[endPoint - 1] == -6 ){
+	  std::cout << "CHECKING WHERE THIS IS GOING RIGHT OR WRONG" << std::endl;
+	  std::cout << "Positions" << std::endl;
+	  std::cout << "X: " << xPerPoint[endPoint - 1] << ", Y: " << yPerPoint[endPoint - 1] << ", Z: " << zPerPoint[endPoint - 1] << std::endl;
+	  if (inNukeRegion) std::cout << "Is in nuke region" << std::endl;
+	  else std::cout << "Not in nuke region" << std::endl;
+	  if (fGeometry.InNukeRegion(xPerPoint[endPoint - 1], yPerPoint[endPoint - 1], zPerPoint[endPoint - 1])) std::cout << "Should be in nuke region" << std::endl;
+	  else std::cout << "Should not be" << std::endl;
+	  if (startPoint != endPoint) std::cout << "Not same start and end" << std::endl;
+	  else std::cout << "Same start and end" << std::endl;
+	  }
+	*/
+	
+	//Weight for final trajectory point.  This is a special case because it's the only time inelastic interactions can happen.
+	//if(startPoint != endPoint && fGeometry.InTracker(xPerPoint[endPoint - 1], yPerPoint[endPoint - 1], zPerPoint[endPoint - 1]) && materialPerPoint[endPoint - 1] == -6)
+	bool passEnd = false;
+	passEnd = ((fMode==0 || fMode==2 || fMode==4) ? inTracker : (inTracker || inNukeRegion) ) && materialPerPoint[endPoint-1] == -6;
+	
+	//if(startPoint != endPoint && (inTracker || inNukeRegion) && materialPerPoint[endPoint - 1] == -6)//Allow also nuke region... still only do scintillator until any idea is formed... neutrons also end up in ECAL since I don't explicitly tell them not too... maybe need to reconsider that if they make up a significant fraction of events... really only the tracker measurement...
+	if(passEnd)
+	  {
+	    
+	    //A multi-set is a collection of numbers with a count of how many times each number came up.
+	    std::multiset<int> inelasticChildren(allInelChildren.begin() + startInelasticChild, allInelChildren.begin() + endInelasticChild);
+	    inelasticChildren.erase(22); //Ignore photons because GEANT tends to emit extra low energy photons to distribute binding energy
+	    
+	    //Break up very short-lived nuclei
+	    if(inelasticChildren.count(1000040080))
+	      {
+		inelasticChildren.insert(1000020040);
+		inelasticChildren.insert(1000020040);
+		inelasticChildren.erase(1000040080);
+	      }
+	    
 	    ////std::cout << "Inelastic children: ";
 	    ////for (auto child:inelasticChildren){
-	      ////std::cout << child << ", ";
-	      ////}
-	    ////std::cout << " end." << std::endl;
-	    ////std::cout << "kinetic energies: " << Ti << ", " << Tf << std::endl;
-	    ////double tmpWeight = getInteractingWeight(*foundChannel, density, Ti, Tf);
-	    ////std::cout << "Weight Factor: " << tmpWeight << std::endl;
-	    ////std::cout << "GuessDens Weight Factor: " << getInteractingWeight(*foundChannel, guessDens, Ti, Tf) << std::endl;
-	    ////std::cout << "Fracweight Difference in %: " << 100.0*(getInteractingWeight(*foundChannel, guessDens, Ti, Tf)-getInteractingWeight(*foundChannel, density, Ti, Tf))/getInteractingWeight(*foundChannel, density, Ti, Tf) << std::endl;
-	    ////if (fabs(100.0*(getInteractingWeight(*foundChannel, guessDens, Ti, Tf)-getInteractingWeight(*foundChannel, density, Ti, Tf))/getInteractingWeight(*foundChannel, density, Ti, Tf)) > 5) std::cout << "Greater than 5%" << std::endl;
-	    ////if (fabs(100.0*(getInteractingWeight(*foundChannel, guessDens, Ti, Tf)-getInteractingWeight(*foundChannel, density, Ti, Tf))/getInteractingWeight(*foundChannel, density, Ti, Tf)) > 10) std::cout << "Greater than 10%" << std::endl;
-	    ////if (fabs(100.0*(getInteractingWeight(*foundChannel, guessDens, Ti, Tf)-getInteractingWeight(*foundChannel, density, Ti, Tf))/getInteractingWeight(*foundChannel, density, Ti, Tf)) > 25) std::cout << "Greater than 25%" << std::endl;
-	    ////if (fabs(100.0*(getInteractingWeight(*foundChannel, guessDens, Ti, Tf)-getInteractingWeight(*foundChannel, density, Ti, Tf))/getInteractingWeight(*foundChannel, density, Ti, Tf)) > 50) std::cout << "Greater than 50%" << std::endl;
-	    ////if (fabs(100.0*(getInteractingWeight(*foundChannel, guessDens, Ti, Tf)-getInteractingWeight(*foundChannel, density, Ti, Tf))/getInteractingWeight(*foundChannel, density, Ti, Tf)) > 100) std::cout << "Greater than 100%" << std::endl;
-	    ////std::cout << "Weight if doing my method: " << getInelasticRatioWeight(*foundChannel, Ti, Tf) << std::endl;
-	    weight *= getInteractingWeight(*foundChannel, density, Ti, Tf);
-	    ////weight *= std::min(3.5,getInteractingWeight(*foundChannel, density, Ti, Tf));//Cap on individual weights of 3.5
-	  }
-	  else weight *= getInelasticRatioWeight(*foundChannel, Ti, Tf);
-	}
-        else if (!doInelRatOnly){
-	  ////std::cout << "Other inelastic weight" << std::endl;
-	  ////std::cout << "Inelastic children: ";
-	  ////for (auto child:inelasticChildren){
 	    ////std::cout << child << ", ";
-	  ////}
-	  ////std::cout << " end." << std::endl;
-	  ////std::cout << "Weight Factor: " << getConstantChannelWeight(density, Ti, Tf) << std::endl;
-	  ////std::cout << "GuessDens Weight Factor: " << getConstantChannelWeight(guessDens, Ti, Tf) << std::endl;
-	  ////std::cout << "Fracweight Difference in %: " << 100.0*(getConstantChannelWeight(guessDens, Ti, Tf)-getConstantChannelWeight(density, Ti, Tf))/getConstantChannelWeight(density, Ti, Tf) << std::endl;
-	  ////if (fabs(100.0*(getConstantChannelWeight(guessDens, Ti, Tf)-getConstantChannelWeight(density, Ti, Tf))/getConstantChannelWeight(density, Ti, Tf)) > 5) std::cout << "Greater than 5%" << std::endl;
-	  ////if (fabs(100.0*(getConstantChannelWeight(guessDens, Ti, Tf)-getConstantChannelWeight(density, Ti, Tf))/getConstantChannelWeight(density, Ti, Tf)) > 10) std::cout << "Greater than 10%" << std::endl;
-	  ////if (fabs(100.0*(getConstantChannelWeight(guessDens, Ti, Tf)-getConstantChannelWeight(density, Ti, Tf))/getConstantChannelWeight(density, Ti, Tf)) > 25) std::cout << "Greater than 25%" << std::endl;
-	  ////if (fabs(100.0*(getConstantChannelWeight(guessDens, Ti, Tf)-getConstantChannelWeight(density, Ti, Tf))/getConstantChannelWeight(density, Ti, Tf)) > 50) std::cout << "Greater than 50%" << std::endl;
-	  ////if (fabs(100.0*(getConstantChannelWeight(guessDens, Ti, Tf)-getConstantChannelWeight(density, Ti, Tf))/getConstantChannelWeight(density, Ti, Tf)) > 100) std::cout << "Greater than 100%" << std::endl;
-	  
-	  ////std::cout << "Weight if doing my method: " << getOtherInelasticRatioWeight(Ti, Tf) << std::endl;
-	  weight *= getConstantChannelWeight(density, Ti, Tf); //getOtherInelasticWeight(density, Ti, Tf); //getConstantChannelWeight(density, Ti, Tf);
-	  ////weight *= std::min(3.5,getConstantChannelWeight(density, Ti, Tf)); //getOtherInelasticWeight(density, Ti, Tf); //getConstantChannelWeight(density, Ti, Tf); //Cap on individual weights of 3.5
-	}
-	else weight *= getOtherInelasticRatioWeight(Ti, Tf);
-      }
-      else if(intCode == 3 && !doInelRatOnly){
-	////std::cout << "Elastic weight" << std::endl;
-	////std::cout << "Weight Factor: " << getConstantChannelWeight(density, Ti, Tf) << std::endl;
-	////std::cout << "GuessDens Weight Factor: " << getConstantChannelWeight(guessDens, Ti, Tf) << std::endl;
-	////std::cout << "Fracweight Difference in %: " << 100.0*(getConstantChannelWeight(guessDens, Ti, Tf)-getConstantChannelWeight(density, Ti, Tf))/getConstantChannelWeight(density, Ti, Tf) << std::endl;
-	////if (fabs(100.0*(getConstantChannelWeight(guessDens, Ti, Tf)-getConstantChannelWeight(density, Ti, Tf))/getConstantChannelWeight(density, Ti, Tf)) > 5) std::cout << "Greater than 5%" << std::endl;
-	////if (fabs(100.0*(getConstantChannelWeight(guessDens, Ti, Tf)-getConstantChannelWeight(density, Ti, Tf))/getConstantChannelWeight(density, Ti, Tf)) > 10) std::cout << "Greater than 10%" << std::endl;
-	////if (fabs(100.0*(getConstantChannelWeight(guessDens, Ti, Tf)-getConstantChannelWeight(density, Ti, Tf))/getConstantChannelWeight(density, Ti, Tf)) > 25) std::cout << "Greater than 25%" << std::endl;
-	////if (fabs(100.0*(getConstantChannelWeight(guessDens, Ti, Tf)-getConstantChannelWeight(density, Ti, Tf))/getConstantChannelWeight(density, Ti, Tf)) > 50) std::cout << "Greater than 50%" << std::endl;
-	////if (fabs(100.0*(getConstantChannelWeight(guessDens, Ti, Tf)-getConstantChannelWeight(density, Ti, Tf))/getConstantChannelWeight(density, Ti, Tf)) > 100) std::cout << "Greater than 100%" << std::endl;
+	    ////}
+	    ////std::cout << " end." << std::endl;
+	    
+	    //Replacing the density*path length saved to the tree with the value estimated based on known detector quantities.
+	    //Validated using the commented out block below to check that the percentage difference was reasonable with very few things differing by more than 1-2% if I recall correctly
+	    //This is not done above as the code above is not used by standard. If it were, then yes this would need to be implemented.
+	    //The material is assumed to be scintillator since the points reweighted are required to be on scintillator in the standard approach as there is no alternative model implemented as a weight for the other nuclei in the detector.
+	    //David L. 10/09/2024
+	    
+	    double scintDensity = 1.06;// grams/cubic cm From PDG... Our own in MC is likely a bit different. This is to test the principle of it at all.
+	    double guessDens = -999;
+	    
+	    TVector3 currPos(xPerPoint[endPoint - 1], yPerPoint[endPoint - 1], zPerPoint[endPoint - 1]);
+	    TVector3 lastPos(xPerPoint[endPoint - 2], yPerPoint[endPoint - 2], zPerPoint[endPoint - 2]);
+	    TVector3 lastLastPos(xPerPoint[endPoint - 3], yPerPoint[endPoint -3], zPerPoint[endPoint - 3]);
+	    if ((currPos-lastPos).Mag() > 1e-9){
+	      guessDens = (currPos-lastPos).Mag()*scintDensity/10.0;
+	    }
+	    else{
+	      guessDens = (currPos-lastLastPos).Mag()*scintDensity/10.0;
+	    }
+	    
+	    const double density = (densityPerPoint[endPoint - 1] !=0 ) ? densityPerPoint[endPoint - 1] : guessDens;//Performing the aforementioned replacement if the tree-saved value was 0 -David L. 10/09/2024
+	    
+	    const double Ti = startEnergyPerPoint[endPoint - 1] - ::neutronMass,
+	      Tf = endEnergyPerPoint[endPoint - 1] - ::neutronMass;
+	    const int intCode = intCodePerPoint[endPoint - 1];
+	    
+	    //If a particle is outside the range covered by the MoNA paper's data, that's OK.
+	    //Don't apply a weight for that particle.
+	    //if(Ti < fLowestMinKE || Ti > fHighestMaxKE) continue;
+	    if(Ti < fLowestMinKE) continue;//This allows for flat cross sections above the highest.
+	    
+	    /*
+	      if (density!=0){
+	      std::cout << "Density Calc Checking ZONE!" << std::endl;
+	      std::cout << "Current Position" << std::endl;
+	      std::cout << "X: " << xPerPoint[endPoint - 1] << ", Y: " << yPerPoint[endPoint - 1] << ", Z: " << zPerPoint[endPoint - 1] << std::endl;
+	      std::cout << "Last Position" << std::endl;
+	      std::cout << "X: " << xPerPoint[endPoint - 2] << ", Y: " << yPerPoint[endPoint - 2] << ", Z: " << zPerPoint[endPoint - 2] << std::endl;
+	      std::cout << "Last Last Position" << std::endl;
+	      std::cout << "X: " << xPerPoint[endPoint - 3] << ", Y: " << yPerPoint[endPoint - 3] << ", Z: " << zPerPoint[endPoint - 3] << std::endl;
+	      TVector3 currPos(xPerPoint[endPoint - 1], yPerPoint[endPoint - 1], zPerPoint[endPoint - 1]);
+	      TVector3 lastPos(xPerPoint[endPoint - 2], yPerPoint[endPoint - 2], zPerPoint[endPoint - 2]);
+	      TVector3 lastLastPos(xPerPoint[endPoint - 3], yPerPoint[endPoint -3], zPerPoint[endPoint - 3]);
+	      std::cout << "Distance to Last: " << (currPos-lastPos).Mag() << std::endl;
+	      std::cout << "Distance to Last Last: " << (currPos-lastLastPos).Mag() << std::endl;
+	      std::cout << "Material!: " << materialPerPoint[endPoint - 1] << std::endl;
+	      std::cout << "Last Material!: " << materialPerPoint[endPoint - 2] << std::endl;
+	      std::cout << "Last Last Material!: " << materialPerPoint[endPoint - 3] << std::endl;
+	      
+	      if ((currPos-lastPos).Mag() > 1e-9){
+	      guessDens = (currPos-lastPos).Mag()*scintDensity/10.0;
+	      std::cout << "Guessed Path Length Times Density: " << guessDens << std::endl;
+	      }
+	      else{
+	      guessDens = (currPos-lastLastPos).Mag()*scintDensity/10.0;
+	      std::cout << "Guessed Path Length Times Density: " << guessDens << std::endl;
+	      }
+	      std::cout << "Saved Path Length Times Density: " << density << std::endl;
+	      std::cout << "Fractional Difference in %: " << 100.0*(guessDens-density)/density << std::endl;
+	      }
+	    */
+	    
+	    ////std::cout << "ENTERED WEIGHTING" << std::endl;
+	    ////std::cout << "WEIGHT BEFORE: " << weight << std::endl;
+	    ////std::cout << "Ti: " << Ti << ", Tf: " << Tf << ", density: " << density << ", intCode: " << intCode << std::endl;
+	    ////if (startPoint == endPoint) std::cout << "Start equal end?" << std::endl;
+	    ////else{
+	    ////std::cout << "Current Position" << std::endl;
+	    ////std::cout << "X: " << xPerPoint[endPoint - 1] << ", Y: " << yPerPoint[endPoint - 1] << ", Z: " << zPerPoint[endPoint - 1] << std::endl;
+	    ////std::cout << "Last Last Position" << std::endl;
+	    ////std::cout << "X: " << xPerPoint[endPoint - 3] << ", Y: " << yPerPoint[endPoint - 3] << ", Z: " << zPerPoint[endPoint - 3] << std::endl;
+	    ////std::cout << "Last IntCode: " << intCodePerPoint[endPoint - 2] << std::endl;
+	    ////}
+	    /*      */
+	    
+	    //Inelastic interactions end any TG4Trajectory.  Figure out whether this
+	    //trajectory ended with an inelastic interaction.  If so, is it one of
+	    //the channels I'm reweighting?
+	    
+	    bool doInelRatOnly = (fMode==4 || fMode==5);
+	    if(intCode == 1 || intCode == 4) //If there was an inelastic interaction
+	      {
+		for (int iSig=0; iSig<fEach1Sigma.size(); ++iSig){
+		  const auto foundChannel = std::find_if(fChannels.at(iSig).begin(), fChannels.at(iSig).end(),
+							 [&inelasticChildren](const auto& channel)
+							 {
+							   return channel.fInelasticChildren == inelasticChildren;
+							 });
+		  if(foundChannel != fChannels.at(iSig).end()){
+		    if (!doInelRatOnly){
+		      ////std::cout << "Doing interacting weight" << std::endl;
+		      ////std::cout << "Inelastic children: ";
+		      ////for (auto child:inelasticChildren){
+		      ////std::cout << child << ", ";
+		      ////}
+		      ////std::cout << " end." << std::endl;
+		      ////std::cout << "kinetic energies: " << Ti << ", " << Tf << std::endl;
+		      ////double tmpWeight = getInteractingWeight(*foundChannel, density, Ti, Tf);
+		      ////std::cout << "Weight Factor: " << tmpWeight << std::endl;
+		      ////std::cout << "GuessDens Weight Factor: " << getInteractingWeight(*foundChannel, guessDens, Ti, Tf) << std::endl;
+		      ////std::cout << "Fracweight Difference in %: " << 100.0*(getInteractingWeight(*foundChannel, guessDens, Ti, Tf)-getInteractingWeight(*foundChannel, density, Ti, Tf))/getInteractingWeight(*foundChannel, density, Ti, Tf) << std::endl;
+		      ////if (fabs(100.0*(getInteractingWeight(*foundChannel, guessDens, Ti, Tf)-getInteractingWeight(*foundChannel, density, Ti, Tf))/getInteractingWeight(*foundChannel, density, Ti, Tf)) > 5) std::cout << "Greater than 5%" << std::endl;
+		      ////if (fabs(100.0*(getInteractingWeight(*foundChannel, guessDens, Ti, Tf)-getInteractingWeight(*foundChannel, density, Ti, Tf))/getInteractingWeight(*foundChannel, density, Ti, Tf)) > 10) std::cout << "Greater than 10%" << std::endl;
+		      ////if (fabs(100.0*(getInteractingWeight(*foundChannel, guessDens, Ti, Tf)-getInteractingWeight(*foundChannel, density, Ti, Tf))/getInteractingWeight(*foundChannel, density, Ti, Tf)) > 25) std::cout << "Greater than 25%" << std::endl;
+		      ////if (fabs(100.0*(getInteractingWeight(*foundChannel, guessDens, Ti, Tf)-getInteractingWeight(*foundChannel, density, Ti, Tf))/getInteractingWeight(*foundChannel, density, Ti, Tf)) > 50) std::cout << "Greater than 50%" << std::endl;
+		      ////if (fabs(100.0*(getInteractingWeight(*foundChannel, guessDens, Ti, Tf)-getInteractingWeight(*foundChannel, density, Ti, Tf))/getInteractingWeight(*foundChannel, density, Ti, Tf)) > 100) std::cout << "Greater than 100%" << std::endl;
+		      ////std::cout << "Weight if doing my method: " << getInelasticRatioWeight(*foundChannel, Ti, Tf) << std::endl;
+		      weights.at(iSig) = weights.at(iSig)*getInteractingWeight(*foundChannel, density, Ti, Tf, iSig);
+		      ////weight *= std::min(3.5,getInteractingWeight(*foundChannel, density, Ti, Tf));//Cap on individual weights of 3.5
+		    }
+		    else weights.at(iSig) = weights.at(iSig)*getInelasticRatioWeight(*foundChannel, Ti, Tf, iSig);
+		  }
+		  else if (!doInelRatOnly){
+		    ////std::cout << "Other inelastic weight" << std::endl;
+		    ////std::cout << "Inelastic children: ";
+		    ////for (auto child:inelasticChildren){
+		    ////std::cout << child << ", ";
+		    ////}
+		    ////std::cout << " end." << std::endl;
+		    ////std::cout << "Weight Factor: " << getConstantChannelWeight(density, Ti, Tf) << std::endl;
+		    ////std::cout << "GuessDens Weight Factor: " << getConstantChannelWeight(guessDens, Ti, Tf) << std::endl;
+		    ////std::cout << "Fracweight Difference in %: " << 100.0*(getConstantChannelWeight(guessDens, Ti, Tf)-getConstantChannelWeight(density, Ti, Tf))/getConstantChannelWeight(density, Ti, Tf) << std::endl;
+		    ////if (fabs(100.0*(getConstantChannelWeight(guessDens, Ti, Tf)-getConstantChannelWeight(density, Ti, Tf))/getConstantChannelWeight(density, Ti, Tf)) > 5) std::cout << "Greater than 5%" << std::endl;
+		    ////if (fabs(100.0*(getConstantChannelWeight(guessDens, Ti, Tf)-getConstantChannelWeight(density, Ti, Tf))/getConstantChannelWeight(density, Ti, Tf)) > 10) std::cout << "Greater than 10%" << std::endl;
+		    ////if (fabs(100.0*(getConstantChannelWeight(guessDens, Ti, Tf)-getConstantChannelWeight(density, Ti, Tf))/getConstantChannelWeight(density, Ti, Tf)) > 25) std::cout << "Greater than 25%" << std::endl;
+		    ////if (fabs(100.0*(getConstantChannelWeight(guessDens, Ti, Tf)-getConstantChannelWeight(density, Ti, Tf))/getConstantChannelWeight(density, Ti, Tf)) > 50) std::cout << "Greater than 50%" << std::endl;
+		    ////if (fabs(100.0*(getConstantChannelWeight(guessDens, Ti, Tf)-getConstantChannelWeight(density, Ti, Tf))/getConstantChannelWeight(density, Ti, Tf)) > 100) std::cout << "Greater than 100%" << std::endl;
+		    
+		    ////std::cout << "Weight if doing my method: " << getOtherInelasticRatioWeight(Ti, Tf) << std::endl;
+		    weights.at(iSig) = weights.at(iSig)*getConstantChannelWeight(density, Ti, Tf, iSig); //getOtherInelasticWeight(density, Ti, Tf); //getConstantChannelWeight(density, Ti, Tf);
+		    ////weight *= std::min(3.5,getConstantChannelWeight(density, Ti, Tf)); //getOtherInelasticWeight(density, Ti, Tf); //getConstantChannelWeight(density, Ti, Tf); //Cap on individual weights of 3.5
+		  }
+		  else weights.at(iSig) = weights.at(iSig)*getOtherInelasticRatioWeight(Ti, Tf, iSig);
+		}
+	      }
+	    else if(intCode == 3 && !doInelRatOnly){
+	      for (int iSig=0; iSig<fEach1Sigma.size(); ++iSig){
+		////std::cout << "Elastic weight" << std::endl;
+		////std::cout << "Weight Factor: " << getConstantChannelWeight(density, Ti, Tf) << std::endl;
+		////std::cout << "GuessDens Weight Factor: " << getConstantChannelWeight(guessDens, Ti, Tf) << std::endl;
+		////std::cout << "Fracweight Difference in %: " << 100.0*(getConstantChannelWeight(guessDens, Ti, Tf)-getConstantChannelWeight(density, Ti, Tf))/getConstantChannelWeight(density, Ti, Tf) << std::endl;
+		////if (fabs(100.0*(getConstantChannelWeight(guessDens, Ti, Tf)-getConstantChannelWeight(density, Ti, Tf))/getConstantChannelWeight(density, Ti, Tf)) > 5) std::cout << "Greater than 5%" << std::endl;
+		////if (fabs(100.0*(getConstantChannelWeight(guessDens, Ti, Tf)-getConstantChannelWeight(density, Ti, Tf))/getConstantChannelWeight(density, Ti, Tf)) > 10) std::cout << "Greater than 10%" << std::endl;
+		////if (fabs(100.0*(getConstantChannelWeight(guessDens, Ti, Tf)-getConstantChannelWeight(density, Ti, Tf))/getConstantChannelWeight(density, Ti, Tf)) > 25) std::cout << "Greater than 25%" << std::endl;
+		////if (fabs(100.0*(getConstantChannelWeight(guessDens, Ti, Tf)-getConstantChannelWeight(density, Ti, Tf))/getConstantChannelWeight(density, Ti, Tf)) > 50) std::cout << "Greater than 50%" << std::endl;
+		////if (fabs(100.0*(getConstantChannelWeight(guessDens, Ti, Tf)-getConstantChannelWeight(density, Ti, Tf))/getConstantChannelWeight(density, Ti, Tf)) > 100) std::cout << "Greater than 100%" << std::endl;
+		
+		weights.at(iSig) = weights.at(iSig)*getConstantChannelWeight(density, Ti, Tf, iSig); //Trajectory ends with an elastic interaction
+		////weight *= std::min(3.5,getConstantChannelWeight(density, Ti, Tf)); //Trajectory ends with an elastic interaction //Cap on individual weights of 3.5
+	      }
+	    }
+	    else if(!doInelRatOnly){
+	      for (int iSig=0; iSig<fEach1Sigma.size(); ++iSig){
+		////std::cout << "Non-interacting weight" << std::endl;
+		////std::cout << "Weight Factor: " << getNoInteractionWeight(density, Ti, Tf) << std::endl;
+		////std::cout << "GuessDens Weight Factor: " << getNoInteractionWeight(guessDens, Ti, Tf) << std::endl;
+		////std::cout << "Fracweight Difference in %: " << 100.0*(getNoInteractionWeight(guessDens, Ti, Tf)-getNoInteractionWeight(density, Ti, Tf))/getNoInteractionWeight(density, Ti, Tf) << std::endl;
+		////if (fabs(100.0*(getNoInteractionWeight(guessDens, Ti, Tf)-getNoInteractionWeight(density, Ti, Tf))/getNoInteractionWeight(density, Ti, Tf)) > 5) std::cout << "Greater than 5%" << std::endl;
+		////if (fabs(100.0*(getNoInteractionWeight(guessDens, Ti, Tf)-getNoInteractionWeight(density, Ti, Tf))/getNoInteractionWeight(density, Ti, Tf)) > 10) std::cout << "Greater than 10%" << std::endl;
+		////if (fabs(100.0*(getNoInteractionWeight(guessDens, Ti, Tf)-getNoInteractionWeight(density, Ti, Tf))/getNoInteractionWeight(density, Ti, Tf)) > 25) std::cout << "Greater than 25%" << std::endl;
+		////if (fabs(100.0*(getNoInteractionWeight(guessDens, Ti, Tf)-getNoInteractionWeight(density, Ti, Tf))/getNoInteractionWeight(density, Ti, Tf)) > 50) std::cout << "Greater than 50%" << std::endl;
+		////if (fabs(100.0*(getNoInteractionWeight(guessDens, Ti, Tf)-getNoInteractionWeight(density, Ti, Tf))/getNoInteractionWeight(density, Ti, Tf)) > 100) std::cout << "Greater than 100%" << std::endl;
+		weights.at(iSig) = weights.at(iSig)*getNoInteractionWeight(density, Ti, Tf, iSig); //If this trajectory ended by some process other than an inelastic interaction
+		////weight *= std::min(3.5,getNoInteractionWeight(density, Ti, Tf)); //If this trajectory ended by some process other than an inelastic interaction //Cap on individual weights of 3.5
+	      }
+	    }
+	    
+	    for (int iSig=0; iSig<fEach1Sigma.size(); ++iSig){      
+	      if(isinf(weights.at(iSig))) std::cout << "weight = " << weights.at(iSig) << " is now inf at Ti = " << Ti << ", Tf = " << Tf << ", and intCode = " << intCode << ".  getNoInteractionWeight returns " << getNoInteractionWeight(density, Ti, Tf, iSig) << "\n";
+	    }
+	    ////std::cout << "WEIGHT AFTER: " << weight << std::endl;
+	  } //If last point is in the tracker and CH scintillator
 	
-	weight *= getConstantChannelWeight(density, Ti, Tf); //Trajectory ends with an elastic interaction
-	////weight *= std::min(3.5,getConstantChannelWeight(density, Ti, Tf)); //Trajectory ends with an elastic interaction //Cap on individual weights of 3.5
-      }
-      else if(!doInelRatOnly){
-	////std::cout << "Non-interacting weight" << std::endl;
-	////std::cout << "Weight Factor: " << getNoInteractionWeight(density, Ti, Tf) << std::endl;
-	////std::cout << "GuessDens Weight Factor: " << getNoInteractionWeight(guessDens, Ti, Tf) << std::endl;
-	////std::cout << "Fracweight Difference in %: " << 100.0*(getNoInteractionWeight(guessDens, Ti, Tf)-getNoInteractionWeight(density, Ti, Tf))/getNoInteractionWeight(density, Ti, Tf) << std::endl;
-	////if (fabs(100.0*(getNoInteractionWeight(guessDens, Ti, Tf)-getNoInteractionWeight(density, Ti, Tf))/getNoInteractionWeight(density, Ti, Tf)) > 5) std::cout << "Greater than 5%" << std::endl;
-	////if (fabs(100.0*(getNoInteractionWeight(guessDens, Ti, Tf)-getNoInteractionWeight(density, Ti, Tf))/getNoInteractionWeight(density, Ti, Tf)) > 10) std::cout << "Greater than 10%" << std::endl;
-	////if (fabs(100.0*(getNoInteractionWeight(guessDens, Ti, Tf)-getNoInteractionWeight(density, Ti, Tf))/getNoInteractionWeight(density, Ti, Tf)) > 25) std::cout << "Greater than 25%" << std::endl;
-	////if (fabs(100.0*(getNoInteractionWeight(guessDens, Ti, Tf)-getNoInteractionWeight(density, Ti, Tf))/getNoInteractionWeight(density, Ti, Tf)) > 50) std::cout << "Greater than 50%" << std::endl;
-	////if (fabs(100.0*(getNoInteractionWeight(guessDens, Ti, Tf)-getNoInteractionWeight(density, Ti, Tf))/getNoInteractionWeight(density, Ti, Tf)) > 100) std::cout << "Greater than 100%" << std::endl;
-	weight *= getNoInteractionWeight(density, Ti, Tf); //If this trajectory ended by some process other than an inelastic interaction
-	////weight *= std::min(3.5,getNoInteractionWeight(density, Ti, Tf)); //If this trajectory ended by some process other than an inelastic interaction //Cap on individual weights of 3.5
-      }
-
-      if(isinf(weight)) std::cout << "weight = " << weight << " is now inf at Ti = " << Ti << ", Tf = " << Tf << ", and intCode = " << intCode << ".  getNoInteractionWeight returns " << getNoInteractionWeight(density, Ti, Tf) << "\n";
-      ////std::cout << "WEIGHT AFTER: " << weight << std::endl;
-    } //If last point is in the tracker and CH scintillator
-
-    //Divide by a kinematics-dependent normalization factor to keep the total neutrino cross section constant.
-    //TODO: Aaron only does this for the leading particle in the original MnvHadronReweight
-    //TODO: Aaron does this using FS particle branches because he only cares about FS particles.  Do I have momentum components for all neutrons?
-    //      If not, I'm tempted to try just reweighting in neutron KE first.
-    //      Nope, I don't have neutron direction.  Trying neutron KE until I see that it's a problem.
-    //weight /= fKinENormalization->GetBinContent(fKinENormalization->FindBin(startEnergyPerPoint[startPoint] - ::neutronMass));
-
-    assert(!isinf(weight));
-  } //For each neutron
-
-  //Now, normalize so that the number of FS neutrons in the entire playlist doesn't change.
-  //This should keep the total neutrino cross section from changing too.
-  if(fKinENormalization)
-  {
-    const auto fsPDGs = univ.GetVecInt("mc_FSPartPDG");
-    const auto fsEnergies = univ.GetVecDouble("mc_FSPartE");
-    const auto fsPx = univ.GetVecDouble("mc_FSPartPx"), fsPy = univ.GetVecDouble("mc_FSPartPy"), fsPz = univ.GetVecDouble("mc_FSPartPz");
-
-    const size_t nFSPart = fsPDGs.size();
-    for(size_t whichFS = 0; whichFS < nFSPart; ++whichFS)
-    {
-      if(fsPDGs[whichFS] == 2112) //for each FS neutron
-      {
-        const double KE = fsEnergies[whichFS] - ::neutronMass;
-        const double cosTheta = fsPz[whichFS]/std::sqrt(fsPx[whichFS]*fsPx[whichFS] + fsPy[whichFS]*fsPy[whichFS]);
-        weight /= fKinENormalization->GetBinContent(fKinENormalization->FindBin(KE, cosTheta));
-      }
-    }
-  }
-
-  assert(!isinf(weight));
-  assert(!isnan(weight));
-
-  //Normalization Attempt By Defining the GetNeutronNormWeight in the CV Universe.
-  double preNormWeight = std::min(weight,10.0);
-  weight = preNormWeight/univ.GetNeutronNormWeight();
-  
-  //return std::min(weight,10.0);//Cap on total weight being < 10.
-  return weight;//Cap on total weight being < 10 removed in favor of cross-section driven values to test.
-}
-
-template <class UNIVERSE, class EVENT>
-double Neutron3ChannelEach1Sigma<UNIVERSE, EVENT>::getInteractingWeight(const Channel& channel, const double density, const double Ti, const double Tf) const
-{
-  ////std::cout << "Channel Min: " << channel.fMin << ", Max: " << channel.fMax << std::endl;
-  ////std::cout << "Ti: " << Ti << "Tf: " << std::endl;
-  //if(Tf < channel.fMin || Ti > channel.fMax) return 1.; //When given KE outside the range where I have splines to compare to, don't reweight.
-  if(Tf < channel.fMin) return 1.; //When given KE outside the range where I have splines to compare to, don't reweight.
-
-  //I don't need to reweight based on the total cross section because I'm implicitly keeping it the same.
-  const double totalElastic = evalSigmaRatio(fTotalElasticSpline, Ti, Tf, fLowestMinKE, fHighestMaxKE);
-  const double totalInelOld = evalSigmaRatio(fTotalInelastic.fOldSigmaRatioSpline, Ti, Tf, fTotalInelastic.fMin, fTotalInelastic.fMax);
-  ////std::cout << "Total Elastic: " << totalElastic << std::endl;
-  //const double denom = 1. - exp(-1. * density * scintDensityToNucleons * (evalSigmaRatio(fTotalInelastic.fOldSigmaRatioSpline, Ti, Tf, fTotalInelastic.fMin, fTotalInelastic.fMax) + totalElastic));
-  const double denom = 1. - exp(-1. * density * scintDensityToNucleons * (totalInelOld + totalElastic));
-  ////std::cout << "Denominator: " << denom << std::endl;
-  //if(denom <= 0) return 0;
-  if(denom <= 0) return 1;
-  
-  const double totalInelNew = evalSigmaRatio(fTotalInelastic.fNewSigmaRatioSpline, Ti, Tf, fTotalInelastic.fMin, fTotalInelastic.fMax);
-
-  //const double num = 1. - exp(-1. * density * scintDensityToNucleons * (evalSigmaRatio(fTotalInelastic.fNewSigmaRatioSpline, Ti, Tf, fTotalInelastic.fMin, fTotalInelastic.fMax) + totalElastic));
-  const double num = 1. - exp(-1. * density * scintDensityToNucleons * (totalInelNew + totalElastic));
-
-  const double aEval = evalSigmaRatio(channel.fNewSigmaRatioSpline, Ti, Tf, channel.fMin, channel.fMax);
-  const double err = evalSigmaRatio(channel.fErrSpline, Ti, Tf, channel.fMin, channel.fMax, true);
-  double scale = 0;
-  //FUSSING WITH THINGS
-  if (fabs(err) < 1e-9){
-    std::vector<std::tuple<TSpline3,double,double>> errSplines;
-
-    double xSecSum = 0;
+	//Divide by a kinematics-dependent normalization factor to keep the total neutrino cross section constant.
+	//TODO: Aaron only does this for the leading particle in the original MnvHadronReweight
+	//TODO: Aaron does this using FS particle branches because he only cares about FS particles.  Do I have momentum components for all neutrons?
+	//      If not, I'm tempted to try just reweighting in neutron KE first.
+	//      Nope, I don't have neutron direction.  Trying neutron KE until I see that it's a problem.
+	//weight /= fKinENormalization->GetBinContent(fKinENormalization->FindBin(startEnergyPerPoint[startPoint] - ::neutronMass));
+	for (int iSig=0; iSig<fEach1Sigma.size(); ++iSig){
+	  assert(!isinf(weights.at(iSig)));
+	}
+      } //For each neutron
     
-    for (auto allChan : fChannels){
-      errSplines.push_back(std::make_tuple(allChan.fErrSpline,allChan.fMin,allChan.fMax));
-      if (fabs(evalSigmaRatio(allChan.fErrSpline, Ti, Tf, allChan.fMin, allChan.fMax, true)) < 1e-9){
-	xSecSum += evalSigmaRatio(allChan.fNewSigmaRatioSpline, Ti, Tf, allChan.fMin, allChan.fMax);
-      }
-    }
-    const double totalInelErr = evalAdjustedSigmaRatio(fTotalInelastic.fNewSigmaRatioSpline, errSplines, Ti, Tf, fTotalInelastic.fMin, fTotalInelastic.fMax);
-
-    const double diff = totalInelNew-totalInelErr;
-    scale = (xSecSum > 0) ? diff*(aEval/xSecSum) : 0;
+    for (int iSig=0; iSig<fEach1Sigma.size(); ++iSig){
+      assert(!isinf(weights.at(iSig)));
+      assert(!isnan(weights.at(iSig)));
+      
+      //Normalization Attempt By Defining the GetNeutronNormWeight in the CV Universe.
+      double preNormWeight = std::min(weights.at(iSig),10.0);
+      weights.at(iSig) = preNormWeight/univ.GetNeutronNormWeight();
+    }  
+    
+    //return std::min(weight,10.0);//Cap on total weight being < 10.
+    return weights;//Cap on total weight being < 10 removed in favor of cross-section driven values to test.
   }
   
-  const double a = aEval + scale;
-  const double b = evalSigmaRatio(channel.fOldSigmaRatioSpline, Ti, Tf, channel.fMin, channel.fMax);
+  template <class UNIVERSE, class EVENT>
+  double Neutron3ChannelsEach1Sigma<UNIVERSE, EVENT>::getInteractingWeight(const Channel& channel, const double density, const double Ti, const double Tf, const int iSig) const
+  {
+    ////std::cout << "Channel Min: " << channel.fMin << ", Max: " << channel.fMax << std::endl;
+    ////std::cout << "Ti: " << Ti << "Tf: " << std::endl;
+    //if(Tf < channel.fMin || Ti > channel.fMax) return 1.; //When given KE outside the range where I have splines to compare to, don't reweight.
+    if(Tf < channel.fMin) return 1.; //When given KE outside the range where I have splines to compare to, don't reweight.
+    
+    //I don't need to reweight based on the total cross section because I'm implicitly keeping it the same.
+    const double totalElastic = evalSigmaRatio(fTotalElasticSpline, Ti, Tf, fLowestMinKE, fHighestMaxKE);
+    const double totalInelOld = evalSigmaRatio(fTotalInelastic.fOldSigmaRatioSpline, Ti, Tf, fTotalInelastic.fMin, fTotalInelastic.fMax);
+    ////std::cout << "Total Elastic: " << totalElastic << std::endl;
+    //const double denom = 1. - exp(-1. * density * scintDensityToNucleons * (evalSigmaRatio(fTotalInelastic.fOldSigmaRatioSpline, Ti, Tf, fTotalInelastic.fMin, fTotalInelastic.fMax) + totalElastic));
+    const double denom = 1. - exp(-1. * density * scintDensityToNucleons * (totalInelOld + totalElastic));
+    ////std::cout << "Denominator: " << denom << std::endl;
+    //if(denom <= 0) return 0;
+    if(denom <= 0) return 1;
+    
+    const double totalInelNew = evalSigmaRatio(fTotalInelastic.fNewSigmaRatioSpline, Ti, Tf, fTotalInelastic.fMin, fTotalInelastic.fMax);
+    
+    //const double num = 1. - exp(-1. * density * scintDensityToNucleons * (evalSigmaRatio(fTotalInelastic.fNewSigmaRatioSpline, Ti, Tf, fTotalInelastic.fMin, fTotalInelastic.fMax) + totalElastic));
+    const double num = 1. - exp(-1. * density * scintDensityToNucleons * (totalInelNew + totalElastic));
+    
+    const double aEval = evalSigmaRatio(channel.fNewSigmaRatioSpline, Ti, Tf, channel.fMin, channel.fMax);
+    const double err = evalSigmaRatio(channel.fErrSpline, Ti, Tf, channel.fMin, channel.fMax, true);
+    double scale = 0;
+    //FUSSING WITH THINGS
+    if (fabs(err) < 1e-9){
+      std::vector<std::tuple<TSpline3,double,double>> errSplines;
+      
+      double xSecSum = 0;
+      
+      for (auto allChan : fChannels.at(iSig)){
+	errSplines.push_back(std::make_tuple(allChan.fErrSpline,allChan.fMin,allChan.fMax));
+	if (fabs(evalSigmaRatio(allChan.fErrSpline, Ti, Tf, allChan.fMin, allChan.fMax, true)) < 1e-9){
+	  xSecSum += evalSigmaRatio(allChan.fNewSigmaRatioSpline, Ti, Tf, allChan.fMin, allChan.fMax);
+	}
+      }
+      const double totalInelErr = evalAdjustedSigmaRatio(fTotalInelastic.fNewSigmaRatioSpline, errSplines, Ti, Tf, fTotalInelastic.fMin, fTotalInelastic.fMax);
+      
+      const double diff = totalInelNew-totalInelErr;
+      scale = (xSecSum > 0) ? diff*(aEval/xSecSum) : 0;
+    }
+    
+    const double a = aEval + scale;
+    const double b = evalSigmaRatio(channel.fOldSigmaRatioSpline, Ti, Tf, channel.fMin, channel.fMax);
+    
+    assert(!isinf(num / denom * a / b));
+    //assert(!isinf(num / denom * a / b * (totalInelOld + totalElastic)/ (totalInelNew + totalElastic)));
+    return num / denom * a / b;
+    //return num / denom * a / b * (totalInelOld + totalElastic)/ (totalInelNew + totalElastic);
+    //return a / b; //Case for when not changing the total inelastic cross section
+  }
   
-  assert(!isinf(num / denom * a / b));
-  //assert(!isinf(num / denom * a / b * (totalInelOld + totalElastic)/ (totalInelNew + totalElastic)));
-  return num / denom * a / b;
-  //return num / denom * a / b * (totalInelOld + totalElastic)/ (totalInelNew + totalElastic);
-  //return a / b; //Case for when not changing the total inelastic cross section
-}
-
-template <class UNIVERSE, class EVENT>
-double Neutron3ChannelEach1Sigma<UNIVERSE, EVENT>::getInelasticRatioWeight(const Channel& channel, const double Ti, const double Tf) const
-{
-  //if(Tf < channel.fMin || Ti > channel.fMax) return 1.; //When given KE outside the range where I have splines to compare to, don't reweight. Removed because of the requirements for summing the points up for the total inelastic. Just take the widest range and deal with it in the edge cases. where there's not data for all channels.
-
-  //I don't need to reweight based on the total cross section because I'm implicitly keeping it the same.
-  const double oldTotInel = evalSigmaRatio(fTotalInelastic.fOldSigmaRatioSpline, Ti, Tf, fTotalInelastic.fMin, fTotalInelastic.fMax);
-  if(oldTotInel <= 0) return 0;
-
-  //This is in development and shouldn't be used as is...
-  std::vector<std::tuple<TSpline3,double,double>> errSplines;  
-  for (auto allChan : fChannels) errSplines.push_back(std::make_tuple(allChan.fErrSpline,allChan.fMin,allChan.fMax));
-
-  const double newTotInel = evalAdjustedSigmaRatio(fTotalInelastic.fNewSigmaRatioSpline, errSplines, Ti, Tf, fTotalInelastic.fMin, fTotalInelastic.fMax);
-  //const double newTotInel = evalSigmaRatio(fTotalInelastic.fNewSigmaRatioSpline, Ti, Tf, fTotalInelastic.fMin, fTotalInelastic.fMax);
-
-  if(newTotInel <= 0) return 0;
-
-  const double newChannel = evalSigmaRatio(channel.fNewSigmaRatioSpline, Ti, Tf, channel.fMin, channel.fMax);
-  const double oldChannel = evalSigmaRatio(channel.fOldSigmaRatioSpline, Ti, Tf, channel.fMin, channel.fMax);
-  assert(!isinf( (newChannel/newTotInel) / (oldChannel/oldTotInel) ));
-  ////std::cout << "Numerator: " << newChannel/newTotInel << ", Denominator: " << oldChannel/oldTotInel << std::endl;
-  return ((newChannel/newTotInel) / (oldChannel/oldTotInel));
-}
-
-template <class UNIVERSE, class EVENT>
-double Neutron3ChannelEach1Sigma<UNIVERSE, EVENT>::getOtherInelasticRatioWeight(const double Ti, const double Tf) const
-{
-  //if(Tf < fTotalInelastic.fMin || Ti > fTotalInelastic.fMax) return 1.; //When given KE outside the range of total inelastic... See getInelasticRatioWeight for reasoning
-
-  //I don't need to reweight based on the total cross section because I'm implicitly keeping it the same.
-  const double oldTotInel = evalSigmaRatio(fTotalInelastic.fOldSigmaRatioSpline, Ti, Tf, fTotalInelastic.fMin, fTotalInelastic.fMax);
-  if(oldTotInel <= 0) return 0;
-
-  //This is in development and shouldn't be used as is...
-  std::vector<std::tuple<TSpline3,double,double>> errSplines;  
-  for (auto allChan : fChannels) errSplines.push_back(std::make_tuple(allChan.fErrSpline,allChan.fMin,allChan.fMax));
+  template <class UNIVERSE, class EVENT>
+  double Neutron3ChannelsEach1Sigma<UNIVERSE, EVENT>::getInelasticRatioWeight(const Channel& channel, const double Ti, const double Tf, const int iSig) const
+  {
+    //if(Tf < channel.fMin || Ti > channel.fMax) return 1.; //When given KE outside the range where I have splines to compare to, don't reweight. Removed because of the requirements for summing the points up for the total inelastic. Just take the widest range and deal with it in the edge cases. where there's not data for all channels.
+    
+    //I don't need to reweight based on the total cross section because I'm implicitly keeping it the same.
+    const double oldTotInel = evalSigmaRatio(fTotalInelastic.fOldSigmaRatioSpline, Ti, Tf, fTotalInelastic.fMin, fTotalInelastic.fMax);
+    if(oldTotInel <= 0) return 0;
+    
+    //This is in development and shouldn't be used as is...
+    std::vector<std::tuple<TSpline3,double,double>> errSplines;  
+    for (auto allChan : fChannels.at(iSig)) errSplines.push_back(std::make_tuple(allChan.fErrSpline,allChan.fMin,allChan.fMax));
+    
+    const double newTotInel = evalAdjustedSigmaRatio(fTotalInelastic.fNewSigmaRatioSpline, errSplines, Ti, Tf, fTotalInelastic.fMin, fTotalInelastic.fMax);
+    //const double newTotInel = evalSigmaRatio(fTotalInelastic.fNewSigmaRatioSpline, Ti, Tf, fTotalInelastic.fMin, fTotalInelastic.fMax);
+    
+    if(newTotInel <= 0) return 0;
+    
+    const double newChannel = evalSigmaRatio(channel.fNewSigmaRatioSpline, Ti, Tf, channel.fMin, channel.fMax);
+    const double oldChannel = evalSigmaRatio(channel.fOldSigmaRatioSpline, Ti, Tf, channel.fMin, channel.fMax);
+    assert(!isinf( (newChannel/newTotInel) / (oldChannel/oldTotInel) ));
+    ////std::cout << "Numerator: " << newChannel/newTotInel << ", Denominator: " << oldChannel/oldTotInel << std::endl;
+    return ((newChannel/newTotInel) / (oldChannel/oldTotInel));
+  }
   
-  const double newTotInel = evalAdjustedSigmaRatio(fTotalInelastic.fNewSigmaRatioSpline, errSplines, Ti, Tf, fTotalInelastic.fMin, fTotalInelastic.fMax);
-  //const double newTotInel = evalSigmaRatio(fTotalInelastic.fNewSigmaRatioSpline, Ti, Tf, fTotalInelastic.fMin, fTotalInelastic.fMax);
-  if(newTotInel <= 0) return 0;
-
-  ////std::cout << "NewTotal: " << newTotInel << ", OldTotal: "  << oldTotInel << std::endl;
-
-  double newChannelSum = 0.0;
-  double oldChannelSum = 0.0;
-  for (auto channel:fChannels){
+  template <class UNIVERSE, class EVENT>
+  double Neutron3ChannelsEach1Sigma<UNIVERSE, EVENT>::getOtherInelasticRatioWeight(const double Ti, const double Tf, const int iSig) const
+  {
+    //if(Tf < fTotalInelastic.fMin || Ti > fTotalInelastic.fMax) return 1.; //When given KE outside the range of total inelastic... See getInelasticRatioWeight for reasoning
+    
+    //I don't need to reweight based on the total cross section because I'm implicitly keeping it the same.
+    const double oldTotInel = evalSigmaRatio(fTotalInelastic.fOldSigmaRatioSpline, Ti, Tf, fTotalInelastic.fMin, fTotalInelastic.fMax);
+    if(oldTotInel <= 0) return 0;
+    
+    //This is in development and shouldn't be used as is...
+    std::vector<std::tuple<TSpline3,double,double>> errSplines;  
+    for (auto allChan : fChannels.at(iSig)) errSplines.push_back(std::make_tuple(allChan.fErrSpline,allChan.fMin,allChan.fMax));
+    
+    const double newTotInel = evalAdjustedSigmaRatio(fTotalInelastic.fNewSigmaRatioSpline, errSplines, Ti, Tf, fTotalInelastic.fMin, fTotalInelastic.fMax);
+    //const double newTotInel = evalSigmaRatio(fTotalInelastic.fNewSigmaRatioSpline, Ti, Tf, fTotalInelastic.fMin, fTotalInelastic.fMax);
+    if(newTotInel <= 0) return 0;
+    
+    ////std::cout << "NewTotal: " << newTotInel << ", OldTotal: "  << oldTotInel << std::endl;
+    
+    double newChannelSum = 0.0;
+    double oldChannelSum = 0.0;
+    for (auto channel:fChannels.at(iSig)){
       const double newChannel = evalSigmaRatio(channel.fNewSigmaRatioSpline, Ti, Tf, channel.fMin, channel.fMax);
       ////std::cout << "New Channel Val: " << newChannel << std::endl;
       const double oldChannel = evalSigmaRatio(channel.fOldSigmaRatioSpline, Ti, Tf, channel.fMin, channel.fMax);
@@ -746,164 +759,166 @@ double Neutron3ChannelEach1Sigma<UNIVERSE, EVENT>::getOtherInelasticRatioWeight(
       ////std::cout << "New Channel Sum: " << newChannelSum << std::endl;
       oldChannelSum += oldChannel;
       ////std::cout << "Old Channel Sum: " << oldChannelSum << std::endl;
-  }
-
-  assert(!isinf( ((newTotInel-newChannelSum)/newTotInel) / ((oldTotInel - oldChannelSum)/oldTotInel) ));
-  return ( ((newTotInel-newChannelSum)/newTotInel) / ((oldTotInel - oldChannelSum)/oldTotInel) );
-}
-
-//Weight for a channel that I'm not reweighting while still keeping the total inelastic cross section at the predicted value.
-template <class UNIVERSE, class EVENT>
-double Neutron3ChannelEach1Sigma<UNIVERSE, EVENT>::getOtherInelasticWeight(const double density, const double Ti, const double Tf) const
-{
-  int nChannelsActive = 0;
-  double oldKnownInelastic = 0, newKnownInelastic = 0;
-  for(const auto& channel: fChannels)
-  {
-    if(Tf >= channel.fMin && Ti <= channel.fMax)
-    {
-      ++nChannelsActive;
-      oldKnownInelastic += evalSigmaRatio(channel.fOldSigmaRatioSpline, Ti, Tf, channel.fMin, channel.fMax);
-      newKnownInelastic += evalSigmaRatio(channel.fNewSigmaRatioSpline, Ti, Tf, channel.fMin, channel.fMax);
     }
+    
+    assert(!isinf( ((newTotInel-newChannelSum)/newTotInel) / ((oldTotInel - oldChannelSum)/oldTotInel) ));
+    return ( ((newTotInel-newChannelSum)/newTotInel) / ((oldTotInel - oldChannelSum)/oldTotInel) );
   }
-  if(nChannelsActive < 2) return 0;
-
-  /*
-  std::vector<std::tuple<TSpline3,double,double>> errSplines;  
-  for (auto allChan : fChannels) errSplines.push_back(std::make_tuple(allChan.fErrSpline,allChan.fMin,allChan.fMax));
   
-  const double newTotalInelastic = evalAdjustedSigmaRatio(fTotalInelastic.fNewSigmaRatioSpline, errSplines, Ti, Tf, fTotalInelastic.fMin, fTotalInelastic.fMax);
-  */
-  
-  const double totalElastic = evalSigmaRatio(fTotalElasticSpline, Ti, Tf, fLowestMinKE, fHighestMaxKE),
-    oldTotalInelastic = evalSigmaRatio(fTotalInelastic.fOldSigmaRatioSpline, Ti, Tf, fTotalInelastic.fMin, fTotalInelastic.fMax),
-    newTotalInelastic = evalSigmaRatio(fTotalInelastic.fNewSigmaRatioSpline, Ti, Tf, fTotalInelastic.fMin, fTotalInelastic.fMax);
-  const double denom = 1. - exp(-1. * density * scintDensityToNucleons * (oldTotalInelastic + totalElastic));
-  //if(denom <= 0) return 0;
-  if(denom <= 0) return 1;
-  const double num = 1. - exp(-1. * density * scintDensityToNucleons * (newTotalInelastic + totalElastic));
-
-  double a = newTotalInelastic - newKnownInelastic;
-  double b = oldTotalInelastic - oldKnownInelastic;
-
-  //std::cout << "Other channel ratio is " << a / b << "\n";
-
-  //TODO: Remove the following debugging lines
-  //if(a < 0 && a > -1) a = 0; //Small disagreement between splines where there's just the nGamma spline.
-
-  /*if(a < 0)
+  //Weight for a channel that I'm not reweighting while still keeping the total inelastic cross section at the predicted value.
+  template <class UNIVERSE, class EVENT>
+  double Neutron3ChannelsEach1Sigma<UNIVERSE, EVENT>::getOtherInelasticWeight(const double density, const double Ti, const double Tf, const int iSig) const
   {
-    std::cout << "Got a negative new cross section at Ti = " << Ti << " and Tf = " << Tf << " for \"Other\" channel: " << a << "\nTotal new cross section is " << newTotalInelastic << "\n";
-    std::cout << "Channels in this region are:\n";
-    for(const auto& channel: fChannels)
-    {
+    int nChannelsActive = 0;
+    double oldKnownInelastic = 0, newKnownInelastic = 0;
+    for(const auto& channel: fChannels.at(iSig))
+      {
+	if(Tf >= channel.fMin && Ti <= channel.fMax)
+	  {
+	    ++nChannelsActive;
+	    oldKnownInelastic += evalSigmaRatio(channel.fOldSigmaRatioSpline, Ti, Tf, channel.fMin, channel.fMax);
+	    newKnownInelastic += evalSigmaRatio(channel.fNewSigmaRatioSpline, Ti, Tf, channel.fMin, channel.fMax);
+	  }
+      }
+    if(nChannelsActive < 2) return 0;
+    
+    /*
+      std::vector<std::tuple<TSpline3,double,double>> errSplines;  
+      for (auto allChan : fChannels.at(iSig)) errSplines.push_back(std::make_tuple(allChan.fErrSpline,allChan.fMin,allChan.fMax));
+      
+      const double newTotalInelastic = evalAdjustedSigmaRatio(fTotalInelastic.fNewSigmaRatioSpline, errSplines, Ti, Tf, fTotalInelastic.fMin, fTotalInelastic.fMax);
+    */
+    
+    const double totalElastic = evalSigmaRatio(fTotalElasticSpline, Ti, Tf, fLowestMinKE, fHighestMaxKE),
+      oldTotalInelastic = evalSigmaRatio(fTotalInelastic.fOldSigmaRatioSpline, Ti, Tf, fTotalInelastic.fMin, fTotalInelastic.fMax),
+      newTotalInelastic = evalSigmaRatio(fTotalInelastic.fNewSigmaRatioSpline, Ti, Tf, fTotalInelastic.fMin, fTotalInelastic.fMax);
+    const double denom = 1. - exp(-1. * density * scintDensityToNucleons * (oldTotalInelastic + totalElastic));
+    //if(denom <= 0) return 0;
+    if(denom <= 0) return 1;
+    const double num = 1. - exp(-1. * density * scintDensityToNucleons * (newTotalInelastic + totalElastic));
+    
+    double a = newTotalInelastic - newKnownInelastic;
+    double b = oldTotalInelastic - oldKnownInelastic;
+    
+    //std::cout << "Other channel ratio is " << a / b << "\n";
+    
+    //TODO: Remove the following debugging lines
+    //if(a < 0 && a > -1) a = 0; //Small disagreement between splines where there's just the nGamma spline.
+    
+    /*if(a < 0)
+      {
+      std::cout << "Got a negative new cross section at Ti = " << Ti << " and Tf = " << Tf << " for \"Other\" channel: " << a << "\nTotal new cross section is " << newTotalInelastic << "\n";
+      std::cout << "Channels in this region are:\n";
+      for(const auto& channel: fChannels.at(iSig))
+      {
       std::cout << channel.fNewSigmaRatioSpline.GetName() << ": ";
       if(Tf < channel.fMin || Ti > channel.fMax) std::cout << "0\n";
       else std::cout << evalSigmaRatio(channel.fNewSigmaRatioSpline, Ti, Tf, channel.fMin, channel.fMax) << "\n";
-    }
-  }
-  if(b < 0)
-  {
-    std::cout << "Got a negative old cross section for \"Other\" channel: " << b << "\nTotal old cross section is " << oldTotalInelastic << "\n";
-    std::cout << "Channels in this region are:\n";
-    for(const auto& channel: fChannels)
-    {
+      }
+      }
+      if(b < 0)
+      {
+      std::cout << "Got a negative old cross section for \"Other\" channel: " << b << "\nTotal old cross section is " << oldTotalInelastic << "\n";
+      std::cout << "Channels in this region are:\n";
+      for(const auto& channel: fChannels.at(iSig))
+      {
       std::cout << channel.fOldSigmaRatioSpline.GetName() << ": ";
       if(Tf < channel.fMin || Ti > channel.fMax) std::cout << "0\n";
       else std::cout << evalSigmaRatio(channel.fOldSigmaRatioSpline, Ti, Tf, channel.fMin, channel.fMax) << "\n";
-    }
-  }*/
-
-  assert(!isinf(num / denom * a / b));
-  assert(a >= 0);
-  assert(b >= 0);
-  return num / denom * a / b;
-}
-
-//Weight for a channel that I'm not actually reweighting.  It turns out not to be 1 if I work out the math for MnvHadronReweight.
-//I use it in multiple places, so I'm making it a function to force myself to be consistent.
-template <class UNIVERSE, class EVENT>
-double Neutron3ChannelEach1Sigma<UNIVERSE, EVENT>::getConstantChannelWeight(const double density, const double Ti, const double Tf) const
-{
-  const double totalElastic = evalSigmaRatio(fTotalElasticSpline, Ti, Tf, fLowestMinKE, fHighestMaxKE);
-  const double oldTotal = evalSigmaRatio(fTotalInelastic.fOldSigmaRatioSpline, Ti, Tf, fTotalInelastic.fMin, fTotalInelastic.fMax) + totalElastic;
-  const double denom = 1. - exp(-1. * density * scintDensityToNucleons * oldTotal);
-  if(denom > 0) //Otherwise, don't reweight at all for this step
-  {
-    /*
-    std::vector<std::tuple<TSpline3,double,double>> errSplines;  
-    for (auto allChan : fChannels) errSplines.push_back(std::make_tuple(allChan.fErrSpline,allChan.fMin,allChan.fMax));
+      }
+      }*/
     
-    const double newTotal = evalAdjustedSigmaRatio(fTotalInelastic.fNewSigmaRatioSpline, errSplines, Ti, Tf, fTotalInelastic.fMin, fTotalInelastic.fMax) + totalElastic;
-    */
-    const double newTotal = evalSigmaRatio(fTotalInelastic.fNewSigmaRatioSpline, Ti, Tf, fTotalInelastic.fMin, fTotalInelastic.fMax) + totalElastic;
-    const double num = 1. - exp(-1. * density * scintDensityToNucleons * newTotal);
-    //Ratio of elastic fractions before and after change reduces to ratio of total cross sections when elastic stays the same!
-    assert(!isinf(num / denom * oldTotal / newTotal));
-    return num / denom * oldTotal / newTotal;
+    assert(!isinf(num / denom * a / b));
+    assert(a >= 0);
+    assert(b >= 0);
+    return num / denom * a / b;
   }
-  return 1; //else
-}
-
-template <class UNIVERSE, class EVENT>
-double Neutron3ChannelEach1Sigma<UNIVERSE, EVENT>::getNoInteractionWeight(const double density, const double Ti, const double Tf) const
-{
-  const double oldInel = evalSigmaRatio(fTotalInelastic.fOldSigmaRatioSpline, Ti, Tf, fTotalInelastic.fMin, fTotalInelastic.fMax);
-  /*
-  std::vector<std::tuple<TSpline3,double,double>> errSplines;  
-  for (auto allChan : fChannels) errSplines.push_back(std::make_tuple(allChan.fErrSpline,allChan.fMin,allChan.fMax));
   
-  const double newInel = evalAdjustedSigmaRatio(fTotalInelastic.fNewSigmaRatioSpline, errSplines, Ti, Tf, fTotalInelastic.fMin, fTotalInelastic.fMax);
-  */
-  const double newInel = evalSigmaRatio(fTotalInelastic.fNewSigmaRatioSpline, Ti, Tf, fTotalInelastic.fMin, fTotalInelastic.fMax);
-  assert(!isinf(exp(-1.0 * density * scintDensityToNucleons * (newInel - oldInel))));
-  return exp(-1.0 * density * scintDensityToNucleons * (newInel - oldInel)); //Should be total cross section difference, but elastic cancels out when it stays the same
-}
-
-//Adapt to graph evaluation pitfalls
-template <class UNIVERSE, class EVENT>
-double Neutron3ChannelEach1Sigma<UNIVERSE, EVENT>::evalSigmaRatio(TSpline3& sigmaSpline, double Ti, double Tf, const double min, const double max, bool allowNeg) const
-{
-  //std::cout << "Starting with Ti = " << Ti << " and Tf = " << Tf << std::endl;
-
-  //Prefer rounding into the range where we have data over interpolating off the end of a spline
-  //"clamp" Ti and Tf to min/max of ratioFunc
-  Ti = std::min(Ti, max);
-  Tf = std::min(Tf, max);
-
-  //Some strange "linear interpolation towards 0" that Jeffrey does.  He also comments that this never happens in MnvHadronReweight because
-  //the "HD neutron cross section" goes down to 1 MeV.
-  //N.B.: ratioFunc wraps over a cubic spline to data
-  /*if(Ti < min) Ti *= ratioFunc.Eval(Ti)/min; //TODO: If Ti < min, then evaluating the spline at Ti could return crazy results!
-  if(Tf < min) Tf *= ratioFunc.Eval(Tf)/min;*/
-
-  //TODO: If Ti, Tf are outside the domain of ratioFunc, I'd rather just return a weight of 1 for this event.  I think this is guaranteed by other functions now?
-  Ti = std::max(min, Ti);
-  Tf = std::max(min, Tf);
-
-  double result = 0.;
-  if(fabs(Ti - Tf) < 1e-6 || Ti - Tf < 0) //If Ti - Tf < 0, then the difference is probably pretty small anyway.
+  //Weight for a channel that I'm not actually reweighting.  It turns out not to be 1 if I work out the math for MnvHadronReweight.
+  //I use it in multiple places, so I'm making it a function to force myself to be consistent.
+  template <class UNIVERSE, class EVENT>
+  double Neutron3ChannelsEach1Sigma<UNIVERSE, EVENT>::getConstantChannelWeight(const double density, const double Ti, const double Tf, const int iSig) const
   {
-    //std::cout << "For a function named " << ratioFunc.GetName() << ", Ti = " << Ti << " is close to Tf = " << Tf << ".  min = " << min << ".  Returning " << ratioFunc.Eval(Ti) << std::flush << std::endl;
-    //return ratioFunc.Eval(Ti);
-    result = sigmaSpline.Eval(Ti);
+    const double totalElastic = evalSigmaRatio(fTotalElasticSpline, Ti, Tf, fLowestMinKE, fHighestMaxKE);
+    const double oldTotal = evalSigmaRatio(fTotalInelastic.fOldSigmaRatioSpline, Ti, Tf, fTotalInelastic.fMin, fTotalInelastic.fMax) + totalElastic;
+    const double denom = 1. - exp(-1. * density * scintDensityToNucleons * oldTotal);
+    if(denom > 0) //Otherwise, don't reweight at all for this step
+      {
+	/*
+	  std::vector<std::tuple<TSpline3,double,double>> errSplines;  
+	  for (auto allChan : fChannels.at(iSig)) errSplines.push_back(std::make_tuple(allChan.fErrSpline,allChan.fMin,allChan.fMax));
+	  
+	  const double newTotal = evalAdjustedSigmaRatio(fTotalInelastic.fNewSigmaRatioSpline, errSplines, Ti, Tf, fTotalInelastic.fMin, fTotalInelastic.fMax) + totalElastic;
+	*/
+	const double newTotal = evalSigmaRatio(fTotalInelastic.fNewSigmaRatioSpline, Ti, Tf, fTotalInelastic.fMin, fTotalInelastic.fMax) + totalElastic;
+	const double num = 1. - exp(-1. * density * scintDensityToNucleons * newTotal);
+	//Ratio of elastic fractions before and after change reduces to ratio of total cross sections when elastic stays the same!
+	assert(!isinf(num / denom * oldTotal / newTotal));
+	return num / denom * oldTotal / newTotal;
+      }
+    return 1; //else
   }
-  else result = integral(sigmaSpline, Tf, Ti)/(Ti - Tf); //ratioFunc.Integral(Ti, Tf, 1e-6)/(Tf - Ti); //TF1::Integral() is supposedly a Gaussian quadrature algorithm in some cases
-
-  if(!allowNeg && result < 0) std::cout << "result = " << result << " < 0!  Ti = " << Ti << ", Tf = " << Tf << " for spline " << sigmaSpline.GetTitle() << ".  Ti - Tf = " << Ti - Tf << "\n";
-  if (!allowNeg) assert(result >= 0);
-  return result;
-}
-
-template <class UNIVERSE, class EVENT>
-double Neutron3ChannelEach1Sigma<UNIVERSE, EVENT>::evalAdjustedSigmaRatio(TSpline3& sigmaSpline, std::vector<std::tuple<TSpline3, double, double>> errSplines, double Ti, double Tf, const double min, const double max) const
-{
-  double total = evalSigmaRatio(sigmaSpline, Ti, Tf, min, max);
-  //std::cout << "Total: " << total << std::endl;
-  for (auto spline : errSplines){
-    total += evalSigmaRatio(std::get<0>(spline), Ti, Tf, std::get<1>(spline), std::get<2>(spline), true);
-    //std::cout << "Total Updated: " << total << std::endl;    
+  
+  template <class UNIVERSE, class EVENT>
+  double Neutron3ChannelsEach1Sigma<UNIVERSE, EVENT>::getNoInteractionWeight(const double density, const double Ti, const double Tf, const int iSig) const
+  {
+    const double oldInel = evalSigmaRatio(fTotalInelastic.fOldSigmaRatioSpline, Ti, Tf, fTotalInelastic.fMin, fTotalInelastic.fMax);
+    /*
+      std::vector<std::tuple<TSpline3,double,double>> errSplines;  
+      for (auto allChan : fChannels.at(iSig)) errSplines.push_back(std::make_tuple(allChan.fErrSpline,allChan.fMin,allChan.fMax));
+      
+      const double newInel = evalAdjustedSigmaRatio(fTotalInelastic.fNewSigmaRatioSpline, errSplines, Ti, Tf, fTotalInelastic.fMin, fTotalInelastic.fMax);
+    */
+    const double newInel = evalSigmaRatio(fTotalInelastic.fNewSigmaRatioSpline, Ti, Tf, fTotalInelastic.fMin, fTotalInelastic.fMax);
+    assert(!isinf(exp(-1.0 * density * scintDensityToNucleons * (newInel - oldInel))));
+    return exp(-1.0 * density * scintDensityToNucleons * (newInel - oldInel)); //Should be total cross section difference, but elastic cancels out when it stays the same
   }
-  return total;
+  
+  //Adapt to graph evaluation pitfalls
+  template <class UNIVERSE, class EVENT>
+  double Neutron3ChannelsEach1Sigma<UNIVERSE, EVENT>::evalSigmaRatio(TSpline3& sigmaSpline, double Ti, double Tf, const double min, const double max, bool allowNeg) const
+  {
+    //std::cout << "Starting with Ti = " << Ti << " and Tf = " << Tf << std::endl;
+    
+    //Prefer rounding into the range where we have data over interpolating off the end of a spline
+    //"clamp" Ti and Tf to min/max of ratioFunc
+    Ti = std::min(Ti, max);
+    Tf = std::min(Tf, max);
+    
+    //Some strange "linear interpolation towards 0" that Jeffrey does.  He also comments that this never happens in MnvHadronReweight because
+    //the "HD neutron cross section" goes down to 1 MeV.
+    //N.B.: ratioFunc wraps over a cubic spline to data
+    /*if(Ti < min) Ti *= ratioFunc.Eval(Ti)/min; //TODO: If Ti < min, then evaluating the spline at Ti could return crazy results!
+      if(Tf < min) Tf *= ratioFunc.Eval(Tf)/min;*/
+    
+    //TODO: If Ti, Tf are outside the domain of ratioFunc, I'd rather just return a weight of 1 for this event.  I think this is guaranteed by other functions now?
+    Ti = std::max(min, Ti);
+    Tf = std::max(min, Tf);
+    
+    double result = 0.;
+    if(fabs(Ti - Tf) < 1e-6 || Ti - Tf < 0) //If Ti - Tf < 0, then the difference is probably pretty small anyway.
+      {
+	//std::cout << "For a function named " << ratioFunc.GetName() << ", Ti = " << Ti << " is close to Tf = " << Tf << ".  min = " << min << ".  Returning " << ratioFunc.Eval(Ti) << std::flush << std::endl;
+	//return ratioFunc.Eval(Ti);
+	result = sigmaSpline.Eval(Ti);
+      }
+    else result = integral(sigmaSpline, Tf, Ti)/(Ti - Tf); //ratioFunc.Integral(Ti, Tf, 1e-6)/(Tf - Ti); //TF1::Integral() is supposedly a Gaussian quadrature algorithm in some cases
+    
+    if(!allowNeg && result < 0) std::cout << "result = " << result << " < 0!  Ti = " << Ti << ", Tf = " << Tf << " for spline " << sigmaSpline.GetTitle() << ".  Ti - Tf = " << Ti - Tf << "\n";
+    if (!allowNeg) assert(result >= 0);
+    return result;
+  }
+  
+  template <class UNIVERSE, class EVENT>
+  double Neutron3ChannelsEach1Sigma<UNIVERSE, EVENT>::evalAdjustedSigmaRatio(TSpline3& sigmaSpline, std::vector<std::tuple<TSpline3, double, double>> errSplines, double Ti, double Tf, const double min, const double max) const
+  {
+    double total = evalSigmaRatio(sigmaSpline, Ti, Tf, min, max);
+    //std::cout << "Total: " << total << std::endl;
+    for (auto spline : errSplines){
+      total += evalSigmaRatio(std::get<0>(spline), Ti, Tf, std::get<1>(spline), std::get<2>(spline), true);
+      //std::cout << "Total Updated: " << total << std::endl;    
+    }
+    return total;
+  }
+  
 }

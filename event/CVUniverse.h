@@ -39,7 +39,7 @@ class CVUniverse : public PlotUtils::MinervaUniverse {
   CVUniverse(PlotUtils::ChainWrapper* chw, double nsigma = 0)
     : PlotUtils::MinervaUniverse(chw, nsigma), m_LeadNeutIndex(-999) {
     m_Random = new TRandom3(0);
-    LoadNeutronReweightHistos();
+    //LoadNeutronReweightHistos(); Moved this to only the universes that do thweighting
   }
 
   virtual ~CVUniverse() {}
@@ -1199,9 +1199,10 @@ class CVUniverse : public PlotUtils::MinervaUniverse {
     return EvtCands;
   };
 
-  double GetNeutronNormWeight() const{
+  virtual double GetNeutronNormWeight() const{
     double ret = 1.0;
     return ret;//Temporary to Remake the Renormalization Plots In The Face of Extending The Reweight Beyond The 200 MeV cutoff...
+    /*
     int categ = GetNeutronReweightCategory(10.0);
     TH2D* reweightHist = m_NeutRWHists.at(categ);
     if (!reweightHist) return ret;
@@ -1211,6 +1212,7 @@ class CVUniverse : public PlotUtils::MinervaUniverse {
     ret = std::max(0.0, val);
     if (ret==0.0) ret = 1.0;
     return ret;
+    */
   }
   
   private:

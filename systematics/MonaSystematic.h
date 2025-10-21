@@ -54,14 +54,13 @@ UniverseMap GetMonaSystematicMap(PlotUtils::ChainWrapper* chain)
 
   error_bands["NeutronInelasticsReweight"].push_back(new PlotUtils::GenericVerticalUniverse<CVUniverse, PlotUtils::detail::empty>(chain, std::unique_ptr<PlotUtils::Reweighter<CVUniverse, PlotUtils::detail::empty>>(new NeutronInelasticReweighter<CVUniverse>(MonaMapDefault,MonaMapCVNSigma,1)), 1.0));
 
-  /*
   error_bands["NeutronInelasticsReweight"].push_back(new PlotUtils::GenericVerticalUniverse<CVUniverse, PlotUtils::detail::empty>(chain, std::unique_ptr<PlotUtils::Reweighter<CVUniverse, PlotUtils::detail::empty>>(new NeutronInelasticReweighter<CVUniverse>(MonaMapDefault,MonaMapBnpUp,1)), 1.0));
   error_bands["NeutronInelasticsReweight"].push_back(new PlotUtils::GenericVerticalUniverse<CVUniverse, PlotUtils::detail::empty>(chain, std::unique_ptr<PlotUtils::Reweighter<CVUniverse, PlotUtils::detail::empty>>(new NeutronInelasticReweighter<CVUniverse>(MonaMapDefault,MonaMapBnpDown,1)), 1.0));
   error_bands["NeutronInelasticsReweight"].push_back(new PlotUtils::GenericVerticalUniverse<CVUniverse, PlotUtils::detail::empty>(chain, std::unique_ptr<PlotUtils::Reweighter<CVUniverse, PlotUtils::detail::empty>>(new NeutronInelasticReweighter<CVUniverse>(MonaMapDefault,MonaMapNGammaUp,1)), 1.0));
   error_bands["NeutronInelasticsReweight"].push_back(new PlotUtils::GenericVerticalUniverse<CVUniverse, PlotUtils::detail::empty>(chain, std::unique_ptr<PlotUtils::Reweighter<CVUniverse, PlotUtils::detail::empty>>(new NeutronInelasticReweighter<CVUniverse>(MonaMapDefault,MonaMapNGammaDown,1)), 1.0));
   error_bands["NeutronInelasticsReweight"].push_back(new PlotUtils::GenericVerticalUniverse<CVUniverse, PlotUtils::detail::empty>(chain, std::unique_ptr<PlotUtils::Reweighter<CVUniverse, PlotUtils::detail::empty>>(new NeutronInelasticReweighter<CVUniverse>(MonaMapDefault,MonaMap3AlphaUp,1)), 1.0));
   error_bands["NeutronInelasticsReweight"].push_back(new PlotUtils::GenericVerticalUniverse<CVUniverse, PlotUtils::detail::empty>(chain, std::unique_ptr<PlotUtils::Reweighter<CVUniverse, PlotUtils::detail::empty>>(new NeutronInelasticReweighter<CVUniverse>(MonaMapDefault,MonaMap3AlphaDown,1)), 1.0));
-  */  
+  /*  */  
   //Checking that these bands give the same result as the single universe band above as they should... I can perform this check even with the modified systematics since the mode in the reweighter is currently set to be the same.
   //error_bands["NeutronInelasticsReweight_1"].push_back(new PlotUtils::GenericVerticalUniverse<CVUniverse, PlotUtils::detail::empty>(chain, std::unique_ptr<PlotUtils::Reweighter<CVUniverse, PlotUtils::detail::empty>>(new NeutronInelasticReweighter<CVUniverse>(MonaMapDefault,1)), 1.0, "1"));
   //error_bands["NeutronInelasticsReweight_1"].push_back(new PlotUtils::GenericVerticalUniverse<CVUniverse, PlotUtils::detail::empty>(chain, std::unique_ptr<PlotUtils::Reweighter<CVUniverse, PlotUtils::detail::empty>>(new NeutronInelasticReweighter<CVUniverse>(MonaMapDefault,1)), -1.0, "1"));
@@ -79,6 +78,66 @@ UniverseMap GetMonaSystematicMap(PlotUtils::ChainWrapper* chain)
   error_bands["NeutronInelasticsReweight_5"].push_back(new PlotUtils::GenericVerticalUniverse<CVUniverse, PlotUtils::detail::empty>(chain, std::unique_ptr<PlotUtils::Reweighter<CVUniverse, PlotUtils::detail::empty>>(new NeutronInelasticReweighter<CVUniverse>(MonaMapDefault,5)), 1.0, "5"));
   error_bands["NeutronInelasticsReweight_5"].push_back(new PlotUtils::GenericVerticalUniverse<CVUniverse, PlotUtils::detail::empty>(chain, std::unique_ptr<PlotUtils::Reweighter<CVUniverse, PlotUtils::detail::empty>>(new NeutronInelasticReweighter<CVUniverse>(MonaMapDefault,5)), -1.0, "5"));
   */
+  return error_bands;
+}
+
+class MENATEUniverse: public CVUniverse{
+public:
+  MENATEUniverse(PlotUtils::ChainWrapper* chw, double nsigma): CVUniverse(chw, nsigma)
+  {
+    if (nsigma == 0){
+      LoadNeutronReweightHistos();
+    }
+  }
+
+  virtual ~MENATEUniverse() = default;
+
+  std::string ShortName() const override
+  {
+    return "MENATEUniverse";
+  }
+
+  std::string LatexName() const override
+  {
+    return "TEST MENATE Uncertainties";
+  }
+
+  double GetNeutronNormWeight() const override
+  {
+    double ret = 1.0;
+    int categ = GetNeutronReweightCategory(10.0);                              
+    TH2D* reweightHist = m_NeutRWHists.at(categ);                              
+    if (!reweightHist) return ret;                                             
+    int binX = reweightHist->GetXaxis()->FindBin(GetMuonPTTrue());             
+    int binY = reweightHist->GetYaxis()->FindBin(GetMaxFSNeutronKE());         
+    double val = reweightHist->GetBinContent(binX,binY);                       
+    ret = std::max(0.0, val);                                                  
+    if (ret==0.0) ret = 1.0;                                                   
+    return ret;                                                                
+  }
+  
+  double GetWeightRatioToCV() const override
+  {
+    double weight = 1.0;
+
+    return weight;
+  }
+
+};
+
+
+UniverseMap GetMENATESystematicMap(PlotUtils::ChainWrapper* chain)
+{
+  UniverseMap error_bands;
+
+  error_bands["NeutronInelasticReweight"].push_back(new MENATEUniverse(chain, 0));
+  error_bands["NeutronInelasticReweight"].push_back(new MENATEUniverse(chain, 1));
+  error_bands["NeutronInelasticReweight"].push_back(new MENATEUniverse(chain, 2));
+  error_bands["NeutronInelasticReweight"].push_back(new MENATEUniverse(chain, 3));
+  error_bands["NeutronInelasticReweight"].push_back(new MENATEUniverse(chain, 4));
+  error_bands["NeutronInelasticReweight"].push_back(new MENATEUniverse(chain, 5));
+  error_bands["NeutronInelasticReweight"].push_back(new MENATEUniverse(chain, 6));
+  
   return error_bands;
 }
 
