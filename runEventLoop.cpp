@@ -73,6 +73,7 @@ enum ErrorCodes
 #include "util/GetBackgroundID.h"
 #include "util/GetRecoTargetZ.h"
 #include "util/Categorized.h"
+#include "util/Neutron3ChannelsEach1Sigma.h"
 #include "cuts/SignalDefinition.h"
 #include "cuts/q3RecoCut.h"
 #include "studies/Study.h"
@@ -153,6 +154,8 @@ void LoopAndFillEventSelection(
     PlotUtils::Model<CVUniverse, NeutronEvent>& model,
     bool doNeutron = true)
 {
+  util::Neutron3ChannelsEach1Sigma<CVUniverse, NeutronEvent> allWeightsCalcer;
+  
   assert(!error_bands["cv"].empty() && "\"cv\" error band is empty!  Can't set Model weight.");
   auto& cvUniv = error_bands["cv"].front();
 
@@ -191,6 +194,9 @@ void LoopAndFillEventSelection(
     for (auto band : error_bands)
     {
       std::vector<CVUniverse*> error_band_universes = band.second;
+
+      std::vector<double> neutronWeights;
+      
       for (auto universe : error_band_universes)
       {    
         // Tell the Event which entry in the TChain it's looking at
@@ -214,7 +220,7 @@ void LoopAndFillEventSelection(
 	    }
 	  }
 	}
-	
+		
 	//Checking my modified final state particle business
 	/*
 	if (((TString)(universe->ShortName())).Contains("FSIReplace") || ((TString)(universe->ShortName())).Contains("cv")){
@@ -252,7 +258,16 @@ void LoopAndFillEventSelection(
         //weight is ignored in isMCSelected() for all but the CV Universe.
         //if (!michelcuts.isMCSelected(*universe, myevent, cvWeight).all()) continue; //all is another function that will later help me with sidebands
 	//std::cout << "Getting weight" << std::endl;
-        const double weight = model.GetWeight(*universe, myevent); //Only calculate the per-universe weight for events that will actually use it.
+        double tmpWeight = model.GetWeight(*universe, myevent); //Only calculate the per-universe weight for events that will actually use it.
+
+	if ((TString)(universe->ShortName()) == "MENATEUniverse"){
+	  if (!neutronWeights.size()){
+	    neutronWeights = allWeightsCalcer.GetWeights(*universe, myevent);
+	  }
+	  if (neutronWeights.size() > (int)(universe->GetSigma())) tmpWeight *= neutronWeights.at((int)(universe->GetSigma()));
+	}
+	
+	const double weight = tmpWeight;
 	
         //const double weight = 1.0; //Dummy weight for testing/validation pre-weight
 
@@ -714,6 +729,8 @@ void LoopAndFillEffDenom( PlotUtils::ChainWrapper* truth,
 			        PlotUtils::Model<CVUniverse, NeutronEvent>& model,
 			        PlotUtils::Model<CVUniverse, NeutronEvent>& evRateONLYmodel)
 {
+  util::Neutron3ChannelsEach1Sigma<CVUniverse, NeutronEvent> allWeightsCalcer;
+  
   assert(!truth_bands["cv"].empty() && "\"cv\" error band is empty!  Could not set Model entry.");
   auto& cvUniv = truth_bands["cv"].front();
 
@@ -740,6 +757,9 @@ void LoopAndFillEffDenom( PlotUtils::ChainWrapper* truth,
     for (auto band : truth_bands)
     {
       std::vector<CVUniverse*> truth_band_universes = band.second;
+
+      std::vector<double> neutronWeights;
+      
       for (auto universe : truth_band_universes)
       {
         NeutronEvent myevent; //Only used to keep the Model happy
@@ -773,8 +793,18 @@ void LoopAndFillEffDenom( PlotUtils::ChainWrapper* truth,
 	// Going to do it by playlist actually.
 	//
         if (!michelcuts.isPhaseSpace(*universe, cvWeight)) continue; //This might proclude some of the backgrunds, but it's doubtful
+
+	double tmpWeight = model.GetWeight(*universe, myevent); //Only calculate the weight for events that will use it
 	
-	const double weight = model.GetWeight(*universe, myevent); //Only calculate the weight for events that will use it
+	if ((TString)(universe->ShortName()) == "MENATEUniverse"){
+	  if (!neutronWeights.size()){
+	    neutronWeights = allWeightsCalcer.GetWeights(*universe, myevent);
+	  }
+	  if (neutronWeights.size() > (int)(universe->GetSigma())) tmpWeight *= neutronWeights.at((int)(universe->GetSigma()));
+	}
+	
+	const double weight = tmpWeight; //Only calculate the weight for events that will use it
+	
 	for(auto& study: studies) study->TruthSignal(*universe, myevent, weight);
 	
         if (!michelcuts.isEfficiencyDenom(*universe, cvWeight)) continue; //Weight is ignored for isEfficiencyDenom() in all but the CV universe 
@@ -1214,8 +1244,10 @@ int main(const int argc, const char** argv)
     ////error_bands.insert(bands_neutDrop.begin(), bands_neutDrop.end());
     ////std::map<std::string, std::vector<CVUniverse*> > bands_Study = GetStudyUnivs(options.m_mc);
     ////error_bands.insert(bands_Study.begin(), bands_Study.end());    
-    /**/std::map<std::string, std::vector<CVUniverse*> > bands_mona = GetMonaSystematicMap(options.m_mc);
-    /**/error_bands.insert(bands_mona.begin(), bands_mona.end());
+    ////std::map<std::string, std::vector<CVUniverse*> > bands_mona = GetMonaSystematicMap(options.m_mc);
+    ////error_bands.insert(bands_mona.begin(), bands_mona.end());
+    /**/std::map<std::string, std::vector<CVUniverse*> > bands_menate = GetMENATESystematicMap(options.m_mc);
+    /**/error_bands.insert(bands_menate.begin(), bands_menate.end());
   }
   error_bands["cv"] = {new CVUniverse(options.m_mc)};
   std::map< std::string, std::vector<CVUniverse*> > truth_bands;
@@ -1229,8 +1261,10 @@ int main(const int argc, const char** argv)
     ////std::map<std::string, std::vector<CVUniverse*> > bands_Study = GetStudyUnivs(options.m_truth);
     ////truth_bands.insert(bands_Study.begin(), bands_Study.end());
 
-    /**/std::map<std::string, std::vector<CVUniverse*> > bands_mona = GetMonaSystematicMap(options.m_truth);
-    /**/truth_bands.insert(bands_mona.begin(), bands_mona.end());
+    ////std::map<std::string, std::vector<CVUniverse*> > bands_mona = GetMonaSystematicMap(options.m_truth);
+    ////truth_bands.insert(bands_mona.begin(), bands_mona.end());
+    /**/std::map<std::string, std::vector<CVUniverse*> > bands_menate = GetMENATESystematicMap(options.m_truth);
+    /**/truth_bands.insert(bands_menate.begin(), bands_menate.end());
     ////std::map<std::string, std::vector<CVUniverse*> > bands_neutDrop = GetNeutronDroppingUnivs(options.m_truth);
     ////truth_bands.insert(bands_neutDrop.begin(), bands_neutDrop.end());
   }
